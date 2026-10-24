@@ -1,6 +1,6 @@
 # API alignment notes
 
-**Status: auth, curriculum, trainee, project, event, and media routes below are implemented in `backend/`.** Mail still lives on the `frontend` branch in that branch's `docs/API.md`. This file is the note the website needs when `VITE_API_MODE=live`. It does not change the website. The website stays on the `frontend` branch.
+**Status: auth, curriculum, trainee, project, event, media, and content singleton routes below are implemented in `backend/`.** Mail and the contact form still live on the `frontend` branch in that branch's `docs/API.md`. This file is the note the website needs when `VITE_API_MODE=live`. It does not change the website. The website stays on the `frontend` branch.
 
 Base path: `/api/v1`. Errors use the shape the website already parses:
 
@@ -79,7 +79,7 @@ Idle time is 30 minutes. The session also ends 12 hours after sign-in. Both can 
 - Keep sending `X-CSRF-Token` from `mn_csrf` on sign-out and on later changes.
 - Treat `403` with code `forbidden` as "this role cannot do that", and `401` as "sign in again".
 
-The permission names match `web/src/domain/permissions.ts`. A viewer can read content and manage their own account. An editor can also change content and media. Content changes use `content.write` and cover classes, trainee profiles, projects, and events. Photo changes use `media.write`. An administrator can do that too, and can also manage users and settings. The server enforces that. The React route guard does not. There is no separate publish permission in the website's map, so this API does not invent one.
+The permission names match `web/src/domain/permissions.ts`. A viewer can read content and manage their own account. An editor can also change content and media. Content changes use `content.write` and cover classes, trainee profiles, projects, events, the homepage, the about page, and the timeline. Photo changes use `media.write`. Settings, including the foundation counters, use `settings.manage`. Only an administrator has that permission. The server enforces that. The React route guard does not. There is no separate publish permission in the website's map, so this API does not invent one.
 
 ## Curriculum routes that exist now
 
@@ -229,7 +229,38 @@ Field messages: `Describe the image without naming anyone.`, `Use at most 300 ch
 
 `npm run seed` inserts three labelled placeholders, `sample-banner`, `sample-bench`, and `sample-mark`. They are not photographs of people. Consent is pending and the workflow is draft, so `GET /public/media` does not return them.
 
-The homepage, about, milestones, and settings are the next milestone. Foundation-wide counters live there.
+## Content routes that exist now
+
+Public homepage, about, timeline, and foundation counters are the published copies. A draft stays on the admin routes. Saving an edit does not publish. `publicationStatus` on a write is ignored. Publish copies the draft to the public document. Unpublish leaves the draft in place and takes the public copy down.
+
+`GET /public/home` is `HomepageContent`, including `announcement` and `showAnnouncement`. That pair is the homepage banner. There is no announcements collection. `showAnnouncement: false` keeps the words in the document. The public object omits `publicationStatus`. A missing publish is `404` with `That page is not available.`
+
+`GET /public/about` is `AboutContent`. A PUT that omits `address`, `email`, or `website` leaves those fields as they are. `figuresPermission` records whether the counters may be presented as display-ready. It does not publish the counters.
+
+`GET /admin/milestones` and `GET /public/milestones` are arrays. The array order is the timeline order. The public array is empty until publish.
+
+Foundation counters live on settings. `GET /admin/settings` adds `foundationStats` and `publicationStatus` to the website's settings shape. `GET /public/foundation-stats` returns the published counters, or `[]` when settings are not published. It does not include the contact email. The seed counters are labelled samples with value `0`.
+
+| Method | Path | Who |
+| --- | --- | --- |
+| GET | `/public/home` | Anyone. Published homepage only. |
+| GET | `/public/about` | Anyone. Published about page only. |
+| GET | `/public/milestones` | Anyone. Published timeline, or an empty array. |
+| GET | `/public/foundation-stats` | Anyone. Published counters, or an empty array. |
+| GET | `/admin/home`, `/admin/about` | `content.read`. The draft, plus `publicationStatus`. |
+| PUT | `/admin/home`, `/admin/about` | `content.write`. Omitted fields stay. Does not publish. |
+| POST | `/admin/home/publish` and `/unpublish` | `content.write`. The same pair exists for about and milestones. |
+| GET | `/admin/milestones` | `content.read`. The draft array. |
+| PUT | `/admin/milestones` | `content.write`. Body `{ milestones }`. |
+| GET | `/admin/settings` | `settings.manage`. |
+| PUT | `/admin/settings` | `settings.manage`. Site name is required. Contact email must be valid. Omitted counters stay. |
+| POST | `/admin/settings/publish` and `/unpublish` | `settings.manage`. Publish also publishes the counters. |
+
+Field messages include `Enter a site name.`, `Enter your email address.`, `Enter a valid email address, like name@example.com.`, `Enter a link or a site path.`, and `Choose a theme.` A script URL is refused and is not repeated in the error.
+
+`npm run seed` inserts the four singletons as drafts. The homepage lead and two timeline descriptions start with `Sample copy for the development seed.` The counters are `Sample counter` rows with value `0`. Run the command again and it leaves an edited row alone.
+
+Accounts, password-reset mail, invitations, and the contact form are the next milestone.
 
 ## Not in this milestone
 
@@ -243,6 +274,8 @@ These paths from the frontend contract are not implemented. They still answer `4
 - `POST /admin/projects/bulk`
 - `POST /admin/events/bulk`
 - `POST /admin/media/bulk`
-- the homepage, about, milestones, and settings singletons
+- `POST /public/enquiries` and an enquiry inbox
+- `GET /admin/search`
+- password change, reset mail, and invitations
 
 There is no public registration route. The first administrator is created with `npm run admin:create` in `backend/`, from a private password. That command is not an HTTP route and it is not in the OpenAPI document. OpenAPI for the routes above is at `/api/docs`.

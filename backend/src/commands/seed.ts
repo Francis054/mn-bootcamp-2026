@@ -13,6 +13,8 @@ import {
 } from '../modules/curriculum/repositories.js';
 import { SeedService } from '../modules/curriculum/seed.service.js';
 import { TrackEntity } from '../modules/curriculum/track.entity.js';
+import { ContentSingletonEntity } from '../modules/content/content.entity.js';
+import { ContentRepository } from '../modules/content/content.repository.js';
 import { EventEntity } from '../modules/events/event.entity.js';
 import { EventRepository } from '../modules/events/event.repository.js';
 import { MediaEntity } from '../modules/gallery/media.entity.js';
@@ -49,6 +51,7 @@ export async function runSeed(options: SeedIO = {}): Promise<number> {
         new ProjectRepository(dataSource.getRepository(ProjectEntity)),
         new EventRepository(dataSource.getRepository(EventEntity)),
         new MediaRepository(dataSource.getRepository(MediaEntity)),
+        new ContentRepository(dataSource.getRepository(ContentSingletonEntity)),
       );
       await seed.run();
       stdout('Sample curriculum is ready.');
