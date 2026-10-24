@@ -1,0 +1,451 @@
+Maxim Nyansa 2026 bootcamp — deploy checklist
+Plain steps for a first launch. Nothing here is a password or an API key.
+Use the dev branch. Do not deploy main.
+
+You already have free accounts signed in with GitHub (Francis054):
+- Supabase project mn-bootcamp-2026, ref psxzqwztgjkqnnncxddc, region eu-central-1.
+  The database password stays in your password manager. It is not in this file.
+- Render, with no services yet. The Render GitHub App is not granted this repo yet.
+- Cloudinary, cloud name i5rrintk.
+- Resend, with no API key and no domain yet.
+
+The site and the API share ONE public address. Pages live on that address.
+The API lives at /api/v1 on that same address. Cookies will not work if the
+browser talks to two different hosts.
+
+Architecture, and why:
+A Render Static Site serves frontend/. A Render Web Service (Free) runs backend/.
+On the static site, a Rewrite rule sends /api/v1/* to the API service.
+A rewrite is not a redirect. Render's docs say the browser stays on the original
+address and cannot tell the content came from somewhere else
+(https://render.com/docs/redirects-rewrites, checked 24 October 2026).
+A redirect would be a 301 and would put cookies on the API host, where this
+site would not send them. onrender.com is a public suffix, so two
+*.onrender.com names do not share cookies either.
+This was checked in the docs. It was not tried on a live Render account.
+Step 16 checks it. If that check fails, stop and read step 17.
+
+You can use the free name https://YOUR-SITE.onrender.com before you buy a domain.
+
+1. Give Render access to this repo only.
+   a. Open https://dashboard.render.com while signed in as the GitHub user Francis054.
+   b. Start a new Web Service. When Render asks for GitHub, choose to configure
+      the GitHub App.
+   c. On GitHub, grant the Render app access only to Francis054/mn-bootcamp-2026.
+      Do not grant all repositories.
+   d. Come back to Render and select that repository. Branch: dev.
+
+2. Create the API as a Web Service.
+   a. Root directory: backend
+   b. Runtime: Node
+   c. Instance type: Free
+   d. Build command: npm ci --include=dev && npm run build
+   e. Start command: npm start
+   f. Health check path: /api/v1/health
+   g. Add an environment variable NODE_VERSION with the value 22
+   The build installs dev tools on purpose. The TypeScript compiler and the
+   migration runner live there. The running app still needs NODE_ENV=production,
+   which you set in the next step.
+
+3. Open the API service, go to Environment, and add every variable below.
+   Paste them only there. Do not put them in git, in a pull request, in chat,
+   or on the static site. Leave a variable blank when the example says blank.
+   Do not set PORT. Render sets PORT itself. If you set PORT=3000 the service
+   will listen on the wrong port.
+
+   NODE_ENV
+     What: tells the app it is in production. Cookies then use Secure, the
+       session secret is required, database SSL defaults on, and one proxy hop
+       is trusted.
+     Example: production
+     Where: type it. Render also has a runtime default, but set it here so it
+       is visible.
+
+   DATABASE_URL
+     What: the Postgres connection. Use the Supabase session pooler, port 5432.
+     Where to get it:
+       1. Open the Supabase project mn-bootcamp-2026.
+       2. Click Connect.
+       3. Choose Session pooler. The port in that string is 5432.
+       4. Copy the host from that dialog. Do not guess it from eu-central-1.
+          Supabase says the host is not something you can build from the region.
+       5. The user is postgres.psxzqwztgjkqnnncxddc
+       6. Replace the password placeholder with the database password you saved.
+          If the password contains @ # ? or a space, encode it for a URL
+          (a space becomes %20, @ becomes %40, # becomes %23).
+     Example shape, password not included:
+       postgresql://postgres.psxzqwztgjkqnnncxddc:YOUR_PASSWORD@HOST_FROM_THE_CONNECT_DIALOG:5432/postgres?sslmode=require
+     Do not use port 6543. That is the transaction pooler, and this app keeps
+     a database session. Do not use db.psxzqwztgjkqnnncxddc.supabase.co.
+     On the free plan that direct host is IPv6, and Render's free service is IPv4.
+     Docs: https://supabase.com/docs/guides/database/connecting-to-postgres
+
+   DATABASE_SSL
+     What: encrypt the database connection and check the certificate.
+     Example: true
+     The app turns true into Node TLS with rejectUnauthorized turned on.
+     It uses Node's built-in certificate list. There is no variable for a
+     Supabase CA file. Also keep sslmode=require on DATABASE_URL, which is
+     what Supabase asks for so the driver will not fall back to plaintext.
+     If the service crashes with a certificate error, stop. Do not set this
+     to false to hide the error.
+
+   FRONTEND_URL
+     What: the one website address, scheme and host, no path on the end.
+     Example for the first launch: https://YOUR-SITE.onrender.com
+     You will not know YOUR-SITE until step 6. You can type a placeholder now
+     and come back after the static site exists. The API refuses to boot in
+     production if this is empty. CORS allows only this origin.
+     When you add a real domain later, change this to that https address.
+
+   SESSION_SECRET
+     What: a long random string the server uses to hash session cookies.
+       At least 32 characters. Never a sentence you use elsewhere.
+     How to make one, on your computer, not on a website:
+       Mac or VS Code bash: openssl rand -base64 32
+       Windows PowerShell:
+         [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))
+     Example shape only, do not use this value: a string of 32 or more random characters
+     Paste the command's output into Render. Do not commit it. Do not send it in chat.
+
+   LOG_LEVEL
+     What: how much the process writes to the log.
+     Example: info
+     Do not use silent on the hosted service.
+
+   TRUST_PROXY
+     What: trust one proxy hop so rate limits see the visitor, not Render.
+     Example: true
+
+   RATE_LIMIT_WINDOW_MS
+     What: length of the general rate-limit window, in milliseconds.
+     Example: 60000
+
+   RATE_LIMIT_MAX
+     What: how many requests one address may make in that window.
+       Health checks are not counted.
+     Example: 300
+
+   SESSION_IDLE_TTL_MS
+     What: how long a session may sit unused, in milliseconds.
+     Example: 1800000
+     That is 30 minutes.
+
+   SESSION_ABSOLUTE_TTL_MS
+     What: how long a session may exist at all, in milliseconds.
+     Example: 43200000
+     That is 12 hours.
+
+   LOGIN_FAILURE_LIMIT
+     What: failed sign-ins for one mailbox before a lock.
+     Example: 5
+
+   LOGIN_LOCK_MS
+     What: how long that lock lasts, in milliseconds.
+     Example: 60000
+
+   LOGIN_IP_FAILURE_LIMIT
+     What: failed sign-ins from one address before a lock.
+     Example: 30
+
+   UPLOAD_MAX_BYTES
+     What: largest photo upload, in bytes. The ceiling is 10485760 (10 MB).
+     Example: 5242880
+     That is 5 MB, which is also the default if you leave it blank.
+
+   CLOUDINARY_CLOUD_NAME
+     What: which Cloudinary account receives photos.
+     Value you already have: i5rrintk
+     Where to confirm: Cloudinary console, the cloud name on the dashboard
+       or under Settings, API Keys. It is not a secret. Image URLs contain it.
+
+   CLOUDINARY_API_KEY
+     What: the Cloudinary API key, together with the secret.
+     Where: Cloudinary console, Settings, API Keys. Reveal the key there.
+     Example shape: a short number string from that page. Do not paste the real one here.
+     All three Cloudinary variables must be set, or all three left blank.
+     If they are blank in production, the site still boots and uploads are refused.
+
+   CLOUDINARY_API_SECRET
+     What: the Cloudinary API secret.
+     Where: the same API Keys page. Reveal the secret there.
+     Example shape: a long random string from that page. Do not paste the real one here.
+     Paste it only in this Environment tab.
+
+   RESEND_API_KEY
+     What: lets the API send invitation and password-reset mail.
+     Where: you do not have a key yet. In Resend, create an API key and copy it once.
+     Example shape: re_ followed by a long random string. Do not paste a real key here.
+     Leave this blank until step 13. Both Resend variables must be set, or both blank.
+     If they are blank in production, the site still boots and no email is sent.
+
+   EMAIL_FROM
+     What: the From address on those emails. It must be on a domain Resend has verified.
+     Example: Bootcamp <hello@your-domain>
+     Leave this blank until the domain in step 13 shows verified.
+     Do not invent a From address on a domain you have not verified. Resend will reject it.
+
+   ADMIN_EMAIL
+     What: read only by the one-time admin:create command, not by the running server.
+     Example: you@example.com
+     You can skip this on the service and pass the mailbox on the command line in step 10.
+
+   ADMIN_BOOTSTRAP_PASSWORD
+     What: the first administrator password, read only by that same command.
+     Do not add this to the Environment tab. It would stay there after you are done.
+     Step 10 types it once in a private shell.
+
+   Leave every other box empty.
+
+4. Save the environment. Let the first deploy run. It will fail health checks
+   until the database has tables. That is expected. Do the migration in step 5
+   before you treat the service as ready.
+
+5. Create the tables. Do not run npm run seed. That command is sample data for
+   your own computer only.
+   Render's docs say the Pre-Deploy Command box is for paid web services
+   (https://render.com/docs/deploys, checked 24 October 2026).
+   a. If your Free service still shows a Pre-Deploy Command box, set it to:
+        npm run migration:run
+      and deploy again. Then skip the rest of this step.
+   b. If there is no such box, open a terminal on your computer in the backend
+      folder, after npm install. Do not write the production URL into a file
+      you might commit. In that terminal only, set DATABASE_URL to the same
+      session-pooler string, DATABASE_SSL to true, NODE_ENV to production,
+      FRONTEND_URL to the site origin, and SESSION_SECRET to the same secret
+      you put in Render. Then run:
+        npm run migration:run
+      Close the terminal when it finishes so the URL is not left on screen.
+      The command prints migration results. It does not print the URL.
+
+6. Create the website as a Static Site on the same Render account.
+   a. Repository Francis054/mn-bootcamp-2026, branch dev.
+   b. Root directory: frontend
+   c. Build command: npm ci && npm run build
+   d. Publish directory: dist
+   e. Environment: do not add VITE_USE_MOCK_API. Do not add any secret.
+      The production file in the repo tells the build to call the live API
+      and leaves the fixture store off. Vite bakes VITE_ values into the
+      public JavaScript at build time. A secret there would be public.
+   f. Redirects/Rewrites, top to bottom:
+      1. Source /api/v1/*   Destination https://YOUR-API.onrender.com/api/v1/*
+         Action: Rewrite
+      2. Source /*          Destination /index.html
+         Action: Rewrite
+      YOUR-API is the hostname of the web service from step 2, not the static site.
+      The first rule must be above the second. Rewrite, not Redirect.
+   g. Deploy. Copy the static site's https://....onrender.com address.
+
+7. Go back to the API Environment tab. Set FRONTEND_URL to that static site
+   address, including https:// and with no path. Save, and let the API redeploy.
+
+8. Confirm the free name works before you buy a domain.
+   Open https://YOUR-SITE.onrender.com in a browser. The page should load.
+   The homepage may say it is not published yet. That is correct. You have
+   not published content, and you did not seed the hosted database.
+
+9. Keep the free web service awake.
+   Render spins a free web service down after 15 minutes with no inbound
+   request, and waking takes about a minute. A GitHub Action pings the public
+   health URL every 14 minutes.
+   The script is backend/scripts/keep-alive.mjs. The workflow is
+   .github/workflows/keep-alive.yml. Both are already on the dev branch.
+   a. On GitHub, open Francis054/mn-bootcamp-2026.
+      Go to Settings, then Secrets and variables, then Actions, then the
+      Variables tab (not Secrets).
+      Add a repository variable named KEEPALIVE_URL.
+      The value is the full health address of the SITE, not the API hostname:
+        https://YOUR-SITE.onrender.com/api/v1/health
+      It is a variable, not a secret, because the address is public.
+      Do not put a password or a token in it.
+   b. GitHub runs scheduled workflows only from the default branch, and only
+      when the workflow file is on that branch. The default branch is main,
+      and main is empty, so the schedule will not run until you change that.
+      Pick one.
+      Option 1: Settings, then General, then Default branch. Switch it from
+        main to dev.
+      Option 2: Leave main as the default. Add only these two files to main,
+        at those same paths:
+          .github/workflows/keep-alive.yml
+          backend/scripts/keep-alive.mjs
+        Do not merge the rest of dev into main for this.
+      These notes do not change the default branch and do not push to main.
+   c. After the variable is set, you can run it by hand: Actions, Keep alive,
+      Run workflow, on the dev branch. A green run prints a status and a time.
+      It does not print secrets. If the variable is still empty, the script
+      says so and the run stays green.
+   d. GitHub's docs say a schedule can start late when Actions is busy,
+      especially at the start of each hour, and a queued run can be dropped.
+      A cold start is still possible now and then. A free pinger outside
+      GitHub is a more reliable backup. cron-job.org and UptimeRobot can GET
+      the same health URL every 5 minutes.
+      On a public repository, GitHub also turns a schedule off after 60 days
+      with no activity in the repository.
+   e. Hours, checked on 24 October 2026 at https://render.com/docs/free :
+      a workspace gets 750 free instance hours per calendar month.
+      A service uses those hours only while it is running. A spun-down
+      service does not. One service that stays up all month uses 720 hours
+      in a 30-day month and 744 in a 31-day month, so it fits, with a few
+      hours to spare. A second free web service that also stays up all month
+      does not fit. The static site does not use these hours.
+
+10. Create the first administrator, once, in private.
+   Do not put the password in git, in Render's saved environment, or in chat.
+   The password needs at least 12 characters, with a letter and a number.
+   It must not be the mailbox.
+   a. On the API service, open the Shell if Render shows one.
+      If the shell can hide typing, run:
+        npm run admin:create -- you@example.com
+      Type the password at "Password:" and again at "Password again:".
+      Nothing you type is shown.
+   b. If the shell says it cannot hide a typed password, do not pass
+      --password. The command refuses that so the password is not saved in
+      shell history. For that one command only, set ADMIN_BOOTSTRAP_PASSWORD
+      in the shell, run npm run admin:create -- you@example.com, then unset
+      the variable before you leave.
+   c. Or do the same from your computer, with the production DATABASE_URL
+      exported in that terminal only, the same way as step 5. Run the command
+      from the backend folder. Then close the terminal.
+   The only success lines are "Administrator account is ready." or
+   "Administrator password updated." The mailbox and the password are not printed.
+   A second run with --rotate changes the password for that same mailbox.
+
+11. Add Cloudinary, if you want photo uploads. The site boots without it, and
+    uploads fail until these three are set.
+    a. In the Cloudinary console, open Settings, then API Keys.
+    b. Confirm the cloud name is i5rrintk.
+    c. Copy the API key and the API secret from that page.
+    d. Paste them into the API service Environment as CLOUDINARY_API_KEY and
+       CLOUDINARY_API_SECRET. CLOUDINARY_CLOUD_NAME is i5rrintk.
+    e. Save and redeploy the API. Do not put these on the static site.
+
+12. You can skip Resend until you have a domain to send from. Until both
+    RESEND_API_KEY and EMAIL_FROM are set, password resets and invitations
+    do not send mail. The API still starts.
+
+13. When you are ready for mail:
+    a. In Resend, add the domain you will send from.
+    b. Resend shows DNS records, including SPF and DKIM. Add those records at
+       the company that hosts that domain's DNS. Wait until Resend shows the
+       domain as verified. Do not copy sample records from this file. Use the
+       ones Resend shows you.
+    c. Create an API key in Resend.
+    d. On the API service, set RESEND_API_KEY to that key.
+    e. Set EMAIL_FROM to an address on the verified domain, for example
+       Bootcamp <hello@your-domain>
+    f. Save and redeploy. Do not commit the key.
+
+14. A custom domain is optional. The onrender.com address already works.
+    a. On the static site, open Settings, then Custom Domains, and add the name.
+    b. At your DNS host, add the records Render shows. That is a CNAME for www
+       and an A or ALIAS record for the apex. Use Render's values. They can
+       change, so do not reuse an old IP from a blog post.
+    c. Wait until Render says the certificate is ready. HTTPS is then on.
+    d. Pick one address, either www or the apex. Redirect the other to it.
+       Cookies are for one host only. They are not shared between www and the apex.
+    e. Change FRONTEND_URL on the API to that exact https address, with no path.
+       Save and redeploy the API.
+    f. You do not rebuild the website for FRONTEND_URL. That variable is read
+       by the API, not by the JavaScript bundle.
+
+15. Free limits, as published on 24 October 2026. Check the pages again before
+    you depend on them. They are not a bill, and they are not a guarantee.
+    a. Render free web services sleep after 15 minutes with no visitors and
+       take about a minute to wake. The first click after a nap can look stuck.
+       A workspace gets 750 free instance hours a month, and only while a
+       service is running. One service kept awake all month uses 720 hours
+       in a 30-day month and 744 in a 31-day month, so it fits. A second
+       always-on free web service does not. Static sites do not use these
+       hours, and they do not sleep that way. See step 9.
+       Source: https://render.com/docs/free
+    b. Supabase free projects pause after about a week of low activity.
+       The pricing page says 1 week, a 500 MB database, and 2 active projects.
+       The pausing guide says you get a warning email and can press Resume.
+       Sources: https://supabase.com/pricing
+       and https://supabase.com/docs/guides/platform/free-project-pausing
+    c. Cloudinary free includes 25 credits a month. One credit is 1,000
+       transformations, or 1 GB of storage, or 1 GB of image bandwidth.
+       On the free plan, video bandwidth is 1 GB per credit as well.
+       Transformations and bandwidth are counted over a rolling 30 days.
+       Sources: https://cloudinary.com/pricing
+       and https://cloudinary.com/documentation/billing_and_plans
+    d. Resend free is 100 emails per UTC day and 3,000 per month. Mail you
+       receive counts too. Each recipient on one message counts separately.
+       Sources: https://resend.com/pricing
+       and https://resend.com/docs/knowledge-base/account-quotas-and-limits
+    How long Supabase keeps backups on the free plan was not confirmed.
+    Open the project's Backups page before you rely on a restore.
+
+16. Smoke test, on the static site address, not on the API hostname.
+    a. Open https://YOUR-SITE.onrender.com/api/v1/health
+       You want "status": "ok" and "database": "up".
+       In a terminal: curl -sI https://YOUR-SITE.onrender.com/api/v1/health
+       The status must not be 301 or 302. A redirect means the rewrite is wrong.
+       Fix the rule in step 6 before you continue.
+    b. Open the homepage. "The homepage is not published yet." is expected.
+    c. Open /admin/login and sign in with the administrator from step 10.
+       In the browser's cookie list for YOUR-SITE, you want:
+         mn_session, HttpOnly, path /api/v1
+         mn_csrf, not HttpOnly, path /
+       Neither cookie should have a Domain, and neither should belong to the
+       API hostname. If they do, stop. The rewrite is not keeping one origin.
+    d. Sign out with the button in the admin. That sends the CSRF header.
+       You should land signed out, not on a 403 page.
+    e. Open /contact, send a test enquiry, and find it under the admin enquiry
+       list if your account has users.manage. The administrator does.
+    f. After Cloudinary is set, add one photo at /admin/media. It stays off the
+       public gallery until step 18.
+    g. Do not test Resend until step 13 shows the domain as verified.
+
+17. If step 16a or 16c fails, do not switch the website to the API hostname.
+    The cookies are Lax and host-only, and the code does not set SameSite=None.
+    The next free fix is one Web Service that serves both the built website
+    files and /api/v1. This repository does not do that yet. It would be a
+    code change. Two public origins will not keep this sign-in working.
+
+18. Edit content after launch. Sign in at /admin/login.
+    a. Classes, trainees, projects, and events: open the item, set Workflow
+       to Published, and save. A hidden listing stays off the public site.
+       A trainee cannot be published until consent is recorded. Project links
+       are public only when every linked trainee has agreed to share them.
+       The hackathon stays "to be confirmed" when the event says so.
+    b. Homepage (/admin/content), about (/admin/about), and the timeline
+       (/admin/timeline): Save stores a draft. The screens do not have a
+       Publish button. The public page stays empty until you publish.
+       While you are signed in on the site, the browser console can send:
+         const csrf = document.cookie.split('; ').find((row) => row.startsWith('mn_csrf=')).split('=')[1];
+         await fetch('/api/v1/admin/home/publish', { method: 'POST', credentials: 'include', headers: { 'X-CSRF-Token': csrf } });
+       Use /api/v1/admin/about/publish for the about page.
+       Use /api/v1/admin/milestones/publish for the timeline.
+       Each of those returns the published copy. Then reload the public page.
+    c. Photos: /admin/media, Add to library, with a file and alt text that does
+       not name people. The photo is not public yet. Consent and publish are
+       separate. Verifying consent does not publish. The screen can withdraw
+       consent or remove a photo. It does not yet have Verify or Publish buttons.
+       While signed in, with the photo id from the library request:
+         await fetch('/api/v1/admin/media/THE_ID', { method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf }, body: JSON.stringify({ consent: 'verified' }) });
+         await fetch('/api/v1/admin/media/THE_ID/publish', { method: 'POST', credentials: 'include', headers: { 'X-CSRF-Token': csrf } });
+       The public gallery also hides a photo whose listing is hidden.
+    d. Foundation counters: the Settings screen does not edit them. They stay
+       hidden on the public site until an administrator saves them and publishes
+       settings. Only use numbers the Foundation has already confirmed.
+       While signed in, load the current settings, add foundationStats, save,
+       then publish. Each counter is an id (lowercase letters, digits, hyphens),
+       a label, a whole number from zero, and a suffix that may be empty:
+         { "id": "years", "label": "Years", "value": 10, "suffix": "" }
+       PUT /api/v1/admin/settings with the full settings body, including that
+       list. Then POST /api/v1/admin/settings/publish the same way as the homepage.
+       Until that publish, GET /api/v1/public/foundation-stats is an empty list
+       and the site hides the counters.
+
+19. Roll back.
+    a. In Render, open the service that broke and use Rollback. On a free web
+       service, Render's free-plan page says you can roll back only to the two
+       most recent previous deploys. Roll back the static site separately if
+       the website build is the problem, and the API if the API is the problem.
+    b. A rollback does not undo a database migration that already ran.
+       Do not run npm run migration:revert on the hosted database unless you
+       have a backup and you mean to drop what that migration added.
+    c. Supabase free backup retention was not confirmed here. Look at the
+       project's Backups page before you count on a restore.
+    d. After a rollback, run the smoke test in step 16 again.

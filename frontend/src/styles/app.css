@@ -1,0 +1,7 @@
+/* Same roles as the prototype, darkened just enough for WCAG AA. */
+.statement .soft{color:#3E4C46}
+.tbc{color:#7A2918}
+
+.dev-banner{background:#FBF0DC;color:#6A4B12;font-family:var(--font-mono);font-size:12px;letter-spacing:.02em;padding:8px 16px;text-align:center}
+.dev-banner strong{font-weight:700}
+.admin .dev-banner{position:sticky;top:0;z-index:40}

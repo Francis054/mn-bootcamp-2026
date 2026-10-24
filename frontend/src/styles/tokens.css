@@ -1,0 +1,116 @@
+/* ==========================================================================
+   Maxim Nyansa Foundation · 2026 Cybersecurity Bootcamp — Design tokens
+   Verified brand values: lime #88CC00 (logo), site lime #A9CF3E, olive #79A00A,
+   grey #757575, black, light #F5F5F5, Noto Sans. Forest greens, gold and
+   terracotta are extensions proposed for this prototype.
+   ========================================================================== */
+@import url("/assets/fonts/fonts.css");
+
+:root {
+  /* Brand (verified) */
+  --mn-lime: #88CC00;
+  --mn-lime-site: #A9CF3E;
+  --mn-olive: #79A00A;
+  --mn-grey: #757575;
+  --mn-black: #111111;
+  --mn-light: #F5F5F5;
+  --mn-white: #FFFFFF;
+
+  /* Extensions (proposed) */
+  --forest-900: #0A1F16;
+  --forest-800: #0E2A1E;
+  --forest-700: #153826;
+  --forest-600: #1F4D36;
+  --forest-500: #2E6A4B;
+  --lime-600: #6FA800;
+  --lime-200: #DDF0B0;
+  --lime-100: #EEF7D9;
+  --paper: #F6F7F2;
+  --paper-2: #ECEEE4;
+  --ink: #0F1A14;
+  --ink-2: #33403A;
+  --ink-3: #5E6A63;
+  --line: #DCE0D5;
+  --line-dark: rgba(255,255,255,.14);
+  --gold: #D9A441;
+  --gold-100: #F7EBD3;
+  --terracotta: #C8553D;
+  --terracotta-100: #F6DFD9;
+
+  /* Semantic */
+  --bg: var(--mn-white);
+  --surface: var(--mn-white);
+  --surface-alt: var(--paper);
+  --text: var(--ink);
+  --text-muted: var(--ink-3);
+  --accent: var(--mn-lime);
+  --accent-ink: var(--forest-800);
+  --focus: #2F7DF6;
+  --success: #2E8B57;
+  --success-bg: #E3F3EA;
+  --warning: #B7791F;
+  --warning-bg: #FBF0DC;
+  --danger: #C2412D;
+  --danger-bg: #FBE4DF;
+  --info: #2B6CB0;
+  --info-bg: #E3EEF9;
+
+  /* Type */
+  --font-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Noto Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  --fs-display: clamp(3rem, 7.2vw, 7rem);      /* 112 */
+  --fs-h1: clamp(2.5rem, 5.2vw, 4.75rem);      /* 76 */
+  --fs-h2: clamp(2rem, 3.6vw, 3.25rem);        /* 52 */
+  --fs-h3: clamp(1.5rem, 2.2vw, 2rem);         /* 32 */
+  --fs-h4: 1.375rem;                           /* 22 */
+  --fs-lead: clamp(1.125rem, 1.4vw, 1.3125rem);/* 21 */
+  --fs-body: 1rem;                             /* 16 */
+  --fs-small: .875rem;                         /* 14 */
+  --fs-label: .75rem;                          /* 12 */
+  --lh-tight: 1.02;
+  --lh-head: 1.1;
+  --lh-body: 1.6;
+  --tracking-tight: -0.035em;
+  --tracking-label: .12em;
+
+  /* Spacing — 8pt scale */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px; --s-6: 32px;
+  --s-7: 40px; --s-8: 48px; --s-9: 64px; --s-10: 80px; --s-11: 96px; --s-12: 128px; --s-13: 160px;
+  --section-y: clamp(72px, 10vw, 144px);
+
+  /* Grid */
+  --container: 1312px;
+  --gutter: clamp(20px, 4vw, 64px);
+  --grid-gap: clamp(16px, 2vw, 24px);
+
+  /* Radii */
+  --r-xs: 4px; --r-sm: 8px; --r-md: 12px; --r-lg: 20px; --r-xl: 32px; --r-pill: 999px;
+
+  /* Elevation */
+  --shadow-1: 0 1px 2px rgba(15,26,20,.06), 0 1px 1px rgba(15,26,20,.04);
+  --shadow-2: 0 6px 18px -6px rgba(15,26,20,.14), 0 2px 6px rgba(15,26,20,.05);
+  --shadow-3: 0 24px 60px -20px rgba(15,26,20,.28), 0 8px 20px -8px rgba(15,26,20,.12);
+  --ring: 0 0 0 3px rgba(136,204,0,.45);
+
+  /* Motion */
+  --ease-out: cubic-bezier(.16, 1, .3, 1);       /* expo-out: reveals */
+  --ease-in-out: cubic-bezier(.65, 0, .35, 1);   /* transitions */
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);/* tiny overshoot: toggles */
+  --d-instant: 100ms;
+  --d-fast: 180ms;
+  --d-base: 280ms;
+  --d-slow: 520ms;
+  --d-reveal: 900ms;
+  --d-draw: 2200ms;
+  --stagger: 70ms;
+
+  --header-h: 76px;
+  --sidebar-w: 256px;
+  --sidebar-w-collapsed: 76px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --d-fast: 1ms; --d-base: 1ms; --d-slow: 1ms; --d-reveal: 1ms; --d-draw: 1ms; --stagger: 0ms; }
+}
