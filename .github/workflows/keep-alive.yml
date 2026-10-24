@@ -1,7 +1,6 @@
 # Pings the public health URL so a free Render web service does not sit idle
-# for 15 minutes. GitHub runs this schedule only from the repository default
-# branch. main is empty today, so the schedule does nothing until the default
-# branch is dev, or until this file and the script are also on main.
+# for 15 minutes. GitHub runs this schedule from the default branch, which
+# is main. Set the repository variable KEEPALIVE_URL to the public health URL.
 name: Keep alive
 
 on:

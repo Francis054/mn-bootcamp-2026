@@ -117,7 +117,7 @@ Run those against the database in `DATABASE_URL`. They do not choose a database 
 
 ## Keep the free service awake
 
-`scripts/keep-alive.mjs` sends one GET to the public health URL in `KEEPALIVE_URL` and logs the HTTP status and how long it took. It never prints a query string, a password, or a token. If `KEEPALIVE_URL` is unset, it says so and exits 0, so the job can exist before the site is deployed. The GitHub Actions workflow at the repository root, `.github/workflows/keep-alive.yml`, runs that script every 14 minutes. GitHub runs that schedule only from the repository default branch. The setup steps are in the deploy checklist on `dev`.
+`scripts/keep-alive.mjs` sends one GET to the public health URL in `KEEPALIVE_URL` and logs the HTTP status and how long it took. It never prints a query string, a password, or a token. If `KEEPALIVE_URL` is unset, it says so and exits 0, so the job can exist before the site is deployed. The GitHub Actions workflow at the repository root, `.github/workflows/keep-alive.yml`, runs that script every 14 minutes. GitHub runs that schedule only from the repository default branch. The setup steps are in `DEPLOY-CHECKLIST.txt`. Deploy from `main`.
 
 ## Tests
 
