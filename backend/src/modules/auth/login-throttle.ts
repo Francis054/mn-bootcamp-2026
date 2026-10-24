@@ -1,3 +1,6 @@
+/** Same sentence for a known mailbox and an unknown one. */
+export const TOO_MANY_REQUESTS = 'Too many requests. Wait a minute and try again.';
+
 export interface ThrottleState {
   failureCount: number;
   lockedUntil: Date | null;

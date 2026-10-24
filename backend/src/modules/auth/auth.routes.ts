@@ -1,13 +1,19 @@
 import { Router } from 'express';
 import { validateDto } from '../../shared/validation/validate-dto.js';
 import { CSRF_COOKIE_NAME, SESSION_COOKIE_NAME } from '../../shared/http/cookies.js';
+import { readText } from '../accounts/account.rules.js';
+import type { AccountService } from '../accounts/account.service.js';
 import type { AuthService } from './auth.service.js';
 import { clearAuthCookies, readCookie, setCsrfCookie, setSessionCookie } from './cookies.js';
 import { LoginDto } from './login.dto.js';
 import type { SessionService } from './session.service.js';
 import { newSecretToken } from './tokens.js';
 
-export function authRouter(auth: AuthService, sessions: SessionService): Router {
+export function authRouter(
+  auth: AuthService,
+  sessions: SessionService,
+  accounts: AccountService,
+): Router {
   const router = Router();
 
   router.post('/login', (req, res, next) => {
@@ -39,6 +45,36 @@ export function authRouter(auth: AuthService, sessions: SessionService): Router 
       .then(() => {
         clearAuthCookies(res);
         res.status(204).send();
+      })
+      .catch(next);
+  });
+
+  router.post('/password-reset/request', (req, res, next) => {
+    accounts
+      .requestReset({
+        email: readText(req.body, 'email'),
+        ip: req.ip ?? 'unknown',
+        requestId: req.id,
+        now: new Date(),
+      })
+      .then((result) => {
+        res.status(200).json(result);
+      })
+      .catch(next);
+  });
+
+  router.post('/password-reset/complete', (req, res, next) => {
+    accounts
+      .completeReset({
+        token: readText(req.body, 'token'),
+        password: readText(req.body, 'password'),
+        confirm: readText(req.body, 'confirm'),
+        ip: req.ip ?? 'unknown',
+        requestId: req.id,
+        now: new Date(),
+      })
+      .then((result) => {
+        res.status(200).json(result);
       })
       .catch(next);
   });

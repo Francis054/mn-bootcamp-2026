@@ -1,5 +1,8 @@
 import type { AppEnv } from '../config/env.js';
 import { createDataSource } from '../database/data-source.js';
+import { AccountService } from '../modules/accounts/account.service.js';
+import { AccessTokenEntity } from '../modules/auth/access-token.entity.js';
+import { AccessTokenRepository } from '../modules/auth/access-token.repository.js';
 import { AuditRepository } from '../modules/auth/audit.repository.js';
 import { AuditEventEntity } from '../modules/auth/audit-event.entity.js';
 import { AuthService } from '../modules/auth/auth.service.js';
@@ -26,12 +29,17 @@ import { TrackEntity } from '../modules/curriculum/track.entity.js';
 import { ContentSingletonEntity } from '../modules/content/content.entity.js';
 import { ContentRepository } from '../modules/content/content.repository.js';
 import { ContentService } from '../modules/content/content.service.js';
+import { EnquiryEntity } from '../modules/enquiries/enquiry.entity.js';
+import { EnquiryRepository } from '../modules/enquiries/enquiry.repository.js';
+import { EnquiryService } from '../modules/enquiries/enquiry.service.js';
 import { EventEntity } from '../modules/events/event.entity.js';
 import { EventRepository } from '../modules/events/event.repository.js';
 import { EventService } from '../modules/events/event.service.js';
 import { MediaEntity } from '../modules/gallery/media.entity.js';
 import { MediaRepository } from '../modules/gallery/media.repository.js';
 import { MediaService } from '../modules/gallery/media.service.js';
+import { createMail } from '../modules/mail/create-mail.js';
+import type { EmailProvider } from '../modules/mail/email-provider.js';
 import { createStorage } from '../modules/storage/create-storage.js';
 import type { StorageProvider } from '../modules/storage/storage-provider.js';
 import { ProjectEntity } from '../modules/projects/project.entity.js';
@@ -60,6 +68,7 @@ export class AppContainer {
   readonly authRouter: Router;
   readonly curriculumRouter: Router;
   readonly storage: StorageProvider;
+  readonly mail: EmailProvider;
 
   constructor(
     readonly env: AppEnv,
@@ -76,12 +85,16 @@ export class AppContainer {
     media: MediaService,
     storage: StorageProvider,
     content: ContentService,
+    mail: EmailProvider,
+    accounts: AccountService,
+    enquiries: EnquiryService,
   ) {
     this.health = new HealthService(dataSource, logger);
     this.users = users;
     this.sessions = sessions;
     this.storage = storage;
-    this.authRouter = authRouter(auth, sessions);
+    this.mail = mail;
+    this.authRouter = authRouter(auth, sessions, accounts);
     this.curriculumRouter = curriculumRouter(
       catalogue,
       lessons,
@@ -92,6 +105,8 @@ export class AppContainer {
       env.uploadMaxBytes,
       content,
       sessions,
+      accounts,
+      enquiries,
     );
   }
 
@@ -111,10 +126,40 @@ export class AppContainer {
       env.sessionAbsoluteTtlMs,
     );
     const audit = new AuditRepository(dataSource.getRepository(AuditEventEntity));
+    const throttles = new LoginThrottleRepository(dataSource);
+    const mail = createMail(env);
+    const contentRepository = new ContentRepository(
+      dataSource.getRepository(ContentSingletonEntity),
+    );
+    const accounts = new AccountService(
+      users,
+      userRepository,
+      sessions,
+      new AccessTokenRepository(dataSource.getRepository(AccessTokenEntity)),
+      throttles,
+      audit,
+      hasher,
+      mail,
+      env.sessionSecret,
+      env.frontendUrl,
+      {
+        failureLimit: env.loginFailureLimit,
+        ipFailureLimit: env.loginIpFailureLimit,
+        lockMs: env.loginLockMs,
+      },
+    );
+    const enquiries = new EnquiryService(
+      new EnquiryRepository(dataSource.getRepository(EnquiryEntity)),
+      contentRepository,
+      mail,
+      throttles,
+      audit,
+      { failureLimit: env.loginFailureLimit, lockMs: env.loginLockMs },
+    );
     const auth = new AuthService(
       users,
       sessions,
-      new LoginThrottleRepository(dataSource),
+      throttles,
       audit,
       hasher,
       logger,
@@ -165,10 +210,7 @@ export class AppContainer {
       audit,
       () => new Date(),
     );
-    const contentService = new ContentService(
-      new ContentRepository(dataSource.getRepository(ContentSingletonEntity)),
-      audit,
-    );
+    const contentService = new ContentService(contentRepository, audit);
     const storage = createStorage(env);
     const mediaService = new MediaService(
       new MediaRepository(dataSource.getRepository(MediaEntity)),
@@ -192,6 +234,9 @@ export class AppContainer {
       mediaService,
       storage,
       contentService,
+      mail,
+      accounts,
+      enquiries,
     );
   }
 

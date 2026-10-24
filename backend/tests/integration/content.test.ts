@@ -77,7 +77,11 @@ describe('content singletons', () => {
     expect(milestones.body).toEqual([]);
     const stats = await request(app).get('/api/v1/public/foundation-stats').expect(200);
     expect(stats.body).toEqual([]);
-    await request(app).post('/api/v1/public/enquiries').send({ name: 'Ada' }).expect(404);
+    const enquiry = await request(app)
+      .post('/api/v1/public/enquiries')
+      .send({ name: 'Ada' })
+      .expect(422);
+    expect(readError(enquiry.body).code).toBe('validation');
   });
 
   it('lets a viewer read the homepage draft and refuses settings', async () => {

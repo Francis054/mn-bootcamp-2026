@@ -115,4 +115,22 @@ describe('loadEnv', () => {
       expect(message).not.toContain('example-cloud');
     }
   });
+
+  it('leaves mail unset until both values are present, and does not repeat a partial value', () => {
+    const blank = loadEnv(
+      { DATABASE_URL: 'postgres://127.0.0.1:5432/mn_bootcamp' },
+      { loadDotenv: false },
+    );
+    expect(blank.resendApiKey).toBeUndefined();
+    expect(blank.emailFrom).toBeUndefined();
+    expect.assertions(5);
+    try {
+      loadEnv(productionSource({ RESEND_API_KEY: 'secret-key-value' }), { loadDotenv: false });
+    } catch (error) {
+      expect(error).toBeInstanceOf(EnvError);
+      const message = error instanceof Error ? error.message : '';
+      expect(message).toBe('RESEND_API_KEY and EMAIL_FROM must both be set, or both left blank.');
+      expect(message).not.toContain('secret-key-value');
+    }
+  });
 });

@@ -57,6 +57,10 @@ export class SessionService {
     return { user: toPublicUser(user), sessionId: id, expiresAt: session.expiresAt.toISOString() };
   }
 
+  async revokeOthers(userId: string, keepSessionId: string | null): Promise<void> {
+    await this.sessions.deleteOthers(userId, keepSessionId);
+  }
+
   async revoke(token: string): Promise<string | null> {
     if (!this.secret) return null;
     const id = sessionTokenHash(token, this.secret);
