@@ -1,0 +1,42 @@
+# Pings the public health URL so a free Render web service does not sit idle
+# for 15 minutes. GitHub runs this schedule only from the repository default
+# branch. main is empty today, so the schedule does nothing until the default
+# branch is dev, or until this file and the script are also on main.
+name: Keep alive
+
+on:
+  schedule:
+    - cron: "*/14 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout the keep-alive script
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            scripts/keep-alive.mjs
+            backend/scripts/keep-alive.mjs
+          sparse-checkout-cone-mode: false
+
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Ping the public health URL
+        env:
+          KEEPALIVE_URL: ${{ vars.KEEPALIVE_URL }}
+        run: |
+          if [ -f backend/scripts/keep-alive.mjs ]; then
+            node backend/scripts/keep-alive.mjs
+          else
+            node scripts/keep-alive.mjs
+          fi
