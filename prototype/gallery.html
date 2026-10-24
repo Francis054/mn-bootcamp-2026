@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gallery · 2026 Cyber Bootcamp · Maxim Nyansa Foundation</title>
+<meta name="description" content="Photos from Maxim Nyansa Foundation community events.">
+<meta name="theme-color" content="#0E2A1E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2388CC00'/%3E%3Cpath d='M16 6l8 3v6c0 5-3.4 8.4-8 10.4C11.4 23.4 8 20 8 15V9z' fill='none' stroke='%230E2A1E' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/tokens.css"><link rel="stylesheet" href="css/components.css"><link rel="stylesheet" href="css/pages.css">
+</head>
+<body data-root="" data-page="gallery" data-header-tone="light">
+<a class="skip-link" href="#main">Skip to content</a>
+<header id="site-header"></header>
+<main id="main"><section class="page-hero" style="padding-bottom:var(--s-8)">
+  <div class="container">
+    <ol class="crumbs" data-reveal><li><a href="index.html">Home</a></li><li aria-current="page">Gallery</li></ol>
+    <div class="split" style="align-items:end">
+      <div class="split__a" style="grid-column:1 / span 7"><span class="eyebrow" data-reveal>Gallery</span><h1 class="h1" style="margin-top:20px" data-split>Moments worth<br>remembering.</h1></div>
+      <div class="split__b" style="grid-column:9 / span 4"><p class="lead" data-reveal>Tap any photo to open it. Use the arrow keys to browse and Esc to close.</p><p class="muted" style="font-size:14px;margin-top:12px" data-reveal>People in these photos are not named. Usage rights and consent are to be confirmed before launch.</p></div>
+    </div>
+  </div>
+</section>
+<section class="section" style="padding-top:var(--s-7)">
+  <div class="container">
+    <div class="toolbar">
+      <div class="tabs" role="tablist" aria-label="Filter photos" id="tabs">
+        <button class="tab" role="tab" aria-selected="true" data-c="">All</button><button class="tab" role="tab" aria-selected="false" data-c="anniversary">10th anniversary</button><button class="tab" role="tab" aria-selected="false" data-c="hackathon">Hackathon (TBC)</button><button class="tab" role="tab" aria-selected="false" data-c="community">Community</button>
+      </div>
+      <span class="result-count" id="count" aria-live="polite"></span>
+    </div>
+    <div class="masonry" id="grid" data-lb-scope></div>
+  </div>
+</section>
+</main>
+<footer id="site-footer"></footer>
+<script src="js/data.js"></script><script src="js/components.js"></script><script>
+(function(){
+  const grid=document.getElementById('grid');
+  grid.innerHTML=MN.PHOTOS.map((p,i)=>`<button class="m-item" data-lb="${p.f}" data-c="${p.cat}" aria-label="Open photo: ${p.cap}" data-reveal="scale" style="--i:${i%6}"><img src="${MN.img(p.f,800)}" srcset="${MN.img(p.f,800)} 800w, ${MN.img(p.f,1600)} 1600w" sizes="(max-width:560px) 50vw, 33vw" alt="${p.cap}" width="${p.w}" height="${p.h}" loading="lazy" decoding="async"><figcaption>${p.cap}<br><span style="opacity:.7;font-family:var(--font-mono);font-size:11px">${MN.PHOTO_CATS[p.cat]}</span></figcaption></button>`).join('');
+  document.getElementById('tabs').addEventListener('tabchange',e=>{const c=e.detail.dataset.c;const n=MN.filterItems([...grid.children],el=>!c||el.dataset.c===c);document.getElementById('count').textContent=`${n} photos`;});
+  const m=location.hash.match(/open=(\d+)/); if(m) setTimeout(()=>grid.children[+m[1]]&&grid.children[+m[1]].click(),400);
+})();
+</script><script src="js/motion.js"></script>
+</body>
+</html>

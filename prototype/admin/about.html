@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About page · Admin · 2026 Cyber Bootcamp · Maxim Nyansa Foundation</title>
+<meta name="description" content="Design prototype for the Maxim Nyansa Foundation 2026 Cybersecurity Bootcamp community website.">
+<meta name="theme-color" content="#0E2A1E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2388CC00'/%3E%3Cpath d='M16 6l8 3v6c0 5-3.4 8.4-8 10.4C11.4 23.4 8 20 8 15V9z' fill='none' stroke='%230E2A1E' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../css/tokens.css"><link rel="stylesheet" href="../css/components.css"><link rel="stylesheet" href="../css/pages.css"><link rel="stylesheet" href="../css/admin.css">
+</head>
+<body data-root="../" data-page="" class="admin " data-admin="about" data-crumbs="Site content>content.html|About page">
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="admin-shell"><aside id="admin-sidebar"></aside><div class="admin-body"><header id="admin-topbar"></header>
+<main id="main" class="admin-main"><div class="a-head"><div><h1>About page</h1><p>Mission, vision, values and contact details, as published on maximnyansa.com.</p></div><div class="a-head__actions"><a class="btn btn--ghost btn--sm" href="../about.html" target="_blank"><svg class="i i--sm"><use href="#i-eye"/></svg>Preview</a></div></div>
+<form id="f" novalidate>
+<div class="error-summary" role="alert"></div>
+<div class="form-layout">
+  <div class="form-stack">
+    <section class="panel"><div class="panel__head"><h2>Mission &amp; vision</h2><span class="badge badge--success"><span class="dot"></span>Verified source</span></div><div class="panel__body form-stack">
+      <div class="field"><label for="mi">Mission *</label><textarea class="textarea" id="mi" required maxlength="200" data-req="The mission statement is required.">To create career perspectives for young people with the use of information technology.</textarea></div>
+      <div class="field"><label for="vi">Vision *</label><textarea class="textarea" id="vi" required maxlength="200" data-req="The vision statement is required.">Investing in young Africans, empowering them with relevant IT skills to drive personal, market, and innovative growth.</textarea></div>
+    </div></section>
+    <section class="panel"><div class="panel__head"><h2>Values</h2><span class="result-count">Drag to reorder</span></div><div class="panel__body"><ul class="drag-list" id="vals"></ul></div></section>
+    <section class="panel"><div class="panel__head"><h2>Contact</h2></div><div class="panel__body form-grid">
+      <div class="field full"><label for="ad">Address</label><input class="input" id="ad" value="Coral Avenue – Tantra Hills, Accra, Ghana"></div>
+      <div class="field"><label for="em">Public email *</label><input class="input" id="em" type="email" required data-req="Enter a valid email." value="mninfo@maximnyansa.com"></div>
+      <div class="field"><label for="ws">Website *</label><input class="input" id="ws" type="url" required data-req="Enter a valid URL." value="https://maximnyansa.com/"></div>
+    </div></section>
+  </div>
+  <aside class="form-side">
+    <section class="panel"><div class="panel__head"><h2>Foundation figures</h2></div><div class="panel__body"><p style="font-size:14px;color:var(--ink-3)">Self-reported figures from the Foundation site. Shown with a label until permission to display is confirmed.</p><div class="pub-row" style="margin-top:8px"><span>Permission confirmed</span><label class="switch"><input type="checkbox" id="perm"><span class="track"></span></label></div><div class="pub-row"><span>Public label</span><span id="pl"></span></div></div></section>
+    <section class="panel"><div class="panel__head"><h2>Official logo</h2></div><div class="panel__body"><div id="lg"></div><p style="font-size:13px;color:var(--ink-3);margin-top:10px">200 × 41 PNG from maximnyansa.com. Use unaltered, on light surfaces. A higher-resolution or vector file is still needed.</p></div></section>
+  </aside>
+</div>
+<div class="savebar"><span class="status">All changes saved · prototype</span><a class="btn btn--ghost btn--sm" href="index.html">Cancel</a><button class="btn btn--dark btn--sm" type="submit">Save about page</button></div>
+</form>
+</main></div></div>
+<script src="../js/data.js"></script><script src="../js/components.js"></script><script src="../js/admin.js"></script><script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const vals=['Empowerment','Family','Hope','Quality','Synergy','Practicality','Humility','Equality'];
+  const up='<svg class="i i--sm" aria-hidden="true" style="transform:rotate(180deg)"><use href="#i-chevron-down"/></svg>';
+  $('vals').innerHTML=vals.map((v,i)=>`<li class="drag-item" draggable="true"><button type="button" class="drag-handle" aria-label="Reorder ${v}. Use arrow keys">${MN.icon('drag','i--sm')}</button><span class="yr">${String(i+1).padStart(2,'0')}</span><div><b>${v}</b></div><div class="actions"><button type="button" class="icon-btn" data-move="-1" aria-label="Move ${v} up">${up}</button><button type="button" class="icon-btn" data-move="1" aria-label="Move ${v} down">${MN.icon('chevron-down','i--sm')}</button></div></li>`).join('');
+  const ren=()=>{ const li=[...$('vals').children]; li.forEach((l,i)=>{ l.querySelector('.yr').textContent=String(i+1).padStart(2,'0'); l.querySelector('[data-move="-1"]').disabled=!i; l.querySelector('[data-move="1"]').disabled=i===li.length-1; }); $('f').dispatchEvent(new Event('input',{bubbles:true})); };
+  MN.A.dragList($('vals'),ren); ren(); document.querySelector('.savebar').classList.remove('is-dirty'); document.querySelector('.savebar .status').textContent='All changes saved · prototype';
+  const pl=()=>$('pl').innerHTML=MN.A.badge($('perm').checked?'verified':'tbc'); $('perm').addEventListener('change',pl); pl();
+  $('lg').innerHTML=MN.officialLogo(200);
+  MN.A.form($('f'),{savedMsg:'About page saved'});
+})();
+</script><script src="../js/motion.js"></script>
+</body>
+</html>

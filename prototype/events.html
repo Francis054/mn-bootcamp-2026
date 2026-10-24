@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Events · 2026 Cyber Bootcamp · Maxim Nyansa Foundation</title>
+<meta name="description" content="Events and milestones around the 2026 Cybersecurity Bootcamp and the Foundation's 10th anniversary.">
+<meta name="theme-color" content="#0E2A1E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2388CC00'/%3E%3Cpath d='M16 6l8 3v6c0 5-3.4 8.4-8 10.4C11.4 23.4 8 20 8 15V9z' fill='none' stroke='%230E2A1E' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/tokens.css"><link rel="stylesheet" href="css/components.css"><link rel="stylesheet" href="css/pages.css">
+</head>
+<body data-root="" data-page="events" data-header-tone="light" class="light-ev">
+<a class="skip-link" href="#main">Skip to content</a>
+<header id="site-header"></header>
+<main id="main"><section class="page-hero">
+  <div class="container">
+    <ol class="crumbs" data-reveal><li><a href="index.html">Home</a></li><li aria-current="page">Events</li></ol>
+    <div class="split" style="align-items:end">
+      <div class="split__a" style="grid-column:1 / span 7"><span class="eyebrow" data-reveal>Events &amp; milestones</span><h1 class="h1" style="margin-top:20px" data-split>Where the cohort<br>meets the community.</h1></div>
+      <div class="split__b" style="grid-column:9 / span 4"><p class="lead" data-reveal>Each event is marked as verified, sample or to be confirmed.</p></div>
+    </div>
+  </div>
+</section>
+<section class="section" style="padding-top:var(--s-7)">
+  <div class="container">
+    <div class="toolbar">
+      <div class="chips" role="group" aria-label="Filter events" id="chips">
+        <button class="chip" aria-pressed="true" data-f="all">All</button><button class="chip" aria-pressed="false" data-f="upcoming">Upcoming</button><button class="chip" aria-pressed="false" data-f="past">Past</button><button class="chip" aria-pressed="false" data-f="Anniversary">Anniversary</button><button class="chip" aria-pressed="false" data-f="Milestone">Milestones</button>
+      </div>
+      <span class="result-count" id="count" aria-live="polite"></span>
+    </div>
+    <div class="ev-list" id="list"></div>
+    <div class="empty" id="empty" hidden><div class="empty__art"><svg class="i i--lg"><use href="#i-calendar"/></svg></div><h3>No events in this view</h3></div>
+  </div>
+</section>
+</main>
+<footer id="site-footer"></footer>
+<script src="js/data.js"></script><script src="js/components.js"></script><script>
+(function(){
+  const list=document.getElementById('list');
+  list.innerHTML=MN.EVENTS.map(e=>{const d=new Date(e.date+'T00:00:00Z'), past=d<MN.TODAY;return `<a class="ev" href="event.html?id=${e.id}" data-kind="${e.kind}" data-when="${past?'past':'upcoming'}">
+    <div class="ev__date"><b>${e.tbc?'TBC':String(d.getUTCDate()).padStart(2,'0')}</b><span>${e.tbc?(e.id==='graduation'?'Dec 2026':'Oct 2026'):MN.fmt(d,{day:undefined,month:'short',year:'numeric'})}</span></div>
+    <div><div class="flex wrap" style="gap:8px;margin-bottom:10px"><span class="tag">${e.kind}</span>${e.verified?'<span class="verified">Verified</span>':e.tbc?'<span class="tbc">Details to be confirmed</span>':'<span class="ph">Sample</span>'}${past?'<span class="badge">Past</span>':'<span class="badge badge--lime">Upcoming</span>'}</div><h3>${e.title}</h3><div class="ev__meta"><span>${MN.icon('clock','i--sm')}${e.when}</span><span>${MN.icon('map-pin','i--sm')}${e.place}</span></div></div>
+    <div class="ev__img"><img src="${MN.img(e.img,800)}" alt="" width="800" height="533" loading="lazy"></div><span class="go">${MN.icon('arrow-right')}</span></a>`}).join('');
+  const chips=[...document.querySelectorAll('#chips .chip')];
+  const apply=f=>{const n=MN.filterItems([...list.children],el=>f==='all'||el.dataset.when===f||el.dataset.kind===f,document.getElementById('empty'));document.getElementById('count').textContent=`${n} events`;};
+  chips.forEach(c=>c.addEventListener('click',()=>{chips.forEach(x=>x.setAttribute('aria-pressed',x===c));apply(c.dataset.f)})); apply('all');
+})();
+</script><script src="js/motion.js"></script>
+</body>
+</html>

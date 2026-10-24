@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Motion spec · 2026 Cyber Bootcamp · Maxim Nyansa Foundation</title>
+<meta name="description" content="Every animation in the prototype: trigger, duration, easing and reduced-motion fallback.">
+<meta name="theme-color" content="#0E2A1E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2388CC00'/%3E%3Cpath d='M16 6l8 3v6c0 5-3.4 8.4-8 10.4C11.4 23.4 8 20 8 15V9z' fill='none' stroke='%230E2A1E' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/tokens.css"><link rel="stylesheet" href="css/components.css"><link rel="stylesheet" href="css/pages.css">
+</head>
+<body data-root="" data-page="motion-spec" data-header-tone="light" class="docs">
+<a class="skip-link" href="#main">Skip to content</a>
+<header id="site-header"></header>
+<main id="main"><section class="page-hero" style="padding-bottom:var(--s-7)">
+  <div class="container">
+    <ol class="crumbs" data-reveal><li><a href="index-of-screens.html">All screens</a></li><li aria-current="page">Motion spec</li></ol>
+    <div class="split" style="align-items:end">
+      <div class="split__a" style="grid-column:1 / span 7"><span class="eyebrow" data-reveal>Reference · motion</span><h1 class="h1" style="margin-top:20px" data-split>Motion spec</h1></div>
+      <div class="split__b" style="grid-column:9 / span 4"><p class="lead" data-reveal>Motion is used to show change and guide attention, never as decoration. It only animates transform, opacity and clip-path, and nothing runs constantly off-screen.</p></div>
+    </div>
+  </div>
+</section>
+<section class="section" style="padding-top:var(--s-8)">
+  <div class="container">
+    <div class="ms-principles" data-stagger>
+      <div class="card" style="padding:24px"><span class="label">01</span><h2 class="h4" style="margin:8px 0">Purposeful</h2><p class="muted" style="font-size:14.5px">Every animation explains a change in state, place or progress.</p></div>
+      <div class="card" style="padding:24px"><span class="label">02</span><h2 class="h4" style="margin:8px 0">Fast to respond</h2><p class="muted" style="font-size:14.5px">Interaction feedback stays under 300 ms. Only content entrances are slower.</p></div>
+      <div class="card" style="padding:24px"><span class="label">03</span><h2 class="h4" style="margin:8px 0">Cheap to run</h2><p class="muted" style="font-size:14.5px">Only transform, opacity and clip-path. Ambient loops pause when off-screen.</p></div>
+      <div class="card" style="padding:24px"><span class="label">04</span><h2 class="h4" style="margin:8px 0">Optional</h2><p class="muted" style="font-size:14.5px">With <code class="mono">prefers-reduced-motion</code>, content appears in its final state.</p></div>
+    </div>
+
+    <div class="ms-bar">
+      <p id="rm-status" class="muted" aria-live="polite" style="margin:0"></p>
+      <div class="chips" role="group" aria-label="Filter animations by area" id="ms-chips">
+        <button class="chip" type="button" aria-pressed="true" data-a="all">All</button>
+        <button class="chip" type="button" aria-pressed="false" data-a="Public">Public</button>
+        <button class="chip" type="button" aria-pressed="false" data-a="Admin">Admin</button>
+        <button class="chip" type="button" aria-pressed="false" data-a="Shared">Shared</button>
+      </div>
+    </div>
+
+    <div class="table-wrap"><table class="table spec-table table--cards ms-table" id="ms">
+      <caption class="sr-only">Animation specification</caption>
+      <thead><tr><th scope="col">Animation</th><th scope="col">Trigger</th><th scope="col">Duration</th><th scope="col">Easing</th><th scope="col">Reduced motion</th><th scope="col"><span class="sr-only">See it</span></th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+    <p class="muted" style="margin-top:20px;font-size:14px">Easing tokens: <code class="mono">ease-out</code> = cubic-bezier(.16,1,.3,1) · <code class="mono">ease-in-out</code> = cubic-bezier(.65,0,.35,1) · <code class="mono">ease-spring</code> = cubic-bezier(.34,1.56,.64,1). The global fallback in <code class="mono">components.css</code> sets every animation and transition to 1 ms under reduced motion, and <code class="mono">motion.js</code> skips its scroll-driven effects.</p>
+  </div>
+</section>
+</main>
+<footer id="site-footer"></footer>
+<script src="js/data.js"></script><script src="js/components.js"></script><script>
+(function(){
+  const A=[
+    ['Hero headline line reveal','Public','Home and page heroes','Page load. Each line slides up out of a mask.','1000ms; +110ms per line; 120ms start delay','ease-out','Lines shown immediately','index.html'],
+    ['Hero image mask entrance','Public','Home hero, detail pages','When the image\'s parent enters the viewport. Clip-path opens upward while the image settles from 1.18× scale.','1200ms clip, 1600ms scale; +120ms stagger','ease-out','Image shown unmasked, no scale','index.html'],
+    ['Scroll reveals (staggered)','Public','All public pages','IntersectionObserver at 8% from the bottom of the viewport. Fade and rise 28px, once only.','900ms; 70ms stagger, groups cycle every 8 items','ease-out','No transform; opacity 1','trainees.html'],
+    ['Header turns solid','Public','All public pages','Scroll past 24px: transparent to solid with a shadow. Hides on a fast downward scroll past 640px and returns on scroll up.','280ms','ease-out','Colour change only, 1ms','index.html'],
+    ['Page transition','Public','Internal links','Click an internal link: a forest veil wipes up (420ms) and the next page\'s main content fades in and rises 14px (640ms).','420ms out, 640ms in','ease-in-out / ease-out','Normal navigation, no veil','about.html'],
+    ['Nav dropdown','Public','Header · Bootcamp menu','Hover (160ms close delay), click, or ArrowDown. Fades and drops 8px; the chevron rotates.','280ms','ease-out','Instant show and hide','bootcamp.html'],
+    ['Mobile menu','Public','Header at 1180px and below','Toggle button: a circular clip-path grows from the button, then links rise in sequence. The bars morph into an ×.','520ms; links +40ms each','ease-out','Menu appears instantly','index.html'],
+    ['Button hover','Shared','All buttons','Hover: a fill slides up from the bottom and the arrow nudges 4px. Press scales to 0.97.','280ms; press 100ms','ease-out','Colour swap only','design-system.html#ds-buttons'],
+    ['Card hover','Public','Cards and row links','Hover/focus: lift 4px, shadow-2, the photo zooms over 900ms. Row links get a paper fill from the bottom and a photo peek.','280ms; image 900ms','ease-out','Border colour only','classes.html'],
+    ['Timeline progress','Public','Journey','Scroll: the lime line follows the reading position (60% of viewport height). Milestones mark as reached when passed; the current week pulses.','120ms linear per frame; pulse 2.4s loop','linear / ease-out','Line drawn to the end, all reached, no pulse','journey.html'],
+    ['Milestone reveal','Public','Journey, Events','Each milestone card reveals when it enters the viewport.','900ms','ease-out','Shown immediately','journey.html'],
+    ['Journey rail','Public','Home · three-month rail','Drag, scroll or the arrow buttons. The fill bar tracks the scroll position.','Native smooth scroll','browser','Jumps instead of smooth scrolling','index.html'],
+    ['Lightbox open / close','Public','Gallery, event photos','Click a photo: the backdrop fades and the image scales from 0.94. Escape or × closes and returns focus to the photo.','280ms backdrop; 520ms image','ease-out','Instant open and close','gallery.html'],
+    ['Lightbox navigation','Public','Gallery lightbox','Arrow buttons, ←/→ keys or a swipe of more than 50px: the image fades out to 0.98 scale, swaps, then fades back in.','180ms out, then 520ms in','ease-out','Instant swap','gallery.html'],
+    ['Tab / filter transitions','Shared','Classes, Trainees, Gallery, admin tabs','Select a tab or chip: the lime ink slides to it; the panel fades and rises 10px; filtered items fade out and back in.','280ms ink; 520ms panel','ease-out','Instant change','classes.html'],
+    ['"10" drawing','Public','10 Years page','Enters the viewport: gold strokes draw in, then terracotta accents and a soft fill. A Replay button restarts it.','2200ms; accents +1200ms; fill +2200ms','ease-in-out','Drawn in its final state','anniversary.html'],
+    ['Verified count-up','Public','About · verified figures only','60% visible: counts from 0 to the verified number.','1600ms','quartic ease-out','Final number shown','about.html'],
+    ['Network-line drift','Public','Dark hero backgrounds','Slow ambient drift. Pauses when off-screen or under reduced motion.','38s alternate loop','linear','Static','index.html'],
+    ['Marquee','Public','Home · modules strip','Continuous scroll; pauses on hover.','48s loop','linear','Static, wrapped list','index.html'],
+    ['Light parallax','Public','Selected photos','Scroll: up to 8% vertical offset, once per animation frame.','Per frame','none','Disabled','index.html'],
+    ['Sidebar collapse','Admin','Admin at 961px and wider','Collapse button: the grid column animates from 264px to 76px and labels hide (tooltips on hover).','280ms','ease-out','Instant','admin/index.html'],
+    ['Mobile drawer','Admin','Admin at 960px and below','Menu button: the sidebar slides in from the left over a scrim. Escape or the scrim closes it and returns focus.','320ms','ease-out','Instant','admin/classes.html'],
+    ['Modal','Shared','Confirm delete, timeline editor','Open: the backdrop fades and blurs; the dialog rises 16px from 0.97 scale. Focus moves inside and is trapped; Escape cancels.','280ms','ease-out','Instant','admin/classes.html'],
+    ['Toast','Shared','Save, delete, export','Enters from the bottom (16px, 0.96 scale); leaves sliding right after 4.2s, or on close.','280ms in / out','ease-out / ease-in-out','Instant','admin/states.html'],
+    ['Row removal','Admin','Tables after a confirmed delete','The row fades and slides 20px right, then is removed.','520ms','ease-in-out','Removed instantly','admin/trainees.html'],
+    ['Form feedback','Admin','All edit forms','On submit: invalid fields turn red and an error summary appears and receives focus; the save button shows a spinner, then a toast. The sticky savebar status switches to "Unsaved changes" as soon as a field is edited.','180ms field; spinner 0.7s loop','ease-out / linear','Static states; spinner stops','admin/class-edit.html'],
+    ['Skeleton loading','Admin','States page','A shimmer sweeps across placeholders until the data loads.','1.4s loop','linear','Static grey blocks','admin/states.html'],
+    ['Switch toggle','Shared','Forms','The thumb slides with a slight overshoot; the track colour fades.','280ms','ease-spring','Instant','admin/settings.html']
+  ];
+  const tb=document.querySelector('#ms tbody'); const rel=u=>u;
+  const draw=f=>{ tb.innerHTML=A.filter(a=>f==='all'||a[1]===f).map(a=>`<tr>
+    <td class="cell-primary"><b>${a[0]}</b><div class="muted" style="font-size:13px;margin-top:4px"><span class="tag">${a[1]}</span> ${a[2]}</div></td>
+    <td data-label="Trigger">${a[3]}</td><td data-label="Duration" class="mono" style="font-size:13px">${a[4]}</td><td data-label="Easing" class="mono" style="font-size:13px">${a[5]}</td><td data-label="Reduced">${a[6]}</td>
+    <td class="cell-actions"><a class="link" href="${rel(a[7])}" aria-label="See ${a[0]} on its page">See it ${MN.icon('arrow-right','i--sm')}</a></td></tr>`).join(''); };
+  draw('all');
+  document.querySelectorAll('#ms-chips .chip').forEach(c=>c.addEventListener('click',()=>{ document.querySelectorAll('#ms-chips .chip').forEach(x=>x.setAttribute('aria-pressed',x===c)); draw(c.dataset.a); }));
+  const st=document.getElementById('rm-status');
+  const upd=()=>{ st.innerHTML = MN.reduced() ? `${MN.icon('check-circle','i--sm')} Your device asks for <b>reduced motion</b>. You are seeing the fallbacks.` : `${MN.icon('info','i--sm')} Full motion is on. Turn on "reduce motion" in your OS settings to see the fallbacks.`; };
+  upd(); matchMedia('(prefers-reduced-motion: reduce)').addEventListener?.('change',upd);
+})();
+</script><script src="js/motion.js"></script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Projects &amp; labs · Admin · 2026 Cyber Bootcamp · Maxim Nyansa Foundation</title>
+<meta name="description" content="Design prototype for the Maxim Nyansa Foundation 2026 Cybersecurity Bootcamp community website.">
+<meta name="theme-color" content="#0E2A1E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2388CC00'/%3E%3Cpath d='M16 6l8 3v6c0 5-3.4 8.4-8 10.4C11.4 23.4 8 20 8 15V9z' fill='none' stroke='%230E2A1E' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../css/tokens.css"><link rel="stylesheet" href="../css/components.css"><link rel="stylesheet" href="../css/pages.css"><link rel="stylesheet" href="../css/admin.css">
+</head>
+<body data-root="../" data-page="" class="admin " data-admin="projects" data-crumbs="Projects">
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="admin-shell"><aside id="admin-sidebar"></aside><div class="admin-body"><header id="admin-topbar"></header>
+<main id="main" class="admin-main"><div class="a-head"><div><h1>Projects &amp; labs</h1><p>Sample projects. Real work is added once teams finish and agree to share.</p></div><div class="a-head__actions"><button class="btn btn--ghost btn--sm" type="button" onclick="MN.toast('Export is simulated','A CSV would download here')"><svg class="i i--sm"><use href="#i-download"/></svg>Export</button><a class="btn btn--dark btn--sm" href="project-edit.html?new=1"><svg class="i i--sm"><use href="#i-plus"/></svg>New</a></div></div>
+<section class="panel">
+  <div class="a-toolbar"><div class="input-icon"><svg class="i i--sm"><use href="#i-search"/></svg><input class="input" type="search" id="q" placeholder="Search projects…" aria-label="Search projects"></div><select class="select" id="f-ty" aria-label="Type"><option value="">All types</option><option>Lab</option><option>CTF</option><option>Case study</option><option>Community project</option><option>Capstone</option></select><span class="spacer"></span><span class="result-count" id="count" aria-live="polite"></span></div>
+  <div class="bulkbar" id="bulk"><b><span data-n>0</span> selected</b><button class="btn btn--sm btn--xs" type="button" data-bulk-pub>Publish</button><button class="btn btn--danger btn--xs" type="button" data-bulk-del>Delete</button><button class="btn btn--ghost-light btn--xs" type="button" data-bulk-clear style="margin-left:auto">Clear</button></div>
+  <div class="table-wrap"><table class="table table--cards" id="t">
+<thead><tr><th class="chk"><input type="checkbox" class="all-chk" aria-label="Select all"></th><th data-sort="title">Project</th><th data-sort="type">Type</th><th>Module</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead><tbody></tbody></table></div>
+  <div class="panel__foot"><span>Sample data</span></div>
+</section>
+</main></div></div>
+<script src="../js/data.js"></script><script src="../js/components.js"></script><script src="../js/admin.js"></script><script>
+MN.A.table({el:document.getElementById('t'),data:MN.PROJECTS,noun:'projects',search:document.getElementById('q'),count:document.getElementById('count'),bulk:document.getElementById('bulk'),
+  filters:[{el:document.getElementById('f-ty'),get:d=>d.type}],text:d=>d.title+' '+d.type,primary:d=>d.title,
+  row:p=>`<tr data-id="${p.id}"><td class="chk"><input type="checkbox" class="row-chk" aria-label="Select ${MN.A.esc(p.title)}"></td><td class="cell-primary"><div class="cell-main"><span class="thumb" style="display:block;overflow:hidden">${MN.cover(p.cover,'')}</span><div><b><a href="project-edit.html?id=${p.id}" style="color:inherit">${p.title}</a></b><small>2026 cohort</small></div></div></td><td data-label="Type"><span class="tag">${p.type}</span></td><td data-label="Module">${MN.mod(p.module).short}</td><td data-label="Status">${MN.A.badge(p.id<3?'review':'draft')}</td><td class="cell-actions"><div class="actions"><a class="icon-btn" href="../project.html?id=${p.id}" aria-label="Preview">${MN.icon('eye','i--sm')}</a><a class="icon-btn" href="project-edit.html?id=${p.id}" aria-label="Edit ${MN.A.esc(p.title)}">${MN.icon('edit','i--sm')}</a><button class="icon-btn danger" type="button" data-del aria-label="Delete ${MN.A.esc(p.title)}">${MN.icon('trash','i--sm')}</button></div></td></tr>`});
+</script><script src="../js/motion.js"></script>
+</body>
+</html>

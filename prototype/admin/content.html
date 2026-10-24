@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Homepage content · Admin · 2026 Cyber Bootcamp · Maxim Nyansa Foundation</title>
+<meta name="description" content="Design prototype for the Maxim Nyansa Foundation 2026 Cybersecurity Bootcamp community website.">
+<meta name="theme-color" content="#0E2A1E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2388CC00'/%3E%3Cpath d='M16 6l8 3v6c0 5-3.4 8.4-8 10.4C11.4 23.4 8 20 8 15V9z' fill='none' stroke='%230E2A1E' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../css/tokens.css"><link rel="stylesheet" href="../css/components.css"><link rel="stylesheet" href="../css/pages.css"><link rel="stylesheet" href="../css/admin.css">
+</head>
+<body data-root="../" data-page="" class="admin " data-admin="content" data-crumbs="Site content>content.html|Homepage hero">
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="admin-shell"><aside id="admin-sidebar"></aside><div class="admin-body"><header id="admin-topbar"></header>
+<main id="main" class="admin-main"><div class="a-head"><div><h1>Homepage hero</h1><p>Edit the first thing visitors see. The preview updates as you type.</p></div><div class="a-head__actions"><a class="btn btn--ghost btn--sm" href="../index.html" target="_blank"><svg class="i i--sm"><use href="#i-external"/></svg>View live page</a></div></div>
+<div class="tabs" role="tablist" aria-label="Content sections" style="margin-bottom:20px"><button class="tab" role="tab" aria-selected="true" aria-controls="p-hero" id="t-hero">Hero</button><button class="tab" role="tab" aria-selected="false" aria-controls="p-ann" id="t-ann">Announcement bar</button><button class="tab" role="tab" aria-selected="false" aria-controls="p-cta" id="t-cta">Footer CTA</button></div>
+<form id="f" novalidate>
+<div class="error-summary" role="alert"></div>
+<div class="editor" id="p-hero" role="tabpanel" aria-labelledby="t-hero">
+  <div class="editor__form">
+    <section class="panel"><div class="panel__body form-stack">
+      <div class="field"><label for="ey">Eyebrow</label><input class="input" id="ey" maxlength="48" value="Free · in person · Accra"></div>
+      <div class="field"><label for="hd">Headline *</label><input class="input" id="hd" required maxlength="70" data-req="The hero needs a headline." value="Defend what matters. Start in Accra."><span class="hint">Wrap words in *asterisks* to highlight them in lime.</span></div>
+      <div class="field"><label for="sb">Supporting text</label><textarea class="textarea" id="sb" maxlength="200">The 2026 Cyber Security Bootcamp by Maxim Nyansa Foundation — free, hands-on training for young people.</textarea></div>
+      <div class="form-grid"><div class="field"><label for="cl">Button label *</label><input class="input" id="cl" required maxlength="24" data-req="Add a button label." value="Follow the journey"></div><div class="field"><label for="cu">Button link</label><input class="input" id="cu" value="journey.html"></div></div>
+      <div class="field"><span class="field-label" id="th-l">Theme</span><div class="seg" id="th" role="group" aria-labelledby="th-l"><button type="button" data-v="dark" aria-pressed="true">Forest</button><button type="button" data-v="light" aria-pressed="false">Paper</button></div></div>
+    </div></section>
+    <div class="callout callout--lime"><svg class="i"><use href="#i-info"/></svg><div>Copy here is sample wording. Final copy should be approved by the Foundation.</div></div>
+  </div>
+  <div class="preview" aria-label="Live preview">
+    <div class="preview__bar"><div class="preview__dots" aria-hidden="true"><i></i><i></i><i></i></div><div class="seg" id="dev" role="group" aria-label="Preview device"><button type="button" data-v="desktop" aria-pressed="true">Desktop</button><button type="button" data-v="tablet" aria-pressed="false">Tablet</button><button type="button" data-v="mobile" aria-pressed="false">Mobile</button></div></div>
+    <div class="preview__frame" id="fr" data-device="desktop"><div class="pv-hero" id="pv"><span class="pv-eyebrow" id="pv-ey"></span><h2 id="pv-hd"></h2><p id="pv-sb"></p><span class="btn btn--primary btn--sm" id="pv-cl"></span></div><div class="pv-body"><div><b>12 weeks</b>Sample length</div><div><b>6 modules</b>Sample plan</div><div><b>Free</b>For trainees</div></div></div>
+  </div>
+</div>
+<section class="panel" id="p-ann" role="tabpanel" aria-labelledby="t-ann" hidden><div class="panel__body form-stack" style="max-width:640px"><div class="field"><label for="an">Announcement text</label><input class="input" id="an" value="Hackathon details to be confirmed — check back soon" maxlength="90" disabled></div><div class="pub-row"><span>Show bar</span><label class="switch"><input type="checkbox" disabled><span class="track"></span></label></div><p style="color:var(--ink-3);font-size:14px"><svg class="i i--sm"><use href="#i-lock"/></svg> Shown for layout review only — this editor is not built in the prototype.</p></div></section>
+<section class="panel" id="p-cta" role="tabpanel" aria-labelledby="t-cta" hidden><div class="panel__body form-stack" style="max-width:640px"><div class="field"><label for="ct">CTA heading</label><input class="input" id="ct" value="Support the Foundation’s work with young people" disabled></div><div class="field"><label for="cb">Button link</label><input class="input" id="cb" value="https://maximnyansa.com/get-involved/" disabled></div><p style="color:var(--ink-3);font-size:14px"><svg class="i i--sm"><use href="#i-lock"/></svg> Shown for layout review only — this editor is not built in the prototype.</p></div></section>
+<div class="savebar"><span class="status">All changes saved · prototype</span><button class="btn btn--ghost btn--sm" type="button" id="rv">Revert</button><button class="btn btn--dark btn--sm" type="submit">Publish changes</button></div>
+</form>
+</main></div></div>
+<script src="../js/data.js"></script><script src="../js/components.js"></script><script src="../js/admin.js"></script><script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const init={ey:$('ey').value,hd:$('hd').value,sb:$('sb').value,cl:$('cl').value};
+  const fl=el=>{el.classList.remove('pv-flash');void el.offsetWidth;el.classList.add('pv-flash');};
+  const upd=e=>{ $('pv-ey').textContent=$('ey').value; $('pv-hd').innerHTML=MN.A.esc($('hd').value).replace(/\*(.+?)\*/g,'<em>$1</em>')||'<span style="opacity:.4">Headline</span>'; $('pv-sb').textContent=$('sb').value; $('pv-cl').textContent=$('cl').value||'Button'; if(e) fl({ey:$('pv-ey'),hd:$('pv-hd'),sb:$('pv-sb'),cl:$('pv-cl')}[e.target.id]||$('pv')); };
+  ['ey','hd','sb','cl'].forEach(i=>$(i).addEventListener('input',upd)); upd();
+  MN.A.seg($('th'),v=>{ $('pv').classList.toggle('is-light',v==='light'); $('f').dispatchEvent(new Event('input')); });
+  MN.A.seg($('dev'),v=>$('fr').dataset.device=v);
+  $('rv').onclick=()=>MN.confirm({title:'Revert unsaved changes?',text:'Your edits will be replaced with the last published version.',ok:'Revert',danger:false}).then(ok=>{ if(!ok)return; Object.entries(init).forEach(([k,v])=>$(k).value=v); upd(); MN.toast('Changes reverted'); });
+  MN.A.form($('f'),{savedMsg:'Homepage updated'});
+})();
+</script><script src="../js/motion.js"></script>
+</body>
+</html>

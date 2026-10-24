@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trainees · Admin · 2026 Cyber Bootcamp · Maxim Nyansa Foundation</title>
+<meta name="description" content="Design prototype for the Maxim Nyansa Foundation 2026 Cybersecurity Bootcamp community website.">
+<meta name="theme-color" content="#0E2A1E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2388CC00'/%3E%3Cpath d='M16 6l8 3v6c0 5-3.4 8.4-8 10.4C11.4 23.4 8 20 8 15V9z' fill='none' stroke='%230E2A1E' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../css/tokens.css"><link rel="stylesheet" href="../css/components.css"><link rel="stylesheet" href="../css/pages.css"><link rel="stylesheet" href="../css/admin.css">
+</head>
+<body data-root="../" data-page="" class="admin " data-admin="trainees" data-crumbs="Trainees">
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="admin-shell"><aside id="admin-sidebar"></aside><div class="admin-body"><header id="admin-topbar"></header>
+<main id="main" class="admin-main"><div class="a-head"><div><h1>Trainees</h1><p>Profiles stay hidden until each trainee gives written consent.</p></div><div class="a-head__actions"><button class="btn btn--ghost btn--sm" type="button" onclick="MN.toast('Export is simulated','A CSV would download here')"><svg class="i i--sm"><use href="#i-download"/></svg>Export</button><a class="btn btn--dark btn--sm" href="trainee-edit.html?new=1"><svg class="i i--sm"><use href="#i-plus"/></svg>New</a></div></div>
+<section class="panel">
+  <div class="a-toolbar"><div class="input-icon"><svg class="i i--sm"><use href="#i-search"/></svg><input class="input" type="search" id="q" placeholder="Search trainees…" aria-label="Search trainees"></div><select class="select" id="f-tr" aria-label="Track"><option value="">All tracks</option><option>Blue team</option><option>Red team</option><option>GRC &amp; awareness</option></select><select class="select" id="f-fo" aria-label="Focus"><option value="">Any focus</option></select><span class="spacer"></span><span class="result-count" id="count" aria-live="polite"></span></div>
+  <div class="bulkbar" id="bulk"><b><span data-n>0</span> selected</b><button class="btn btn--sm btn--xs" type="button" data-bulk-pub>Publish</button><button class="btn btn--danger btn--xs" type="button" data-bulk-del>Delete</button><button class="btn btn--ghost-light btn--xs" type="button" data-bulk-clear style="margin-left:auto">Clear</button></div>
+  <div class="table-wrap"><table class="table table--cards" id="t">
+<thead><tr><th class="chk"><input type="checkbox" class="all-chk" aria-label="Select all"></th><th data-sort="name">Trainee</th><th data-sort="track">Track</th><th>Focus</th><th>Consent</th><th>Visibility</th><th><span class="sr-only">Actions</span></th></tr></thead><tbody></tbody></table></div>
+  <div class="panel__foot"><span>12 sample profiles · no real trainee data</span><div class="pagination" aria-label="Pagination"><button disabled aria-label="Previous page">‹</button><button aria-current="page">1</button><button disabled aria-label="Next page">›</button></div></div>
+</section>
+</main></div></div>
+<script src="../js/data.js"></script><script src="../js/components.js"></script><script src="../js/admin.js"></script><script>
+(function(){
+  const ff=document.getElementById('f-fo'); ff.innerHTML+=MN.MODULES.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+  MN.A.table({el:document.getElementById('t'),data:MN.TRAINEES,noun:'trainees',search:document.getElementById('q'),count:document.getElementById('count'),bulk:document.getElementById('bulk'),
+    filters:[{el:document.getElementById('f-tr'),get:d=>d.track},{el:ff,get:d=>d.focus}],text:d=>d.name+' '+d.track+' '+d.skills.join(' '),primary:d=>d.name,
+    row:t=>`<tr data-id="${t.id}"><td class="chk"><input type="checkbox" class="row-chk" aria-label="Select ${t.name}"></td><td class="cell-primary"><div class="cell-main">${MN.avatar(t,'sm')}<div><b><a href="trainee-edit.html?id=${t.id}" style="color:inherit">${t.name}</a></b><small>${t.skills.slice(0,2).join(' · ')}</small></div></div></td><td data-label="Track">${t.track}</td><td data-label="Focus">${MN.mod(t.focus).short}</td><td data-label="Consent">${MN.A.badge('consent')}</td><td data-label="Visibility"><span class="badge"><svg class="i i--sm"><use href="#i-lock"/></svg>Hidden</span></td><td class="cell-actions"><div class="actions"><a class="icon-btn" href="../trainee.html?id=${t.id}" aria-label="Preview ${t.name}">${MN.icon('eye','i--sm')}</a><a class="icon-btn" href="trainee-edit.html?id=${t.id}" aria-label="Edit ${t.name}">${MN.icon('edit','i--sm')}</a><button class="icon-btn danger" type="button" data-del aria-label="Delete ${t.name}">${MN.icon('trash','i--sm')}</button></div></td></tr>`});
+})();
+</script><script src="../js/motion.js"></script>
+</body>
+</html>

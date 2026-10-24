@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Classes · Admin · 2026 Cyber Bootcamp · Maxim Nyansa Foundation</title>
+<meta name="description" content="Design prototype for the Maxim Nyansa Foundation 2026 Cybersecurity Bootcamp community website.">
+<meta name="theme-color" content="#0E2A1E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2388CC00'/%3E%3Cpath d='M16 6l8 3v6c0 5-3.4 8.4-8 10.4C11.4 23.4 8 20 8 15V9z' fill='none' stroke='%230E2A1E' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../css/tokens.css"><link rel="stylesheet" href="../css/components.css"><link rel="stylesheet" href="../css/pages.css"><link rel="stylesheet" href="../css/admin.css">
+</head>
+<body data-root="../" data-page="" class="admin " data-admin="classes" data-crumbs="Classes">
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="admin-shell"><aside id="admin-sidebar"></aside><div class="admin-body"><header id="admin-topbar"></header>
+<main id="main" class="admin-main"><div class="a-head"><div><h1>Classes</h1><p>Weekly lessons for the 2026 cohort. Titles and order are samples.</p></div><div class="a-head__actions"><button class="btn btn--ghost btn--sm" type="button" onclick="MN.toast('Export is simulated','A CSV would download here')"><svg class="i i--sm"><use href="#i-download"/></svg>Export</button><a class="btn btn--dark btn--sm" href="class-edit.html?new=1"><svg class="i i--sm"><use href="#i-plus"/></svg>New</a></div></div>
+<section class="panel">
+  <div class="a-toolbar"><div class="input-icon"><svg class="i i--sm"><use href="#i-search"/></svg><input class="input" type="search" id="q" placeholder="Search classes…" aria-label="Search classes"></div><select class="select" id="f-mod" aria-label="Module"><option value="">All modules</option></select><select class="select" id="f-st" aria-label="Status"><option value="">Any status</option><option value="done">Published</option><option value="now">Live this week</option><option value="upcoming">Scheduled</option></select><span class="spacer"></span><span class="result-count" id="count" aria-live="polite"></span></div>
+  <div class="bulkbar" id="bulk"><b><span data-n>0</span> selected</b><button class="btn btn--sm btn--xs" type="button" data-bulk-pub>Publish</button><button class="btn btn--danger btn--xs" type="button" data-bulk-del>Delete</button><button class="btn btn--ghost-light btn--xs" type="button" data-bulk-clear style="margin-left:auto">Clear</button></div>
+  <div class="table-wrap"><table class="table table--cards" id="t">
+<thead><tr><th class="chk"><input type="checkbox" class="all-chk" aria-label="Select all"></th><th data-sort="title">Class</th><th data-sort="week">Week</th><th data-sort="module">Module</th><th>Format</th><th data-sort="status">Status</th><th><span class="sr-only">Actions</span></th></tr></thead><tbody></tbody></table></div>
+  <div class="panel__foot"><span>Showing sample data · 12-week plan TBC</span><div class="pagination" aria-label="Pagination"><button disabled aria-label="Previous page">‹</button><button aria-current="page">1</button><button disabled aria-label="Next page">›</button></div></div>
+</section>
+</main></div></div>
+<script src="../js/data.js"></script><script src="../js/components.js"></script><script src="../js/admin.js"></script><script>
+(function(){
+  const fm=document.getElementById('f-mod'); fm.innerHTML+=MN.MODULES.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+  MN.A.table({el:document.getElementById('t'),data:MN.CLASSES,noun:'classes',search:document.getElementById('q'),count:document.getElementById('count'),bulk:document.getElementById('bulk'),
+    filters:[{el:fm,get:d=>d.module},{el:document.getElementById('f-st'),get:d=>d.status}],text:d=>d.title+' '+MN.mod(d.module).name,primary:d=>d.title,
+    row:c=>`<tr data-id="${c.id}"><td class="chk"><input type="checkbox" class="row-chk" aria-label="Select ${MN.A.esc(c.title)}"></td><td class="cell-primary"><div class="cell-main"><img class="thumb" src="${MN.img(MN.PHOTOS[(c.id*3)%MN.PHOTOS.length].f,800)}" alt="" width="48" height="36" loading="lazy"><div><b><a href="class-edit.html?id=${c.id}" style="color:inherit">${c.title}</a></b><small>${MN.fmt(c.date,{weekday:'short',day:'numeric',month:'short'})}</small></div></div></td><td data-label="Week" class="num">W${String(c.week).padStart(2,'0')}</td><td data-label="Module">${MN.mod(c.module).short}</td><td data-label="Format">${c.format}</td><td data-label="Status">${MN.A.badge(c.status)}</td><td class="cell-actions"><div class="actions"><a class="icon-btn" href="../lesson.html?id=${c.id}" aria-label="Preview ${MN.A.esc(c.title)}">${MN.icon('eye','i--sm')}</a><a class="icon-btn" href="class-edit.html?id=${c.id}" aria-label="Edit ${MN.A.esc(c.title)}">${MN.icon('edit','i--sm')}</a><button class="icon-btn danger" type="button" data-del aria-label="Delete ${MN.A.esc(c.title)}">${MN.icon('trash','i--sm')}</button></div></td></tr>`});
+})();
+</script><script src="../js/motion.js"></script>
+</body>
+</html>

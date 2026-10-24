@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Event · 2026 Cyber Bootcamp · Maxim Nyansa Foundation</title>
+<meta name="description" content="Event detail.">
+<meta name="theme-color" content="#0E2A1E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2388CC00'/%3E%3Cpath d='M16 6l8 3v6c0 5-3.4 8.4-8 10.4C11.4 23.4 8 20 8 15V9z' fill='none' stroke='%230E2A1E' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/tokens.css"><link rel="stylesheet" href="css/components.css"><link rel="stylesheet" href="css/pages.css">
+</head>
+<body data-root="" data-page="events" data-header-tone="light">
+<a class="skip-link" href="#main">Skip to content</a>
+<header id="site-header"></header>
+<main id="main"><section class="detail-hero">
+  <div class="container">
+    <ol class="crumbs" data-reveal><li><a href="index.html">Home</a></li><li><a href="events.html">Events</a></li><li aria-current="page" id="crumb">Event</li></ol>
+    <div class="flex wrap" style="gap:10px;margin-top:24px" data-reveal id="e-flags"></div>
+    <h1 id="e-title" data-reveal></h1>
+    <div class="meta-row" data-reveal><span><svg class="i i--sm"><use href="#i-calendar"/></svg><span id="e-when"></span></span><span><svg class="i i--sm"><use href="#i-map-pin"/></svg><span id="e-place"></span></span></div>
+    <figure class="detail-media mask-reveal"><img id="e-img" src="" alt="" width="1600" height="1067"></figure>
+  </div>
+</section>
+<section class="section" style="padding-top:var(--s-9)">
+  <div class="container split">
+    <div class="split__b" style="grid-column:1 / span 7;grid-row:1">
+      <p class="lead" id="e-sum" data-reveal></p>
+      <div id="e-body" style="margin-top:40px" data-reveal></div>
+    </div>
+    <aside class="split__a" style="grid-column:9 / span 4">
+      <div class="sticky surface" style="padding:24px;border-radius:var(--r-lg);border:1px solid var(--line);background:#fff">
+        <span class="label">Add to your calendar</span>
+        <div class="ev__date" style="margin:16px 0"><b id="e-day" style="font-size:56px"></b><span id="e-mon"></span></div>
+        <button class="btn btn--dark" style="width:100%;justify-content:center" id="ics"><svg class="i i--sm"><use href="#i-download"/></svg>Download .ics</button>
+        <p class="muted" id="ics-note" style="font-size:13px;margin-top:12px">Generated in your browser. Nothing is sent anywhere.</p>
+        <hr style="border:0;border-top:1px solid var(--line);margin:20px 0">
+        <span class="label">Source</span><p style="font-size:14px;margin-top:8px" id="e-src"></p>
+      </div>
+    </aside>
+  </div>
+</section>
+<section class="section section--paper"><div class="container"><div class="sec-head"><div class="sec-head__title"><h2 class="h3">More events</h2></div><div class="sec-head__aside"><a class="link" href="events.html">All events <svg class="i i--sm"><use href="#i-arrow-right"/></svg></a></div></div><div class="lesson-grid" id="more"></div></div></section>
+</main>
+<footer id="site-footer"></footer>
+<script src="js/data.js"></script><script src="js/components.js"></script><script>
+(function(){
+  const e=MN.EVENTS.find(x=>x.id===MN.q('id'))||MN.EVENTS.find(x=>x.id==='durbar'); const $=id=>document.getElementById(id);
+  const d=new Date(e.date+'T00:00:00Z');
+  document.title=e.title+' · 2026 Cyber Bootcamp · Maxim Nyansa Foundation';
+  $('crumb').textContent=e.title; $('e-title').textContent=e.title; $('e-when').textContent=e.when; $('e-place').textContent=e.place; $('e-sum').textContent=e.summary; $('e-img').src=MN.img(e.img,1600);
+  $('e-flags').innerHTML=`<span class="tag">${e.kind}</span>`+(e.verified?'<span class="verified">Verified</span>':e.tbc?'<span class="tbc">Details to be confirmed</span>':'<span class="ph">Sample event</span>');
+  $('e-day').textContent=e.tbc?'TBC':String(d.getUTCDate()).padStart(2,'0'); $('e-mon').textContent=e.tbc?'Date to be confirmed':MN.fmt(d,{weekday:'long',month:'long',year:'numeric'});
+  const src={start:'Bootcamp 2026 announcement — maximnyansa.com and the Foundation’s LinkedIn.',reception:'GNBCC event listing and the Foundation’s anniversary posts.',durbar:'Foundation anniversary posts (programme as published).',hackathon:'STEMAIDE Africa LinkedIn post, 9 Oct 2026 (title only). Date, venue and bootcamp involvement are unconfirmed.',midpoint:'Sample milestone for the prototype.',graduation:'Training ends December 2026 (verified). Event details unconfirmed.'};
+  $('e-src').textContent=src[e.id];
+  const bodies={durbar:'<h2 class="h3" style="margin-bottom:16px">Programme</h2><ol class="steps"><li><h4>Reflections on ten years</h4></li><li><h4>Cybersecurity panel discussion</h4></li><li><h4>Student performances</h4></li><li><h4>Partner recognition</h4></li><li><h4>Networking</h4></li></ol><p class="muted">Order as published by the Foundation; timings within the day are not confirmed.</p>',
+    reception:'<div class="callout"><h3>Hosted with GNBCC</h3><p>An anniversary cocktail reception with the Ghana Netherlands Business &amp; Culture Council, 5–8 PM at GNBCC in Cantonments, Accra.</p></div>',
+    hackathon:'<div class="callout" style="background:#F6E2DC;border-color:#E8C1B6"><h3>Details to be confirmed</h3><p>On 9 Oct 2026 STEMAIDE Africa announced an “AI for Impact” hackathon co-organised with Maxim Nyansa IT Solutions. The date, venue, results and whether bootcamp trainees took part are not confirmed, so this page stays a placeholder.</p></div>',
+    start:'<div class="callout callout--lime"><h3>Day one</h3><p>Training began at the Maxim Nyansa Foundation premises in Tantra Hills, Accra. The bootcamp is free and in person.</p></div>'};
+  $('e-body').innerHTML=bodies[e.id]||'<div class="callout"><p>More details will be added when confirmed. <span class="ph">Placeholder</span></p></div>';
+  if(e.tbc){$('ics').disabled=true;$('ics-note').textContent='Available once the date is confirmed.';}
+  $('ics').addEventListener('click',()=>{const ds=e.date.replace(/-/g,'');const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//MN Bootcamp prototype//EN','BEGIN:VEVENT','UID:'+e.id+'@mn-bootcamp-prototype','DTSTAMP:20261024T000000Z','DTSTART;VALUE=DATE:'+ds,'SUMMARY:'+e.title,'LOCATION:'+e.place.replace(/,/g,'\\,'),'DESCRIPTION:'+e.summary.replace(/,/g,'\\,'),'END:VEVENT','END:VCALENDAR'].join('\r\n');
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));a.download=e.id+'.ics';a.setAttribute('download','');document.body.append(a);a.click();a.remove();MN.toast('Calendar file ready',e.id+'.ics');});
+  $('more').innerHTML=MN.EVENTS.filter(x=>x.id!==e.id).slice(0,3).map(x=>`<a class="card lesson-card" href="event.html?id=${x.id}"><div class="card__media" style="aspect-ratio:16/10"><img src="${MN.img(x.img,800)}" alt="" width="800" height="533" loading="lazy"></div><div class="card__body"><div class="card__meta"><span class="tag">${x.kind}</span></div><h3 class="card__title">${x.title}</h3><p class="muted" style="font-size:14px;margin-top:6px">${x.when}</p></div></a>`).join('');
+})();
+</script><script src="js/motion.js"></script>
+</body>
+</html>
