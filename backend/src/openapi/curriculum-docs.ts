@@ -32,6 +32,40 @@ export const curriculumPaths = {
       responses: { '200': { description: 'Phase list.' } },
     },
   },
+  '/api/v1/public/tracks/{id}': {
+    get: {
+      operationId: 'getPublicTrack',
+      summary: 'One published track',
+      description: 'Returned only when the track is published and its listing is not hidden.',
+      responses: {
+        '200': { description: 'The public track.' },
+        '404': { description: 'Missing or not public.', content: errorRef },
+      },
+    },
+  },
+  '/api/v1/public/modules/{id}': {
+    get: {
+      operationId: 'getPublicModule',
+      summary: 'One published module',
+      description: 'Returned only when the module is published and its listing is not hidden.',
+      responses: {
+        '200': { description: 'The public module.' },
+        '404': { description: 'Missing or not public.', content: errorRef },
+      },
+    },
+  },
+  '/api/v1/public/phases/{id}': {
+    get: {
+      operationId: 'getPublicPhase',
+      summary: 'One published phase',
+      description:
+        'The id is one digit from 1 to 9. Anything else is 404 before the database is asked.',
+      responses: {
+        '200': { description: 'The public phase.' },
+        '404': { description: 'Missing or not public.', content: errorRef },
+      },
+    },
+  },
   '/api/v1/public/classes': {
     get: {
       operationId: 'listPublicClasses',
@@ -118,6 +152,54 @@ export const curriculumPaths = {
   '/api/v1/admin/phases': {
     get: { operationId: 'listAdminPhases', summary: 'All phases, including drafts' },
     post: { operationId: 'createPhase', summary: 'Create a phase' },
+  },
+  '/api/v1/admin/tracks/{id}': {
+    get: { operationId: 'getAdminTrack', summary: 'One track, including a draft' },
+    patch: { operationId: 'updateTrack', summary: 'Edit a track' },
+    delete: { operationId: 'deleteTrack', summary: 'Delete a track' },
+  },
+  '/api/v1/admin/tracks/{id}/publish': {
+    post: {
+      operationId: 'publishTrack',
+      summary: 'Mark a track published',
+      description:
+        'Requires content.write. Does not change the listing. A hidden track stays off the public site.',
+    },
+  },
+  '/api/v1/admin/tracks/{id}/unpublish': {
+    post: { operationId: 'unpublishTrack', summary: 'Return a track to draft' },
+  },
+  '/api/v1/admin/modules/{id}': {
+    get: { operationId: 'getAdminModule', summary: 'One module, including a draft' },
+    patch: { operationId: 'updateModule', summary: 'Edit a module' },
+    delete: { operationId: 'deleteModule', summary: 'Delete a module' },
+  },
+  '/api/v1/admin/modules/{id}/publish': {
+    post: {
+      operationId: 'publishModule',
+      summary: 'Mark a module published',
+      description:
+        'Requires content.write. Does not change the listing. A hidden module stays off the public site.',
+    },
+  },
+  '/api/v1/admin/modules/{id}/unpublish': {
+    post: { operationId: 'unpublishModule', summary: 'Return a module to draft' },
+  },
+  '/api/v1/admin/phases/{id}': {
+    get: { operationId: 'getAdminPhase', summary: 'One phase, including a draft' },
+    patch: { operationId: 'updatePhase', summary: 'Edit a phase' },
+    delete: { operationId: 'deletePhase', summary: 'Delete a phase' },
+  },
+  '/api/v1/admin/phases/{id}/publish': {
+    post: {
+      operationId: 'publishPhase',
+      summary: 'Mark a phase published',
+      description:
+        'Requires content.write. Does not change the listing. A hidden phase stays off the public site.',
+    },
+  },
+  '/api/v1/admin/phases/{id}/unpublish': {
+    post: { operationId: 'unpublishPhase', summary: 'Return a phase to draft' },
   },
 };
 
