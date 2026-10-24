@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Lockup, Mark } from './Brand';
+import { usesMockApi } from '@/config/runtime';
 import { Icon, type IconName } from './Icon';
 
 const MENU: Array<{ id: string; label: string; to?: string; items?: Array<{ id: string; label: string; to: string; sub: string; icon: IconName }> }> = [
@@ -83,7 +84,7 @@ export function SiteHeader({ page, tone }: { page: string; tone: 'light' | 'dark
         </nav>
         <div className="mm-foot">
           <Link className="btn" to="/journey" onClick={() => toggleMenu(false)}>Follow the cohort <span className="arrow"><Icon name="arrow-right" className="i--sm" /></span></Link>
-          <span className="label" style={{ color: '#8FA597' }}>Development · sample data</span>
+          {usesMockApi() ? <span className="label" style={{ color: '#8FA597' }}>Development · sample data</span> : null}
         </div>
       </div>
     </>
@@ -126,7 +127,7 @@ export function SiteFooter() {
         </div>
         <div className="footer-big" aria-hidden="true">Secure the future.</div>
         <div className="footer-bottom">
-          <span>© 2026 Maxim Nyansa Foundation · Development build — sample data, not a live site</span>
+          <span>© 2026 Maxim Nyansa Foundation{usesMockApi() ? ' · Development build — sample data, not a live site' : ''}</span>
           <span><Link to="/admin/login">Admin</Link></span>
         </div>
       </div>
@@ -176,6 +177,7 @@ export function Crumbs({ items }: { items: Array<{ label: string; to?: string }>
 }
 
 export function ProtoFlag() {
+  if (!usesMockApi()) return null;
   return <span className="proto-flag">Development · sample data</span>;
 }
 

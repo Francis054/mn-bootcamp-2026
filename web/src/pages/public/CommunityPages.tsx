@@ -8,7 +8,8 @@ import { Icon, type IconName } from '@/components/Icon';
 import { Netlines } from '@/components/Netlines';
 import { TenMark } from '@/components/TenMark';
 import { usePageMeta } from '@/components/SiteChrome';
-import { ALBUM_LABEL, FOUNDATION_STATS, MODULES } from '@/dev/fixtures';
+import { ALBUM_LABEL, MODULES } from '@/dev/fixtures';
+import { usesMockApi } from '@/config/runtime';
 import { APP_TODAY, parseUtcDate } from '@/domain/format';
 import { isApiError } from '@/domain/types';
 import { collect, emailAddress, minLength, required } from '@/domain/validate';
@@ -51,11 +52,12 @@ export function TraineesPage() {
 
 export function TraineePage() {
   const { id = '' } = useParams();
-  const { trainees, projects } = usePublicContent();
+  const { trainees, projects, loading } = usePublicContent();
   const trainee = trainees.find((item) => item.id === id);
   const [tab, setTab] = useState('about');
   const toast = useToast();
   usePageMeta(trainee?.displayName ?? 'Trainee');
+  if (loading) return <section className="section"><div className="container"><p>Loading the published site…</p></div></section>;
   if (!trainee) return <section className="section"><div className="container"><ErrorState title="This profile is not public" text="Profiles stay hidden until they are a published record or a labelled sample. Private contact details are never sent to this page." /></div></section>;
   const related = projects.filter((project) => project.moduleId === trainee.focus).slice(0, 2);
   return (
@@ -135,9 +137,10 @@ export function ProjectsPage() {
 
 export function ProjectPage() {
   const { id = '' } = useParams();
-  const { projects } = usePublicContent();
+  const { projects, loading } = usePublicContent();
   const project = projects.find((item) => item.id === id);
   usePageMeta(project?.title ?? 'Project');
+  if (loading) return <section className="section"><div className="container"><p>Loading the published site…</p></div></section>;
   if (!project) return <section className="section"><div className="container"><ErrorState title="This project is not available" text="Drafts and internal notes stay in the admin adapter. This page only receives the public sample." /></div></section>;
   return (
     <section className="section">
@@ -184,9 +187,10 @@ export function EventsPage() {
 
 export function EventPage() {
   const { id = '' } = useParams();
-  const { events } = usePublicContent();
+  const { events, loading } = usePublicContent();
   const event = events.find((item) => item.id === id);
   usePageMeta(event?.title ?? 'Event');
+  if (loading) return <section className="section"><div className="container"><p>Loading the published site…</p></div></section>;
   if (!event) return <section className="section"><div className="container"><ErrorState title="This event is not available" text="It may still be a hidden draft." /></div></section>;
   const canCalendar = event.calendarDownload && !event.dateTbc;
   return (
@@ -220,7 +224,7 @@ export function GalleryPage() {
   const [album, setAlbum] = useState('');
   const open = useLightbox();
   const rows = media.filter((item) => !album || item.album === album);
-  const items = useMemo(() => rows.map((item) => ({ src: item.src, alt: item.alt, caption: item.caption, category: ALBUM_LABEL[item.album], width: item.width, height: item.height })), [rows]);
+  const items = useMemo(() => rows.map((item) => ({ src: item.src.startsWith('http') || item.src.startsWith('/') ? item.src : `/assets/img/${item.file}-1600.webp`, alt: item.alt, caption: item.caption, category: ALBUM_LABEL[item.album as keyof typeof ALBUM_LABEL] ?? item.album, width: item.width, height: item.height })), [rows]);
   return (
     <>
       <PageIntro title="Gallery" crumbs={[{ label: 'Home', to: '/' }, { label: 'Gallery' }]} eyebrow="Gallery" headline={'Moments worth\nremembering.'} aside={<><p className="lead">Open a photo, then use the arrow keys to browse and Escape to close.</p><p className="muted" style={{ marginTop: 12 }}>People are not named. The Foundation has confirmed consent for the included photographs.</p></>} />
@@ -234,8 +238,8 @@ export function GalleryPage() {
             <div className="masonry">
               {rows.map((item, index) => (
                 <button className="m-item" type="button" key={item.id} aria-label={`Open photo: ${item.caption}`} onClick={() => open(items, index)}>
-                  <Photo file={item.file} alt={item.alt} width={item.width} height={item.height} sizes="(max-width:560px) 50vw, 33vw" />
-                  <figcaption>{item.caption}<br /><span style={{ opacity: 0.7 }}>{ALBUM_LABEL[item.album]}{item.consent === 'pending' ? ' · consent record pending' : ''}</span></figcaption>
+                  {item.src.startsWith('http') || item.src.startsWith('/') ? <img src={item.src} alt={item.alt} width={item.width} height={item.height} /> : <Photo file={item.file} alt={item.alt} width={item.width} height={item.height} sizes="(max-width:560px) 50vw, 33vw" />}
+                  <figcaption>{item.caption}<br /><span style={{ opacity: 0.7 }}>{ALBUM_LABEL[item.album as keyof typeof ALBUM_LABEL] ?? item.album}{item.consent === 'pending' ? ' · consent record pending' : ''}</span></figcaption>
                 </button>
               ))}
             </div>
@@ -247,7 +251,11 @@ export function GalleryPage() {
 }
 
 export function AboutPage() {
-  const { about, milestones } = usePublicContent();
+  const { about, milestones, foundationStats, loading, error } = usePublicContent();
+  usePageMeta('About');
+  if (loading) return <section className="section"><div className="container"><p>Loading the published site…</p></div></section>;
+  if (error) return <section className="section"><div className="container"><ErrorState title="The about page could not be loaded" text={error} /></div></section>;
+  if (!about) return <section className="section"><div className="container"><h1>The about page is not published yet.</h1></div></section>;
   return (
     <>
       <PageIntro title="About" crumbs={[{ label: 'Home', to: '/' }, { label: 'About' }]} eyebrow="About the Foundation" headline={'Maximal wisdom,\nshared widely.'} aside={<><OfficialLogo width={180} /><p className="lead">Established in Ghana in 2016 to create career perspectives for young Africans through information technology.</p></>} />
@@ -275,13 +283,19 @@ export function AboutPage() {
           </ol>
         </div>
       </section>
-      <section className="section section--dark">
-        <div className="container">
-          <div className="sec-head"><div><span className="eyebrow">Foundation-wide figures</span><h2 className="h2">Not bootcamp statistics.</h2></div><span className={about.figuresPermission ? 'verified' : 'tbc'}>{about.figuresPermission ? 'Display permitted in this draft' : 'Self-reported · permission to display TBC'}</span></div>
-          <div className="stats">{FOUNDATION_STATS.map((stat) => <div className="stat" key={stat.id}><CountUp value={stat.value} suffix={stat.suffix} /><span>{stat.label}</span></div>)}</div>
-          <p className="muted" style={{ marginTop: 20 }}>These counters describe the Foundation’s wider work, not the 2026 cohort. Address: {about.address}. Email: <a href={`mailto:${about.email}`}>{about.email}</a>.</p>
-        </div>
-      </section>
+      {foundationStats.length ? (
+        <section className="section section--dark">
+          <div className="container">
+            <div className="sec-head"><div><span className="eyebrow">Foundation-wide figures</span><h2 className="h2">Not bootcamp statistics.</h2></div><span className={about.figuresPermission ? 'verified' : 'tbc'}>{about.figuresPermission ? 'Published counters' : 'Self-reported · permission to display TBC'}</span></div>
+            <div className="stats">{foundationStats.map((stat) => <div className="stat" key={stat.id}><CountUp value={stat.value} suffix={stat.suffix} /><span>{stat.label}</span></div>)}</div>
+            <p className="muted" style={{ marginTop: 20 }}>These counters describe the Foundation’s wider work, not the 2026 cohort. Address: {about.address}. Email: <a href={`mailto:${about.email}`}>{about.email}</a>.</p>
+          </div>
+        </section>
+      ) : (
+        <section className="section">
+          <div className="container"><p className="muted">Foundation counters stay hidden until they are published. Address: {about.address}. Email: <a href={`mailto:${about.email}`}>{about.email}</a>.</p></div>
+        </section>
+      )}
     </>
   );
 }
@@ -329,7 +343,7 @@ export function AnniversaryPage() {
       </section>
       <section className="section">
         <div className="container">
-          <div className="gal-teaser">{photos.map((item) => <Link className="m-item" to="/gallery" key={item.id}><Photo file={item.file} alt={item.alt} width={item.width} height={item.height} sizes="40vw" /></Link>)}</div>
+          <div className="gal-teaser">{photos.length ? photos.map((item) => <Link className="m-item" to="/gallery" key={item.id}>{item.src.startsWith('http') || item.src.startsWith('/') ? <img src={item.src} alt={item.alt} width={item.width} height={item.height} /> : <Photo file={item.file} alt={item.alt} width={item.width} height={item.height} sizes="40vw" />}</Link>) : <p className="muted">No published anniversary photos yet.</p>}</div>
           <p className="muted" style={{ marginTop: 16 }}>People in these photographs are not identified.</p>
         </div>
       </section>
@@ -343,6 +357,7 @@ export function ContactPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [done, setDone] = useState(false);
   const [pending, setPending] = useState(false);
+  const [status, setStatus] = useState('');
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
@@ -360,9 +375,13 @@ export function ContactPage() {
     if (Object.keys(fieldErrors).length) return;
     setPending(true);
     try {
-      const result = await api<{ delivered: boolean; message: string }>({ method: 'POST', path: '/public/enquiries', body: { name, email, topic: String(data.get('topic') ?? TOPICS[0]), message, consent: true } });
+      const result = await api<{ delivered: boolean; message: string }>({
+        method: 'POST',
+        path: '/public/enquiries',
+        body: { name, email, topic: String(data.get('topic') ?? TOPICS[0]), message, consent: true, company: String(data.get('company') ?? '') },
+      });
+      setStatus(result.message);
       setDone(true);
-      if (result.delivered) return;
     } catch (error) {
       if (isApiError(error)) setErrors(error.fieldErrors ?? { form: error.message });
       else setErrors({ form: 'The enquiry could not be validated.' });
@@ -384,14 +403,14 @@ export function ContactPage() {
           <div className="card contact-form-card">
             {done ? (
               <div className="contact-done" tabIndex={-1}>
-                <h3>Form accepted by the development adapter</h3>
-                <p className="muted">Nothing was emailed or stored on a server. In a live site the team would reply from mninfo@maximnyansa.com.</p>
-                <button className="btn btn--ghost btn--sm" type="button" onClick={() => setDone(false)}>Write another</button>
+                <h3>{usesMockApi() ? 'Form accepted by the development adapter' : 'Message saved'}</h3>
+                <p className="muted">{status || (usesMockApi() ? 'Nothing was emailed or stored on a server.' : 'The team can read this in the enquiry inbox.')}</p>
+                <button className="btn btn--ghost btn--sm" type="button" onClick={() => { setDone(false); setStatus(''); }}>Write another</button>
               </div>
             ) : (
               <form onSubmit={(event) => void submit(event)} noValidate>
-                <div className="between" style={{ marginBottom: 8 }}><h2 className="h3">Send an enquiry</h2><span className="ph">Not sent · development adapter</span></div>
-                <p className="muted" style={{ marginBottom: 24 }}>This form validates your message and keeps it in memory for this browser session only. It does not contact the Foundation.</p>
+                <div className="between" style={{ marginBottom: 8 }}><h2 className="h3">Send an enquiry</h2>{usesMockApi() ? <span className="ph">Not sent · development adapter</span> : null}</div>
+                <p className="muted" style={{ marginBottom: 24 }}>{usesMockApi() ? 'This form validates your message and keeps it in memory for this browser session only. It does not contact the Foundation.' : 'This form sends the message to the bootcamp API. Leave the extra company field empty.'}</p>
                 <ErrorSummary errors={errors} />
                 <div className="form-grid">
                   <Field id="name" label="Your name" error={errors.name}><input className="input" id="name" name="name" autoComplete="name" aria-invalid={Boolean(errors.name)} /></Field>
@@ -399,6 +418,10 @@ export function ContactPage() {
                   <Field id="topic" label="Topic" className="span-2"><select className="select" id="topic" name="topic">{TOPICS.map((topic) => <option key={topic}>{topic}</option>)}</select></Field>
                   <Field id="message" label="Message" error={errors.message} hint="At least 20 characters." className="span-2"><textarea className="textarea" id="message" name="message" maxLength={600} aria-invalid={Boolean(errors.message)} /></Field>
                   <div className="field span-2"><label className="check"><input type="checkbox" name="consent" /> I understand this message is not delivered</label>{errors.consent ? <div className="error-msg">{errors.consent}</div> : null}</div>
+                </div>
+                <div style={{ position: 'absolute', left: '-10000px', width: 1, height: 1, overflow: 'hidden' }} aria-hidden="true">
+                  <label htmlFor="company">Company</label>
+                  <input id="company" name="company" type="text" tabIndex={-1} autoComplete="off" defaultValue="" />
                 </div>
                 {errors.form ? <p role="alert">{errors.form}</p> : null}
                 <button className={`btn${pending ? ' is-loading' : ''}`} type="submit" disabled={pending}>Send enquiry</button>

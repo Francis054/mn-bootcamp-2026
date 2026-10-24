@@ -9,3 +9,7 @@ export function setEnvForTests(env: AppEnv | null): void {
 export function currentEnv(): AppEnv {
   return override ?? readEnv();
 }
+
+export function usesMockApi(env: AppEnv = currentEnv()): boolean {
+  return env.apiMode !== 'live';
+}

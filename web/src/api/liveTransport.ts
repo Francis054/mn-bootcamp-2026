@@ -17,6 +17,14 @@ export interface ApiRequest {
 }
 
 const CSRF_COOKIE = 'mn_csrf';
+const UNSAFE = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+let onUnauthorized: (() => void) | null = null;
+
+/** Called when a signed-in request comes back 401. Login and reset keep their own errors. */
+export function setUnauthorizedHandler(handler: (() => void) | null): void {
+  onUnauthorized = handler;
+}
 
 /** Reads a non-HttpOnly CSRF cookie. The session cookie itself must stay HttpOnly and is never read here. */
 export function readCsrfToken(cookie = typeof document === 'undefined' ? '' : document.cookie): string {
@@ -35,6 +43,28 @@ export function statusToCode(status: number): ApiErrorCode {
   return 'server';
 }
 
+/** Login, reset, and the anonymous session probe must not bounce the visitor to the admin login. */
+export function skipsSessionExpiry(path: string): boolean {
+  return path.includes('/auth/login') || path.includes('/auth/password-reset/') || path.includes('/auth/session');
+}
+
+export function buildApiUrl(path: string, query?: ApiRequest['query']): string {
+  const base = path.startsWith('/') ? path : `/${path}`;
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query ?? {})) {
+    if (value === undefined || value === '') continue;
+    if (typeof value === 'object') {
+      for (const [inner, innerValue] of Object.entries(value)) {
+        if (innerValue) params.set(`${key}.${inner}`, innerValue);
+      }
+    } else {
+      params.set(key, String(value));
+    }
+  }
+  const search = params.toString();
+  return search ? `${base}?${search}` : base;
+}
+
 export async function parseApiResponse<T>(response: Response): Promise<T> {
   if (response.status === 204) return undefined as T;
   const text = await response.text();
@@ -47,29 +77,24 @@ export async function parseApiResponse<T>(response: Response): Promise<T> {
 }
 
 export async function liveTransport<T>(req: ApiRequest, env: AppEnv = readEnv(), fetchImpl: typeof fetch = fetch): Promise<T> {
-  if (!env.apiBaseUrl) {
-    throw new ApiError('pending', 'No API base URL is configured. The proposed contract is pending implementation — this build does not call a backend.', 501);
-  }
-  const url = new URL(req.path.replace(/^\//, ''), env.apiBaseUrl.endsWith('/') ? env.apiBaseUrl : `${env.apiBaseUrl}/`);
-  for (const [key, value] of Object.entries(req.query ?? {})) {
-    if (value === undefined || value === '') continue;
-    if (typeof value === 'object') {
-      for (const [inner, innerValue] of Object.entries(value)) {
-        if (innerValue) url.searchParams.set(`${key}.${inner}`, innerValue);
-      }
-    } else {
-      url.searchParams.set(key, String(value));
-    }
-  }
+  void env;
+  const url = buildApiUrl(req.path, req.query);
+  const form = typeof FormData !== 'undefined' && req.body instanceof FormData;
   const headers: Record<string, string> = { Accept: 'application/json' };
-  if (req.body !== undefined) headers['Content-Type'] = 'application/json';
-  const csrf = readCsrfToken();
-  if (csrf) headers['X-CSRF-Token'] = csrf;
+  if (req.body !== undefined && !form) headers['Content-Type'] = 'application/json';
+  if (UNSAFE.has(req.method)) {
+    const csrf = readCsrfToken();
+    if (csrf) headers['X-CSRF-Token'] = csrf;
+  }
+  let body: BodyInit | undefined;
+  if (typeof FormData !== 'undefined' && req.body instanceof FormData) body = req.body;
+  else if (req.body !== undefined) body = JSON.stringify(req.body);
   const response = await fetchImpl(url, {
     method: req.method,
     headers,
-    body: req.body === undefined ? undefined : JSON.stringify(req.body),
+    body,
     credentials: 'include',
   });
+  if (response.status === 401 && !skipsSessionExpiry(req.path)) onUnauthorized?.();
   return parseApiResponse<T>(response);
 }

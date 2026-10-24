@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { api } from '@/api/client';
+import { searchAdmin } from '@/api/search';
 import { useAuth } from '@/auth/AuthProvider';
+import { usesMockApi } from '@/config/runtime';
 import { OfficialLogo } from '@/components/Brand';
 import { ShellMark } from '@/components/SiteChrome';
 import { Icon, type IconName } from '@/components/Icon';
@@ -65,17 +67,18 @@ export function AdminLayout() {
   const search = async () => {
     if (!query.trim()) return;
     try {
-      const results = await api<SearchHit[]>({ method: 'GET', path: '/admin/search', query: { q: query } });
+      const results = await searchAdmin(query.trim());
       setHits(results);
-      if (!results.length) toast('No matches', `Nothing in the development store matches “${query}”.`, 'info');
+      if (!results.length) toast('No matches', `Nothing matches “${query}”.`, 'info');
     } catch {
-      toast('Search failed', 'The development adapter could not search.', 'error');
+      toast('Search failed', 'The lists could not be searched.', 'error');
     }
   };
+  const mock = usesMockApi();
   return (
     <>
       <a className="skip-link" href="#main">Skip to content</a>
-      <div className={`dev-banner`}><strong>Development adapter.</strong> Sample data only. Production authentication is disabled until a verified backend is connected.</div>
+      {mock ? <div className="dev-banner"><strong>Development adapter.</strong> Sample data only. The live API is off for this session.</div> : null}
       <div className={`admin-shell${collapsed ? ' is-collapsed' : ''}${drawer ? ' drawer-open' : ''}`}>
         <aside className="admin-sidebar" id="admin-sidebar">
           <div className="sb-head">
@@ -122,7 +125,7 @@ export function AdminLayout() {
                 </div>
               ) : null}
             </div>
-            <span className="badge badge--warning tb-proto">Development adapter — sample data</span>
+            {mock ? <span className="badge badge--warning tb-proto">Development adapter — sample data</span> : null}
             <div className={`tb-pop${notesOpen ? ' is-open' : ''}`}>
               <button className="icon-btn tb-bell" type="button" aria-label="Notifications" aria-expanded={notesOpen} onClick={() => { setNotesOpen((value) => !value); setUserOpen(false); }}>
                 <Icon name="bell" />{unread ? <span className="tb-dot" /> : null}

@@ -4,10 +4,10 @@ import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '@/auth/AuthProvider';
 import { ConfirmProvider, LightboxProvider, ToastProvider } from '@/components/feedback';
 import { App } from '@/App';
-import '../../css/tokens.css';
-import '../../css/components.css';
-import '../../css/pages.css';
-import '../../css/admin.css';
+import './styles/tokens.css';
+import './styles/components.css';
+import './styles/pages.css';
+import './styles/admin.css';
 import './styles/app.css';
 
 document.documentElement.classList.add('js');

@@ -1,8 +1,11 @@
 import { currentEnv } from '@/config/runtime';
+import { markSessionExpired } from '@/dev/session';
 import { devTransport } from '@/dev/transport';
-import { liveTransport, type ApiRequest } from './liveTransport';
+import { liveTransport, setUnauthorizedHandler, type ApiRequest } from './liveTransport';
 
 const PREFIX = '/api/v1';
+
+setUnauthorizedHandler(markSessionExpired);
 
 export { setEnvForTests, currentEnv } from '@/config/runtime';
 

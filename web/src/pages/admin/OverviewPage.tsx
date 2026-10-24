@@ -1,16 +1,37 @@
 import { Link } from 'react-router-dom';
+import { api } from '@/api/client';
 import { useAuth } from '@/auth/AuthProvider';
 import { Icon } from '@/components/Icon';
-import { StatusBadge } from '@/components/feedback';
+import { ErrorState, LoadingRows, StatusBadge } from '@/components/feedback';
 import { usePageMeta } from '@/components/SiteChrome';
+import { usesMockApi } from '@/config/runtime';
 import { moduleName } from '@/dev/fixtures';
 import { currentWeek, formatDate } from '@/domain/format';
+import type { BootcampEvent, Lesson, MediaItem, Page, Trainee } from '@/domain/types';
 import { useContent } from '@/hooks/useContent';
+import { useAsync } from '@/hooks/useAsync';
 
 export function OverviewPage() {
   const auth = useAuth();
-  const { lessons, trainees, media, events } = useContent();
+  const mock = usesMockApi();
+  const store = useContent();
+  const remote = useAsync('admin-overview', async () => {
+    const [classes, trainees, events, media] = await Promise.all([
+      api<Page<Lesson>>({ method: 'GET', path: '/admin/classes', query: { page: 1, pageSize: 50, sort: 'week', dir: 'asc' } }),
+      api<Page<Trainee>>({ method: 'GET', path: '/admin/trainees', query: { page: 1, pageSize: 50 } }),
+      api<Page<BootcampEvent>>({ method: 'GET', path: '/admin/events', query: { page: 1, pageSize: 50 } }),
+      api<MediaItem[]>({ method: 'GET', path: '/admin/media' }),
+    ]);
+    return { lessons: classes.items, trainees: trainees.items, events: events.items, media };
+  }, !mock);
   usePageMeta('Overview');
+  const source = mock ? store : remote.data;
+  if (!mock && remote.loading) return <LoadingRows />;
+  if (!mock && remote.error) return <ErrorState title="Overview unavailable" text={remote.error.message} />;
+  const lessons = source?.lessons ?? [];
+  const trainees = source?.trainees ?? [];
+  const media = source?.media ?? [];
+  const events = source?.events ?? [];
   const week = currentWeek();
   const published = lessons.filter((lesson) => lesson.scheduleStatus !== 'upcoming').length;
   const review = events.filter((event) => event.dateTbc).length + media.filter((item) => item.consent === 'pending').length;
@@ -20,7 +41,7 @@ export function OverviewPage() {
   return (
     <>
       <div className="a-head">
-        <div><span className="a-sub">{formatDate(new Date(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · development clock</span><h1>{hello}, {auth.displayName || 'there'}</h1><p>Here’s the 2026 cohort in the development adapter. Counts are fixture totals, not live analytics.</p></div>
+        <div><span className="a-sub">{formatDate(new Date(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}{mock ? ' · development clock' : ''}</span><h1>{hello}, {auth.displayName || 'there'}</h1><p>{mock ? 'Here’s the 2026 cohort in the development adapter. Counts are fixture totals, not live analytics.' : 'Counts come from the admin lists. They are records in the API, not analytics.'}</p></div>
         <div className="a-head__actions">
           <Link className="btn btn--ghost btn--sm" to="/"><Icon name="eye" className="i--sm" />View site</Link>
           {auth.allowed('content.write') ? <Link className="btn btn--dark btn--sm" to="/admin/classes/new"><Icon name="plus" className="i--sm" />New class</Link> : null}

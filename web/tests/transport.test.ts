@@ -61,10 +61,7 @@ describe('public projections', () => {
   });
 
   it('accepts an enquiry without delivering it', async () => {
-    const result = await api<{ delivered: boolean }>({ method: 'POST', path: '/public/enquiries', body: { name: 'Sample Person', email: 'person@example.test', message: 'This is a long enough sample message.', consent: true } });
+    const result = await api<{ delivered: boolean }>({ method: 'POST', path: '/public/enquiries', body: { name: 'Sample Person', email: 'person@example.test', message: 'This is a long enough sample message.', consent: true, company: '' } });
     expect(result.delivered).toBe(false);
   });
 });
-
-it.todo('cookie session, CSRF and server-side authorization require the future backend');
-it.todo('persisted content, media upload and password email require the future backend');

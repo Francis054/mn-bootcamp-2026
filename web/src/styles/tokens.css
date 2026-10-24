@@ -4,7 +4,7 @@
    grey #757575, black, light #F5F5F5, Noto Sans. Forest greens, gold and
    terracotta are extensions proposed for this prototype.
    ========================================================================== */
-@import url("../assets/fonts/fonts.css");
+@import url("/assets/fonts/fonts.css");
 
 :root {
   /* Brand (verified) */

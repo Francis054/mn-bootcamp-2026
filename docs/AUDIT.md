@@ -1,6 +1,6 @@
 # Phase 1 audit
 
-Inspected before any application code was added. The prototype at the repository root was left in place.
+Inspected before any application code was added. The static prototype has since been removed from this branch. It remains on the `prototype` branch.
 
 ## What existed
 
@@ -28,7 +28,7 @@ Inspected before any application code was added. The prototype at the repository
 
 ## Stack decision
 
-A Vite + React + TypeScript single-page app now lives in `web/`. Next.js was not used: there is no server, and a Next app would imply API routes that do not exist. The prototype HTML remains the visual reference and can still be opened without a build.
+A Vite + React + TypeScript single-page app now lives in `web/`. Next.js was not used: there is no server, and a Next app would imply API routes that do not exist. The static prototype HTML is on the `prototype` branch.
 
 ## Checklist
 

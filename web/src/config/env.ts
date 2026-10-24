@@ -13,13 +13,14 @@ function read(source: ImportMetaEnv | Record<string, string | undefined>, key: s
   return typeof value === 'string' ? value : '';
 }
 
+/** Live API unless `VITE_USE_MOCK_API=true`. Production builds leave the flag unset. */
 export function readEnv(source: ImportMetaEnv | Record<string, string | undefined> = import.meta.env): AppEnv {
-  const apiMode = read(source, 'VITE_API_MODE') === 'live' ? 'live' : 'development-adapter';
+  const mock = read(source, 'VITE_USE_MOCK_API') === 'true';
   const authMode = read(source, 'VITE_AUTH_MODE') === 'disabled' ? 'disabled' : 'development';
   const ttl = Number(read(source, 'VITE_DEV_SESSION_TTL_MS'));
   return {
-    apiMode,
-    apiBaseUrl: read(source, 'VITE_API_BASE_URL').trim(),
+    apiMode: mock ? 'development-adapter' : 'live',
+    apiBaseUrl: '',
     authMode,
     sessionTtlMs: Number.isFinite(ttl) && ttl > 0 ? ttl : 1_800_000,
   };

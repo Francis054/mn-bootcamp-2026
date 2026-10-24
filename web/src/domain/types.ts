@@ -1,6 +1,4 @@
-/** Frontend models aligned with the proposed API contract in docs/API.md.
- *  The contract is pending a real backend. These types are not evidence that endpoints exist.
- */
+/** Frontend models for the `/api/v1` contract. The live client sends cookies, not stored tokens. */
 
 export type Role = 'viewer' | 'editor' | 'administrator';
 
@@ -144,7 +142,7 @@ export interface MediaItem {
   caption: string;
   alt: string;
   album: AlbumId;
-  consent: 'verified' | 'pending';
+  consent: 'verified' | 'pending' | 'withdrawn';
   publicationStatus: PublicationStatus;
   listing: Listing;
 }
@@ -194,8 +192,8 @@ export interface DevUser {
   initials: string;
   hue: number;
   role: Role;
-  lastActiveLabel: string;
-  fixture: true;
+  lastActiveLabel?: string;
+  fixture?: true;
 }
 
 export interface EnquiryRecord {
@@ -227,7 +225,7 @@ export interface SessionUser {
 }
 
 export interface DevSession {
-  mode: 'development';
+  mode: 'development' | 'cookie';
   user: SessionUser;
   expiresAt: number;
 }

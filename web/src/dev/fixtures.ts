@@ -151,7 +151,7 @@ export function buildTrainees(): Trainee[] {
   return Array.from({ length: 12 }, (_, index) => {
     const n = String(index + 1).padStart(2, '0');
     const focus = MODULES[index % 6]?.id ?? 'network';
-    const track = index % 3 === 0 ? 'Blue team' : index % 3 === 1 ? 'Red team' : 'GRC & awareness';
+    const track = index % 3 === 0 ? 'Blue team' : index % 3 === 1 ? 'Red team' : 'GRC & Awareness';
     return {
       id: String(index + 1),
       displayName: `Sample Trainee ${n}`,
