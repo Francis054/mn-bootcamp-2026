@@ -1,3 +1,5 @@
+import type { EventRepository } from '../events/event.repository.js';
+import { buildSampleEvents } from '../events/sample-events.js';
 import type { ProjectRepository } from '../projects/project.repository.js';
 import { buildSampleProjects } from '../projects/sample-projects.js';
 import type { TraineeRepository } from '../trainees/trainee.repository.js';
@@ -27,6 +29,7 @@ export class SeedService {
     private readonly lessons: LessonRepository,
     private readonly trainees: TraineeRepository,
     private readonly projects: ProjectRepository,
+    private readonly events: EventRepository,
   ) {}
 
   async run(): Promise<void> {
@@ -56,6 +59,10 @@ export class SeedService {
       const { traineeIds, ...row } = project;
       await this.projects.insert(row);
       await this.projects.replaceTrainees(project.id, traineeIds);
+    }
+    for (const event of buildSampleEvents()) {
+      if (await this.events.findById(event.id)) continue;
+      await this.events.insert(event);
     }
   }
 }

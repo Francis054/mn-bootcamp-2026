@@ -23,6 +23,9 @@ import {
 } from '../modules/curriculum/repositories.js';
 import { accraToday } from '../modules/curriculum/schedule.js';
 import { TrackEntity } from '../modules/curriculum/track.entity.js';
+import { EventEntity } from '../modules/events/event.entity.js';
+import { EventRepository } from '../modules/events/event.repository.js';
+import { EventService } from '../modules/events/event.service.js';
 import { ProjectEntity } from '../modules/projects/project.entity.js';
 import { liveRepositoryVisibility } from '../modules/projects/project-url.js';
 import { ProjectRepository } from '../modules/projects/project.repository.js';
@@ -60,12 +63,20 @@ export class AppContainer {
     lessons: LessonService,
     trainees: TraineeService,
     projects: ProjectService,
+    events: EventService,
   ) {
     this.health = new HealthService(dataSource, logger);
     this.users = users;
     this.sessions = sessions;
     this.authRouter = authRouter(auth, sessions);
-    this.curriculumRouter = curriculumRouter(catalogue, lessons, trainees, projects, sessions);
+    this.curriculumRouter = curriculumRouter(
+      catalogue,
+      lessons,
+      trainees,
+      projects,
+      events,
+      sessions,
+    );
   }
 
   static async create(env: AppEnv): Promise<AppContainer> {
@@ -133,6 +144,11 @@ export class AppContainer {
       audit,
       liveRepositoryVisibility(),
     );
+    const eventService = new EventService(
+      new EventRepository(dataSource.getRepository(EventEntity)),
+      audit,
+      () => new Date(),
+    );
     return new AppContainer(
       env,
       logger,
@@ -144,6 +160,7 @@ export class AppContainer {
       lessonService,
       traineeService,
       projectService,
+      eventService,
     );
   }
 
