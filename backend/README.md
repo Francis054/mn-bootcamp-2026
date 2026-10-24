@@ -281,6 +281,22 @@ An editor and an administrator both change photos. That is the website's `media.
 
 `npm run seed` also inserts three labelled placeholders: `sample-banner`, `sample-bench`, and `sample-mark`. They are drawings and banners, not photographs of people. Consent is pending and the workflow is draft, so the public gallery does not include them. Run the command again and it leaves an edited row alone.
 
+## Homepage, about, timeline, and settings
+
+A public page is the last published copy. Editors read the draft on the admin routes. Saving an edit does not publish. Publish copies the draft. A later edit stays in the draft until the next publish. Unpublish takes the public copy down and leaves the draft.
+
+The homepage includes the announcement banner: `announcement` and `showAnnouncement`. There is no separate announcements list. The about page keeps its address, email, and website when a save omits them. `figuresPermission` records display permission for the counters. It does not publish them.
+
+The timeline is one list. `PUT /api/v1/admin/milestones` takes `{ milestones }` and stores that order. The public list is empty until publish.
+
+Foundation counters live on settings. Only an administrator can read or change settings. That permission is `settings.manage`. An editor can change the homepage, the about page, and the timeline with `content.write`. A viewer can read those drafts and cannot open settings. A change needs the session cookie and the matching `X-CSRF-Token` header. The audit row stores the action and the document id. It does not store the headline, the mission, the contact email, or the counter labels.
+
+`GET /api/v1/public/foundation-stats` returns the published counters. Until settings are published it returns an empty array. The contact email is not on that response.
+
+`npm run seed` inserts the homepage, the about page, three timeline rows, and settings, all as drafts. The counters are labelled `Sample counter` and the value is `0`. The seed does not invent foundation-wide totals. Run the command again and it leaves an edited row alone.
+
+The contact form is not part of this milestone.
+
 ## What is left for the next milestone
 
-The homepage, about, milestones, and settings, including the foundation-wide counters. Password-reset mail and invitations come with the accounts milestone.
+Accounts and mail: password change, password reset, invitations, and the contact form. An unconfigured mail provider should say that nothing was sent.
