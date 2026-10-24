@@ -1,8 +1,36 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-export const AUDIT_ACTIONS = ['auth.login.succeeded', 'auth.login.failed', 'auth.logout'] as const;
+const AUTH_AUDIT_ACTIONS = ['auth.login.succeeded', 'auth.login.failed', 'auth.logout'] as const;
 
-export type AuditAction = (typeof AUDIT_ACTIONS)[number];
+export const CURRICULUM_KINDS = ['track', 'module', 'phase', 'lesson'] as const;
+export const CURRICULUM_VERBS = [
+  'created',
+  'updated',
+  'published',
+  'unpublished',
+  'deleted',
+] as const;
+
+export type CurriculumKind = (typeof CURRICULUM_KINDS)[number];
+export type CurriculumVerb = (typeof CURRICULUM_VERBS)[number];
+export type CurriculumAuditAction = `curriculum.${CurriculumKind}.${CurriculumVerb}`;
+
+export type AuditAction = (typeof AUTH_AUDIT_ACTIONS)[number] | CurriculumAuditAction;
+
+export const AUDIT_ACTIONS: readonly AuditAction[] = [
+  ...AUTH_AUDIT_ACTIONS,
+  ...CURRICULUM_KINDS.flatMap((kind) =>
+    CURRICULUM_VERBS.map((verb): CurriculumAuditAction => `curriculum.${kind}.${verb}`),
+  ),
+];
+
+export function isAuditAction(value: string): value is AuditAction {
+  return (AUDIT_ACTIONS as readonly string[]).includes(value);
+}
+
+export function curriculumAuditAction(kind: CurriculumKind, verb: CurriculumVerb): AuditAction {
+  return `curriculum.${kind}.${verb}`;
+}
 
 @Entity({ name: 'audit_events' })
 export class AuditEventEntity {
@@ -20,6 +48,14 @@ export class AuditEventEntity {
 
   @Column({ name: 'request_id', type: 'varchar', length: 80, nullable: true })
   requestId!: string | null;
+
+  /** What changed, for example `lesson`. Auth rows leave this empty. */
+  @Column({ name: 'subject_type', type: 'varchar', length: 32, nullable: true })
+  subjectType!: string | null;
+
+  /** The row id. Not the title, the notes, or a mailbox. */
+  @Column({ name: 'subject_id', type: 'varchar', length: 64, nullable: true })
+  subjectId!: string | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;

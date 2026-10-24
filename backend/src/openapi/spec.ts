@@ -1,10 +1,12 @@
+import { curriculumPaths, curriculumSchemas } from './curriculum-docs.js';
+
 export const openApiSpec = {
   openapi: '3.0.3',
   info: {
     title: 'Maxim Nyansa Bootcamp API',
-    version: '0.2.0',
+    version: '0.3.0',
     description:
-      'Bootcamp API. Implemented routes: health, sign-in, sign-out, and the current session. Other paths return not_found. There is no public registration. Password reset and content routes are later milestones.',
+      'Bootcamp API. Implemented routes: health, sign-in, sessions, and the curriculum (tracks, modules, phases, and classes). Public class lists return published rows only. Foundation-wide counters are a later settings milestone. There is no public registration.',
   },
   servers: [{ url: '/' }],
   paths: {
@@ -102,6 +104,7 @@ export const openApiSpec = {
         },
       },
     },
+    ...curriculumPaths,
   },
   components: {
     schemas: {
@@ -188,6 +191,7 @@ export const openApiSpec = {
           },
         },
       },
+      ...curriculumSchemas,
     },
   },
-} as const;
+};

@@ -17,6 +17,7 @@ export interface AppDependencies {
   logger: AppLogger;
   health: HealthService;
   authRouter: Router;
+  curriculumRouter: Router;
   /** Mounted before the 404 handler. Tests use this for role checks. */
   extraRouters?: readonly Router[];
 }
@@ -43,6 +44,7 @@ export function createApp(deps: AppDependencies): Express {
   app.use('/api/v1', csrfGuard());
   app.use('/api/v1/health', healthRouter(deps.health));
   app.use('/api/v1/auth', deps.authRouter);
+  app.use('/api/v1', deps.curriculumRouter);
   for (const extra of deps.extraRouters ?? []) {
     app.use(extra);
   }

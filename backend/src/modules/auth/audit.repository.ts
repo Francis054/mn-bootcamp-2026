@@ -6,9 +6,15 @@ export interface AuditInput {
   actorUserId: string | null;
   ip: string | null;
   requestId: string | null;
+  subjectType?: string | null;
+  subjectId?: string | null;
 }
 
-/** Auth events only. No password, and no mailbox address. */
+/**
+ * One row per sign-in, sign-out, or curriculum change. The row stores the
+ * action and the row id. It does not store a password, a mailbox, or the text
+ * the editor wrote.
+ */
 export class AuditRepository {
   constructor(private readonly repository: Repository<AuditEventEntity>) {}
 
@@ -18,6 +24,8 @@ export class AuditRepository {
       actorUserId: input.actorUserId,
       ip: input.ip,
       requestId: input.requestId,
+      subjectType: input.subjectType ?? null,
+      subjectId: input.subjectId ?? null,
     });
     await this.repository.save(row);
   }
