@@ -23,6 +23,10 @@ import {
 } from '../modules/curriculum/repositories.js';
 import { accraToday } from '../modules/curriculum/schedule.js';
 import { TrackEntity } from '../modules/curriculum/track.entity.js';
+import { ProjectEntity } from '../modules/projects/project.entity.js';
+import { liveRepositoryVisibility } from '../modules/projects/project-url.js';
+import { ProjectRepository } from '../modules/projects/project.repository.js';
+import { ProjectService } from '../modules/projects/project.service.js';
 import { TraineeEntity } from '../modules/trainees/trainee.entity.js';
 import { TraineeRepository } from '../modules/trainees/trainee.repository.js';
 import { TraineeService } from '../modules/trainees/trainee.service.js';
@@ -55,12 +59,13 @@ export class AppContainer {
     catalogue: CatalogueService,
     lessons: LessonService,
     trainees: TraineeService,
+    projects: ProjectService,
   ) {
     this.health = new HealthService(dataSource, logger);
     this.users = users;
     this.sessions = sessions;
     this.authRouter = authRouter(auth, sessions);
-    this.curriculumRouter = curriculumRouter(catalogue, lessons, trainees, sessions);
+    this.curriculumRouter = curriculumRouter(catalogue, lessons, trainees, projects, sessions);
   }
 
   static async create(env: AppEnv): Promise<AppContainer> {
@@ -98,12 +103,14 @@ export class AppContainer {
     const phaseRepository = new PhaseRepository(dataSource.getRepository(PhaseEntity));
     const lessonRepository = new LessonRepository(dataSource.getRepository(LessonEntity));
     const traineeRepository = new TraineeRepository(dataSource.getRepository(TraineeEntity));
+    const projectRepository = new ProjectRepository(dataSource.getRepository(ProjectEntity));
     const catalogue = new CatalogueService(
       trackRepository,
       moduleRepository,
       phaseRepository,
       lessonRepository,
       traineeRepository,
+      projectRepository,
       audit,
     );
     const lessonService = new LessonService(
@@ -113,7 +120,19 @@ export class AppContainer {
       audit,
       accraToday,
     );
-    const traineeService = new TraineeService(traineeRepository, moduleRepository, audit);
+    const traineeService = new TraineeService(
+      traineeRepository,
+      moduleRepository,
+      projectRepository,
+      audit,
+    );
+    const projectService = new ProjectService(
+      projectRepository,
+      moduleRepository,
+      traineeRepository,
+      audit,
+      liveRepositoryVisibility(),
+    );
     return new AppContainer(
       env,
       logger,
@@ -124,6 +143,7 @@ export class AppContainer {
       catalogue,
       lessonService,
       traineeService,
+      projectService,
     );
   }
 

@@ -16,6 +16,8 @@ import {
 import { LessonCreateDto, LessonPatchDto } from './lesson.dto.js';
 import type { LessonService } from './lesson.service.js';
 import { readLessonListQuery } from './list-query.js';
+import { mountAdminProjects, mountPublicProjects } from '../projects/project.routes.js';
+import type { ProjectService } from '../projects/project.service.js';
 import { mountAdminTrainees, mountPublicTrainees } from '../trainees/trainee.routes.js';
 import type { TraineeService } from '../trainees/trainee.service.js';
 
@@ -23,6 +25,7 @@ export function curriculumRouter(
   catalogue: CatalogueService,
   lessons: LessonService,
   trainees: TraineeService,
+  projects: ProjectService,
   sessions: SessionService,
 ): Router {
   const router = Router();
@@ -83,6 +86,7 @@ export function curriculumRouter(
       .catch(next);
   });
   mountPublicTrainees(router, trainees);
+  mountPublicProjects(router, projects);
 
   const admin = Router();
   admin.use(requireAuth(sessions), requirePermission('content.read'));
@@ -91,6 +95,7 @@ export function curriculumRouter(
   mountPhases(admin, catalogue);
   mountClasses(admin, lessons);
   mountAdminTrainees(admin, trainees);
+  mountAdminProjects(admin, projects);
   router.use('/admin', admin);
   return router;
 }

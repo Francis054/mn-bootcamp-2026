@@ -1,6 +1,6 @@
 # API alignment notes
 
-**Status: auth, curriculum, and trainee routes below are implemented in `backend/`.** The rest of the contract (projects, events, media, and mail) still lives on the `frontend` branch in that branch's `docs/API.md`. This file is the note the website needs when `VITE_API_MODE=live`. It does not change the website. The website stays on the `frontend` branch.
+**Status: auth, curriculum, trainee, and project routes below are implemented in `backend/`.** The rest of the contract (events, media, and mail) still lives on the `frontend` branch in that branch's `docs/API.md`. This file is the note the website needs when `VITE_API_MODE=live`. It does not change the website. The website stays on the `frontend` branch.
 
 Base path: `/api/v1`. Errors use the shape the website already parses:
 
@@ -79,7 +79,7 @@ Idle time is 30 minutes. The session also ends 12 hours after sign-in. Both can 
 - Keep sending `X-CSRF-Token` from `mn_csrf` on sign-out and on later changes.
 - Treat `403` with code `forbidden` as "this role cannot do that", and `401` as "sign in again".
 
-The permission names match `web/src/domain/permissions.ts`. A viewer can read content and manage their own account. An editor can also change content and media, which includes creating, editing, publishing, and deleting classes and trainee profiles. An administrator can do that too, and can also manage users and settings. The server enforces that. The React route guard does not. There is no separate publish permission in the website's map, so this API does not invent one.
+The permission names match `web/src/domain/permissions.ts`. A viewer can read content and manage their own account. An editor can also change content and media, which includes creating, editing, publishing, and deleting classes, trainee profiles, and projects. An administrator can do that too, and can also manage users and settings. The server enforces that. The React route guard does not. There is no separate publish permission in the website's map, so this API does not invent one.
 
 ## Curriculum routes that exist now
 
@@ -122,15 +122,15 @@ The admin object matches `Trainee` and adds those three consent fields. `consent
 
 The track check is `Blue team`, `Red team`, or `GRC & Awareness`. `General` and `GRC & awareness` are `422` with `Choose Blue team, Red team, or GRC & Awareness.`
 
-| Method   | Path                                          | Who                                                                                                                                                          |
-| -------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| GET      | `/public/trainees` and `/public/trainees/:id` | Anyone. `PublicTrainee`.                                                                                                                                     |
-| GET      | `/admin/trainees`                             | `content.read`. Page `{ items, page, pageSize, total }`.                                                                                                     |
-| GET      | `/admin/trainees/:id`                         | `content.read`. Full profile, including a draft, the email, and the notes.                                                                                   |
-| POST     | `/admin/trainees`                             | `content.write`.                                                                                                                                             |
-| PATCH    | `/admin/trainees/:id`                         | `content.write`. Omitted fields stay as they are. Withdrawal unpublishes immediately.                                                                        |
-| DELETE   | `/admin/trainees/:id`                         | `content.write`. `{ deleted: true, id }`.                                                                                                                    |
-| POST     | `/admin/trainees/:id/publish` and `/unpublish` | `content.write`. Publish requires consent and does not change `listing`. Unpublish sets `draft` and leaves consent as it is.                                 |
+| Method | Path                                           | Who                                                                                                                          |
+| ------ | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/public/trainees` and `/public/trainees/:id`  | Anyone. `PublicTrainee`.                                                                                                     |
+| GET    | `/admin/trainees`                              | `content.read`. Page `{ items, page, pageSize, total }`.                                                                     |
+| GET    | `/admin/trainees/:id`                          | `content.read`. Full profile, including a draft, the email, and the notes.                                                   |
+| POST   | `/admin/trainees`                              | `content.write`.                                                                                                             |
+| PATCH  | `/admin/trainees/:id`                          | `content.write`. Omitted fields stay as they are. Withdrawal unpublishes immediately.                                        |
+| DELETE | `/admin/trainees/:id`                          | `content.write`. `{ deleted: true, id }`.                                                                                    |
+| POST   | `/admin/trainees/:id/publish` and `/unpublish` | `content.write`. Publish requires consent and does not change `listing`. Unpublish sets `draft` and leaves consent as it is. |
 
 There is no `POST /admin/trainees/bulk`. The class list is the only bulk action. The trainee list in the website has no bulk bar.
 
@@ -138,9 +138,41 @@ The list query uses `filters.track` and `filters.focus` as separate query keys. 
 
 Field messages match the form: `Enter a display name.`, `Enter your email address.`, `Enter a valid email address, like name@example.com.`, `Enter a full link starting with https://`. A duplicate email is `422` with `A trainee with that email already exists.` The address is not repeated in the error.
 
-A module that still has trainee profiles cannot be deleted until those profiles are moved or deleted.
+A module that still has trainee profiles cannot be deleted until those profiles are moved or deleted. A trainee who is still listed on a project cannot be deleted until they are removed from that project.
 
-Projects are the next milestone. `linksShareConsent` and the public project URL rule are not implemented here.
+`linksShareConsent` is the agreement that lets a published project show its code and demo links. It is separate from profile consent. Clearing it does not unpublish the profile. The timestamps and the account id that recorded it stay on the admin trainee. They are not on `PublicTrainee`.
+
+## Project routes that exist now
+
+A public project needs `publicationStatus: published` and a listing other than `hidden`. A sample label does not publish a draft. The public object matches `PublicProject`: it omits `internalNotes`, `labOnlyConfirmed`, and `shareAgreed`. It also omits `traineeIds`. A missing or private project is `404` with `That page is not available.`
+
+`repositoryUrl` and `demoUrl` are added to that public object only when the project is published, the listing is not hidden, at least one trainee is linked, and every linked trainee has `linksShareConsent: true`. Clearing that flag on a trainee removes both links from the next public read. The project stays published. `shareAgreed` is stored for the current form and does not publish the links. Publish does not set link consent and does not change `listing`. The adapter's rewrite of a published listing to `sample` is not copied.
+
+A stored link must be `https`, at most 500 characters, with no user or password in the address, and not a private or loopback host. `javascript:` and `data:` are refused. A GitHub repository (`github.com`) is checked with one unauthenticated GET and no redirects. Any answer other than 200, including a network failure, omits `repositoryUrl`. The admin project then includes `repositoryLinkNote`. Demo links are not fetched. The admin list leaves `repositoryLinkNote` null so the list does not call GitHub.
+
+The admin object matches `Project` and adds `traineeIds`, `repositoryLinkNote`, and `updatedAt`. `team` stays a list of display names. It does not create the trainee relation. Send `traineeIds` for that.
+
+| Method | Path                                           | Who                                                                               |
+| ------ | ---------------------------------------------- | --------------------------------------------------------------------------------- |
+| GET    | `/public/projects` and `/public/projects/:id`  | Anyone. `PublicProject`, with links only when consent and publication allow them. |
+| GET    | `/admin/projects`                              | `content.read`. Page `{ items, page, pageSize, total }`.                          |
+| GET    | `/admin/projects/:id`                          | `content.read`. Full project, including a draft, the notes, and the links.        |
+| POST   | `/admin/projects`                              | `content.write`.                                                                  |
+| PATCH  | `/admin/projects/:id`                          | `content.write`. Omitted fields stay as they are.                                 |
+| DELETE | `/admin/projects/:id`                          | `content.write`. `{ deleted: true, id }`.                                         |
+| POST   | `/admin/projects/:id/publish` and `/unpublish` | `content.write`. Publish does not change `listing`. Unpublish sets `draft`.       |
+
+There is no `POST /admin/projects/bulk`. The class list is the only bulk action.
+
+The list query uses `q`, `page`, `pageSize`, `sort`, `dir`, and `filters.type`. Search matches the title and the type. The default page size is 8. An unknown sort is `422`. An unknown type filter is `422` with `Choose a type.`
+
+Field messages match the form: `Give the project a title.`, `Use at least 6 characters.`, `Choose a type.`, `Write an abstract of at least 30 characters.`, `Use at least 30 characters.` A link that is not `https`, or that contains a password, is `Enter a full link starting with https://.` A private or loopback host is `Use a public https address.` The rejected address is not repeated in the error.
+
+A module that still has projects cannot be deleted until those projects are moved or deleted.
+
+`npm run seed` also inserts six labelled projects. They are `in_review` or `draft`, with blank links, so `GET /public/projects` does not return them.
+
+Events are the next milestone. A scheduled event stays off the public route.
 
 ## Not in this milestone
 
@@ -151,6 +183,7 @@ These paths from the frontend contract are not implemented. They still answer `4
 - `POST /auth/session/expire` (development-only on the website; it will not be a production route)
 - `POST /admin/account/password`
 - `POST /admin/trainees/bulk`
-- projects, events, media, and the homepage, about, and settings singletons
+- `POST /admin/projects/bulk`
+- events, media, and the homepage, about, and settings singletons
 
 There is no public registration route. The first administrator is created with `npm run admin:create` in `backend/`, from a private password. That command is not an HTTP route and it is not in the OpenAPI document. OpenAPI for the routes above is at `/api/docs`.

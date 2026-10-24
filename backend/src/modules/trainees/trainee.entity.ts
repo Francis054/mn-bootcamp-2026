@@ -51,6 +51,19 @@ export class TraineeEntity {
   @Column({ name: 'consent_withdrawn_at', type: 'timestamptz', nullable: true })
   consentWithdrawnAt!: Date | null;
 
+  /** Agreement to show repository and demo links on a published project. */
+  @Column({ name: 'links_share_consent', type: 'boolean', default: false })
+  linksShareConsent!: boolean;
+
+  @Column({ name: 'links_share_consent_at', type: 'timestamptz', nullable: true })
+  linksShareConsentAt!: Date | null;
+
+  @Column({ name: 'links_share_consent_recorded_by', type: 'uuid', nullable: true })
+  linksShareConsentRecordedBy!: string | null;
+
+  @Column({ name: 'links_share_consent_withdrawn_at', type: 'timestamptz', nullable: true })
+  linksShareConsentWithdrawnAt!: Date | null;
+
   @Column({ type: 'varchar', length: 16 })
   listing!: Listing;
 

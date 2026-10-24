@@ -68,6 +68,11 @@ export function consentMessage(value: unknown): string | undefined {
   return undefined;
 }
 
+export function linkConsentMessage(value: unknown): string | undefined {
+  if (typeof value !== 'boolean') return 'Choose whether the trainee agreed to share links.';
+  return undefined;
+}
+
 export function hueMessage(value: unknown): string | undefined {
   if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value > 359) {
     return 'Choose a colour from 0 to 359.';

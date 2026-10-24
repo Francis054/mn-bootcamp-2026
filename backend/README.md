@@ -233,6 +233,24 @@ The trainee list has no bulk action. The class list is the one that publishes or
 
 `npm run seed` also inserts twelve labelled profiles, `Sample Trainee 01` through `Sample Trainee 12`, with addresses at `example.test`. Their workflow is published and their consent is false, so the public list does not include them. Run the command again and it leaves an edited row alone.
 
+## Projects
+
+A public project is a row whose workflow is `published` and whose listing is not `hidden`. Drafts, rows in review, scheduled rows, and hidden rows stay on the admin routes. A sample label does not put a draft on the public site.
+
+`GET /api/v1/public/projects` returns the title, slug, type, module, cover, image, abstract, tools, steps, team names, listing, and workflow. The internal notes, the lab-only checkbox, and the form's share checkbox stay on the admin response. The code link and the demo link are included only when the project is published, the listing is not hidden, and every linked trainee has `linksShareConsent` set to true. If no trainee is linked, those links stay off. If one linked trainee withdraws that agreement, both links leave the public response on the next read. The project itself stays published. Withdrawing link consent does not unpublish the trainee profile.
+
+`shareAgreed` is stored so the current form can round-trip. It does not publish the links. The agreement that does is `linksShareConsent` on the trainee.
+
+A link has to be `https`, with no password in the address, and it cannot point at a private or loopback host. `javascript:` and `data:` are refused. The limit is 500 characters. A GitHub repository link is checked with one unauthenticated request. If that request is not a 200, the code link stays off the public page. The admin project then carries `repositoryLinkNote`. Demo links are not fetched. The admin list does not run that check.
+
+Publish does not change the listing and does not record link consent. An editor and an administrator both change projects, including publish and delete. That is the website's `content.write` permission. A viewer can read the admin list. A change needs the session cookie and the matching `X-CSRF-Token` header. The audit row stores the action and the project id. It does not store the title, the links, the team names, or the notes.
+
+The project list has no bulk action. Search matches the title and the type. `filters.type` uses the same dot form as the class filters.
+
+`npm run seed` also inserts six labelled projects. Their workflow is `in_review` or `draft`, their links are blank, and the linked sample trainees have not agreed to share links, so the public list does not include them. Run the command again and it leaves an edited row alone.
+
+A module that still has projects cannot be deleted until those projects are moved or deleted. A trainee who is still listed on a project cannot be deleted until they are removed from the project.
+
 ## What is left for the next milestone
 
-Projects. A public project link needs the trainee's link consent and a published project, and the address has to be a checked `https` URL. Events, the gallery, and the homepage, about, and settings pages come after that. Password-reset mail and invitations come with the accounts milestone. Foundation-wide counters come with the settings and homepage milestone.
+Events. A scheduled event stays off the public route. The gallery, and the homepage, about, and settings pages come after that. Password-reset mail and invitations come with the accounts milestone. Foundation-wide counters come with the settings and homepage milestone.

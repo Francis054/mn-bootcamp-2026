@@ -1,3 +1,5 @@
+import type { ProjectRepository } from '../projects/project.repository.js';
+import { buildSampleProjects } from '../projects/sample-projects.js';
 import type { TraineeRepository } from '../trainees/trainee.repository.js';
 import { buildSampleTrainees } from '../trainees/sample-trainees.js';
 import {
@@ -24,6 +26,7 @@ export class SeedService {
     private readonly phases: PhaseRepository,
     private readonly lessons: LessonRepository,
     private readonly trainees: TraineeRepository,
+    private readonly projects: ProjectRepository,
   ) {}
 
   async run(): Promise<void> {
@@ -47,6 +50,12 @@ export class SeedService {
       if (await this.trainees.findById(trainee.id)) continue;
       if (await this.trainees.findByEmail(trainee.email)) continue;
       await this.trainees.insert(trainee);
+    }
+    for (const project of buildSampleProjects()) {
+      if (await this.projects.findById(project.id)) continue;
+      const { traineeIds, ...row } = project;
+      await this.projects.insert(row);
+      await this.projects.replaceTrainees(project.id, traineeIds);
     }
   }
 }

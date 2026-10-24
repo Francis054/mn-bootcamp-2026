@@ -14,6 +14,26 @@ export class TraineeRepository extends BaseRepository<TraineeEntity> {
     return this.repository.count({ where: { focus } });
   }
 
+  async consentFlags(ids: readonly string[]): Promise<Map<string, boolean>> {
+    const flags = new Map<string, boolean>();
+    if (ids.length === 0) return flags;
+    const rows: unknown = await this.repository.manager.query(
+      'SELECT id, links_share_consent FROM trainees WHERE id = ANY($1::varchar[])',
+      [ids],
+    );
+    if (!Array.isArray(rows)) return flags;
+    for (const entry of rows) {
+      const item: unknown = entry;
+      if (typeof item !== 'object' || item === null) continue;
+      if (!('id' in item) || !('links_share_consent' in item)) continue;
+      const id: unknown = item.id;
+      const consent: unknown = item.links_share_consent;
+      if (typeof id !== 'string' || typeof consent !== 'boolean') continue;
+      flags.set(id, consent);
+    }
+    return flags;
+  }
+
   insert(trainee: Omit<TraineeEntity, 'createdAt' | 'updatedAt'>): Promise<TraineeEntity> {
     return this.repository.save(this.repository.create(trainee));
   }
