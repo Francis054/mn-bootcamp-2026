@@ -1,0 +1,164 @@
+import { Transform } from 'class-transformer';
+import { IsOptional, ValidateBy } from 'class-validator';
+import {
+  consentMessage,
+  displayNameMessage,
+  emailMessage,
+  focusMessage,
+  hueMessage,
+  initialsMessage,
+  listingMessage,
+  optionalHttpUrlMessage,
+  plainTextMessage,
+  publicationMessage,
+  skillsMessage,
+  trackMessage,
+} from './trainee.rules.js';
+
+function rule(name: string, problem: (value: unknown) => string | undefined, fallback: string) {
+  return ValidateBy({
+    name,
+    validator: {
+      validate: (value: unknown) => problem(value) === undefined,
+      defaultMessage: (args) => problem(args?.value) ?? fallback,
+    },
+  });
+}
+
+function skillsTransform({ value }: { value: unknown }): unknown {
+  if (value === undefined || value === null) return undefined;
+  if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) return value;
+  return value.map((item: string) => item.trim()).filter((item) => item.length > 0);
+}
+
+/** Body for `POST /admin/trainees`. Messages match the trainee form. */
+export class TraineeCreateDto {
+  @rule('displayName', displayNameMessage, 'Enter a display name.')
+  displayName!: string;
+
+  @rule('email', emailMessage, 'Enter your email address.')
+  email!: string;
+
+  @rule('track', trackMessage, 'Choose Blue team, Red team, or GRC & Awareness.')
+  track!: string;
+
+  @rule('focus', focusMessage, 'Choose a module.')
+  focus!: string;
+
+  @IsOptional()
+  @rule('initials', initialsMessage, 'Use initials of at most 8 characters.')
+  initials?: string;
+
+  @IsOptional()
+  @rule('hue', hueMessage, 'Choose a colour from 0 to 359.')
+  hue?: number;
+
+  @IsOptional()
+  @Transform(skillsTransform)
+  @rule('skills', skillsMessage, 'Enter skills as a list.')
+  skills?: string[];
+
+  @IsOptional()
+  @rule('bio', (value) => plainTextMessage(value, 5000), 'Use at most 5000 characters.')
+  bio?: string;
+
+  @IsOptional()
+  @rule('quote', (value) => plainTextMessage(value, 5000), 'Use at most 5000 characters.')
+  quote?: string;
+
+  @IsOptional()
+  @rule('linkedin', optionalHttpUrlMessage, 'Enter a full link starting with https://')
+  linkedin?: string;
+
+  @IsOptional()
+  @rule('portfolio', optionalHttpUrlMessage, 'Enter a full link starting with https://')
+  portfolio?: string;
+
+  @IsOptional()
+  @rule('consentReceived', consentMessage, 'Choose whether consent was received.')
+  consentReceived?: boolean;
+
+  @IsOptional()
+  @rule('listing', listingMessage, 'Choose a listing.')
+  listing?: string;
+
+  @IsOptional()
+  @rule('publicationStatus', publicationMessage, 'Choose a workflow state.')
+  publicationStatus?: string;
+
+  @IsOptional()
+  @rule('statusLabel', (value) => plainTextMessage(value, 80), 'Use at most 80 characters.')
+  statusLabel?: string;
+
+  @IsOptional()
+  @rule('internalNotes', (value) => plainTextMessage(value, 5000), 'Use at most 5000 characters.')
+  internalNotes?: string;
+}
+
+/** Body for `PATCH /admin/trainees/:id`. Omitted fields stay as they are. */
+export class TraineePatchDto {
+  @IsOptional()
+  @rule('displayName', displayNameMessage, 'Enter a display name.')
+  displayName?: string;
+
+  @IsOptional()
+  @rule('email', emailMessage, 'Enter your email address.')
+  email?: string;
+
+  @IsOptional()
+  @rule('track', trackMessage, 'Choose Blue team, Red team, or GRC & Awareness.')
+  track?: string;
+
+  @IsOptional()
+  @rule('focus', focusMessage, 'Choose a module.')
+  focus?: string;
+
+  @IsOptional()
+  @rule('initials', initialsMessage, 'Use initials of at most 8 characters.')
+  initials?: string;
+
+  @IsOptional()
+  @rule('hue', hueMessage, 'Choose a colour from 0 to 359.')
+  hue?: number;
+
+  @IsOptional()
+  @Transform(skillsTransform)
+  @rule('skills', skillsMessage, 'Enter skills as a list.')
+  skills?: string[];
+
+  @IsOptional()
+  @rule('bio', (value) => plainTextMessage(value, 5000), 'Use at most 5000 characters.')
+  bio?: string;
+
+  @IsOptional()
+  @rule('quote', (value) => plainTextMessage(value, 5000), 'Use at most 5000 characters.')
+  quote?: string;
+
+  @IsOptional()
+  @rule('linkedin', optionalHttpUrlMessage, 'Enter a full link starting with https://')
+  linkedin?: string;
+
+  @IsOptional()
+  @rule('portfolio', optionalHttpUrlMessage, 'Enter a full link starting with https://')
+  portfolio?: string;
+
+  @IsOptional()
+  @rule('consentReceived', consentMessage, 'Choose whether consent was received.')
+  consentReceived?: boolean;
+
+  @IsOptional()
+  @rule('listing', listingMessage, 'Choose a listing.')
+  listing?: string;
+
+  @IsOptional()
+  @rule('publicationStatus', publicationMessage, 'Choose a workflow state.')
+  publicationStatus?: string;
+
+  @IsOptional()
+  @rule('statusLabel', (value) => plainTextMessage(value, 80), 'Use at most 80 characters.')
+  statusLabel?: string;
+
+  @IsOptional()
+  @rule('internalNotes', (value) => plainTextMessage(value, 5000), 'Use at most 5000 characters.')
+  internalNotes?: string;
+}

@@ -217,6 +217,22 @@ Run it again and it does nothing to rows that are already there. It will not ove
 
 Modules and phases are editable on the admin routes (`/api/v1/admin/modules` and `/api/v1/admin/phases`). Foundation-wide counters stay for the settings milestone. They are not stored here.
 
+## Trainees
+
+A public profile is a row whose workflow is `published`, whose listing is `sample` or `public`, and whose `consentReceived` is true. Drafts, rows in review, scheduled rows, and hidden rows stay on the admin routes. The same is true of a published row that does not have consent.
+
+`GET /api/v1/public/trainees` returns the public profile: the display name, initials, colour, track, focus, skills, biography, quote, listing, workflow, and status label. The email, LinkedIn link, portfolio link, internal notes, consent flag, and consent timestamps stay on the admin response.
+
+The track is `Blue team`, `Red team`, or `GRC & Awareness`. `General` and `GRC & awareness` are rejected.
+
+An editor and an administrator both change profiles, including publish and delete. That is the website's `content.write` permission. A viewer can read the admin list. A change needs the session cookie and the matching `X-CSRF-Token` header.
+
+Publish does not change the listing. A hidden profile can be marked published and still stay off the public site. Publish is rejected while consent is false. Clearing consent sets the workflow back to draft in that same save, so the profile leaves the public site immediately. The admin row keeps when consent was recorded, which account recorded it, and when it was withdrawn. The audit row stores the action and the profile id. It does not store the name, the email, the links, or the notes.
+
+The trainee list has no bulk action. The class list is the one that publishes or deletes a selection. The admin list is a page. Search matches the display name, the track, and the skills. `filters.track` and `filters.focus` use the same dot form as the class filters.
+
+`npm run seed` also inserts twelve labelled profiles, `Sample Trainee 01` through `Sample Trainee 12`, with addresses at `example.test`. Their workflow is published and their consent is false, so the public list does not include them. Run the command again and it leaves an edited row alone.
+
 ## What is left for the next milestone
 
-Trainees. A public profile requires consent, and the email stays off the public response. The track check includes `GRC & Awareness`. Password-reset mail and invitations come after that. Foundation-wide counters come with the settings and homepage milestone, not with the curriculum.
+Projects. A public project link needs the trainee's link consent and a published project, and the address has to be a checked `https` URL. Events, the gallery, and the homepage, about, and settings pages come after that. Password-reset mail and invitations come with the accounts milestone. Foundation-wide counters come with the settings and homepage milestone.

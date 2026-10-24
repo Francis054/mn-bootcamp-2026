@@ -2,7 +2,7 @@ import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeor
 
 const AUTH_AUDIT_ACTIONS = ['auth.login.succeeded', 'auth.login.failed', 'auth.logout'] as const;
 
-export const CURRICULUM_KINDS = ['track', 'module', 'phase', 'lesson'] as const;
+export const CURRICULUM_KINDS = ['track', 'module', 'phase', 'lesson', 'trainee'] as const;
 export const CURRICULUM_VERBS = [
   'created',
   'updated',

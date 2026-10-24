@@ -7,10 +7,12 @@ import { LessonEntity } from '../modules/curriculum/lesson.entity.js';
 import { ModuleEntity } from '../modules/curriculum/module.entity.js';
 import { PhaseEntity } from '../modules/curriculum/phase.entity.js';
 import { TrackEntity } from '../modules/curriculum/track.entity.js';
+import { TraineeEntity } from '../modules/trainees/trainee.entity.js';
 import { UserEntity } from '../modules/users/user.entity.js';
 import { Auth1792868400000 } from './migrations/1792868400000-Auth.js';
 import { Baseline1792800000000 } from './migrations/1792800000000-Baseline.js';
 import { Curriculum1792886400000 } from './migrations/1792886400000-Curriculum.js';
+import { Trainees1792972800000 } from './migrations/1792972800000-Trainees.js';
 
 /**
  * `synchronize` stays false. Schema changes are migration files, reviewed like
@@ -33,8 +35,14 @@ export function createDataSource(
       ModuleEntity,
       PhaseEntity,
       LessonEntity,
+      TraineeEntity,
     ],
-    migrations: [Baseline1792800000000, Auth1792868400000, Curriculum1792886400000],
+    migrations: [
+      Baseline1792800000000,
+      Auth1792868400000,
+      Curriculum1792886400000,
+      Trainees1792972800000,
+    ],
     migrationsTableName: 'schema_migrations',
     ssl: env.databaseSsl ? { rejectUnauthorized: true } : false,
   });

@@ -42,6 +42,10 @@ import type {
 } from './records.js';
 import { isCatalogueId, slugify } from './slug.js';
 
+interface TraineeModuleUse {
+  countByModule(moduleId: string): Promise<number>;
+}
+
 /**
  * Tracks, modules, and phases. Lessons live in `LessonService` because their
  * rules and the class form are a different shape.
@@ -52,6 +56,7 @@ export class CatalogueService {
     private readonly modules: ModuleRepository,
     private readonly phases: PhaseRepository,
     private readonly lessons: LessonRepository,
+    private readonly trainees: TraineeModuleUse,
     private readonly audit: AuditRepository,
   ) {}
 
@@ -234,6 +239,12 @@ export class CatalogueService {
       throw new ApiError(
         'validation',
         'That module still has classes. Move or delete those classes first.',
+      );
+    }
+    if ((await this.trainees.countByModule(id)) > 0) {
+      throw new ApiError(
+        'validation',
+        'That module still has trainee profiles. Move or delete those profiles first.',
       );
     }
     const phases = await this.phases.findAll();
