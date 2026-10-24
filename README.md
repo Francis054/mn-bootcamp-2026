@@ -1,4 +1,33 @@
-# Maxim Nyansa Foundation · 2026 Cyber Security Bootcamp: interactive design prototype
+# Maxim Nyansa Foundation · 2026 Cyber Security Bootcamp
+
+Two things live in this repository.
+
+1. **`web/`** is the application frontend: Vite, React and TypeScript. It keeps the prototype’s CSS, logo and motion, and it prepares authentication and API boundaries. It is **not production-ready**. There is no backend. See `docs/ARCHITECTURE.md`, `docs/API.md` (pending) and `docs/AUDIT.md`.
+2. **The repository root** is the original static prototype. It is still the visual reference and still opens without a build. The notes below describe that prototype.
+
+## Run the application
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+Open http://localhost:5173. Copy `web/.env.example` if you need to override modes. Do not put secrets in env files; none are required.
+
+Development sign-in (explicitly not production authentication) uses fixture emails `viewer@example.test`, `editor@example.test` or `administrator@example.test`, any password of 8+ characters, and the acknowledgement checkbox. The password is discarded. Production builds set `VITE_AUTH_MODE=disabled` and will not create a session.
+
+```bash
+npm run typecheck
+npm run lint
+npm test
+npm run build
+npm run test:e2e
+```
+
+---
+
+## Prototype (static HTML)
 
 This is a high-fidelity, clickable prototype of the community site and its admin/CMS. It is plain HTML, CSS and vanilla JS. There is no build step, no backend and no tracking, and every font and image is bundled locally.
 
