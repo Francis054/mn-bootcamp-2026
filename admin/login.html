@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in · Admin · 2026 Cyber Bootcamp · Maxim Nyansa Foundation</title>
+<meta name="description" content="Design prototype for the Maxim Nyansa Foundation 2026 Cybersecurity Bootcamp community website.">
+<meta name="theme-color" content="#0E2A1E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2388CC00'/%3E%3Cpath d='M16 6l8 3v6c0 5-3.4 8.4-8 10.4C11.4 23.4 8 20 8 15V9z' fill='none' stroke='%230E2A1E' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../css/tokens.css"><link rel="stylesheet" href="../css/components.css"><link rel="stylesheet" href="../css/pages.css"><link rel="stylesheet" href="../css/admin.css">
+</head>
+<body data-root="../" data-page="" class="admin " data-admin="" data-crumbs="">
+<main id="main"><div class="login">
+  <section class="login__form">
+    <div class="login__brand"><span class="wordmark" style="color:var(--ink)"><span class="wordmark__mark" style="width:40px;height:40px;border-radius:10px;background:var(--mn-lime);display:grid;place-items:center;color:var(--forest-900)"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.8l7.5 2.9v5.6c0 4.8-3.2 8.3-7.5 9.9-4.3-1.6-7.5-5.1-7.5-9.9V5.7z"/><path d="M8.5 12l2.4 2.4 4.6-4.8"/></svg></span><span class="wordmark__text"><b>Bootcamp CMS</b><small>2026 cohort</small></span></span><span style="width:1px;height:28px;background:var(--line)"></span><img src="../assets/logo/maxim-nyansa-foundation-logo.png" width="200" height="41" alt="Maxim Nyansa Foundation logo" style="width:150px;height:auto"></div>
+    <span class="badge badge--warning" style="align-self:flex-start;margin-bottom:16px">Prototype — sample data</span>
+    <h1 style="font-size:34px;letter-spacing:-.03em;margin-bottom:8px">Welcome back</h1>
+    <p class="muted" style="margin-bottom:32px">Sign in to manage classes, trainees, events and media.</p>
+    <form id="login" novalidate>
+      <div class="error-summary" role="alert"></div>
+      <div class="field"><label for="em">Work email</label><input class="input" id="em" type="email" required autocomplete="username" placeholder="name@maximnyansa.com" data-req="Enter your email address."></div>
+      <div class="field"><div class="flex" style="justify-content:space-between"><label for="pw">Password</label><button type="button" class="link" style="background:none;border:0;font-size:13px;color:var(--forest-600);font-weight:600;cursor:pointer" onclick="MN.toast('Password reset is simulated','No email is sent from the prototype')">Forgot password?</button></div>
+        <div class="pw-wrap"><input class="input" id="pw" type="password" required autocomplete="current-password" data-min="8" data-req="Enter your password."><button type="button" class="icon-btn" id="pwt" aria-label="Show password" aria-pressed="false"><svg class="i i--sm"><use href="#i-eye"/></svg></button></div></div>
+      <label class="check"><input type="checkbox" checked> Keep me signed in on this device</label>
+      <button class="btn btn--dark" type="submit" style="justify-content:center">Sign in <span class="arrow"><svg class="i i--sm"><use href="#i-arrow-right"/></svg></span></button>
+      <p class="muted" style="font-size:13px">Prototype: any valid-looking email and an 8+ character password will open the dashboard. No account is checked.</p>
+    </form>
+  </section>
+  <aside class="login__art" aria-hidden="true">
+    <img src="../assets/img/electronics-lab-1600.webp" width="1600" height="1067" alt="">
+    <span class="a-sub" style="color:var(--mn-lime)">Maxim Nyansa Foundation · Cyber Security Bootcamp 2026</span>
+    <h2 style="margin-top:16px">Publish the journey, <em>week by week.</em></h2>
+  </aside>
+</div>
+</main>
+<script src="../js/data.js"></script><script src="../js/components.js"></script><script src="../js/admin.js"></script><script>
+(function(){
+  const f=document.getElementById('login');
+  MN.A.form(f,{savedMsg:'Signed in',onSave:()=>{location.href='index.html'}});
+  const t=document.getElementById('pwt'), p=document.getElementById('pw');
+  t.addEventListener('click',()=>{const s=p.type==='password';p.type=s?'text':'password';t.setAttribute('aria-pressed',s);t.setAttribute('aria-label',s?'Hide password':'Show password');});
+})();
+</script><script src="../js/motion.js"></script>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design system · 2026 Cyber Bootcamp · Maxim Nyansa Foundation</title>
+<meta name="description" content="Tokens and components for the Maxim Nyansa Foundation 2026 Cybersecurity Bootcamp prototype.">
+<meta name="theme-color" content="#0E2A1E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2388CC00'/%3E%3Cpath d='M16 6l8 3v6c0 5-3.4 8.4-8 10.4C11.4 23.4 8 20 8 15V9z' fill='none' stroke='%230E2A1E' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/tokens.css"><link rel="stylesheet" href="css/components.css"><link rel="stylesheet" href="css/pages.css">
+</head>
+<body data-root="" data-page="design-system" data-header-tone="light" class="docs">
+<a class="skip-link" href="#main">Skip to content</a>
+<header id="site-header"></header>
+<main id="main"><section class="page-hero" style="padding-bottom:var(--s-7)">
+  <div class="container">
+    <ol class="crumbs" data-reveal><li><a href="index-of-screens.html">All screens</a></li><li aria-current="page">Design system</li></ol>
+    <div class="split" style="align-items:end">
+      <div class="split__a" style="grid-column:1 / span 7"><span class="eyebrow" data-reveal>Reference · v0.1 prototype</span><h1 class="h1" style="margin-top:20px" data-split>Design system</h1></div>
+      <div class="split__b" style="grid-column:9 / span 4"><p class="lead" data-reveal>The tokens and components used across the public site and the admin. All values are live CSS variables from <code class="mono">css/tokens.css</code>.</p></div>
+    </div>
+  </div>
+</section>
+<section class="section" style="padding-top:var(--s-8)">
+  <div class="container docs-layout">
+    <nav class="toc docs-toc" aria-label="On this page">
+      <a href="#ds-brand">Brand &amp; logo</a><a href="#ds-colour">Colour</a><a href="#ds-type">Typography</a><a href="#ds-space">Spacing &amp; grid</a><a href="#ds-radius">Radii &amp; elevation</a><a href="#ds-buttons">Buttons</a><a href="#ds-forms">Inputs</a><a href="#ds-cards">Cards</a><a href="#ds-tabs">Tabs &amp; chips</a><a href="#ds-badges">Badges &amp; labels</a><a href="#ds-icons">Icons</a><a href="#ds-feedback">Feedback</a><a href="#ds-motion">Motion tokens</a>
+    </nav>
+    <div class="docs-main">
+
+      <div class="ds-block" id="ds-brand" style="border-top:0;padding-top:0">
+        <h2 class="h3">Brand &amp; logo</h2>
+        <p class="muted">The official Foundation logo is used unaltered, on light surfaces or a white plate, beside the bootcamp community wordmark. The only file available is 200×41 px, so it is never shown larger than that. A vector or high-resolution file is needed for production.</p>
+        <div class="ds-row">
+          <div class="ds-specimen"><img src="assets/logo/maxim-nyansa-foundation-logo.png" width="200" height="41" alt="Maxim Nyansa Foundation logo"><small>Official logo · 200×41 · light surface</small></div>
+          <div class="ds-specimen ds-specimen--dark"><span class="logo-plate"><img src="assets/logo/maxim-nyansa-foundation-logo.png" width="160" height="33" alt="Maxim Nyansa Foundation logo"></span><small>On dark: white plate</small></div>
+          <div class="ds-specimen" id="ds-lockup"><small>Community lockup (header)</small></div>
+        </div>
+        <p class="muted" style="margin-top:16px;font-size:14px"><b>Not supplied:</b> the bootcamp poster. Visual direction is based on the photos and on maximnyansa.com.</p>
+      </div>
+
+      <div class="ds-block" id="ds-colour">
+        <h2 class="h3">Colour</h2>
+        <p class="muted">The lime and neutrals are verified from the Foundation's logo and site. Forest greens, gold and terracotta are proposed extensions for this campaign.</p>
+        <h3 class="label" style="margin-bottom:12px">Verified brand</h3>
+        <div class="ds-grid" style="margin-bottom:28px">
+          <div class="swatch"><i style="background:#88CC00"></i><div><b>MN Lime</b><code>#88CC00 · --mn-lime</code></div></div>
+          <div class="swatch"><i style="background:#A9CF3E"></i><div><b>Site lime</b><code>#A9CF3E</code></div></div>
+          <div class="swatch"><i style="background:#79A00A"></i><div><b>Olive</b><code>#79A00A</code></div></div>
+          <div class="swatch"><i style="background:#111111"></i><div><b>Black</b><code>#111111</code></div></div>
+          <div class="swatch"><i style="background:#757575"></i><div><b>Grey</b><code>#757575</code></div></div>
+          <div class="swatch"><i style="background:#F5F5F5"></i><div><b>Light</b><code>#F5F5F5</code></div></div>
+        </div>
+        <h3 class="label" style="margin-bottom:12px">Proposed extensions</h3>
+        <div class="ds-grid" style="margin-bottom:28px">
+          <div class="swatch"><i style="background:#0A1F16"></i><div><b>Forest 900</b><code>#0A1F16</code></div></div>
+          <div class="swatch"><i style="background:#0E2A1E"></i><div><b>Forest 800</b><code>#0E2A1E</code></div></div>
+          <div class="swatch"><i style="background:#1F4D36"></i><div><b>Forest 600</b><code>#1F4D36</code></div></div>
+          <div class="swatch"><i style="background:#2E6A4B"></i><div><b>Forest 500</b><code>#2E6A4B</code></div></div>
+          <div class="swatch"><i style="background:#D9A441"></i><div><b>Gold</b><code>#D9A441</code></div></div>
+          <div class="swatch"><i style="background:#C8553D"></i><div><b>Terracotta</b><code>#C8553D</code></div></div>
+          <div class="swatch"><i style="background:#F6F7F2"></i><div><b>Paper</b><code>#F6F7F2</code></div></div>
+          <div class="swatch"><i style="background:#0F1A14"></i><div><b>Ink</b><code>#0F1A14</code></div></div>
+        </div>
+        <h3 class="label" style="margin-bottom:12px">Semantic</h3>
+        <div class="ds-grid">
+          <div class="swatch"><i style="background:var(--success)"></i><div><b>Success</b><code>#2E8B57</code></div></div>
+          <div class="swatch"><i style="background:var(--warning)"></i><div><b>Warning</b><code>#B7791F</code></div></div>
+          <div class="swatch"><i style="background:var(--danger)"></i><div><b>Danger</b><code>#C2412D</code></div></div>
+          <div class="swatch"><i style="background:var(--info)"></i><div><b>Info</b><code>#2B6CB0</code></div></div>
+          <div class="swatch"><i style="background:var(--focus)"></i><div><b>Focus ring</b><code>#2F7DF6</code></div></div>
+        </div>
+        <p class="muted" style="margin-top:16px;font-size:14px">Contrast: body text uses Ink on white or Paper (above 15:1). Lime is used as a fill behind Forest 900 text, never as text on white.</p>
+      </div>
+
+      <div class="ds-block" id="ds-type">
+        <h2 class="h3">Typography</h2>
+        <p class="muted">Space Grotesk for display, Noto Sans for body (the Foundation's site font), and JetBrains Mono for labels and code. All three are bundled locally in <code class="mono">assets/fonts</code>.</p>
+        <div class="type-scale">
+          <div><span class="label">Display · clamp 48–112</span><p class="display" style="font-size:clamp(2.5rem,6vw,5rem)">Secure the future.</p></div>
+          <div><span class="label">H1 · clamp 40–76</span><p class="h1" style="font-size:clamp(2rem,4.4vw,3.5rem)">Every lesson, in one place.</p></div>
+          <div><span class="label">H2 · clamp 32–52</span><p class="h2">Three-month journey</p></div>
+          <div><span class="label">H3 · clamp 24–32</span><p class="h3">Network security basics</p></div>
+          <div><span class="label">H4 · 22</span><p class="h4">Week 3 lab</p></div>
+          <div><span class="label">Lead · 18–21 · Noto Sans</span><p class="lead">A free bootcamp creating career perspectives for young people.</p></div>
+          <div><span class="label">Body · 16 / 1.6</span><p>Trainees practise in isolated lab environments and write up what they learn each week.</p></div>
+          <div><span class="label">Label · 12 mono</span><p class="label">Week 03 · Ethical hacking</p></div>
+          <div><span class="label">Code · 13.5 mono</span><pre class="code" style="margin:0">$ nmap -sV 10.0.0.0/24 <span class="c"># lab network only</span></pre></div>
+        </div>
+      </div>
+
+      <div class="ds-block" id="ds-space">
+        <h2 class="h3">Spacing &amp; grid</h2>
+        <p class="muted">An 8-point scale. 12-column grid, 1312 px max container, fluid gutters (20–64 px). Breakpoints are tested at 390, 768 and 1440.</p>
+        <div class="space-scale" id="space-scale"></div>
+        <div class="grid-demo" aria-hidden="true"></div>
+      </div>
+
+      <div class="ds-block" id="ds-radius">
+        <h2 class="h3">Radii &amp; elevation</h2>
+        <div class="ds-row" style="margin-bottom:28px">
+          <div class="r-demo" style="border-radius:var(--r-xs)">xs · 4</div><div class="r-demo" style="border-radius:var(--r-sm)">sm · 8</div><div class="r-demo" style="border-radius:var(--r-md)">md · 12</div><div class="r-demo" style="border-radius:var(--r-lg)">lg · 20</div><div class="r-demo" style="border-radius:var(--r-xl)">xl · 32</div><div class="r-demo" style="border-radius:var(--r-pill);width:140px">pill</div>
+        </div>
+        <div class="ds-row">
+          <div class="e-demo" style="box-shadow:var(--shadow-1)">shadow-1<br><small>Rows, inputs</small></div><div class="e-demo" style="box-shadow:var(--shadow-2)">shadow-2<br><small>Cards on hover</small></div><div class="e-demo" style="box-shadow:var(--shadow-3)">shadow-3<br><small>Menus, modals</small></div>
+        </div>
+      </div>
+
+      <div class="ds-block" id="ds-buttons">
+        <h2 class="h3">Buttons</h2>
+        <p class="muted">Hover fills from the bottom; the arrow nudges right. Press scales to 0.97. Focus uses a 3 px blue ring. Try them with the mouse and with Tab.</p>
+        <div class="ds-row" style="margin-bottom:16px">
+          <button class="btn" type="button" data-demo-toast>Primary <span class="arrow" data-ic="arrow-right"></span></button>
+          <button class="btn btn--dark" type="button" data-demo-toast>Dark</button>
+          <button class="btn btn--ghost" type="button" data-demo-toast>Ghost</button>
+          <button class="btn btn--danger" type="button" data-demo-toast>Danger</button>
+          <button class="btn" type="button" disabled>Disabled</button>
+          <button class="btn btn--dark" type="button" id="load-demo">Click to load</button>
+        </div>
+        <div class="ds-row" style="margin-bottom:16px">
+          <button class="btn btn--sm" type="button" data-demo-toast>Small</button>
+          <button class="btn btn--xs btn--ghost" type="button" data-demo-toast>Extra small</button>
+          <button class="btn btn--icon btn--ghost" type="button" aria-label="Search (demo)" data-demo-toast><span data-ic="search"></span></button>
+          <a class="link" href="#ds-buttons">Text link <span data-ic="arrow-right" data-ic-cls="i--sm"></span></a>
+        </div>
+        <div class="ds-row on-dark-demo">
+          <button class="btn btn--ghost-light" type="button" data-demo-toast>Ghost on dark</button>
+          <button class="btn" type="button" data-demo-toast>Primary on dark</button>
+        </div>
+      </div>
+
+      <div class="ds-block" id="ds-forms">
+        <h2 class="h3">Inputs</h2>
+        <div class="form-grid" style="max-width:760px">
+          <div class="field"><label for="ds-i1">Default</label><input class="input" id="ds-i1" placeholder="e.g. Network security basics"><span class="hint">Helper text sits under the field.</span></div>
+          <div class="field has-error"><label for="ds-i2">Error</label><input class="input" id="ds-i2" value="not-an-email" aria-invalid="true" aria-describedby="ds-e2"><span class="error-msg" id="ds-e2"><span data-ic="alert" data-ic-cls="i--sm"></span>Enter a valid email address</span></div>
+          <div class="field"><label for="ds-i3">Disabled</label><input class="input" id="ds-i3" value="Read only" disabled></div>
+          <div class="field"><label for="ds-i4">Select</label><select class="select" id="ds-i4"><option>Network security</option><option>Ethical hacking</option><option>Digital forensics</option></select></div>
+          <div class="field"><label for="ds-i5">Search</label><div class="input-icon"><span data-ic="search"></span><input class="input" id="ds-i5" type="search" placeholder="Search classes…"></div></div>
+          <div class="field"><span class="field-label">Choice controls</span><div class="ds-row"><label class="check"><input type="checkbox" checked> Checkbox</label><label class="switch"><input type="checkbox" checked><span class="track"></span>Switch</label></div></div>
+          <div class="field span-2"><label for="ds-i6">Textarea</label><textarea class="textarea" id="ds-i6" placeholder="Lab notes…"></textarea></div>
+        </div>
+      </div>
+
+      <div class="ds-block" id="ds-cards">
+        <h2 class="h3">Cards</h2>
+        <p class="muted">Cards lift 4 px with shadow-2 on hover; the photo zooms slowly. The whole card is one link.</p>
+        <div class="ds-cards">
+          <a class="card" href="lesson.html?id=3"><div class="card__media" style="aspect-ratio:4/3"><img src="assets/img/hack-coding-team-1600.webp" srcset="assets/img/hack-coding-team-800.webp 800w, assets/img/hack-coding-team-1600.webp 1600w" sizes="(max-width:760px) 100vw, 33vw" width="1600" height="1066" alt="Students working at laptops in a hall" loading="lazy" decoding="async"></div><div class="card__body"><span class="card__meta label">Week 03 · Sample</span><h3 class="card__title h4">Lesson card</h3><p class="muted" style="font-size:14px">Photo, label, title and summary.</p></div></a>
+          <a class="card" href="project.html?id=1"><div class="card__media" style="aspect-ratio:4/3" id="ds-cover"></div><div class="card__body"><span class="card__meta label">Lab · Sample</span><h3 class="card__title h4">Project card</h3><p class="muted" style="font-size:14px">Abstract cover art, not photos.</p></div></a>
+          <div class="card" style="padding:24px"><span class="label">Stat · verified</span><p class="h2" style="margin:8px 0">2016</p><p class="muted" style="font-size:14px">Year founded. Only verified figures are shown as stats.</p></div>
+        </div>
+      </div>
+
+      <div class="ds-block" id="ds-tabs">
+        <h2 class="h3">Tabs &amp; chips</h2>
+        <div class="tabs" role="tablist" aria-label="Demo tabs">
+          <button class="tab" role="tab" id="dt1" aria-selected="true" aria-controls="dp1">Overview</button>
+          <button class="tab" role="tab" id="dt2" aria-selected="false" aria-controls="dp2" tabindex="-1">Labs</button>
+          <button class="tab" role="tab" id="dt3" aria-selected="false" aria-controls="dp3" tabindex="-1">Resources</button>
+        </div>
+        <div class="tab-panel" role="tabpanel" id="dp1" aria-labelledby="dt1" style="padding:18px 0">The lime ink slides to the selected tab. Use the arrow keys to move between tabs.</div>
+        <div class="tab-panel" role="tabpanel" id="dp2" aria-labelledby="dt2" style="padding:18px 0" hidden>Panels fade up 10 px when shown.</div>
+        <div class="tab-panel" role="tabpanel" id="dp3" aria-labelledby="dt3" style="padding:18px 0" hidden>A third panel, for the demo.</div>
+        <div class="chips" role="group" aria-label="Demo filter chips" id="ds-chips" style="margin-top:12px">
+          <button class="chip" type="button" aria-pressed="true">All <span class="count">12</span></button>
+          <button class="chip" type="button" aria-pressed="false">Completed <span class="count">2</span></button>
+          <button class="chip" type="button" aria-pressed="false">This week <span class="count">1</span></button>
+          <button class="chip" type="button" aria-pressed="false">Upcoming <span class="count">9</span></button>
+        </div>
+      </div>
+
+      <div class="ds-block" id="ds-badges">
+        <h2 class="h3">Badges &amp; labels</h2>
+        <div class="ds-row" style="margin-bottom:16px">
+          <span class="badge badge--success"><span class="dot"></span>Published</span>
+          <span class="badge badge--warning"><span class="dot"></span>Draft</span>
+          <span class="badge badge--danger"><span class="dot"></span>Error</span>
+          <span class="badge badge--info"><span class="dot"></span>Scheduled</span>
+          <span class="badge badge--lime"><span class="dot"></span>Live this week</span>
+          <span class="badge badge--dark">Milestone</span>
+          <span class="badge">Neutral</span>
+        </div>
+        <div class="ds-row">
+          <span class="verified">Verified</span><span class="tbc">Details TBC</span><span class="ph">Sample content</span><span class="tag">Forensics</span><span class="eyebrow">Eyebrow</span>
+        </div>
+        <p class="muted" style="margin-top:16px;font-size:14px"><b>Content honesty:</b> every unconfirmed fact carries a Verified, TBC or Sample label. These labels are part of the system, not decoration.</p>
+      </div>
+
+      <div class="ds-block" id="ds-icons">
+        <h2 class="h3">Icons</h2>
+        <p class="muted">A 24-px outline set with a 1.75 stroke, inlined as an SVG sprite. Sizes: 16, 20 and 28.</p>
+        <div class="icon-grid" id="icon-grid"></div>
+      </div>
+
+      <div class="ds-block" id="ds-feedback">
+        <h2 class="h3">Feedback</h2>
+        <div class="ds-row" style="margin-bottom:20px">
+          <button class="btn btn--sm btn--dark" type="button" id="t-ok">Success toast</button>
+          <button class="btn btn--sm btn--ghost" type="button" id="t-info">Info toast</button>
+          <button class="btn btn--sm btn--ghost" type="button" id="t-err">Error toast</button>
+          <button class="btn btn--sm btn--danger" type="button" id="m-del">Confirm modal</button>
+        </div>
+        <div class="ds-row" style="align-items:stretch">
+          <div class="skel-demo" aria-hidden="true"><div class="skel" style="height:120px;margin-bottom:12px"></div><div class="skel" style="height:14px;width:70%;margin-bottom:8px"></div><div class="skel" style="height:14px;width:45%"></div></div>
+          <div class="empty" style="flex:1;min-width:240px;margin:0"><div class="empty__art"><span data-ic="search"></span></div><h3>Empty state</h3><p class="muted">Explain what's missing and offer one action.</p></div>
+        </div>
+      </div>
+
+      <div class="ds-block" id="ds-motion">
+        <h2 class="h3">Motion tokens</h2>
+        <p class="muted">Click a row to preview. With reduced motion turned on, every duration drops to 1 ms. Full per-animation details are in the <a class="link" href="motion-spec.html">motion spec</a>.</p>
+        <div class="table-wrap"><table class="table motion-tokens">
+          <thead><tr><th scope="col">Token</th><th scope="col">Value</th><th scope="col">Use</th><th scope="col"><span class="sr-only">Preview</span></th></tr></thead>
+          <tbody>
+            <tr><td class="mono">--d-instant</td><td class="mono">100ms</td><td>Press feedback</td><td><button class="btn btn--xs btn--ghost" type="button" data-play="100ms|var(--ease-out)">Play</button></td></tr>
+            <tr><td class="mono">--d-fast</td><td class="mono">180ms</td><td>Colour, border, focus</td><td><button class="btn btn--xs btn--ghost" type="button" data-play="180ms|var(--ease-out)">Play</button></td></tr>
+            <tr><td class="mono">--d-base</td><td class="mono">280ms</td><td>Hover fills, toggles, dropdowns</td><td><button class="btn btn--xs btn--ghost" type="button" data-play="280ms|var(--ease-out)">Play</button></td></tr>
+            <tr><td class="mono">--d-slow</td><td class="mono">520ms</td><td>Panels, lightbox, rows out</td><td><button class="btn btn--xs btn--ghost" type="button" data-play="520ms|var(--ease-in-out)">Play</button></td></tr>
+            <tr><td class="mono">--d-reveal</td><td class="mono">900ms</td><td>Scroll reveals</td><td><button class="btn btn--xs btn--ghost" type="button" data-play="900ms|var(--ease-out)">Play</button></td></tr>
+            <tr><td class="mono">--d-draw</td><td class="mono">2200ms</td><td>The anniversary "10" stroke</td><td><button class="btn btn--xs btn--ghost" type="button" data-play="2200ms|var(--ease-in-out)">Play</button></td></tr>
+            <tr><td class="mono">--ease-out</td><td class="mono">cubic-bezier(.16,1,.3,1)</td><td>Entrances and reveals</td><td></td></tr>
+            <tr><td class="mono">--ease-in-out</td><td class="mono">cubic-bezier(.65,0,.35,1)</td><td>Transitions between states</td><td></td></tr>
+            <tr><td class="mono">--ease-spring</td><td class="mono">cubic-bezier(.34,1.56,.64,1)</td><td>Switch thumb (small overshoot)</td><td></td></tr>
+            <tr><td class="mono">--stagger</td><td class="mono">70ms</td><td>Delay between grouped items</td><td></td></tr>
+          </tbody>
+        </table></div>
+        <div class="motion-lane" aria-hidden="true"><div class="demo-box" id="mbox"></div></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+</main>
+<footer id="site-footer"></footer>
+<script src="js/data.js"></script><script src="js/components.js"></script><script>
+(function(){
+  document.querySelectorAll('[data-ic]').forEach(s=>{ s.outerHTML = MN.icon(s.dataset.ic, s.dataset.icCls||''); });
+  document.getElementById('ds-lockup').insertAdjacentHTML('afterbegin', MN.lockup());
+  document.getElementById('ds-cover').innerHTML = MN.cover('terminal','LAB · SAMPLE');
+  const gd=document.querySelector('.grid-demo'); gd.innerHTML='<i></i>'.repeat(12);
+  const sp=[['s-1',4],['s-2',8],['s-3',12],['s-4',16],['s-5',24],['s-6',32],['s-7',40],['s-8',48],['s-9',64],['s-10',80],['s-11',96],['s-12',128]];
+  document.getElementById('space-scale').innerHTML = sp.map(([n,v])=>`<div><i style="width:${v}px"></i><code>--${n}</code><span>${v}</span></div>`).join('');
+  const icons='arrow-right arrow-left arrow-up-right chevron-down chevron-left chevron-right x menu search filter plus edit trash eye calendar map-pin clock users user shield lock network terminal scan alert check check-circle image upload settings home book layers flag grid bell log-out external mail play download sidebar more info file award sparkle commit copy globe cpu drag monitor phone linkedin facebook instagram twitter youtube'.split(' ');
+  document.getElementById('icon-grid').innerHTML = icons.map(n=>`<div class="ic-cell">${MN.icon(n)}<span>${n}</span></div>`).join('');
+  document.querySelectorAll('[data-demo-toast]').forEach(b=>b.addEventListener('click',()=>MN.toast('Button pressed', b.textContent.trim()+' · demo only','info')));
+  const ld=document.getElementById('load-demo');
+  ld.addEventListener('click',()=>{ ld.classList.add('is-loading'); ld.setAttribute('aria-busy','true'); setTimeout(()=>{ ld.classList.remove('is-loading'); ld.removeAttribute('aria-busy'); MN.toast('Saved','Loading state finished','success'); },1400); });
+  document.querySelectorAll('#ds-chips .chip').forEach(c=>c.addEventListener('click',()=>{ document.querySelectorAll('#ds-chips .chip').forEach(x=>x.setAttribute('aria-pressed', x===c)); }));
+  document.getElementById('t-ok').onclick=()=>MN.toast('Class published','Week 03 is now live','success');
+  document.getElementById('t-info').onclick=()=>MN.toast('Heads up','This is sample data','info');
+  document.getElementById('t-err').onclick=()=>MN.toast('Could not save','Check your connection and try again','error');
+  document.getElementById('m-del').onclick=()=>MN.confirm({title:'Delete this class?',text:'This is a demo. Nothing will be deleted.',ok:'Delete'}).then(ok=>ok&&MN.toast('Deleted','Demo only — nothing was removed','success'));
+  const box=document.getElementById('mbox');
+  document.querySelectorAll('[data-play]').forEach(b=>b.addEventListener('click',()=>{
+    const [d,e]=b.dataset.play.split('|'); const far=box.classList.contains('is-far');
+    box.style.transition = MN.reduced()? 'none' : `transform ${d} ${e}`; box.classList.toggle('is-far', !far);
+  }));
+  // toc active state
+  const links=[...document.querySelectorAll('.docs-toc a')];
+  if ('IntersectionObserver' in window) { const io=new IntersectionObserver(es=>es.forEach(en=>{ if(en.isIntersecting){ links.forEach(l=>l.classList.toggle('is-active', l.getAttribute('href')==='#'+en.target.id)); } }),{rootMargin:'-30% 0px -60% 0px'}); document.querySelectorAll('.ds-block').forEach(b=>io.observe(b)); }
+})();
+</script><script src="js/motion.js"></script>
+</body>
+</html>

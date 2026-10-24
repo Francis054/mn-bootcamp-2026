@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anniversary timeline · Admin · 2026 Cyber Bootcamp · Maxim Nyansa Foundation</title>
+<meta name="description" content="Design prototype for the Maxim Nyansa Foundation 2026 Cybersecurity Bootcamp community website.">
+<meta name="theme-color" content="#0E2A1E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2388CC00'/%3E%3Cpath d='M16 6l8 3v6c0 5-3.4 8.4-8 10.4C11.4 23.4 8 20 8 15V9z' fill='none' stroke='%230E2A1E' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../css/tokens.css"><link rel="stylesheet" href="../css/components.css"><link rel="stylesheet" href="../css/pages.css"><link rel="stylesheet" href="../css/admin.css">
+</head>
+<body data-root="../" data-page="" class="admin " data-admin="timeline" data-crumbs="Site content>content.html|Anniversary timeline">
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="admin-shell"><aside id="admin-sidebar"></aside><div class="admin-body"><header id="admin-topbar"></header>
+<main id="main" class="admin-main"><div class="a-head"><div><h1>Anniversary timeline</h1><p>The “10 years” rail on the anniversary page. Drag to reorder, or use the handle with ↑ / ↓. Dashed rows are gaps waiting for confirmed milestones.</p></div><div class="a-head__actions"><a class="btn btn--ghost btn--sm" href="../anniversary.html" target="_blank"><svg class="i i--sm"><use href="#i-eye"/></svg>Preview</a><button class="btn btn--dark btn--sm" type="button" id="add"><svg class="i i--sm"><use href="#i-plus"/></svg>Add milestone</button></div></div>
+<div class="a-grid">
+  <section class="panel span-8"><div class="panel__head"><h2>Milestones</h2><span class="result-count" id="cnt"></span></div><div class="panel__body"><ul class="drag-list" id="list"></ul></div><div class="panel__foot"><span id="ord" aria-live="polite">Order saved · prototype</span><button class="btn btn--dark btn--xs" type="button" id="save">Save order</button></div></section>
+  <aside class="panel span-4"><div class="panel__head"><h2>Rules</h2></div><div class="panel__body" style="font-size:14.5px;display:flex;flex-direction:column;gap:12px">
+    <p><b>Verified only.</b> Each milestone needs a public source before it is shown without a “to be supplied” label.</p>
+    <p><b>No invented achievements.</b> Leave a gap instead of guessing.</p>
+    <p><b>Open:</b> highlights for 2018, 2019 and 2021–25 are awaiting the Foundation.</p>
+  </div></aside>
+</div>
+<div class="modal-backdrop" id="md" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="md-t"><h2 id="md-t">Edit milestone</h2><form id="mf" novalidate class="form-stack" style="margin-top:16px"><div class="error-summary" role="alert"></div><div class="field"><label for="m-y">Year *</label><input class="input" id="m-y" required maxlength="9" data-req="Enter a year or range."></div><div class="field"><label for="m-t">Title *</label><input class="input" id="m-t" required maxlength="60" data-req="Enter a title."></div><div class="field"><label for="m-d">Description</label><textarea class="textarea" id="m-d" maxlength="200"></textarea></div><div class="field"><label for="m-s">Source</label><input class="input" id="m-s" placeholder="Leave blank to mark as a gap"></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn--ghost btn--sm" type="button" id="m-x">Cancel</button><button class="btn btn--dark btn--sm" type="submit">Save milestone</button></div></form></div></div>
+</main></div></div>
+<script src="../js/data.js"></script><script src="../js/components.js"></script><script src="../js/admin.js"></script><script>
+(function(){
+  const $=id=>document.getElementById(id);
+  let rows=[
+    {y:'2016',t:'The Foundation is established',d:'First pilots in a junior high school in Accra and with a group of 10 young IT graduates.',s:'maximnyansa.com'},
+    {y:'2017',t:'Steady growth begins',d:'The Foundation’s work grows steadily from 2017 onwards.',s:'maximnyansa.com'},
+    {y:'2018',t:'Milestone to be supplied',d:'',s:''},
+    {y:'2019',t:'Milestone to be supplied',d:'',s:''},
+    {y:'2020',t:'First cybersecurity bootcamp',d:'Pilot bootcamp at the Tantra Hills training centre with 14 trainees.',s:'Foundation post, Jan 2020'},
+    {y:'2021–25',t:'Milestones to be supplied',d:'',s:''},
+    {y:'2026',t:'Ten years, and a new cohort',d:'Bootcamp starts 5 Oct; GNBCC reception 8 Oct; Grand Durbar 10 Oct.',s:'maximnyansa.com, GNBCC'}];
+  let editing=null, last=null;
+  const up='<svg class="i i--sm" aria-hidden="true" style="transform:rotate(180deg)"><use href="#i-chevron-down"/></svg>';
+  const draw=()=>{ $('list').innerHTML=rows.map((r,i)=>`<li class="drag-item${r.s?'':' is-gap'}" draggable="true" data-i="${i}"><button type="button" class="drag-handle" aria-label="Reorder ${MN.A.esc(r.y)}. Use arrow keys">${MN.icon('drag','i--sm')}</button><span class="yr">${MN.A.esc(r.y)}</span><div><b>${MN.A.esc(r.t)}</b><small>${r.s?'Source: '+MN.A.esc(r.s):'Gap — no verified source yet'}</small></div><div class="actions"><button type="button" class="icon-btn" data-move="-1" aria-label="Move ${MN.A.esc(r.y)} up"${i?'':' disabled'}>${up}</button><button type="button" class="icon-btn" data-move="1" aria-label="Move ${MN.A.esc(r.y)} down"${i<rows.length-1?'':' disabled'}>${MN.icon('chevron-down','i--sm')}</button><button type="button" class="icon-btn" data-edit aria-label="Edit ${MN.A.esc(r.y)}">${MN.icon('edit','i--sm')}</button><button type="button" class="icon-btn danger" data-rm aria-label="Delete ${MN.A.esc(r.y)}">${MN.icon('trash','i--sm')}</button></div></li>`).join(''); $('cnt').textContent=`${rows.filter(r=>r.s).length} verified · ${rows.filter(r=>!r.s).length} gaps`; };
+  const reorder=()=>{ const li=[...$('list').children]; rows=li.map(l=>rows[+l.dataset.i]); li.forEach((l,i)=>{ l.dataset.i=i; l.querySelector('[data-move="-1"]').disabled=!i; l.querySelector('[data-move="1"]').disabled=i===li.length-1; }); $('ord').textContent='Order changed — not saved'; };
+  draw(); MN.A.dragList($('list'),reorder);
+  $('save').onclick=()=>{ $('ord').textContent='Order saved · prototype'; MN.toast('Timeline order saved','Prototype — nothing was stored','success'); };
+  const open=i=>{ editing=i; last=document.activeElement; const r=i==null?{y:'',t:'',d:'',s:''}:rows[i]; $('m-y').value=r.y; $('m-t').value=r.t; $('m-d').value=r.d; $('m-s').value=r.s; $('md-t').textContent=i==null?'Add milestone':'Edit milestone'; $('md').hidden=false; requestAnimationFrame(()=>$('md').classList.add('is-open')); $('m-y').focus(); };
+  const close=()=>{ $('md').classList.remove('is-open'); $('md').hidden=true; last&&last.focus(); };
+  $('add').onclick=()=>open(null); $('m-x').onclick=close; $('md').addEventListener('click',e=>{if(e.target===$('md'))close();}); $('md').addEventListener('keydown',e=>{if(e.key==='Escape')close();});
+  $('list').addEventListener('click',e=>{ const li=e.target.closest('.drag-item'); if(!li)return; const i=+li.dataset.i;
+    if(e.target.closest('[data-edit]')) open(i);
+    if(e.target.closest('[data-rm]')) MN.confirm({title:`Delete ${rows[i].y}?`,text:'This removes the milestone from the anniversary page. Prototype only.'}).then(ok=>{if(!ok)return; li.style.transition='opacity 200ms'; li.style.opacity=0; setTimeout(()=>{rows.splice(i,1);draw();MN.toast('Milestone deleted');},200);}); });
+  MN.A.form($('mf'),{savedMsg:'Milestone saved',onSave:()=>{ const r={y:$('m-y').value.trim(),t:$('m-t').value.trim(),d:$('m-d').value.trim(),s:$('m-s').value.trim()}; if(editing==null) rows.push(r); else rows[editing]=r; draw(); close(); }});
+})();
+</script><script src="../js/motion.js"></script>
+</body>
+</html>

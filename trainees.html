@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trainees · 2026 Cyber Bootcamp · Maxim Nyansa Foundation</title>
+<meta name="description" content="Directory of the 2026 Cybersecurity Bootcamp cohort (sample profiles).">
+<meta name="theme-color" content="#0E2A1E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2388CC00'/%3E%3Cpath d='M16 6l8 3v6c0 5-3.4 8.4-8 10.4C11.4 23.4 8 20 8 15V9z' fill='none' stroke='%230E2A1E' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/tokens.css"><link rel="stylesheet" href="css/components.css"><link rel="stylesheet" href="css/pages.css">
+</head>
+<body data-root="" data-page="trainees" data-header-tone="light">
+<a class="skip-link" href="#main">Skip to content</a>
+<header id="site-header"></header>
+<main id="main"><section class="page-hero" style="padding-bottom:var(--s-8)">
+  <div class="container">
+    <ol class="crumbs" data-reveal><li><a href="index.html">Home</a></li><li aria-current="page">Trainees</li></ol>
+    <div class="split" style="align-items:end">
+      <div class="split__a" style="grid-column:1 / span 7"><span class="eyebrow" data-reveal>The 2026 cohort</span><h1 class="h1" style="margin-top:20px" data-split>The people<br>behind the work.</h1></div>
+      <div class="split__b" style="grid-column:9 / span 4"><p class="lead" data-reveal>Search by name, filter by focus area or track.</p>
+        <div class="callout" style="margin-top:20px;padding:16px 20px" data-reveal><p style="font-size:14px"><b>Sample profiles only.</b> Real names, photos and links will be published only after each trainee gives written consent.</p></div></div>
+    </div>
+  </div>
+</section>
+<section class="section" style="padding-top:var(--s-7)">
+  <div class="container">
+    <div class="toolbar">
+      <label class="input-icon"><span class="sr-only">Search trainees</span><svg class="i"><use href="#i-search"/></svg><input class="input" type="search" id="q" placeholder="Search name or skill…" autocomplete="off"></label>
+      <label><span class="sr-only">Track</span><select class="select" id="track"><option value="">All tracks</option><option>Blue team</option><option>Red team</option><option>GRC &amp; awareness</option></select></label>
+      <span class="result-count" id="count" aria-live="polite"></span>
+    </div>
+    <div class="chips" role="group" aria-label="Filter by focus" id="chips" style="margin-top:-24px;margin-bottom:32px"></div>
+    <div class="t-grid" id="grid"></div>
+    <div class="empty" id="empty" hidden><div class="empty__art"><svg class="i i--lg"><use href="#i-users"/></svg></div><h3>No trainees found</h3><p class="muted">Try a different search or clear the filters.</p><button class="btn btn--ghost btn--sm" id="reset" style="margin-top:16px">Clear filters</button></div>
+  </div>
+</section>
+</main>
+<footer id="site-footer"></footer>
+<script src="js/data.js"></script><script src="js/components.js"></script><script>
+(function(){
+  const grid=document.getElementById('grid'), q=document.getElementById('q'), tr=document.getElementById('track'), chipsEl=document.getElementById('chips');
+  grid.innerHTML=MN.TRAINEES.map(t=>`<a class="tcard" href="trainee.html?id=${t.id}" data-focus="${t.focus}" data-track="${t.track}" data-text="${(t.name+' '+t.skills.join(' ')+' '+MN.mod(t.focus).name).toLowerCase()}">
+    <div class="tcard__art" style="--h:${t.hue}"><span class="ph">Placeholder</span>${MN.avatar(t)}</div>
+    <div class="tcard__body"><h3>${t.name}</h3><p>${t.track} · ${MN.mod(t.focus).short}</p><div class="tcard__tags">${t.skills.slice(0,2).map(s=>`<span class="tag">${s}</span>`).join('')}</div></div></a>`).join('');
+  chipsEl.innerHTML=`<button class="chip" aria-pressed="true" data-f="">All focus areas</button>`+MN.MODULES.map(m=>`<button class="chip" aria-pressed="false" data-f="${m.id}">${m.short}</button>`).join('');
+  let f='';
+  const apply=()=>{const s=q.value.trim().toLowerCase(), t=tr.value;
+    const n=MN.filterItems([...grid.children],el=>(!s||el.dataset.text.includes(s))&&(!t||el.dataset.track===t)&&(!f||el.dataset.focus===f),document.getElementById('empty'));
+    document.getElementById('count').textContent=`${n} of ${MN.TRAINEES.length} trainees`;};
+  q.addEventListener('input',apply); tr.addEventListener('change',apply);
+  chipsEl.addEventListener('click',e=>{const c=e.target.closest('.chip'); if(!c)return; chipsEl.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x===c)); f=c.dataset.f; apply();});
+  document.getElementById('reset').addEventListener('click',()=>{q.value='';tr.value='';chipsEl.querySelector('.chip').click();});
+  apply();
+})();
+</script><script src="js/motion.js"></script>
+</body>
+</html>

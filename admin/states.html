@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UI states · Admin · 2026 Cyber Bootcamp · Maxim Nyansa Foundation</title>
+<meta name="description" content="Design prototype for the Maxim Nyansa Foundation 2026 Cybersecurity Bootcamp community website.">
+<meta name="theme-color" content="#0E2A1E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2388CC00'/%3E%3Cpath d='M16 6l8 3v6c0 5-3.4 8.4-8 10.4C11.4 23.4 8 20 8 15V9z' fill='none' stroke='%230E2A1E' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../css/tokens.css"><link rel="stylesheet" href="../css/components.css"><link rel="stylesheet" href="../css/pages.css"><link rel="stylesheet" href="../css/admin.css">
+</head>
+<body data-root="../" data-page="" class="admin " data-admin="states" data-crumbs="UI states">
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="admin-shell"><aside id="admin-sidebar"></aside><div class="admin-body"><header id="admin-topbar"></header>
+<main id="main" class="admin-main"><div class="a-head"><div><h1>UI states</h1><p>Reference for empty, loading, error, success and permission states used across the admin.</p></div><div class="a-head__actions"><button class="btn btn--ghost btn--sm" type="button" id="reload"><svg class="i i--sm"><use href="#i-clock"/></svg>Replay loading</button></div></div>
+<div class="state-grid">
+  <article class="state-card"><header><b>Empty list</b><span class="badge">Empty</span></header><div class="state-card__body"><div class="empty"><div class="empty__art"><svg class="i"><use href="#i-layers"/></svg></div><h3>No projects yet</h3><p>Projects appear here once a team submits work for review.</p><a class="btn btn--dark btn--sm" href="project-edit.html?new=1"><svg class="i i--sm"><use href="#i-plus"/></svg>Add a project</a></div></div></article>
+  <article class="state-card"><header><b>No search results</b><span class="badge">Empty</span></header><div class="state-card__body"><div class="empty"><div class="empty__art"><svg class="i"><use href="#i-search"/></svg></div><h3>Nothing matches “firewal”</h3><p>Check the spelling or clear the filters.</p><button class="btn btn--ghost btn--sm" type="button" data-toast="Filters cleared">Clear filters</button></div></div></article>
+  <article class="state-card"><header><b>Loading (skeleton)</b><span class="badge badge--info"><span class="dot"></span>Loading</span></header><div class="state-card__body" id="sk" aria-busy="true" aria-label="Loading list"></div></article>
+  <article class="state-card"><header><b>Toasts</b><span class="badge badge--lime"><span class="dot"></span>Feedback</span></header><div class="state-card__body" style="display:flex;flex-wrap:wrap;gap:10px"><button class="btn btn--ghost btn--sm" type="button" data-t="success">Success</button><button class="btn btn--ghost btn--sm" type="button" data-t="info">Info</button><button class="btn btn--ghost btn--sm" type="button" data-t="error">Error</button><button class="btn btn--danger btn--sm" type="button" id="cdel">Confirm delete</button><p style="flex-basis:100%;font-size:13.5px;color:var(--ink-3)">Toasts stack bottom-right, auto-dismiss after ~4s and are announced to screen readers.</p></div></article>
+  <article class="state-card"><header><b>Validation errors</b><span class="badge badge--danger"><span class="dot"></span>Error</span></header><div class="state-card__body"><form id="vf" novalidate class="form-stack"><div class="error-summary" role="alert"></div><div class="field"><label for="v-t">Class title *</label><input class="input" id="v-t" required data-min="6" data-req="Give the class a title."></div><div class="field"><label for="v-e">Contact email *</label><input class="input" id="v-e" type="email" required value="not-an-email" data-req="Enter an email address."></div><button class="btn btn--dark btn--sm" type="submit" style="align-self:flex-start">Save</button></form></div></article>
+  <article class="state-card"><header><b>Access denied</b><span class="badge badge--danger"><span class="dot"></span>403</span></header><div class="state-card__body"><div class="denied empty"><div class="empty__art"><svg class="i"><use href="#i-lock"/></svg></div><h3>You don’t have access to Settings</h3><p>Viewers can see content but not change site settings. Ask an owner for Editor access.</p><button class="btn btn--ghost btn--sm" type="button" data-toast="Access request is simulated">Request access</button></div></div></article>
+  <article class="state-card"><header><b>Error loading</b><span class="badge badge--danger"><span class="dot"></span>Error</span></header><div class="state-card__body"><div class="empty"><div class="empty__art" style="background:var(--danger-bg);color:var(--danger)"><svg class="i"><use href="#i-alert"/></svg></div><h3>Couldn’t load events</h3><p>Check your connection and try again.</p><button class="btn btn--dark btn--sm" type="button" id="retry">Try again</button></div></div></article>
+  <article class="state-card"><header><b>Success</b><span class="badge badge--success"><span class="dot"></span>Done</span></header><div class="state-card__body"><div class="empty"><div class="empty__art" style="background:var(--lime-100);color:var(--forest-700)"><svg class="i"><use href="#i-check-circle"/></svg></div><h3>Class published</h3><p>Week 3 is now visible in the public archive (sample).</p><a class="btn btn--ghost btn--sm" href="../classes.html" target="_blank">View on site</a></div></div></article>
+</div>
+</main></div></div>
+<script src="../js/data.js"></script><script src="../js/components.js"></script><script src="../js/admin.js"></script><script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const sk=()=>{ const b=$('sk'); b.setAttribute('aria-busy','true'); b.innerHTML=Array.from({length:4},()=>'<div class="skel-row"><span class="skel sq"></span><span class="skel"></span><span class="skel"></span><span class="skel"></span></div>').join('');
+    clearTimeout(sk.t); sk.t=setTimeout(()=>{ b.setAttribute('aria-busy','false'); b.innerHTML=MN.CLASSES.slice(0,4).map(c=>`<div class="skel-row"><img src="${MN.img(MN.PHOTOS[(c.id*3)%MN.PHOTOS.length].f,800)}" alt="" style="width:48px;height:36px;object-fit:cover;border-radius:6px"><b style="font-size:14px;font-weight:500">${c.title}</b><span>W${String(c.week).padStart(2,'0')}</span>${MN.A.badge(c.status)}</div>`).join(''); },1800); };
+  sk(); $('reload').onclick=sk;
+  const msgs={success:['Saved','Prototype — nothing was stored'],info:['Heads up','Hackathon details are still to be confirmed'],error:['Couldn’t save','Check the highlighted fields and try again']};
+  document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>MN.toast(...msgs[b.dataset.t],b.dataset.t));
+  document.querySelectorAll('[data-toast]').forEach(b=>b.onclick=()=>MN.toast(b.dataset.toast));
+  $('cdel').onclick=()=>MN.confirm({title:'Delete “Sample class”?',text:'This removes it from the archive. Prototype only.'}).then(ok=>MN.toast(ok?'Deleted':'Cancelled',ok?'Prototype — nothing was removed':'', ok?'success':'info'));
+  $('retry').onclick=e=>{ const b=e.currentTarget; b.classList.add('is-loading'); b.disabled=true; setTimeout(()=>{b.classList.remove('is-loading'); b.disabled=false; MN.toast('Still offline','This prototype always shows the error state','error');},1200); };
+  const vf=MN.A.form($('vf'),{savedMsg:'Saved'});
+  const errs=[...$('vf').querySelectorAll('.field')].map(vf.check).filter(Boolean); const sm=$('vf').querySelector('.error-summary');
+  sm.classList.add('is-on'); sm.innerHTML=`<h2>${MN.icon('alert','i--sm')} ${errs.length} fields need attention</h2><ul>${errs.map(x=>`<li><a href="#${x.inp.id}">${MN.A.esc(x.label.replace('*','').trim())}: ${MN.A.esc(x.msg)}</a></li>`).join('')}</ul>`;
+})();
+</script><script src="../js/motion.js"></script>
+</body>
+</html>
