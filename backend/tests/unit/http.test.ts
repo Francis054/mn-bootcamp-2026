@@ -170,6 +170,14 @@ describe('HTTP pipeline', () => {
     const homePath = readRecord(paths['/api/v1/public/home']);
     const homeGet = readRecord(homePath.get);
     expect(homeGet.operationId).toBe('getPublicHome');
+    const info = readRecord(document.info);
+    expect(info.version).toBe('0.9.0');
+    const resetPath = readRecord(paths['/api/v1/auth/password-reset/request']);
+    const resetPost = readRecord(resetPath.post);
+    expect(resetPost.operationId).toBe('requestPasswordReset');
+    const enquiryPath = readRecord(paths['/api/v1/public/enquiries']);
+    const enquiryPost = readRecord(enquiryPath.post);
+    expect(enquiryPost.operationId).toBe('createEnquiry');
     const components = readRecord(document.components);
     const schemas = readRecord(components.schemas);
     expect(schemas.ErrorBody).toBeDefined();

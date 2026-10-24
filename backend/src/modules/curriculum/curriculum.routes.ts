@@ -1,5 +1,8 @@
 import { Router, type Request } from 'express';
+import { mountAccountAdmin, mountPublicEnquiries } from '../accounts/account.routes.js';
+import type { AccountService } from '../accounts/account.service.js';
 import type { SessionService } from '../auth/session.service.js';
+import type { EnquiryService } from '../enquiries/enquiry.service.js';
 import { requireAuth, requirePermission } from '../auth/require-auth.js';
 import { validateDto } from '../../shared/validation/validate-dto.js';
 import type { Actor } from './actor.js';
@@ -37,6 +40,8 @@ export function curriculumRouter(
   maxBytes: number,
   content: ContentService,
   sessions: SessionService,
+  accounts: AccountService,
+  enquiries: EnquiryService,
 ): Router {
   const router = Router();
 
@@ -100,6 +105,7 @@ export function curriculumRouter(
   mountPublicEvents(router, events);
   mountPublicMedia(router, media);
   mountPublicContent(router, content);
+  mountPublicEnquiries(router, enquiries);
 
   const admin = Router();
   admin.use(requireAuth(sessions), requirePermission('content.read'));
@@ -112,6 +118,7 @@ export function curriculumRouter(
   mountAdminEvents(admin, events);
   mountAdminMedia(admin, media, maxBytes);
   mountAdminContent(admin, content);
+  mountAccountAdmin(admin, accounts, enquiries);
   router.use('/admin', admin);
   return router;
 }

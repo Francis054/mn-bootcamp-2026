@@ -2,6 +2,17 @@ import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeor
 
 const AUTH_AUDIT_ACTIONS = ['auth.login.succeeded', 'auth.login.failed', 'auth.logout'] as const;
 
+const ACCOUNT_AUDIT_ACTIONS = [
+  'auth.password.changed',
+  'auth.password.reset.requested',
+  'auth.password.reset.completed',
+  'auth.user.invited',
+  'auth.user.role.updated',
+  'enquiry.created',
+  'enquiry.updated',
+  'enquiry.deleted',
+] as const;
+
 export const CURRICULUM_KINDS = [
   'track',
   'module',
@@ -28,10 +39,14 @@ export type CurriculumKind = (typeof CURRICULUM_KINDS)[number];
 export type CurriculumVerb = (typeof CURRICULUM_VERBS)[number];
 export type CurriculumAuditAction = `curriculum.${CurriculumKind}.${CurriculumVerb}`;
 
-export type AuditAction = (typeof AUTH_AUDIT_ACTIONS)[number] | CurriculumAuditAction;
+export type AuditAction =
+  | (typeof AUTH_AUDIT_ACTIONS)[number]
+  | (typeof ACCOUNT_AUDIT_ACTIONS)[number]
+  | CurriculumAuditAction;
 
 export const AUDIT_ACTIONS: readonly AuditAction[] = [
   ...AUTH_AUDIT_ACTIONS,
+  ...ACCOUNT_AUDIT_ACTIONS,
   ...CURRICULUM_KINDS.flatMap((kind) =>
     CURRICULUM_VERBS.map((verb): CurriculumAuditAction => `curriculum.${kind}.${verb}`),
   ),

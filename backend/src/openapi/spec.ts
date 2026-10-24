@@ -1,3 +1,4 @@
+import { accountPaths, accountSchemas } from './account-docs.js';
 import { contentPaths, contentSchemas } from './content-docs.js';
 import { curriculumPaths, curriculumSchemas } from './curriculum-docs.js';
 import { eventPaths, eventSchemas } from './event-docs.js';
@@ -9,9 +10,9 @@ export const openApiSpec = {
   openapi: '3.0.3',
   info: {
     title: 'Maxim Nyansa Bootcamp API',
-    version: '0.8.0',
+    version: '0.9.0',
     description:
-      'Bootcamp API. Implemented routes: health, sign-in, sessions, the curriculum, trainee profiles, projects, events, the gallery, and the content singletons. Public reads return published copies. Homepage, about, the timeline, and settings each keep a draft for editors. The announcement banner is part of the homepage. Foundation counters are stored with settings and are published with them. A public photo also needs verified consent. Verifying consent does not publish the photo. A scheduled event stays off the public routes until its Africa/Accra start, and that clock is UTC. A public trainee also needs profile consent. Project links are included only when every linked trainee has agreed to share them. There is no public registration.',
+      'Bootcamp API. Implemented routes: health, sign-in, sessions, password change and reset, invitations, the curriculum, trainee profiles, projects, events, the gallery, the content singletons, and the contact form. Public reads return published copies. Homepage, about, the timeline, and settings each keep a draft for editors. The announcement banner is part of the homepage. Foundation counters are stored with settings and are published with them. A public photo also needs verified consent. Verifying consent does not publish the photo. A scheduled event stays off the public routes until its Africa/Accra start, and that clock is UTC. A public trainee also needs profile consent. Project links are included only when every linked trainee has agreed to share them. A password reset response does not say whether the mailbox exists. There is no public registration.',
   },
   servers: [{ url: '/' }],
   paths: {
@@ -115,6 +116,7 @@ export const openApiSpec = {
     ...eventPaths,
     ...mediaPaths,
     ...contentPaths,
+    ...accountPaths,
   },
   components: {
     schemas: {
@@ -207,6 +209,7 @@ export const openApiSpec = {
       ...eventSchemas,
       ...mediaSchemas,
       ...contentSchemas,
+      ...accountSchemas,
     },
   },
 };

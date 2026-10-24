@@ -38,6 +38,8 @@ export interface AppEnv {
   cloudinaryCloudName?: string;
   cloudinaryApiKey?: string;
   cloudinaryApiSecret?: string;
+  resendApiKey?: string;
+  emailFrom?: string;
 }
 
 const NODE_ENVS: readonly NodeEnv[] = ['development', 'test', 'production'];
@@ -124,6 +126,12 @@ export function loadEnv(
       'CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET must all be set, or all left blank.',
     );
   }
+  const resendApiKey = readOptional(source.RESEND_API_KEY);
+  const emailFrom = readOptional(source.EMAIL_FROM);
+  const resendCount = [resendApiKey, emailFrom].filter((value) => value !== undefined).length;
+  if (resendCount === 1) {
+    problems.push('RESEND_API_KEY and EMAIL_FROM must both be set, or both left blank.');
+  }
 
   if (problems.length > 0) {
     throw new EnvError(problems.join(' '));
@@ -150,6 +158,8 @@ export function loadEnv(
   if (cloudinaryCloudName !== undefined) env.cloudinaryCloudName = cloudinaryCloudName;
   if (cloudinaryApiKey !== undefined) env.cloudinaryApiKey = cloudinaryApiKey;
   if (cloudinaryApiSecret !== undefined) env.cloudinaryApiSecret = cloudinaryApiSecret;
+  if (resendApiKey !== undefined) env.resendApiKey = resendApiKey;
+  if (emailFrom !== undefined) env.emailFrom = emailFrom;
   return env;
 }
 

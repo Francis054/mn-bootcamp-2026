@@ -1,6 +1,6 @@
 # API alignment notes
 
-**Status: auth, curriculum, trainee, project, event, media, and content singleton routes below are implemented in `backend/`.** Mail and the contact form still live on the `frontend` branch in that branch's `docs/API.md`. This file is the note the website needs when `VITE_API_MODE=live`. It does not change the website. The website stays on the `frontend` branch.
+**Status: auth, accounts, curriculum, trainee, project, event, media, content singleton, and enquiry routes below are implemented in `backend/`.** This file is the note the website needs when `VITE_API_MODE=live`. It does not change the website. The website stays on the `frontend` branch.
 
 Base path: `/api/v1`. Errors use the shape the website already parses:
 
@@ -79,7 +79,7 @@ Idle time is 30 minutes. The session also ends 12 hours after sign-in. Both can 
 - Keep sending `X-CSRF-Token` from `mn_csrf` on sign-out and on later changes.
 - Treat `403` with code `forbidden` as "this role cannot do that", and `401` as "sign in again".
 
-The permission names match `web/src/domain/permissions.ts`. A viewer can read content and manage their own account. An editor can also change content and media. Content changes use `content.write` and cover classes, trainee profiles, projects, events, the homepage, the about page, and the timeline. Photo changes use `media.write`. Settings, including the foundation counters, use `settings.manage`. Only an administrator has that permission. The server enforces that. The React route guard does not. There is no separate publish permission in the website's map, so this API does not invent one.
+The permission names match `web/src/domain/permissions.ts`. A viewer can read content and manage their own account. An editor can also change content and media. Content changes use `content.write` and cover classes, trainee profiles, projects, events, the homepage, the about page, and the timeline. Photo changes use `media.write`. Settings, including the foundation counters, use `settings.manage`. Invitations, role changes, and the enquiry inbox use `users.manage`. Listing accounts uses `users.read`. Only an administrator has those permissions. The server enforces that. The React route guard does not. There is no separate publish permission in the website's map, so this API does not invent one.
 
 ## Curriculum routes that exist now
 
@@ -258,24 +258,69 @@ Foundation counters live on settings. `GET /admin/settings` adds `foundationStat
 
 Field messages include `Enter a site name.`, `Enter your email address.`, `Enter a valid email address, like name@example.com.`, `Enter a link or a site path.`, and `Choose a theme.` A script URL is refused and is not repeated in the error.
 
-`npm run seed` inserts the four singletons as drafts. The homepage lead and two timeline descriptions start with `Sample copy for the development seed.` The counters are `Sample counter` rows with value `0`. Run the command again and it leaves an edited row alone.
+`npm run seed` inserts the four singletons as drafts. The homepage lead and two timeline descriptions start with `Sample copy for the development seed.` The counters are `Sample counter` rows with value `0`. Run the command again and it leaves an edited row alone. It does not insert enquiries.
 
-Accounts, password-reset mail, invitations, and the contact form are the next milestone.
+## Account routes that exist now
+
+Password changes, resets, and invitations store a hash. The stored password uses the same 12-character rule as `npm run admin:create`. The website form still says 8 characters. A shorter password is `422` with `Use at least 12 characters.`
+
+`POST /auth/password-reset/request` body `{ email }`. Success is always:
+
+```json
+{
+  "accepted": true,
+  "delivered": false,
+  "message": "If an account exists for that address, a reset message will be sent."
+}
+```
+
+There is no `developmentResetPath`. A missing mailbox and a real mailbox return that same JSON. A badly formed address is `422`. Too many requests is `429` with `Too many requests. Wait a minute and try again.` That `429` also does not say whether the mailbox exists.
+
+`POST /auth/password-reset/complete` body `{ token, password, confirm }`. This accepts a reset link and an invitation link. Success:
+
+```json
+{
+  "completed": true,
+  "passwordStored": true,
+  "message": "The password is saved. Sign in with the new password."
+}
+```
+
+A missing, used, or expired token is field `token`: `This reset link is missing, used or expired.` Empty password is `Choose a new password.` A mismatch is `The two passwords do not match.` A rejected password does not use the token up. Success signs every session for that account out.
+
+`POST /admin/account/password` needs `account.manage` and `X-CSRF-Token`. Body `{ current, next, confirm }`. Empty current is `Enter your current password.` A wrong current password is `The current password is not correct.` Success signs out the other sessions and keeps this one.
+
+`GET /admin/users` needs `users.read`. The body is an array of public accounts. It has no password hash. A viewer and an editor receive `403`.
+
+`PATCH /admin/users/:id` needs `users.manage`. Body `{ role }`. An unknown role is `Choose viewer, editor or administrator.` Removing your own administrator role is `422`, message `You cannot remove your own administrator access from this session.`, field `role` `Ask another administrator to change your role.` A missing account is `404` `User not found.`
+
+`POST /admin/users/invite` needs `users.manage`. Body `{ email, role }`. The role is required. `Choose a role.` when it is missing. The current website sends only `{ email }`, so that call is `422` until the form sends a role. An existing mailbox is `422` `An account with that mailbox already exists.` and the address is not repeated. Success is `{ delivered, message }`. `delivered` is true only when the mail provider accepted the invitation. The account exists either way.
+
+## Enquiry routes that exist now
+
+`POST /public/enquiries` is public. No captcha service. Body `{ name, email, topic, message, consent, company? }`.
+
+Field messages: `Enter your name.`, `Enter your email address.`, `Enter a valid email address, like name@example.com.`, `Choose a topic.`, `Write a short message.`, `Use at least 20 characters.`, `Tick to confirm you understand this message is not delivered.`
+
+Topics: `The 2026 bootcamp`, `Partnering or volunteering`, `Media and photos`, `Something else`.
+
+A non-empty `company` is the honeypot. The response looks like a save, `delivered` is false, and nothing is stored. An empty `company` is a normal enquiry. Posts from one address are rate-limited with the same `429` sentence as a reset.
+
+Success is `{ id, delivered, message }`. `message` is a status sentence, not the text the person wrote. `delivered` is true only when a notification to the settings contact email was accepted. If mail is not configured, the enquiry is still stored and `delivered` is false, with `The message is saved. No email was sent.`
+
+`GET /admin/enquiries` needs `users.manage`. The body is an array, newest first, with `id`, `name`, `email`, `topic`, `message`, `createdAt`, `handled`, and `notified`. A viewer and an editor receive `403`. `PATCH /admin/enquiries/:id` body `{ handled }`. `DELETE /admin/enquiries/:id` returns `{ deleted: true, id }`. Those changes need `X-CSRF-Token`.
+
+The audit row stores the action and the enquiry id. It does not store the mailbox, the token, or the message.
 
 ## Not in this milestone
 
 These paths from the frontend contract are not implemented. They still answer `404` with code `not_found`:
 
-- `POST /auth/password-reset/request`
-- `POST /auth/password-reset/complete`
 - `POST /auth/session/expire` (development-only on the website; it will not be a production route)
-- `POST /admin/account/password`
 - `POST /admin/trainees/bulk`
 - `POST /admin/projects/bulk`
 - `POST /admin/events/bulk`
 - `POST /admin/media/bulk`
-- `POST /public/enquiries` and an enquiry inbox
 - `GET /admin/search`
-- password change, reset mail, and invitations
 
-There is no public registration route. The first administrator is created with `npm run admin:create` in `backend/`, from a private password. That command is not an HTTP route and it is not in the OpenAPI document. OpenAPI for the routes above is at `/api/docs`.
+There is no public registration route. The first administrator is created with `npm run admin:create` in `backend/`, from a private password. That command is not an HTTP route and it is not in the OpenAPI document. OpenAPI for the routes above is at `/api/docs`. Text messages are not part of this API.
