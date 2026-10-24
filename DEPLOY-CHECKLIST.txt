@@ -1,6 +1,6 @@
 Maxim Nyansa 2026 bootcamp — deploy checklist
 Plain steps for a first launch. Nothing here is a password or an API key.
-Use the dev branch. Do not deploy main.
+Deploy the main branch. main is the release.
 
 You already have free accounts signed in with GitHub (Francis054):
 - Supabase project mn-bootcamp-2026, ref psxzqwztgjkqnnncxddc, region eu-central-1.
@@ -33,7 +33,7 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
       the GitHub App.
    c. On GitHub, grant the Render app access only to Francis054/mn-bootcamp-2026.
       Do not grant all repositories.
-   d. Come back to Render and select that repository. Branch: dev.
+   d. Come back to Render and select that repository. Branch: main.
 
 2. Create the API as a Web Service.
    a. Root directory: backend
@@ -219,7 +219,7 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
       The command prints migration results. It does not print the URL.
 
 6. Create the website as a Static Site on the same Render account.
-   a. Repository Francis054/mn-bootcamp-2026, branch dev.
+   a. Repository Francis054/mn-bootcamp-2026, branch main.
    b. Root directory: frontend
    c. Build command: npm ci && npm run build
    d. Publish directory: dist
@@ -249,7 +249,9 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
    request, and waking takes about a minute. A GitHub Action pings the public
    health URL every 14 minutes.
    The script is backend/scripts/keep-alive.mjs. The workflow is
-   .github/workflows/keep-alive.yml. Both are already on the dev branch.
+   .github/workflows/keep-alive.yml. Both are on main, and main is already
+   the default branch, so the schedule runs from main. You do not change
+   the default branch. You only set the variable.
    a. On GitHub, open Francis054/mn-bootcamp-2026.
       Go to Settings, then Secrets and variables, then Actions, then the
       Variables tab (not Secrets).
@@ -258,30 +260,20 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
         https://YOUR-SITE.onrender.com/api/v1/health
       It is a variable, not a secret, because the address is public.
       Do not put a password or a token in it.
-   b. GitHub runs scheduled workflows only from the default branch, and only
-      when the workflow file is on that branch. The default branch is main,
-      and main is empty, so the schedule will not run until you change that.
-      Pick one.
-      Option 1: Settings, then General, then Default branch. Switch it from
-        main to dev.
-      Option 2: Leave main as the default. Add only these two files to main,
-        at those same paths:
-          .github/workflows/keep-alive.yml
-          backend/scripts/keep-alive.mjs
-        Do not merge the rest of dev into main for this.
-      These notes do not change the default branch and do not push to main.
-   c. After the variable is set, you can run it by hand: Actions, Keep alive,
-      Run workflow, on the dev branch. A green run prints a status and a time.
+   b. After the variable is set, you can run it by hand: Actions, Keep alive,
+      Run workflow, on the main branch. A green run prints a status and a time.
       It does not print secrets. If the variable is still empty, the script
-      says so and the run stays green.
-   d. GitHub's docs say a schedule can start late when Actions is busy,
+      says so and the run stays green. The every-14-minute schedule uses the
+      same variable and starts on its own, because the workflow is on the
+      default branch.
+   c. GitHub's docs say a schedule can start late when Actions is busy,
       especially at the start of each hour, and a queued run can be dropped.
       A cold start is still possible now and then. A free pinger outside
       GitHub is a more reliable backup. cron-job.org and UptimeRobot can GET
       the same health URL every 5 minutes.
       On a public repository, GitHub also turns a schedule off after 60 days
       with no activity in the repository.
-   e. Hours, checked on 24 October 2026 at https://render.com/docs/free :
+   d. Hours, checked on 24 October 2026 at https://render.com/docs/free :
       a workspace gets 750 free instance hours per calendar month.
       A service uses those hours only while it is running. A spun-down
       service does not. One service that stays up all month uses 720 hours

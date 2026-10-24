@@ -25,7 +25,7 @@ If the rewrite check fails, the next free option that keeps one origin is a sing
 
 ## Services
 
-Both services deploy the `dev` branch of `Francis054/mn-bootcamp-2026`.
+Both services deploy the `main` branch of `Francis054/mn-bootcamp-2026`.
 
 API web service:
 
@@ -78,10 +78,7 @@ Supabase free backup retention was not confirmed for this note. Look at the proj
 
 `.github/workflows/keep-alive.yml` runs that script on the cron `*/14 * * * *` (every 14 minutes, inside Render’s 15-minute idle window) and when someone starts it by hand. The URL comes from the GitHub Actions variable `KEEPALIVE_URL`, not from a secret, because the address is public. The workflow’s only permission is `contents: read`.
 
-GitHub runs a scheduled workflow only from the repository’s default branch, and only if the workflow file is on that branch (https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule, checked 24 October 2026). The default branch is `main`, and `main` is empty, so the schedule does nothing until one of these is done. Do not change it from this repository’s notes. Pick one:
-
-1. In GitHub, set the default branch to `dev`. The workflow and the script are already on `dev`.
-2. Leave `main` as the default, and put only `.github/workflows/keep-alive.yml` and `backend/scripts/keep-alive.mjs` on `main`. Do not merge the rest of `dev` into `main` for this.
+GitHub runs a scheduled workflow only from the repository’s default branch, and only if the workflow file is on that branch (https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule, checked 24 October 2026). The workflow and the script are on `main`, and `main` is the default branch, so the schedule runs once `KEEPALIVE_URL` is set. Do not change the default branch.
 
 The same GitHub page says a schedule can start late when Actions is busy, especially at the start of each hour, and a queued run can be dropped. A cold start is still possible now and then. A free pinger outside GitHub, every 5 minutes, is a more reliable backup. cron-job.org and UptimeRobot are two that can GET the same health URL. On a public repository, GitHub also turns a schedule off after 60 days with no repository activity.
 
