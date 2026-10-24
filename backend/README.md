@@ -2,7 +2,7 @@
 
 This folder is the HTTP API for the Maxim Nyansa 2026 Cybersecurity Bootcamp. It is a separate program from the website. The website is developed on the `frontend` branch. This API is developed on the `backend` branch. Neither tree is copied into the other.
 
-The process starts, checks its configuration, and connects to PostgreSQL. It answers `GET /api/v1/health`, and it can sign an administrator in. Lessons and the other screens are later milestones. There is no public registration page.
+The process starts, checks its configuration, and connects to PostgreSQL. It answers `GET /api/v1/health`, it can sign an administrator in, and it serves the curriculum: tracks, modules, phases, and classes. There is no public registration page.
 
 ## What you need
 
@@ -56,7 +56,7 @@ Open `http://127.0.0.1:3000/api/v1/health`. A healthy database looks like:
 
 If Postgres is down, the status is `503` and `database` is `down`. The message from the database driver is not included. It can contain a host name.
 
-API docs are at `http://127.0.0.1:3000/api/docs`. The raw document is `/api/docs/openapi.json`. It lists health, sign-in, sign-out, and the session check. The administrator command is not an HTTP route, so it is not in that document.
+API docs are at `http://127.0.0.1:3000/api/docs`. The raw document is `/api/docs/openapi.json`. It lists health, sign-in, the session check, and the curriculum routes. The administrator command and the sample seed are not HTTP routes, so they are not in that document.
 
 ## How a request walks through the program
 
@@ -101,7 +101,7 @@ Sign-in sets two cookies. The flags live on `app.locals.cookiePolicy`, and the r
 
 TypeORM is the library that talks to PostgreSQL. `synchronize` is off. The program will not invent or alter tables on startup. A migration file is the only way the schema changes, and that file is reviewed like any other change.
 
-`src/database/migrations/1792800000000-Baseline.ts` is the first migration. It creates no tables. It marks the start of the history. `1792868400000-Auth.ts` adds `users`, `sessions`, `login_throttles`, and `audit_events`. New migrations are new files, and each class is registered in `src/database/data-source.ts`.
+`src/database/migrations/1792800000000-Baseline.ts` is the first migration. It creates no tables. It marks the start of the history. `1792868400000-Auth.ts` adds `users`, `sessions`, `login_throttles`, and `audit_events`. `1792886400000-Curriculum.ts` adds `tracks`, `modules`, `phases`, and `lessons`, and it extends the audit table with the curriculum actions. New migrations are new files, and each class is registered in `src/database/data-source.ts`.
 
 `src/database/cli-data-source.ts` is what the migration commands load. They read the same environment as the server.
 
@@ -155,6 +155,7 @@ npm run build
 | `npm run format`       | Rewrite files with Prettier.                  |
 | `npm test`             | Unit tests and the Postgres integration test. |
 | `npm run admin:create` | Create the first administrator. See below.    |
+| `npm run seed`         | Insert the labelled sample curriculum.        |
 
 ## Signing in
 
@@ -194,6 +195,28 @@ A free Supabase project can pause after about a week with no traffic. A free Ren
 
 No connection string is stored in this repository. None should be pasted into a pull request or a chat.
 
+## Classes, modules, phases, and tracks
+
+The public site and the admin site do not see the same rows.
+
+- `GET /api/v1/public/classes` and `GET /api/v1/public/classes/:id` return a lesson only when its workflow is `published` and its listing is not `hidden`. A draft, a row in review, and a scheduled row are not on the public site, even if the listing says `sample`. The same rule applies to tracks, modules, and phases.
+- `GET /api/v1/admin/classes` returns every lesson, including drafts and the private notes. A viewer can read it. An editor and an administrator can change it. The website calls that permission `content.write`. Publishing and deleting use that same permission. There is no separate publish permission in the website's map, so this API does not invent one.
+- A change (create, edit, publish, unpublish, delete) needs the session cookie and the matching `X-CSRF-Token` header. The audit row stores the action and the row id. It does not store the class notes.
+- Publish does not change the listing. A hidden class can be marked published and still stay off the public site until an editor sets the listing to `sample` or `public`.
+- The class list accepts `q`, `page`, `pageSize`, `sort`, `dir`, and `filters.moduleId`. Week sorts as a number. The default sort is week, oldest first.
+- `scheduleStatus` (`done`, `now`, `upcoming`) is worked out from the class date and today's date in Africa/Accra. It is not a column.
+- Tracks are `Blue team`, `Red team`, and `GRC & Awareness`. That third name is the spelling later trainee rows should use.
+
+Load the labelled sample, after the migrations, with:
+
+```bash
+npm run seed
+```
+
+Run it again and it does nothing to rows that are already there. It will not overwrite an edit. The sample text says it is a sample. It does not include foundation-wide counters, and it does not use real people's names. Do not run it against the production database.
+
+Modules and phases are editable on the admin routes (`/api/v1/admin/modules` and `/api/v1/admin/phases`). Foundation-wide counters stay for the settings milestone. They are not stored here.
+
 ## What is left for the next milestone
 
-Curriculum. Public class lists and class pages return published rows only. Drafts stay on the admin routes. Accounts, password reset mail, and invitations come after that.
+Trainees. A public profile requires consent, and the email stays off the public response. The track check includes `GRC & Awareness`. Password-reset mail and invitations come after that. Foundation-wide counters come with the settings and homepage milestone, not with the curriculum.
