@@ -5,10 +5,11 @@ coverage/
 playwright-report/
 test-results/
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+!.env.development
+!.env.production
 *.log
 .DS_Store
 *.tsbuildinfo
 frontend/playwright/.cache/
-!.env.example
