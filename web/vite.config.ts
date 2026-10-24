@@ -7,7 +7,17 @@ export default defineConfig({
   resolve: {
     alias: { '@': path.resolve(__dirname, 'src') },
   },
-  server: { port: 5173, strictPort: true, fs: { allow: [path.resolve(__dirname, '..')] } },
+  server: {
+    port: 5173,
+    strictPort: true,
+    fs: { allow: [path.resolve(__dirname, '..')] },
+    proxy: {
+      '/api/v1': {
+        target: process.env.VITE_API_PROXY || 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
+  },
   preview: { port: 4173, strictPort: true },
   test: {
     environment: 'jsdom',
@@ -15,5 +25,6 @@ export default defineConfig({
     globals: true,
     css: false,
     include: ['src/**/*.{test,spec}.{ts,tsx}', 'tests/**/*.{test,spec}.{ts,tsx}'],
+    env: { VITE_USE_MOCK_API: 'true' },
   },
 });

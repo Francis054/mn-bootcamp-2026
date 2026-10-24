@@ -15,6 +15,12 @@ export function isPubliclyListable(item: Listable): boolean {
   return item.publicationStatus === 'published' || item.publicationStatus === 'scheduled';
 }
 
+/** The API shows a row when it is published and not hidden. Sample does not publish a draft. */
+export function isApiPublic(item: { publicationStatus: string; listing: string; consentReceived?: boolean }): boolean {
+  const visible = item.publicationStatus === 'published' && item.listing !== 'hidden';
+  return item.consentReceived === undefined ? visible : visible && item.consentReceived;
+}
+
 export function stripKeys<T extends object, K extends keyof T>(value: T, keys: readonly K[]): Omit<T, K> {
   const copy: Partial<T> = { ...value };
   for (const key of keys) delete copy[key];

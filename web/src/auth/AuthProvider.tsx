@@ -1,9 +1,11 @@
-import { createContext, useContext, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useSyncExternalStore } from 'react';
-import type { Permission, Role } from '@/domain/types';
+import { api } from '@/api/client';
+import { usesMockApi } from '@/config/runtime';
+import type { Permission, Role, SessionUser } from '@/domain/types';
 import { can } from '@/domain/permissions';
-import { expireIfNeeded, getSessionSnapshot, subscribeSession } from '@/dev/session';
+import { clearSession, expireIfNeeded, getSessionSnapshot, rememberSignedIn, subscribeSession } from '@/dev/session';
 
 interface AuthValue {
   signedIn: boolean;
@@ -22,10 +24,29 @@ const AuthContext = createContext<AuthValue>({
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const snapshot = useSyncExternalStore(subscribeSession, getSessionSnapshot);
+  const [ready, setReady] = useState(() => usesMockApi());
   useEffect(() => {
     const timer = window.setInterval(() => expireIfNeeded(), 1000);
     return () => window.clearInterval(timer);
   }, []);
+  useEffect(() => {
+    if (usesMockApi()) return;
+    let cancel = false;
+    void api<{ authenticated: boolean; user?: SessionUser; expiresAt?: string }>({ method: 'GET', path: '/auth/session' })
+      .then((result) => {
+        if (cancel) return;
+        if (result.authenticated && result.user && result.expiresAt) rememberSignedIn(result.user, result.expiresAt);
+        else clearSession();
+      })
+      .catch(() => {
+        if (!cancel) clearSession();
+      })
+      .finally(() => {
+        if (!cancel) setReady(true);
+      });
+    return () => { cancel = true; };
+  }, []);
+  if (!ready) return null;
   const user = snapshot.session?.user;
   const value: AuthValue = {
     signedIn: Boolean(user),
