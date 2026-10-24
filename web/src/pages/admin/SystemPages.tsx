@@ -348,7 +348,7 @@ export function AccountPage() {
       <form onSubmit={(event) => void submit(event)} noValidate>
         <ErrorSummary errors={errors} />
         <Field id="current" label="Current password" error={errors.current}><input className="input" id="current" name="current" type="password" autoComplete="current-password" /></Field>
-        <Field id="next" label="New password" error={errors.next} hint={usesMockApi() ? 'At least 8 characters in the development adapter.' : 'At least 12 characters, with a letter and a number.'}><input className="input" id="next" name="next" type="password" autoComplete="new-password" /></Field>
+        <Field id="next" label="New password" error={errors.next} hint="At least 12 characters, with a letter and a number."><input className="input" id="next" name="next" type="password" autoComplete="new-password" /></Field>
         <Field id="confirm" label="Confirm" error={errors.confirm}><input className="input" id="confirm" name="confirm" type="password" autoComplete="new-password" /></Field>
         <button className="btn btn--dark btn--sm" type="submit">Change password</button>
         {message ? <p role="status">{message}</p> : null}
