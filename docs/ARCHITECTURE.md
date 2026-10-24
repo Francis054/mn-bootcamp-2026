@@ -1,8 +1,8 @@
 # Architecture
 
-The public site and admin live in `web/`. Stylesheets are imported from `web/src/styles/`. Fonts, photos and the logo are served from `web/public/assets`.
+The public site and admin live in `frontend/`. Stylesheets are imported from `frontend/src/styles/`. Fonts, photos and the logo are served from `frontend/public/assets`.
 
-Home hero photos are `figure.hm-1`, `figure.hm-2` and `figure.hm-3`, and the lime corner is `span.hm-frame`. `web/src/styles/pages.css` absolutely positions `figure` inside `.hero__media`, so those elements have to stay figures and a span. The main portrait uses the prototype’s light parallax shift, which is skipped when `prefers-reduced-motion` is set.
+Home hero photos are `figure.hm-1`, `figure.hm-2` and `figure.hm-3`, and the lime corner is `span.hm-frame`. `frontend/src/styles/pages.css` absolutely positions `figure` inside `.hero__media`, so those elements have to stay figures and a span. The main portrait uses the prototype’s light parallax shift, which is skipped when `prefers-reduced-motion` is set.
 
 ## Boundaries
 
@@ -50,4 +50,4 @@ Verified facts come from `docs/research.md`. Anything else is labelled sample or
 - Enquiry messages stay in memory with `delivered: false`.
 - Calendar files for confirmed dates are built in the browser. They are not an API.
 - The platform is not production-ready until a real backend is connected and authentication, authorization, persistence, media, deployment and end-to-end behaviour have been verified.
-- Two prototype colours were darkened in `web/src/styles/app.css` (the muted statement clause and the TBC chip) so they meet WCAG AA. Layout, type and the green-and-white identity are unchanged.
+- Two prototype colours were darkened in `frontend/src/styles/app.css` (the muted statement clause and the TBC chip) so they meet WCAG AA. Layout, type and the green-and-white identity are unchanged.

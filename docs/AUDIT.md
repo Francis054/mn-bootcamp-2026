@@ -28,7 +28,7 @@ Inspected before any application code was added. The static prototype has since 
 
 ## Stack decision
 
-A Vite + React + TypeScript single-page app now lives in `web/`. Next.js was not used: there is no server, and a Next app would imply API routes that do not exist. The static prototype HTML is on the `prototype` branch.
+A Vite + React + TypeScript single-page app now lives in `frontend/`. Next.js was not used: there is no server, and a Next app would imply API routes that do not exist. The static prototype HTML is on the `prototype` branch.
 
 ## Checklist
 
