@@ -16,10 +16,13 @@ import {
 import { LessonCreateDto, LessonPatchDto } from './lesson.dto.js';
 import type { LessonService } from './lesson.service.js';
 import { readLessonListQuery } from './list-query.js';
+import { mountAdminTrainees, mountPublicTrainees } from '../trainees/trainee.routes.js';
+import type { TraineeService } from '../trainees/trainee.service.js';
 
 export function curriculumRouter(
   catalogue: CatalogueService,
   lessons: LessonService,
+  trainees: TraineeService,
   sessions: SessionService,
 ): Router {
   const router = Router();
@@ -79,6 +82,7 @@ export function curriculumRouter(
       .then((row) => res.json(row))
       .catch(next);
   });
+  mountPublicTrainees(router, trainees);
 
   const admin = Router();
   admin.use(requireAuth(sessions), requirePermission('content.read'));
@@ -86,6 +90,7 @@ export function curriculumRouter(
   mountModules(admin, catalogue);
   mountPhases(admin, catalogue);
   mountClasses(admin, lessons);
+  mountAdminTrainees(admin, trainees);
   router.use('/admin', admin);
   return router;
 }

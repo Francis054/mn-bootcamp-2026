@@ -23,6 +23,9 @@ import {
 } from '../modules/curriculum/repositories.js';
 import { accraToday } from '../modules/curriculum/schedule.js';
 import { TrackEntity } from '../modules/curriculum/track.entity.js';
+import { TraineeEntity } from '../modules/trainees/trainee.entity.js';
+import { TraineeRepository } from '../modules/trainees/trainee.repository.js';
+import { TraineeService } from '../modules/trainees/trainee.service.js';
 import { UserEntity } from '../modules/users/user.entity.js';
 import { UserRepository } from '../modules/users/user.repository.js';
 import { UserService } from '../modules/users/user.service.js';
@@ -51,12 +54,13 @@ export class AppContainer {
     auth: AuthService,
     catalogue: CatalogueService,
     lessons: LessonService,
+    trainees: TraineeService,
   ) {
     this.health = new HealthService(dataSource, logger);
     this.users = users;
     this.sessions = sessions;
     this.authRouter = authRouter(auth, sessions);
-    this.curriculumRouter = curriculumRouter(catalogue, lessons, sessions);
+    this.curriculumRouter = curriculumRouter(catalogue, lessons, trainees, sessions);
   }
 
   static async create(env: AppEnv): Promise<AppContainer> {
@@ -93,11 +97,13 @@ export class AppContainer {
     const moduleRepository = new ModuleRepository(dataSource.getRepository(ModuleEntity));
     const phaseRepository = new PhaseRepository(dataSource.getRepository(PhaseEntity));
     const lessonRepository = new LessonRepository(dataSource.getRepository(LessonEntity));
+    const traineeRepository = new TraineeRepository(dataSource.getRepository(TraineeEntity));
     const catalogue = new CatalogueService(
       trackRepository,
       moduleRepository,
       phaseRepository,
       lessonRepository,
+      traineeRepository,
       audit,
     );
     const lessonService = new LessonService(
@@ -107,6 +113,7 @@ export class AppContainer {
       audit,
       accraToday,
     );
+    const traineeService = new TraineeService(traineeRepository, moduleRepository, audit);
     return new AppContainer(
       env,
       logger,
@@ -116,6 +123,7 @@ export class AppContainer {
       auth,
       catalogue,
       lessonService,
+      traineeService,
     );
   }
 
