@@ -1,8 +1,8 @@
 # Architecture
 
-The public site and admin live in `web/` and import the prototype CSS from `/css`. Assets are served from `web/public/assets`, a symlink to `/assets`.
+The public site and admin live in `web/`. Stylesheets are imported from `web/src/styles/`. Fonts, photos and the logo are served from `web/public/assets`.
 
-Home hero photos are `figure.hm-1`, `figure.hm-2` and `figure.hm-3`, and the lime corner is `span.hm-frame`. `css/pages.css` absolutely positions `figure` inside `.hero__media`, so those elements have to stay figures and a span. The main portrait uses the prototype’s light parallax shift, which is skipped when `prefers-reduced-motion` is set.
+Home hero photos are `figure.hm-1`, `figure.hm-2` and `figure.hm-3`, and the lime corner is `span.hm-frame`. `web/src/styles/pages.css` absolutely positions `figure` inside `.hero__media`, so those elements have to stay figures and a span. The main portrait uses the prototype’s light parallax shift, which is skipped when `prefers-reduced-motion` is set.
 
 ## Boundaries
 
