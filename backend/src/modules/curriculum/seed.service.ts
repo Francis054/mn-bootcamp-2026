@@ -1,3 +1,5 @@
+import type { TraineeRepository } from '../trainees/trainee.repository.js';
+import { buildSampleTrainees } from '../trainees/sample-trainees.js';
 import {
   SAMPLE_MODULES,
   SAMPLE_PHASES,
@@ -21,6 +23,7 @@ export class SeedService {
     private readonly modules: ModuleRepository,
     private readonly phases: PhaseRepository,
     private readonly lessons: LessonRepository,
+    private readonly trainees: TraineeRepository,
   ) {}
 
   async run(): Promise<void> {
@@ -39,6 +42,11 @@ export class SeedService {
     for (const lesson of buildSampleLessons()) {
       if (await this.lessons.findById(lesson.id)) continue;
       await this.lessons.insert(lesson);
+    }
+    for (const trainee of buildSampleTrainees()) {
+      if (await this.trainees.findById(trainee.id)) continue;
+      if (await this.trainees.findByEmail(trainee.email)) continue;
+      await this.trainees.insert(trainee);
     }
   }
 }

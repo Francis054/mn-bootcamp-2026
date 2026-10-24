@@ -11,6 +11,7 @@ import {
   optionalHttpUrlMessage,
   trackMessage,
 } from '../../src/modules/trainees/trainee.rules.js';
+import { buildSampleTrainees } from '../../src/modules/trainees/sample-trainees.js';
 import { consentWrite, isPublicTrainee } from '../../src/modules/trainees/visibility.js';
 
 const profile: TraineeRecord = {
@@ -143,6 +144,21 @@ describe('trainee rules', () => {
     expect(query.filters.track).toBe('GRC & Awareness');
     expect(query.filters.focus).toBe('awareness');
     expect(query.sort).toBeUndefined();
+  });
+
+  it('labels twelve sample profiles and keeps them off the public rule', () => {
+    const rows = buildSampleTrainees();
+    expect(rows).toHaveLength(12);
+    expect(rows.every((row) => !row.consentReceived)).toBe(true);
+    expect(rows.every((row) => row.email.endsWith('@example.test'))).toBe(true);
+    expect(rows.every((row) => row.displayName.startsWith('Sample Trainee '))).toBe(true);
+    expect(rows.map((row) => row.track)).toContain('GRC & Awareness');
+    expect(rows.map((row) => row.track)).not.toContain('GRC & awareness');
+    expect(rows.map((row) => row.track)).not.toContain('General');
+    const third = rows[2];
+    expect(third).toMatchObject({ id: '3', track: 'GRC & Awareness', consentReceived: false });
+    if (!third) return;
+    expect(isPublicTrainee(third)).toBe(false);
   });
 
   it('records trainee changes with the curriculum audit actions', () => {
