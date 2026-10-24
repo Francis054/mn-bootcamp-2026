@@ -33,6 +33,11 @@ export interface AppEnv {
   loginFailureLimit: number;
   loginLockMs: number;
   loginIpFailureLimit: number;
+  /** Largest accepted upload. Defaults to 5 MB. */
+  uploadMaxBytes: number;
+  cloudinaryCloudName?: string;
+  cloudinaryApiKey?: string;
+  cloudinaryApiSecret?: string;
 }
 
 const NODE_ENVS: readonly NodeEnv[] = ['development', 'test', 'production'];
@@ -107,6 +112,18 @@ export function loadEnv(
     'LOGIN_IP_FAILURE_LIMIT',
     problems,
   );
+  const uploadMaxBytes = readUploadMax(source.UPLOAD_MAX_BYTES, problems);
+  const cloudinaryCloudName = readOptional(source.CLOUDINARY_CLOUD_NAME);
+  const cloudinaryApiKey = readOptional(source.CLOUDINARY_API_KEY);
+  const cloudinaryApiSecret = readOptional(source.CLOUDINARY_API_SECRET);
+  const cloudinaryCount = [cloudinaryCloudName, cloudinaryApiKey, cloudinaryApiSecret].filter(
+    (value) => value !== undefined,
+  ).length;
+  if (cloudinaryCount !== 0 && cloudinaryCount !== 3) {
+    problems.push(
+      'CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET must all be set, or all left blank.',
+    );
+  }
 
   if (problems.length > 0) {
     throw new EnvError(problems.join(' '));
@@ -127,10 +144,12 @@ export function loadEnv(
     loginFailureLimit,
     loginLockMs,
     loginIpFailureLimit,
+    uploadMaxBytes,
   };
-  if (sessionSecret !== undefined) {
-    env.sessionSecret = sessionSecret;
-  }
+  if (sessionSecret !== undefined) env.sessionSecret = sessionSecret;
+  if (cloudinaryCloudName !== undefined) env.cloudinaryCloudName = cloudinaryCloudName;
+  if (cloudinaryApiKey !== undefined) env.cloudinaryApiKey = cloudinaryApiKey;
+  if (cloudinaryApiSecret !== undefined) env.cloudinaryApiSecret = cloudinaryApiSecret;
   return env;
 }
 
@@ -278,6 +297,28 @@ function readPositiveInt(
     return fallback;
   }
   return value;
+}
+
+const UPLOAD_MAX_DEFAULT = 5 * 1024 * 1024;
+const UPLOAD_MAX_CEILING = 10 * 1024 * 1024;
+
+function readUploadMax(raw: string | undefined, problems: string[]): number {
+  if (raw === undefined || raw.trim() === '') return UPLOAD_MAX_DEFAULT;
+  if (!/^[0-9]+$/.test(raw.trim())) {
+    problems.push('UPLOAD_MAX_BYTES must be a whole number from 1 to 10485760.');
+    return UPLOAD_MAX_DEFAULT;
+  }
+  const value = Number(raw.trim());
+  if (value < 1 || value > UPLOAD_MAX_CEILING) {
+    problems.push('UPLOAD_MAX_BYTES must be a whole number from 1 to 10485760.');
+    return UPLOAD_MAX_DEFAULT;
+  }
+  return value;
+}
+
+function readOptional(raw: string | undefined): string | undefined {
+  const value = raw?.trim() ?? '';
+  return value === '' ? undefined : value;
 }
 
 function isNodeEnv(value: string): value is NodeEnv {

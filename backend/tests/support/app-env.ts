@@ -17,6 +17,7 @@ export function testEnv(overrides: Partial<AppEnv> = {}): AppEnv {
     loginFailureLimit: 5,
     loginLockMs: 60_000,
     loginIpFailureLimit: 30,
+    uploadMaxBytes: 5 * 1024 * 1024,
     ...overrides,
   };
 }

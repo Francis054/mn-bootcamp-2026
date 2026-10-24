@@ -1,5 +1,6 @@
 import { curriculumPaths, curriculumSchemas } from './curriculum-docs.js';
 import { eventPaths, eventSchemas } from './event-docs.js';
+import { mediaPaths, mediaSchemas } from './media-docs.js';
 import { projectPaths, projectSchemas } from './project-docs.js';
 import { traineePaths, traineeSchemas } from './trainee-docs.js';
 
@@ -7,9 +8,9 @@ export const openApiSpec = {
   openapi: '3.0.3',
   info: {
     title: 'Maxim Nyansa Bootcamp API',
-    version: '0.6.0',
+    version: '0.7.0',
     description:
-      'Bootcamp API. Implemented routes: health, sign-in, sessions, the curriculum, trainee profiles, projects, and events. Public lists return published rows only. A scheduled event stays off the public routes until its Africa/Accra start, and that clock is UTC. A public trainee also needs profile consent. Project links are included only when every linked trainee has agreed to share them. Foundation-wide counters are a later milestone. There is no public registration.',
+      'Bootcamp API. Implemented routes: health, sign-in, sessions, the curriculum, trainee profiles, projects, events, and the gallery. Public lists return published rows only. A public photo also needs verified consent. Verifying consent does not publish the photo. A scheduled event stays off the public routes until its Africa/Accra start, and that clock is UTC. A public trainee also needs profile consent. Project links are included only when every linked trainee has agreed to share them. Foundation-wide counters are a later milestone. There is no public registration.',
   },
   servers: [{ url: '/' }],
   paths: {
@@ -111,6 +112,7 @@ export const openApiSpec = {
     ...traineePaths,
     ...projectPaths,
     ...eventPaths,
+    ...mediaPaths,
   },
   components: {
     schemas: {
@@ -201,6 +203,7 @@ export const openApiSpec = {
       ...traineeSchemas,
       ...projectSchemas,
       ...eventSchemas,
+      ...mediaSchemas,
     },
   },
 };

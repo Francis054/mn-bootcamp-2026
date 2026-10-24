@@ -84,4 +84,35 @@ describe('loadEnv', () => {
       'DATABASE_URL is required.',
     );
   });
+
+  it('defaults the upload cap to 5 MB and leaves Cloudinary unset', () => {
+    const env = loadEnv(
+      { DATABASE_URL: 'postgres://127.0.0.1:5432/mn_bootcamp' },
+      { loadDotenv: false },
+    );
+    expect(env.uploadMaxBytes).toBe(5 * 1024 * 1024);
+    expect(env.cloudinaryCloudName).toBeUndefined();
+    expect(env.cloudinaryApiKey).toBeUndefined();
+    expect(env.cloudinaryApiSecret).toBeUndefined();
+  });
+
+  it('refuses a partial Cloudinary setup and does not repeat the values', () => {
+    expect.assertions(3);
+    try {
+      loadEnv(
+        productionSource({
+          CLOUDINARY_CLOUD_NAME: 'example-cloud',
+          CLOUDINARY_API_KEY: 'key-value',
+        }),
+        { loadDotenv: false },
+      );
+    } catch (error) {
+      expect(error).toBeInstanceOf(EnvError);
+      const message = error instanceof Error ? error.message : '';
+      expect(message).toBe(
+        'CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET must all be set, or all left blank.',
+      );
+      expect(message).not.toContain('example-cloud');
+    }
+  });
 });
