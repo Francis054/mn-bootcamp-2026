@@ -18,7 +18,16 @@ export default defineConfig({
       },
     },
   },
-  preview: { port: 4173, strictPort: true },
+  preview: {
+    port: 4173,
+    strictPort: true,
+    proxy: {
+      '/api/v1': {
+        target: process.env.VITE_API_PROXY || 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',

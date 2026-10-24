@@ -11,7 +11,7 @@ Set `VITE_USE_MOCK_API=true` to use the in-browser fixture store instead. Leave 
 ## Local development
 
 1. Start the API on port 3000 (its `PORT` default). Point it at a local Postgres database. Do not set Resend or Cloudinary credentials for this check.
-2. From `web/`, run `npm install` and `npm run dev`. Vite proxies `/api/v1` to `http://localhost:3000`. Override that target with `VITE_API_PROXY` if the API is on another port. That variable is read by the dev server only.
+2. From `web/`, run `npm install` and `npm run dev`. Vite proxies `/api/v1` to `http://localhost:3000`. `npm run preview` uses the same proxy after `npm run build`. Override the target with `VITE_API_PROXY` if the API is on another port. That variable is read by the dev server only.
 3. Open http://localhost:5173. Public pages show whatever `/api/v1/public/*` returns. An unpublished homepage says “The homepage is not published yet.” Foundation counters stay hidden until `GET /public/foundation-stats` returns rows.
 4. Sign in at `/admin/login` with an account created by `npm run admin:create` in `backend/`. The password is not stored in the browser.
 
