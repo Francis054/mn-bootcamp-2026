@@ -193,6 +193,8 @@ The API process is a free Render web service. Put `DATABASE_URL`, `SESSION_SECRE
 
 New photo uploads use Cloudinary when `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` are all set on the host. The cloud name for this project is `i5rrintk`. Leave those three lines blank in `.env.example`. Do not commit the key or the secret. Development and the tests keep uploads in memory, so the test suite does not call Cloudinary. If production starts without those three variables, the process still boots and an upload is refused. This milestone does not rewrite image bytes to remove EXIF. The plan does not ask for that.
 
+Mail uses Resend when `RESEND_API_KEY` and `EMAIL_FROM` are both set. Leave both lines blank in `.env.example`. Do not commit a key or a from address. Development and the tests keep messages in memory, so the test suite does not call Resend. If production starts with neither variable, the process still boots and a message is reported as not sent. Set both, or leave both blank. The plan leaves text messages unselected, so this API does not send SMS.
+
 A free Supabase project can pause after about a week with no traffic. A free Render service sleeps after a period with no requests. The first request after a pause can fail until the database wakes up. `/api/v1/health` only means the process and the database answered at that moment.
 
 No connection string is stored in this repository. None should be pasted into a pull request or a chat.
@@ -293,10 +295,26 @@ Foundation counters live on settings. Only an administrator can read or change s
 
 `GET /api/v1/public/foundation-stats` returns the published counters. Until settings are published it returns an empty array. The contact email is not on that response.
 
-`npm run seed` inserts the homepage, the about page, three timeline rows, and settings, all as drafts. The counters are labelled `Sample counter` and the value is `0`. The seed does not invent foundation-wide totals. Run the command again and it leaves an edited row alone.
+`npm run seed` inserts the homepage, the about page, three timeline rows, and settings, all as drafts. The counters are labelled `Sample counter` and the value is `0`. The seed does not invent foundation-wide totals. Run the command again and it leaves an edited row alone. The settings draft includes the public contact address, which the enquiry notification uses. The seed does not insert enquiries.
 
-The contact form is not part of this milestone.
+## Accounts and mail
 
-## What is left for the next milestone
+A signed-in person changes their password with `POST /api/v1/admin/account/password`. The body is `{ current, next, confirm }`. The current password is checked again. Other sessions for that account are signed out. This session stays. The new password uses the same 12-character rule as `npm run admin:create`: at least one letter and one number, and not the mailbox. The website form still says 8 characters. This API does not store a shorter password.
 
-Accounts and mail: password change, password reset, invitations, and the contact form. An unconfigured mail provider should say that nothing was sent.
+`POST /api/v1/auth/password-reset/request` answers with the same JSON whether or not the mailbox exists. It does not return a link. A real account gets one email, through the mail provider. The link lasts 15 minutes. The token in that link is random. The database stores a hash of it, and the row is single-use. `POST /api/v1/auth/password-reset/complete` writes the new hash and signs every session for that account out. `passwordStored` is true only when that hash was written. A password the rules reject does not use the link up. A missing, used, or expired link all return `This reset link is missing, used or expired.`
+
+Reset requests are limited with the same counters as a failed sign-in. The lock message does not say whether the mailbox exists. A badly formed address is `422` and also does not say whether an account exists.
+
+An administrator invites with `POST /api/v1/admin/users/invite` and a body `{ email, role }`. The role is `viewer`, `editor`, or `administrator`, and it is required. The current website form sends only an email, so that form is rejected until it sends a role. The account is created immediately. The invitation link uses the same complete-reset route and lasts 24 hours. `delivered` is true only when the provider accepted the message. If mail is not configured, the account still exists and the response says no email was sent. A second invite for the same mailbox is `422` and does not repeat the address.
+
+`GET /api/v1/admin/users` is a list. Only an administrator can read it (`users.read`). `PATCH /api/v1/admin/users/:id` changes the role (`users.manage`). An administrator cannot remove their own administrator role from the session they are using. The new role is read from the database on the next request.
+
+The contact form is `POST /api/v1/public/enquiries`. It checks the name, the email, one of the four topics, a message of at least 20 characters, and the consent tick. It does not use a captcha service. A non-empty `company` field is ignored as spam: the response looks like success, and nothing is stored or emailed. Posts from one address are rate-limited. The response `message` is a status sentence. It is not a copy of what the person wrote. When settings have a contact email and mail is configured, a notification is sent there. If that send fails, or mail is not configured, the enquiry is still saved and `delivered` is false.
+
+`GET /api/v1/admin/enquiries` lists those rows for an administrator (`users.manage`). A viewer or an editor cannot read them. `PATCH` sets `handled`. `DELETE` removes the row. A change needs the session cookie and `X-CSRF-Token`. A public post with no session cookie does not.
+
+The audit row stores the action and the account id or the enquiry id. It does not store a mailbox, a token, a password, or the message text.
+
+## What is left
+
+`POST /api/v1/auth/session/expire` and `GET /api/v1/admin/search` are still not implemented. The plan's next milestone is the public cutover on the website, then the deployment notes. This API does not start that work. Text messages stay off.
