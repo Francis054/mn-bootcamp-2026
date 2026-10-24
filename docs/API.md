@@ -1,5 +1,7 @@
 # API alignment notes
 
+The route list that matches the running process is in `docs/api-reference.md`. The same list is served as OpenAPI at `/api/docs/openapi.json`. A test fails if those two lists drift apart.
+
 **Status: auth, accounts, curriculum, trainee, project, event, media, content singleton, and enquiry routes below are implemented in `backend/`.** The website that calls them is `frontend/`.
 
 Base path: `/api/v1`. Errors use the shape the website already parses:
