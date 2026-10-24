@@ -1,6 +1,6 @@
 # API alignment notes
 
-**Status: auth, curriculum, trainee, project, and event routes below are implemented in `backend/`.** The rest of the contract (media and mail) still lives on the `frontend` branch in that branch's `docs/API.md`. This file is the note the website needs when `VITE_API_MODE=live`. It does not change the website. The website stays on the `frontend` branch.
+**Status: auth, curriculum, trainee, project, event, and media routes below are implemented in `backend/`.** Mail still lives on the `frontend` branch in that branch's `docs/API.md`. This file is the note the website needs when `VITE_API_MODE=live`. It does not change the website. The website stays on the `frontend` branch.
 
 Base path: `/api/v1`. Errors use the shape the website already parses:
 
@@ -79,7 +79,7 @@ Idle time is 30 minutes. The session also ends 12 hours after sign-in. Both can 
 - Keep sending `X-CSRF-Token` from `mn_csrf` on sign-out and on later changes.
 - Treat `403` with code `forbidden` as "this role cannot do that", and `401` as "sign in again".
 
-The permission names match `web/src/domain/permissions.ts`. A viewer can read content and manage their own account. An editor can also change content and media, which includes creating, editing, publishing, and deleting classes, trainee profiles, projects, and events. An administrator can do that too, and can also manage users and settings. The server enforces that. The React route guard does not. There is no separate publish permission in the website's map, so this API does not invent one.
+The permission names match `web/src/domain/permissions.ts`. A viewer can read content and manage their own account. An editor can also change content and media. Content changes use `content.write` and cover classes, trainee profiles, projects, and events. Photo changes use `media.write`. An administrator can do that too, and can also manage users and settings. The server enforces that. The React route guard does not. There is no separate publish permission in the website's map, so this API does not invent one.
 
 ## Curriculum routes that exist now
 
@@ -200,7 +200,36 @@ Field messages match the form: `Give the event a name.`, `Enter a venue, or “V
 
 `npm run seed` inserts six labelled events. The hackathon has `dateTbc: true`, place `Venue to be confirmed`, and blank times. The midpoint is `scheduled` and `sample: true`. Each internal note starts with `Sample event.`
 
-The gallery is the next milestone. Verified consent does not publish a photo.
+## Media routes that exist now
+
+A public photo needs `publicationStatus: published`, a listing other than `hidden`, and `consent: verified`. A sample label does not publish a draft. Pending and withdrawn photos stay off `/public/media`. Verifying consent does not publish the photo. Publish is a second request, and it is refused until consent is already verified. One request that verifies consent and sets `publicationStatus: published` is `422` with `Verifying consent does not publish the photo.`
+
+The public object is `id`, `file`, `src`, `width`, `height`, `caption`, `alt`, and `album`. It omits `listing`, `publicationStatus`, consent, and the storage key. A missing or private photo is `404` with `That page is not available.`
+
+`GET /admin/media` is an array, not a page. Album filtering stays in the browser. The admin object matches the website's `MediaItem` and adds `withdrawn` consent, `consentVerifiedAt`, `consentRecordedBy` (the account id, not the mailbox), `consentWithdrawnAt`, `storageProvider`, and `updatedAt`.
+
+A JSON `POST /admin/media` cannot set `src`, `consent`, or `publicationStatus`. The new row is pending, draft, and hidden, with an empty `src`. A multipart post stores one JPEG, PNG, or WebP. The bytes are sniffed. The file name and the part content type are not trusted, and the stored `file` is `upload`. The cap is `UPLOAD_MAX_BYTES`, 5 MB unless the host sets another whole number up to 10 MB. Development and tests store the bytes in memory. Production uses Cloudinary when `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` are all set, and refuses uploads when none of them are set. This API does not rewrite image bytes to remove EXIF. The plan does not ask for that. Static seed rows point at no uploaded object. A request does not delete a file from git.
+
+`POST /admin/media/:id/withdraw-consent` sets consent to `withdrawn`, the workflow to `draft`, and the listing to `hidden`, clears `src`, and deletes an uploaded object. The admin row stays. If storage cannot delete the object, the photo is already off the public site, the storage key is kept, and the response is `Delivery removal failed. The photo is already off the public site. Try again.` The audit row stores the action and the photo id. It does not store the alt text, the caption, the address, or the bytes.
+
+| Method | Path                                                | Who                                                                                          |
+| ------ | --------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| GET    | `/public/media` and `/public/media/:id`             | Anyone. `PublicMedia`. Published, visible, and verified only.                               |
+| GET    | `/admin/media`                                      | `content.read`. An array of every photo, including drafts.                                  |
+| GET    | `/admin/media/:id`                                  | `content.read`. Full photo, including a draft and consent bookkeeping.                      |
+| POST   | `/admin/media`                                      | `media.write`. JSON metadata or one multipart image.                                        |
+| PATCH  | `/admin/media/:id`                                  | `media.write`. Omitted fields stay as they are. Verified consent does not publish.          |
+| DELETE | `/admin/media/:id`                                  | `media.write`. `{ deleted: true, id }`. An upload is removed from storage first.            |
+| POST   | `/admin/media/:id/publish` and `/unpublish`         | `media.write`. Publish does not change `listing`. Unpublish sets `draft`.                   |
+| POST   | `/admin/media/:id/withdraw-consent`                 | `media.write`. Unpublishes immediately and deletes an uploaded object.                      |
+
+There is no `POST /admin/media/bulk`. The class list is the only bulk action.
+
+Field messages: `Describe the image without naming anyone.`, `Use at most 300 characters.`, `Choose an album.`, `Use a JPEG, PNG, or WebP image.`, `Use an image of at most 5 MB.` A withdrawal sent as `consent: withdrawn` on PATCH is `Use the withdrawal action to remove consent.`
+
+`npm run seed` inserts three labelled placeholders, `sample-banner`, `sample-bench`, and `sample-mark`. They are not photographs of people. Consent is pending and the workflow is draft, so `GET /public/media` does not return them.
+
+The homepage, about, milestones, and settings are the next milestone. Foundation-wide counters live there.
 
 ## Not in this milestone
 
@@ -213,6 +242,7 @@ These paths from the frontend contract are not implemented. They still answer `4
 - `POST /admin/trainees/bulk`
 - `POST /admin/projects/bulk`
 - `POST /admin/events/bulk`
-- media, and the homepage, about, and settings singletons
+- `POST /admin/media/bulk`
+- the homepage, about, milestones, and settings singletons
 
 There is no public registration route. The first administrator is created with `npm run admin:create` in `backend/`, from a private password. That command is not an HTTP route and it is not in the OpenAPI document. OpenAPI for the routes above is at `/api/docs`.

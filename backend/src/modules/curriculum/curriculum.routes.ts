@@ -18,6 +18,8 @@ import type { LessonService } from './lesson.service.js';
 import { readLessonListQuery } from './list-query.js';
 import { mountAdminEvents, mountPublicEvents } from '../events/event.routes.js';
 import type { EventService } from '../events/event.service.js';
+import { mountAdminMedia, mountPublicMedia } from '../gallery/media.routes.js';
+import type { MediaService } from '../gallery/media.service.js';
 import { mountAdminProjects, mountPublicProjects } from '../projects/project.routes.js';
 import type { ProjectService } from '../projects/project.service.js';
 import { mountAdminTrainees, mountPublicTrainees } from '../trainees/trainee.routes.js';
@@ -29,6 +31,8 @@ export function curriculumRouter(
   trainees: TraineeService,
   projects: ProjectService,
   events: EventService,
+  media: MediaService,
+  maxBytes: number,
   sessions: SessionService,
 ): Router {
   const router = Router();
@@ -91,6 +95,7 @@ export function curriculumRouter(
   mountPublicTrainees(router, trainees);
   mountPublicProjects(router, projects);
   mountPublicEvents(router, events);
+  mountPublicMedia(router, media);
 
   const admin = Router();
   admin.use(requireAuth(sessions), requirePermission('content.read'));
@@ -101,6 +106,7 @@ export function curriculumRouter(
   mountAdminTrainees(admin, trainees);
   mountAdminProjects(admin, projects);
   mountAdminEvents(admin, events);
+  mountAdminMedia(admin, media, maxBytes);
   router.use('/admin', admin);
   return router;
 }

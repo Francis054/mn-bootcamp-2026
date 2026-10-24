@@ -15,6 +15,8 @@ import { SeedService } from '../modules/curriculum/seed.service.js';
 import { TrackEntity } from '../modules/curriculum/track.entity.js';
 import { EventEntity } from '../modules/events/event.entity.js';
 import { EventRepository } from '../modules/events/event.repository.js';
+import { MediaEntity } from '../modules/gallery/media.entity.js';
+import { MediaRepository } from '../modules/gallery/media.repository.js';
 import { ProjectEntity } from '../modules/projects/project.entity.js';
 import { ProjectRepository } from '../modules/projects/project.repository.js';
 import { TraineeEntity } from '../modules/trainees/trainee.entity.js';
@@ -46,6 +48,7 @@ export async function runSeed(options: SeedIO = {}): Promise<number> {
         new TraineeRepository(dataSource.getRepository(TraineeEntity)),
         new ProjectRepository(dataSource.getRepository(ProjectEntity)),
         new EventRepository(dataSource.getRepository(EventEntity)),
+        new MediaRepository(dataSource.getRepository(MediaEntity)),
       );
       await seed.run();
       stdout('Sample curriculum is ready.');

@@ -26,6 +26,11 @@ import { TrackEntity } from '../modules/curriculum/track.entity.js';
 import { EventEntity } from '../modules/events/event.entity.js';
 import { EventRepository } from '../modules/events/event.repository.js';
 import { EventService } from '../modules/events/event.service.js';
+import { MediaEntity } from '../modules/gallery/media.entity.js';
+import { MediaRepository } from '../modules/gallery/media.repository.js';
+import { MediaService } from '../modules/gallery/media.service.js';
+import { createStorage } from '../modules/storage/create-storage.js';
+import type { StorageProvider } from '../modules/storage/storage-provider.js';
 import { ProjectEntity } from '../modules/projects/project.entity.js';
 import { liveRepositoryVisibility } from '../modules/projects/project-url.js';
 import { ProjectRepository } from '../modules/projects/project.repository.js';
@@ -51,6 +56,7 @@ export class AppContainer {
   readonly sessions: SessionService;
   readonly authRouter: Router;
   readonly curriculumRouter: Router;
+  readonly storage: StorageProvider;
 
   constructor(
     readonly env: AppEnv,
@@ -64,10 +70,13 @@ export class AppContainer {
     trainees: TraineeService,
     projects: ProjectService,
     events: EventService,
+    media: MediaService,
+    storage: StorageProvider,
   ) {
     this.health = new HealthService(dataSource, logger);
     this.users = users;
     this.sessions = sessions;
+    this.storage = storage;
     this.authRouter = authRouter(auth, sessions);
     this.curriculumRouter = curriculumRouter(
       catalogue,
@@ -75,6 +84,8 @@ export class AppContainer {
       trainees,
       projects,
       events,
+      media,
+      env.uploadMaxBytes,
       sessions,
     );
   }
@@ -149,6 +160,14 @@ export class AppContainer {
       audit,
       () => new Date(),
     );
+    const storage = createStorage(env);
+    const mediaService = new MediaService(
+      new MediaRepository(dataSource.getRepository(MediaEntity)),
+      audit,
+      storage,
+      env.uploadMaxBytes,
+      () => new Date(),
+    );
     return new AppContainer(
       env,
       logger,
@@ -161,6 +180,8 @@ export class AppContainer {
       traineeService,
       projectService,
       eventService,
+      mediaService,
+      storage,
     );
   }
 

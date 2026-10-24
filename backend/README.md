@@ -191,6 +191,8 @@ The database is a free Supabase Postgres project in `eu-central-1`. The project 
 
 The API process is a free Render web service. Put `DATABASE_URL`, `SESSION_SECRET`, and `FRONTEND_URL` in Render's environment, not in git. Set `TRUST_PROXY=true` there, because Render is the proxy in front of the process. `FRONTEND_URL` is the one public origin.
 
+New photo uploads use Cloudinary when `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` are all set on the host. The cloud name for this project is `i5rrintk`. Leave those three lines blank in `.env.example`. Do not commit the key or the secret. Development and the tests keep uploads in memory, so the test suite does not call Cloudinary. If production starts without those three variables, the process still boots and an upload is refused. This milestone does not rewrite image bytes to remove EXIF. The plan does not ask for that.
+
 A free Supabase project can pause after about a week with no traffic. A free Render service sleeps after a period with no requests. The first request after a pause can fail until the database wakes up. `/api/v1/health` only means the process and the database answered at that moment.
 
 No connection string is stored in this repository. None should be pasted into a pull request or a chat.
@@ -265,6 +267,20 @@ The event list has no bulk action. Search matches the title and the place. `filt
 
 `npm run seed` also inserts six labelled events. Each internal note starts with `Sample event.` The hackathon stays to be confirmed: `dateTbc` is true, the place is `Venue to be confirmed`, and the start and end are blank. The seed does not invent a clock or a venue for it. The midpoint is a sample milestone with workflow `scheduled`, so it stays off the public list until 16 Nov 2026. Run the command again and it leaves an edited row alone.
 
+## Gallery
+
+A public photo is a row whose workflow is `published`, whose listing is not `hidden`, and whose consent is `verified`. Drafts, pending consent, withdrawn consent, and hidden rows stay on the admin routes. A sample label does not put a draft on the public site. Marking consent verified does not publish the photo. Publish is a separate step, and it is refused until consent is already verified. Sending both in one edit is refused.
+
+`GET /api/v1/public/media` returns the id, file, src, width, height, caption, alt, and album. It leaves out the listing, the workflow, consent, and the storage key. The admin list is an array, not a page. Album filters stay in the browser.
+
+A JSON create starts as pending, draft, and hidden, with an empty src. A file upload is sniffed as JPEG, PNG, or WebP. The file name and the part's content type are not trusted. The stored file label is `upload`, so an original name is not kept. The size cap is `UPLOAD_MAX_BYTES`. It is 5 MB unless the host sets another whole number up to 10 MB.
+
+`POST /api/v1/admin/media/:id/withdraw-consent` sets consent to withdrawn, returns the workflow to draft, hides the listing, clears src, and deletes an uploaded object from storage. A static seed row has no uploaded object, so withdrawal only clears the metadata. If storage cannot delete the object, the photo is already off the public site and the key is kept so the request can be tried again. The audit row stores the action and the photo id. It does not store the alt text, the caption, the address, or the file bytes.
+
+An editor and an administrator both change photos. That is the website's `media.write` permission. A viewer can read the admin list. A change needs the session cookie and the matching `X-CSRF-Token` header. There is no media bulk action.
+
+`npm run seed` also inserts three labelled placeholders: `sample-banner`, `sample-bench`, and `sample-mark`. They are drawings and banners, not photographs of people. Consent is pending and the workflow is draft, so the public gallery does not include them. Run the command again and it leaves an edited row alone.
+
 ## What is left for the next milestone
 
-The gallery. Marking a photo's consent verified does not publish it. Publish needs verified consent. Withdrawing consent unpublishes the photo. The homepage, about, and settings pages come after that. Password-reset mail and invitations come with the accounts milestone. Foundation-wide counters come with the settings and homepage milestone.
+The homepage, about, milestones, and settings, including the foundation-wide counters. Password-reset mail and invitations come with the accounts milestone.

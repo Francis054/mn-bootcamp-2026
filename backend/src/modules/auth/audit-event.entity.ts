@@ -10,6 +10,7 @@ export const CURRICULUM_KINDS = [
   'trainee',
   'project',
   'event',
+  'media',
 ] as const;
 export const CURRICULUM_VERBS = [
   'created',
