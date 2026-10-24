@@ -2,9 +2,9 @@ export const openApiSpec = {
   openapi: '3.0.3',
   info: {
     title: 'Maxim Nyansa Bootcamp API',
-    version: '0.1.0',
+    version: '0.2.0',
     description:
-      'Foundation of the bootcamp API. The only implemented route is the health check. Any other path returns the error shape with code not_found. Draft content, accounts, and uploads are later milestones.',
+      'Bootcamp API. Implemented routes: health, sign-in, sign-out, and the current session. Other paths return not_found. There is no public registration. Password reset and content routes are later milestones.',
   },
   servers: [{ url: '/' }],
   paths: {
@@ -32,6 +32,76 @@ export const openApiSpec = {
         },
       },
     },
+    '/api/v1/auth/login': {
+      post: {
+        operationId: 'login',
+        summary: 'Start a server session',
+        description:
+          'Sets the HttpOnly session cookie `mn_session` on path /api/v1 and the readable CSRF cookie `mn_csrf` on path /. Neither cookie sets Domain. SameSite is Lax. Secure is set in production. developmentAck is ignored. Failures do not say whether the mailbox exists.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/LoginRequest' },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Signed in. The session token is only in the cookie.',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/LoginResponse' },
+              },
+            },
+          },
+          '401': {
+            description: 'The email or password is not correct.',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorBody' } } },
+          },
+          '422': {
+            description: 'The body failed validation.',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorBody' } } },
+          },
+          '429': {
+            description: 'Too many sign-in attempts.',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorBody' } } },
+          },
+        },
+      },
+    },
+    '/api/v1/auth/logout': {
+      post: {
+        operationId: 'logout',
+        summary: 'Delete the server session',
+        description:
+          'Requires the session cookie and a matching X-CSRF-Token header. Clears both cookies.',
+        responses: {
+          '204': { description: 'Signed out.' },
+          '403': {
+            description: 'The CSRF token does not match.',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorBody' } } },
+          },
+        },
+      },
+    },
+    '/api/v1/auth/session': {
+      get: {
+        operationId: 'getSession',
+        summary: 'Current session',
+        description: 'Does not require CSRF. An anonymous caller gets authenticated: false.',
+        responses: {
+          '200': {
+            description: 'Whether a session is active.',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/SessionResponse' },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   components: {
     schemas: {
@@ -43,6 +113,48 @@ export const openApiSpec = {
           status: { type: 'string', enum: ['ok', 'degraded'] },
           database: { type: 'string', enum: ['up', 'down'] },
           uptimeSeconds: { type: 'integer', minimum: 0 },
+        },
+      },
+      LoginRequest: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['email', 'password'],
+        properties: {
+          email: { type: 'string', format: 'email' },
+          password: { type: 'string', minLength: 8, maxLength: 200 },
+          developmentAck: { type: 'boolean', description: 'Ignored. Sent by the current website.' },
+        },
+      },
+      PublicUser: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['id', 'email', 'displayName', 'initials', 'hue', 'role'],
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          email: { type: 'string' },
+          displayName: { type: 'string' },
+          initials: { type: 'string' },
+          hue: { type: 'integer', minimum: 0, maximum: 359 },
+          role: { type: 'string', enum: ['viewer', 'editor', 'administrator'] },
+        },
+      },
+      LoginResponse: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['user', 'expiresAt'],
+        properties: {
+          user: { $ref: '#/components/schemas/PublicUser' },
+          expiresAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      SessionResponse: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['authenticated'],
+        properties: {
+          authenticated: { type: 'boolean' },
+          user: { $ref: '#/components/schemas/PublicUser' },
+          expiresAt: { type: 'string', format: 'date-time' },
         },
       },
       ErrorBody: {

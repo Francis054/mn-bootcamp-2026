@@ -32,7 +32,7 @@ describe('health against Postgres', () => {
     const names: unknown = await container.dataSource.query(
       'SELECT name FROM schema_migrations ORDER BY id',
     );
-    expect(names).toEqual([{ name: 'Baseline1792800000000' }]);
+    expect(names).toEqual([{ name: 'Baseline1792800000000' }, { name: 'Auth1792868400000' }]);
 
     const app = createApp(container);
     const response = await request(app).get('/api/v1/health').expect(200);
@@ -41,10 +41,16 @@ describe('health against Postgres', () => {
   });
 });
 
+const OUR_MIGRATIONS = new Set(['Baseline1792800000000', 'Auth1792868400000']);
+
 async function revertBaselineIfPresent(dataSource: DataSource): Promise<void> {
-  const rows: unknown = await dataSource.query('SELECT name FROM schema_migrations ORDER BY id');
-  if (!Array.isArray(rows) || rows.length !== 1) return;
-  if (migrationName(rows[0]) === 'Baseline1792800000000') {
+  for (;;) {
+    const rows: unknown = await dataSource.query(
+      'SELECT name FROM schema_migrations ORDER BY id DESC',
+    );
+    if (!Array.isArray(rows) || rows.length === 0) return;
+    const name = migrationName(rows[0]);
+    if (!name || !OUR_MIGRATIONS.has(name)) return;
     await dataSource.undoLastMigration();
   }
 }

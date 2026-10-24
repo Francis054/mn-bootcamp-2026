@@ -28,6 +28,11 @@ export interface AppEnv {
   trustProxy: boolean;
   rateLimitWindowMs: number;
   rateLimitMax: number;
+  sessionIdleTtlMs: number;
+  sessionAbsoluteTtlMs: number;
+  loginFailureLimit: number;
+  loginLockMs: number;
+  loginIpFailureLimit: number;
 }
 
 const NODE_ENVS: readonly NodeEnv[] = ['development', 'test', 'production'];
@@ -77,6 +82,31 @@ export function loadEnv(
     problems,
   );
   const rateLimitMax = readPositiveInt(source.RATE_LIMIT_MAX, 300, 'RATE_LIMIT_MAX', problems);
+  const sessionIdleTtlMs = readPositiveInt(
+    source.SESSION_IDLE_TTL_MS,
+    1_800_000,
+    'SESSION_IDLE_TTL_MS',
+    problems,
+  );
+  const sessionAbsoluteTtlMs = readPositiveInt(
+    source.SESSION_ABSOLUTE_TTL_MS,
+    43_200_000,
+    'SESSION_ABSOLUTE_TTL_MS',
+    problems,
+  );
+  const loginFailureLimit = readPositiveInt(
+    source.LOGIN_FAILURE_LIMIT,
+    5,
+    'LOGIN_FAILURE_LIMIT',
+    problems,
+  );
+  const loginLockMs = readPositiveInt(source.LOGIN_LOCK_MS, 60_000, 'LOGIN_LOCK_MS', problems);
+  const loginIpFailureLimit = readPositiveInt(
+    source.LOGIN_IP_FAILURE_LIMIT,
+    30,
+    'LOGIN_IP_FAILURE_LIMIT',
+    problems,
+  );
 
   if (problems.length > 0) {
     throw new EnvError(problems.join(' '));
@@ -92,6 +122,11 @@ export function loadEnv(
     trustProxy,
     rateLimitWindowMs,
     rateLimitMax,
+    sessionIdleTtlMs,
+    sessionAbsoluteTtlMs,
+    loginFailureLimit,
+    loginLockMs,
+    loginIpFailureLimit,
   };
   if (sessionSecret !== undefined) {
     env.sessionSecret = sessionSecret;

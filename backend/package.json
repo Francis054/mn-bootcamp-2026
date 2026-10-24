@@ -20,9 +20,11 @@
     "test:integration": "vitest run tests/integration",
     "migration:run": "tsx ./node_modules/typeorm/cli.js migration:run -d src/database/cli-data-source.ts",
     "migration:revert": "tsx ./node_modules/typeorm/cli.js migration:revert -d src/database/cli-data-source.ts",
-    "migration:show": "tsx ./node_modules/typeorm/cli.js migration:show -d src/database/cli-data-source.ts"
+    "migration:show": "tsx ./node_modules/typeorm/cli.js migration:show -d src/database/cli-data-source.ts",
+    "admin:create": "tsx src/commands/admin-create.ts"
   },
   "dependencies": {
+    "argon2": "^0.45.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "cookie-parser": "^1.4.7",
