@@ -13,6 +13,8 @@ import {
 } from '../modules/curriculum/repositories.js';
 import { SeedService } from '../modules/curriculum/seed.service.js';
 import { TrackEntity } from '../modules/curriculum/track.entity.js';
+import { ProjectEntity } from '../modules/projects/project.entity.js';
+import { ProjectRepository } from '../modules/projects/project.repository.js';
 import { TraineeEntity } from '../modules/trainees/trainee.entity.js';
 import { TraineeRepository } from '../modules/trainees/trainee.repository.js';
 import { postgresCode } from '../shared/persistence/postgres-error.js';
@@ -40,6 +42,7 @@ export async function runSeed(options: SeedIO = {}): Promise<number> {
         new PhaseRepository(dataSource.getRepository(PhaseEntity)),
         new LessonRepository(dataSource.getRepository(LessonEntity)),
         new TraineeRepository(dataSource.getRepository(TraineeEntity)),
+        new ProjectRepository(dataSource.getRepository(ProjectEntity)),
       );
       await seed.run();
       stdout('Sample curriculum is ready.');

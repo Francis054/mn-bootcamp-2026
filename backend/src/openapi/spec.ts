@@ -1,13 +1,14 @@
 import { curriculumPaths, curriculumSchemas } from './curriculum-docs.js';
+import { projectPaths, projectSchemas } from './project-docs.js';
 import { traineePaths, traineeSchemas } from './trainee-docs.js';
 
 export const openApiSpec = {
   openapi: '3.0.3',
   info: {
     title: 'Maxim Nyansa Bootcamp API',
-    version: '0.4.0',
+    version: '0.5.0',
     description:
-      'Bootcamp API. Implemented routes: health, sign-in, sessions, the curriculum (tracks, modules, phases, and classes), and trainee profiles. Public class lists return published rows only. A public trainee also needs profile consent. Foundation-wide counters and projects are later milestones. There is no public registration.',
+      'Bootcamp API. Implemented routes: health, sign-in, sessions, the curriculum, trainee profiles, and projects. Public lists return published rows only. A public trainee also needs profile consent. Project links are included only when every linked trainee has agreed to share them. Foundation-wide counters are a later milestone. There is no public registration.',
   },
   servers: [{ url: '/' }],
   paths: {
@@ -107,6 +108,7 @@ export const openApiSpec = {
     },
     ...curriculumPaths,
     ...traineePaths,
+    ...projectPaths,
   },
   components: {
     schemas: {
@@ -195,6 +197,7 @@ export const openApiSpec = {
       },
       ...curriculumSchemas,
       ...traineeSchemas,
+      ...projectSchemas,
     },
   },
 };

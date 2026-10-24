@@ -22,6 +22,10 @@ export interface TraineeRecord {
   consentReceivedAt: string | null;
   consentRecordedBy: string | null;
   consentWithdrawnAt: string | null;
+  linksShareConsent: boolean;
+  linksShareConsentAt: string | null;
+  linksShareConsentRecordedBy: string | null;
+  linksShareConsentWithdrawnAt: string | null;
   listing: Listing;
   publicationStatus: PublicationStatus;
   statusLabel: string;

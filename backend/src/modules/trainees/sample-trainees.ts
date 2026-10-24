@@ -35,6 +35,10 @@ export interface SampleTrainee {
   consentReceivedAt: null;
   consentRecordedBy: null;
   consentWithdrawnAt: null;
+  linksShareConsent: boolean;
+  linksShareConsentAt: null;
+  linksShareConsentRecordedBy: null;
+  linksShareConsentWithdrawnAt: null;
   listing: Listing;
   publicationStatus: PublicationStatus;
   statusLabel: string;
@@ -65,6 +69,10 @@ export function buildSampleTrainees(): SampleTrainee[] {
       consentReceivedAt: null,
       consentRecordedBy: null,
       consentWithdrawnAt: null,
+      linksShareConsent: false,
+      linksShareConsentAt: null,
+      linksShareConsentRecordedBy: null,
+      linksShareConsentWithdrawnAt: null,
       listing: 'sample',
       publicationStatus: 'published',
       statusLabel: 'In training',

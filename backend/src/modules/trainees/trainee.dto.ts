@@ -3,6 +3,7 @@ import { IsOptional, ValidateBy } from 'class-validator';
 import {
   consentMessage,
   displayNameMessage,
+  linkConsentMessage,
   emailMessage,
   focusMessage,
   hueMessage,
@@ -79,6 +80,14 @@ export class TraineeCreateDto {
   consentReceived?: boolean;
 
   @IsOptional()
+  @rule(
+    'linksShareConsent',
+    linkConsentMessage,
+    'Choose whether the trainee agreed to share links.',
+  )
+  linksShareConsent?: boolean;
+
+  @IsOptional()
   @rule('listing', listingMessage, 'Choose a listing.')
   listing?: string;
 
@@ -145,6 +154,14 @@ export class TraineePatchDto {
   @IsOptional()
   @rule('consentReceived', consentMessage, 'Choose whether consent was received.')
   consentReceived?: boolean;
+
+  @IsOptional()
+  @rule(
+    'linksShareConsent',
+    linkConsentMessage,
+    'Choose whether the trainee agreed to share links.',
+  )
+  linksShareConsent?: boolean;
 
   @IsOptional()
   @rule('listing', listingMessage, 'Choose a listing.')

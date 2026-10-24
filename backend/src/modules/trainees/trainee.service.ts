@@ -27,6 +27,7 @@ export class TraineeService {
   constructor(
     private readonly trainees: TraineeRepository,
     private readonly modules: ModuleRepository,
+    private readonly projects: { countByTrainee(traineeId: string): Promise<number> },
     private readonly audit: AuditRepository,
     private readonly now: () => Date = () => new Date(),
   ) {}
@@ -109,6 +110,10 @@ export class TraineeService {
       consentReceivedAt: consentReceived ? this.now() : null,
       consentRecordedBy: consentReceived ? actor.userId : null,
       consentWithdrawnAt: null,
+      linksShareConsent: dto.linksShareConsent ?? false,
+      linksShareConsentAt: dto.linksShareConsent ? this.now() : null,
+      linksShareConsentRecordedBy: dto.linksShareConsent ? actor.userId : null,
+      linksShareConsentWithdrawnAt: null,
       listing: listingOr(dto.listing, 'hidden'),
       publicationStatus: decision.publicationStatus,
       statusLabel: dto.statusLabel?.trim() || 'In training',
@@ -168,6 +173,16 @@ export class TraineeService {
     if (decision.withdrawing) current.consentWithdrawnAt = this.now();
     current.consentReceived = requestedConsent;
     current.publicationStatus = decision.publicationStatus;
+    const nextLinks = patch.linksShareConsent ?? current.linksShareConsent;
+    if (nextLinks && !current.linksShareConsent) {
+      current.linksShareConsentAt = this.now();
+      current.linksShareConsentRecordedBy = actor.userId;
+      current.linksShareConsentWithdrawnAt = null;
+    }
+    if (current.linksShareConsent && patch.linksShareConsent === false) {
+      current.linksShareConsentWithdrawnAt = this.now();
+    }
+    current.linksShareConsent = nextLinks;
     const saved = await this.save(current);
     const verb: CurriculumVerb = decision.withdrawing && wasPublished ? 'unpublished' : 'updated';
     await this.writeAudit(actor, verb, saved.id);
@@ -197,6 +212,12 @@ export class TraineeService {
 
   async remove(id: string, actor: Actor): Promise<{ deleted: true; id: string }> {
     const current = await this.requireTrainee(id, 'Record not found.');
+    if ((await this.projects.countByTrainee(id)) > 0) {
+      throw new ApiError(
+        'validation',
+        'That trainee is still listed on a project. Remove them there first.',
+      );
+    }
     await this.trainees.remove(current);
     await this.writeAudit(actor, 'deleted', id);
     return { deleted: true, id };
@@ -262,6 +283,10 @@ export class TraineeService {
       consentReceivedAt: stamp(row.consentReceivedAt),
       consentRecordedBy: row.consentRecordedBy,
       consentWithdrawnAt: stamp(row.consentWithdrawnAt),
+      linksShareConsent: row.linksShareConsent,
+      linksShareConsentAt: stamp(row.linksShareConsentAt),
+      linksShareConsentRecordedBy: row.linksShareConsentRecordedBy,
+      linksShareConsentWithdrawnAt: stamp(row.linksShareConsentWithdrawnAt),
       listing: row.listing,
       publicationStatus: row.publicationStatus,
       statusLabel: row.statusLabel,

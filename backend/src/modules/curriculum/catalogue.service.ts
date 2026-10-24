@@ -46,6 +46,10 @@ interface TraineeModuleUse {
   countByModule(moduleId: string): Promise<number>;
 }
 
+interface ProjectModuleUse {
+  countByModule(moduleId: string): Promise<number>;
+}
+
 /**
  * Tracks, modules, and phases. Lessons live in `LessonService` because their
  * rules and the class form are a different shape.
@@ -57,6 +61,7 @@ export class CatalogueService {
     private readonly phases: PhaseRepository,
     private readonly lessons: LessonRepository,
     private readonly trainees: TraineeModuleUse,
+    private readonly projects: ProjectModuleUse,
     private readonly audit: AuditRepository,
   ) {}
 
@@ -245,6 +250,12 @@ export class CatalogueService {
       throw new ApiError(
         'validation',
         'That module still has trainee profiles. Move or delete those profiles first.',
+      );
+    }
+    if ((await this.projects.countByModule(id)) > 0) {
+      throw new ApiError(
+        'validation',
+        'That module still has projects. Move or delete those projects first.',
       );
     }
     const phases = await this.phases.findAll();
