@@ -23,6 +23,9 @@ import {
 } from '../modules/curriculum/repositories.js';
 import { accraToday } from '../modules/curriculum/schedule.js';
 import { TrackEntity } from '../modules/curriculum/track.entity.js';
+import { ContentSingletonEntity } from '../modules/content/content.entity.js';
+import { ContentRepository } from '../modules/content/content.repository.js';
+import { ContentService } from '../modules/content/content.service.js';
 import { EventEntity } from '../modules/events/event.entity.js';
 import { EventRepository } from '../modules/events/event.repository.js';
 import { EventService } from '../modules/events/event.service.js';
@@ -72,6 +75,7 @@ export class AppContainer {
     events: EventService,
     media: MediaService,
     storage: StorageProvider,
+    content: ContentService,
   ) {
     this.health = new HealthService(dataSource, logger);
     this.users = users;
@@ -86,6 +90,7 @@ export class AppContainer {
       events,
       media,
       env.uploadMaxBytes,
+      content,
       sessions,
     );
   }
@@ -160,6 +165,10 @@ export class AppContainer {
       audit,
       () => new Date(),
     );
+    const contentService = new ContentService(
+      new ContentRepository(dataSource.getRepository(ContentSingletonEntity)),
+      audit,
+    );
     const storage = createStorage(env);
     const mediaService = new MediaService(
       new MediaRepository(dataSource.getRepository(MediaEntity)),
@@ -182,6 +191,7 @@ export class AppContainer {
       eventService,
       mediaService,
       storage,
+      contentService,
     );
   }
 

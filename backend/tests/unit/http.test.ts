@@ -167,6 +167,9 @@ describe('HTTP pipeline', () => {
     const mediaPath = readRecord(paths['/api/v1/public/media']);
     const mediaGet = readRecord(mediaPath.get);
     expect(mediaGet.operationId).toBe('listPublicMedia');
+    const homePath = readRecord(paths['/api/v1/public/home']);
+    const homeGet = readRecord(homePath.get);
+    expect(homeGet.operationId).toBe('getPublicHome');
     const components = readRecord(document.components);
     const schemas = readRecord(components.schemas);
     expect(schemas.ErrorBody).toBeDefined();

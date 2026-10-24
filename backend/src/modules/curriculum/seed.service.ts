@@ -1,3 +1,5 @@
+import type { ContentRepository } from '../content/content.repository.js';
+import { buildSampleContent } from '../content/sample-content.js';
 import type { EventRepository } from '../events/event.repository.js';
 import { buildSampleEvents } from '../events/sample-events.js';
 import type { MediaRepository } from '../gallery/media.repository.js';
@@ -33,6 +35,7 @@ export class SeedService {
     private readonly projects: ProjectRepository,
     private readonly events: EventRepository,
     private readonly media: MediaRepository,
+    private readonly content: ContentRepository,
   ) {}
 
   async run(): Promise<void> {
@@ -70,6 +73,10 @@ export class SeedService {
     for (const media of buildSampleMedia()) {
       if (await this.media.findById(media.id)) continue;
       await this.media.insert(media);
+    }
+    for (const document of buildSampleContent()) {
+      if (await this.content.findById(document.id)) continue;
+      await this.content.insert(document);
     }
   }
 }

@@ -16,6 +16,8 @@ import {
 import { LessonCreateDto, LessonPatchDto } from './lesson.dto.js';
 import type { LessonService } from './lesson.service.js';
 import { readLessonListQuery } from './list-query.js';
+import { mountAdminContent, mountPublicContent } from '../content/content.routes.js';
+import type { ContentService } from '../content/content.service.js';
 import { mountAdminEvents, mountPublicEvents } from '../events/event.routes.js';
 import type { EventService } from '../events/event.service.js';
 import { mountAdminMedia, mountPublicMedia } from '../gallery/media.routes.js';
@@ -33,6 +35,7 @@ export function curriculumRouter(
   events: EventService,
   media: MediaService,
   maxBytes: number,
+  content: ContentService,
   sessions: SessionService,
 ): Router {
   const router = Router();
@@ -96,6 +99,7 @@ export function curriculumRouter(
   mountPublicProjects(router, projects);
   mountPublicEvents(router, events);
   mountPublicMedia(router, media);
+  mountPublicContent(router, content);
 
   const admin = Router();
   admin.use(requireAuth(sessions), requirePermission('content.read'));
@@ -107,6 +111,7 @@ export function curriculumRouter(
   mountAdminProjects(admin, projects);
   mountAdminEvents(admin, events);
   mountAdminMedia(admin, media, maxBytes);
+  mountAdminContent(admin, content);
   router.use('/admin', admin);
   return router;
 }

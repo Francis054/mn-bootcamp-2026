@@ -1,3 +1,4 @@
+import { contentPaths, contentSchemas } from './content-docs.js';
 import { curriculumPaths, curriculumSchemas } from './curriculum-docs.js';
 import { eventPaths, eventSchemas } from './event-docs.js';
 import { mediaPaths, mediaSchemas } from './media-docs.js';
@@ -8,9 +9,9 @@ export const openApiSpec = {
   openapi: '3.0.3',
   info: {
     title: 'Maxim Nyansa Bootcamp API',
-    version: '0.7.0',
+    version: '0.8.0',
     description:
-      'Bootcamp API. Implemented routes: health, sign-in, sessions, the curriculum, trainee profiles, projects, events, and the gallery. Public lists return published rows only. A public photo also needs verified consent. Verifying consent does not publish the photo. A scheduled event stays off the public routes until its Africa/Accra start, and that clock is UTC. A public trainee also needs profile consent. Project links are included only when every linked trainee has agreed to share them. Foundation-wide counters are a later milestone. There is no public registration.',
+      'Bootcamp API. Implemented routes: health, sign-in, sessions, the curriculum, trainee profiles, projects, events, the gallery, and the content singletons. Public reads return published copies. Homepage, about, the timeline, and settings each keep a draft for editors. The announcement banner is part of the homepage. Foundation counters are stored with settings and are published with them. A public photo also needs verified consent. Verifying consent does not publish the photo. A scheduled event stays off the public routes until its Africa/Accra start, and that clock is UTC. A public trainee also needs profile consent. Project links are included only when every linked trainee has agreed to share them. There is no public registration.',
   },
   servers: [{ url: '/' }],
   paths: {
@@ -113,6 +114,7 @@ export const openApiSpec = {
     ...projectPaths,
     ...eventPaths,
     ...mediaPaths,
+    ...contentPaths,
   },
   components: {
     schemas: {
@@ -204,6 +206,7 @@ export const openApiSpec = {
       ...projectSchemas,
       ...eventSchemas,
       ...mediaSchemas,
+      ...contentSchemas,
     },
   },
 };
