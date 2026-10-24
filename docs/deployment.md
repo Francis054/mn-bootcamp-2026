@@ -65,12 +65,27 @@ Create the first administrator only after migrations, in private, once. Do not c
 
 These are the published limits as checked on 24 October 2026. They are not a promise that the vendor still offers them next month.
 
-- Render free web services spin down after 15 minutes without inbound traffic and take about a minute to wake. A workspace gets 750 free instance hours a month. Static sites do not spin down that way. Rollbacks on the free web service go back only to the two most recent previous deploys. Source: https://render.com/docs/free
+- Render free web services spin down after 15 minutes without inbound traffic and take about a minute to wake. A workspace gets 750 free instance hours a month. Hours count only while a service is running. A spun-down service does not use them. One web service left running all month uses 720 hours in a 30-day month and 744 in a 31-day month, so a single always-on free service fits, with a few hours left. A second free web service that also stays up all month does not. Static sites do not use these hours. Rollbacks on the free web service go back only to the two most recent previous deploys. Source: https://render.com/docs/free, checked 24 October 2026.
 - Supabase free projects pause after a week of low database activity. The pricing page says “paused after 1 week of inactivity,” a 500 MB database, and 2 active projects. The pausing guide says a warning email comes about a week before, and a paused project can be restored from the dashboard. Sources: https://supabase.com/pricing and https://supabase.com/docs/guides/platform/free-project-pausing
 - Cloudinary’s free plan includes 25 credits a month. One credit is 1,000 transformations, or 1 GB of storage, or 1 GB of image bandwidth. On the free plan, video bandwidth is also 1 GB per credit. Transformations and bandwidth use a rolling 30 days, not a calendar month. Sources: https://cloudinary.com/pricing and https://cloudinary.com/documentation/billing_and_plans
 - Resend’s free plan is 100 emails per UTC day and 3,000 per month. Received mail counts too, and each To, Cc, or Bcc recipient counts as one email. Sources: https://resend.com/pricing and https://resend.com/docs/knowledge-base/account-quotas-and-limits
 
 Supabase free backup retention was not confirmed for this note. Look at the project’s Backups page before you rely on one.
+
+## Staying awake
+
+`backend/scripts/keep-alive.mjs` is plain Node 22 with no dependencies. It sends one GET to `KEEPALIVE_URL` (the full public health URL, such as `https://YOUR-SITE.onrender.com/api/v1/health`), retries twice, and gives each try 60 seconds so a cold start can finish. It logs the status and the latency. The log line is the origin and the path. It does not print a query string, a password, or a token. If `KEEPALIVE_URL` is unset, it says so and exits 0, so the workflow can be merged before the site exists.
+
+`.github/workflows/keep-alive.yml` runs that script on the cron `*/14 * * * *` (every 14 minutes, inside Render’s 15-minute idle window) and when someone starts it by hand. The URL comes from the GitHub Actions variable `KEEPALIVE_URL`, not from a secret, because the address is public. The workflow’s only permission is `contents: read`.
+
+GitHub runs a scheduled workflow only from the repository’s default branch, and only if the workflow file is on that branch (https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule, checked 24 October 2026). The default branch is `main`, and `main` is empty, so the schedule does nothing until one of these is done. Do not change it from this repository’s notes. Pick one:
+
+1. In GitHub, set the default branch to `dev`. The workflow and the script are already on `dev`.
+2. Leave `main` as the default, and put only `.github/workflows/keep-alive.yml` and `backend/scripts/keep-alive.mjs` on `main`. Do not merge the rest of `dev` into `main` for this.
+
+The same GitHub page says a schedule can start late when Actions is busy, especially at the start of each hour, and a queued run can be dropped. A cold start is still possible now and then. A free pinger outside GitHub, every 5 minutes, is a more reliable backup. cron-job.org and UptimeRobot are two that can GET the same health URL. On a public repository, GitHub also turns a schedule off after 60 days with no repository activity.
+
+`KEEPALIVE_URL` is not a Render environment variable. The API does not read it.
 
 ## After it is up
 

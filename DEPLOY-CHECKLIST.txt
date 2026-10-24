@@ -23,7 +23,7 @@ A redirect would be a 301 and would put cookies on the API host, where this
 site would not send them. onrender.com is a public suffix, so two
 *.onrender.com names do not share cookies either.
 This was checked in the docs. It was not tried on a live Render account.
-Step 15 checks it. If that check fails, stop and read step 16.
+Step 16 checks it. If that check fails, stop and read step 17.
 
 You can use the free name https://YOUR-SITE.onrender.com before you buy a domain.
 
@@ -176,24 +176,24 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
      What: lets the API send invitation and password-reset mail.
      Where: you do not have a key yet. In Resend, create an API key and copy it once.
      Example shape: re_ followed by a long random string. Do not paste a real key here.
-     Leave this blank until step 12. Both Resend variables must be set, or both blank.
+     Leave this blank until step 13. Both Resend variables must be set, or both blank.
      If they are blank in production, the site still boots and no email is sent.
 
    EMAIL_FROM
      What: the From address on those emails. It must be on a domain Resend has verified.
      Example: Bootcamp <hello@your-domain>
-     Leave this blank until the domain in step 12 shows verified.
+     Leave this blank until the domain in step 13 shows verified.
      Do not invent a From address on a domain you have not verified. Resend will reject it.
 
    ADMIN_EMAIL
      What: read only by the one-time admin:create command, not by the running server.
      Example: you@example.com
-     You can skip this on the service and pass the mailbox on the command line in step 9.
+     You can skip this on the service and pass the mailbox on the command line in step 10.
 
    ADMIN_BOOTSTRAP_PASSWORD
      What: the first administrator password, read only by that same command.
      Do not add this to the Environment tab. It would stay there after you are done.
-     Step 9 types it once in a private shell.
+     Step 10 types it once in a private shell.
 
    Leave every other box empty.
 
@@ -244,7 +244,52 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
    The homepage may say it is not published yet. That is correct. You have
    not published content, and you did not seed the hosted database.
 
-9. Create the first administrator, once, in private.
+9. Keep the free web service awake.
+   Render spins a free web service down after 15 minutes with no inbound
+   request, and waking takes about a minute. A GitHub Action pings the public
+   health URL every 14 minutes.
+   The script is backend/scripts/keep-alive.mjs. The workflow is
+   .github/workflows/keep-alive.yml. Both are already on the dev branch.
+   a. On GitHub, open Francis054/mn-bootcamp-2026.
+      Go to Settings, then Secrets and variables, then Actions, then the
+      Variables tab (not Secrets).
+      Add a repository variable named KEEPALIVE_URL.
+      The value is the full health address of the SITE, not the API hostname:
+        https://YOUR-SITE.onrender.com/api/v1/health
+      It is a variable, not a secret, because the address is public.
+      Do not put a password or a token in it.
+   b. GitHub runs scheduled workflows only from the default branch, and only
+      when the workflow file is on that branch. The default branch is main,
+      and main is empty, so the schedule will not run until you change that.
+      Pick one.
+      Option 1: Settings, then General, then Default branch. Switch it from
+        main to dev.
+      Option 2: Leave main as the default. Add only these two files to main,
+        at those same paths:
+          .github/workflows/keep-alive.yml
+          backend/scripts/keep-alive.mjs
+        Do not merge the rest of dev into main for this.
+      These notes do not change the default branch and do not push to main.
+   c. After the variable is set, you can run it by hand: Actions, Keep alive,
+      Run workflow, on the dev branch. A green run prints a status and a time.
+      It does not print secrets. If the variable is still empty, the script
+      says so and the run stays green.
+   d. GitHub's docs say a schedule can start late when Actions is busy,
+      especially at the start of each hour, and a queued run can be dropped.
+      A cold start is still possible now and then. A free pinger outside
+      GitHub is a more reliable backup. cron-job.org and UptimeRobot can GET
+      the same health URL every 5 minutes.
+      On a public repository, GitHub also turns a schedule off after 60 days
+      with no activity in the repository.
+   e. Hours, checked on 24 October 2026 at https://render.com/docs/free :
+      a workspace gets 750 free instance hours per calendar month.
+      A service uses those hours only while it is running. A spun-down
+      service does not. One service that stays up all month uses 720 hours
+      in a 30-day month and 744 in a 31-day month, so it fits, with a few
+      hours to spare. A second free web service that also stays up all month
+      does not fit. The static site does not use these hours.
+
+10. Create the first administrator, once, in private.
    Do not put the password in git, in Render's saved environment, or in chat.
    The password needs at least 12 characters, with a letter and a number.
    It must not be the mailbox.
@@ -265,7 +310,7 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
    "Administrator password updated." The mailbox and the password are not printed.
    A second run with --rotate changes the password for that same mailbox.
 
-10. Add Cloudinary, if you want photo uploads. The site boots without it, and
+11. Add Cloudinary, if you want photo uploads. The site boots without it, and
     uploads fail until these three are set.
     a. In the Cloudinary console, open Settings, then API Keys.
     b. Confirm the cloud name is i5rrintk.
@@ -274,11 +319,11 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
        CLOUDINARY_API_SECRET. CLOUDINARY_CLOUD_NAME is i5rrintk.
     e. Save and redeploy the API. Do not put these on the static site.
 
-11. You can skip Resend until you have a domain to send from. Until both
+12. You can skip Resend until you have a domain to send from. Until both
     RESEND_API_KEY and EMAIL_FROM are set, password resets and invitations
     do not send mail. The API still starts.
 
-12. When you are ready for mail:
+13. When you are ready for mail:
     a. In Resend, add the domain you will send from.
     b. Resend shows DNS records, including SPF and DKIM. Add those records at
        the company that hosts that domain's DNS. Wait until Resend shows the
@@ -290,7 +335,7 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
        Bootcamp <hello@your-domain>
     f. Save and redeploy. Do not commit the key.
 
-13. A custom domain is optional. The onrender.com address already works.
+14. A custom domain is optional. The onrender.com address already works.
     a. On the static site, open Settings, then Custom Domains, and add the name.
     b. At your DNS host, add the records Render shows. That is a CNAME for www
        and an A or ALIAS record for the apex. Use Render's values. They can
@@ -303,12 +348,16 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
     f. You do not rebuild the website for FRONTEND_URL. That variable is read
        by the API, not by the JavaScript bundle.
 
-14. Free limits, as published on 24 October 2026. Check the pages again before
+15. Free limits, as published on 24 October 2026. Check the pages again before
     you depend on them. They are not a bill, and they are not a guarantee.
     a. Render free web services sleep after 15 minutes with no visitors and
        take about a minute to wake. The first click after a nap can look stuck.
-       A workspace gets 750 free instance hours a month. Static sites do not
-       sleep that way. Source: https://render.com/docs/free
+       A workspace gets 750 free instance hours a month, and only while a
+       service is running. One service kept awake all month uses 720 hours
+       in a 30-day month and 744 in a 31-day month, so it fits. A second
+       always-on free web service does not. Static sites do not use these
+       hours, and they do not sleep that way. See step 9.
+       Source: https://render.com/docs/free
     b. Supabase free projects pause after about a week of low activity.
        The pricing page says 1 week, a 500 MB database, and 2 active projects.
        The pausing guide says you get a warning email and can press Resume.
@@ -327,14 +376,14 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
     How long Supabase keeps backups on the free plan was not confirmed.
     Open the project's Backups page before you rely on a restore.
 
-15. Smoke test, on the static site address, not on the API hostname.
+16. Smoke test, on the static site address, not on the API hostname.
     a. Open https://YOUR-SITE.onrender.com/api/v1/health
        You want "status": "ok" and "database": "up".
        In a terminal: curl -sI https://YOUR-SITE.onrender.com/api/v1/health
        The status must not be 301 or 302. A redirect means the rewrite is wrong.
        Fix the rule in step 6 before you continue.
     b. Open the homepage. "The homepage is not published yet." is expected.
-    c. Open /admin/login and sign in with the administrator from step 9.
+    c. Open /admin/login and sign in with the administrator from step 10.
        In the browser's cookie list for YOUR-SITE, you want:
          mn_session, HttpOnly, path /api/v1
          mn_csrf, not HttpOnly, path /
@@ -345,16 +394,16 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
     e. Open /contact, send a test enquiry, and find it under the admin enquiry
        list if your account has users.manage. The administrator does.
     f. After Cloudinary is set, add one photo at /admin/media. It stays off the
-       public gallery until step 17.
-    g. Do not test Resend until step 12 shows the domain as verified.
+       public gallery until step 18.
+    g. Do not test Resend until step 13 shows the domain as verified.
 
-16. If step 15a or 15c fails, do not switch the website to the API hostname.
+17. If step 16a or 16c fails, do not switch the website to the API hostname.
     The cookies are Lax and host-only, and the code does not set SameSite=None.
     The next free fix is one Web Service that serves both the built website
     files and /api/v1. This repository does not do that yet. It would be a
     code change. Two public origins will not keep this sign-in working.
 
-17. Edit content after launch. Sign in at /admin/login.
+18. Edit content after launch. Sign in at /admin/login.
     a. Classes, trainees, projects, and events: open the item, set Workflow
        to Published, and save. A hidden listing stays off the public site.
        A trainee cannot be published until consent is recorded. Project links
@@ -389,7 +438,7 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
        Until that publish, GET /api/v1/public/foundation-stats is an empty list
        and the site hides the counters.
 
-18. Roll back.
+19. Roll back.
     a. In Render, open the service that broke and use Rollback. On a free web
        service, Render's free-plan page says you can roll back only to the two
        most recent previous deploys. Roll back the static site separately if
@@ -399,4 +448,4 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
        have a backup and you mean to drop what that migration added.
     c. Supabase free backup retention was not confirmed here. Look at the
        project's Backups page before you count on a restore.
-    d. After a rollback, run the smoke test in step 15 again.
+    d. After a rollback, run the smoke test in step 16 again.
