@@ -161,6 +161,9 @@ describe('HTTP pipeline', () => {
     const projectsPath = readRecord(paths['/api/v1/public/projects']);
     const projectsGet = readRecord(projectsPath.get);
     expect(projectsGet.operationId).toBe('listPublicProjects');
+    const eventsPath = readRecord(paths['/api/v1/public/events']);
+    const eventsGet = readRecord(eventsPath.get);
+    expect(eventsGet.operationId).toBe('listPublicEvents');
     const components = readRecord(document.components);
     const schemas = readRecord(components.schemas);
     expect(schemas.ErrorBody).toBeDefined();

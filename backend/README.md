@@ -251,6 +251,20 @@ The project list has no bulk action. Search matches the title and the type. `fil
 
 A module that still has projects cannot be deleted until those projects are moved or deleted. A trainee who is still listed on a project cannot be deleted until they are removed from the project.
 
+## Events
+
+A public event is a row whose workflow is `published` and whose listing is not `hidden`. A row whose workflow is `scheduled` stays off the public routes until its start. Drafts, rows in review, and hidden rows stay on the admin routes. A sample label does not put a draft on the public site.
+
+The start and end are a clock on the event's calendar day. Ghana does not use daylight saving, so Africa/Accra wall time is UTC. `17:00` is 17:00 UTC. An empty start means midnight on that date. The end, when it is set, has to be later the same day. A date marked `dateTbc` has no confirmed clock, so the times stay blank and a scheduled row with that flag does not appear on its own.
+
+`GET /api/v1/public/events` returns the same fields the website shows, including the body, the source, and the anniversary flag. The internal notes stay on the admin response. There is no calendar-file route. The browser builds an `.ics` file from these fields.
+
+Marking an event verified requires a public `https` source link. Publishing does not change the listing and does not turn a to-be-confirmed date into a confirmed one. An editor and an administrator both change events, including publish and delete. That is the website's `content.write` permission. A viewer can read the admin list. A change needs the session cookie and the matching `X-CSRF-Token` header. The audit row stores the action and the event id. It does not store the title, the place, the source, the body, or the notes.
+
+The event list has no bulk action. Search matches the title and the place. `filters.kind` and `filters.verification` use the same dot form as the class filters. The default sort is the date, oldest first.
+
+`npm run seed` also inserts six labelled events. Each internal note starts with `Sample event.` The hackathon stays to be confirmed: `dateTbc` is true, the place is `Venue to be confirmed`, and the start and end are blank. The seed does not invent a clock or a venue for it. The midpoint is a sample milestone with workflow `scheduled`, so it stays off the public list until 16 Nov 2026. Run the command again and it leaves an edited row alone.
+
 ## What is left for the next milestone
 
-Events. A scheduled event stays off the public route. The gallery, and the homepage, about, and settings pages come after that. Password-reset mail and invitations come with the accounts milestone. Foundation-wide counters come with the settings and homepage milestone.
+The gallery. Marking a photo's consent verified does not publish it. Publish needs verified consent. Withdrawing consent unpublishes the photo. The homepage, about, and settings pages come after that. Password-reset mail and invitations come with the accounts milestone. Foundation-wide counters come with the settings and homepage milestone.

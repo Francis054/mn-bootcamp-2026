@@ -1,6 +1,6 @@
 # API alignment notes
 
-**Status: auth, curriculum, trainee, and project routes below are implemented in `backend/`.** The rest of the contract (events, media, and mail) still lives on the `frontend` branch in that branch's `docs/API.md`. This file is the note the website needs when `VITE_API_MODE=live`. It does not change the website. The website stays on the `frontend` branch.
+**Status: auth, curriculum, trainee, project, and event routes below are implemented in `backend/`.** The rest of the contract (media and mail) still lives on the `frontend` branch in that branch's `docs/API.md`. This file is the note the website needs when `VITE_API_MODE=live`. It does not change the website. The website stays on the `frontend` branch.
 
 Base path: `/api/v1`. Errors use the shape the website already parses:
 
@@ -79,7 +79,7 @@ Idle time is 30 minutes. The session also ends 12 hours after sign-in. Both can 
 - Keep sending `X-CSRF-Token` from `mn_csrf` on sign-out and on later changes.
 - Treat `403` with code `forbidden` as "this role cannot do that", and `401` as "sign in again".
 
-The permission names match `web/src/domain/permissions.ts`. A viewer can read content and manage their own account. An editor can also change content and media, which includes creating, editing, publishing, and deleting classes, trainee profiles, and projects. An administrator can do that too, and can also manage users and settings. The server enforces that. The React route guard does not. There is no separate publish permission in the website's map, so this API does not invent one.
+The permission names match `web/src/domain/permissions.ts`. A viewer can read content and manage their own account. An editor can also change content and media, which includes creating, editing, publishing, and deleting classes, trainee profiles, projects, and events. An administrator can do that too, and can also manage users and settings. The server enforces that. The React route guard does not. There is no separate publish permission in the website's map, so this API does not invent one.
 
 ## Curriculum routes that exist now
 
@@ -172,7 +172,35 @@ A module that still has projects cannot be deleted until those projects are move
 
 `npm run seed` also inserts six labelled projects. They are `in_review` or `draft`, with blank links, so `GET /public/projects` does not return them.
 
-Events are the next milestone. A scheduled event stays off the public route.
+## Event routes that exist now
+
+A public event needs `publicationStatus: published` and a listing other than `hidden`. A sample label does not publish a draft. A row with `publicationStatus: scheduled` stays off `/public/events` until its start. The start is a clock on `date` in Africa/Accra. Ghana does not use daylight saving, so that clock is UTC. An empty `startTime` means midnight. `dateTbc: true` means the date is not confirmed: `startTime` and `endTime` must be blank, and the scheduled row does not become public on its own.
+
+The public object matches `PublicEvent`. It omits `internalNotes`. It keeps `body`, `source`, `sourceUrl`, `showOnAnniversary`, and the times. A missing or private event is `404` with `That page is not available.` There is no `.ics` route.
+
+The admin object matches `BootcampEvent` and adds `updatedAt`. PATCH leaves out a field to keep the stored value, including `body`. An omitted body on create becomes `{ kind: "placeholder", text }` from the summary. Publish does not change `listing` and does not clear `dateTbc`.
+
+`verified: true` requires `sourceUrl`. The link must be `https`, at most 500 characters, with no user or password, and not a private or loopback host. The rejected address is not repeated in the error.
+
+| Method | Path                                         | Who                                                                                  |
+| ------ | -------------------------------------------- | ------------------------------------------------------------------------------------ |
+| GET    | `/public/events` and `/public/events/:id`    | Anyone. `PublicEvent`. Scheduled rows appear only once their Accra start has passed. |
+| GET    | `/admin/events`                              | `content.read`. Page `{ items, page, pageSize, total }`.                             |
+| GET    | `/admin/events/:id`                          | `content.read`. Full event, including a draft and the notes.                         |
+| POST   | `/admin/events`                              | `content.write`.                                                                     |
+| PATCH  | `/admin/events/:id`                          | `content.write`. Omitted fields stay as they are.                                    |
+| DELETE | `/admin/events/:id`                          | `content.write`. `{ deleted: true, id }`.                                            |
+| POST   | `/admin/events/:id/publish` and `/unpublish` | `content.write`. Publish does not change `listing`. Unpublish sets `draft`.          |
+
+There is no `POST /admin/events/bulk`. The class list is the only bulk action.
+
+The list query uses `q`, `page`, `pageSize`, `sort`, `dir`, `filters.kind`, and `filters.verification`. Search matches the title and the place. The default sort is `date` ascending. The default page size is 8. `filters.verification` is `verified`, `tbc`, or `sample`. An unknown sort is `422`.
+
+Field messages match the form: `Give the event a name.`, `Enter a venue, or “Venue to be confirmed”.`, `Write a summary of at least 20 characters.`, `Use at least 20 characters.` A source link that is not `https` is `Enter a full link starting with https://`. A private host is `Use a public https address.` A clock uses `Use 24-hour time, like 17:00.` An end that is not later the same day is `End the event after it starts.`
+
+`npm run seed` inserts six labelled events. The hackathon has `dateTbc: true`, place `Venue to be confirmed`, and blank times. The midpoint is `scheduled` and `sample: true`. Each internal note starts with `Sample event.`
+
+The gallery is the next milestone. Verified consent does not publish a photo.
 
 ## Not in this milestone
 
@@ -184,6 +212,7 @@ These paths from the frontend contract are not implemented. They still answer `4
 - `POST /admin/account/password`
 - `POST /admin/trainees/bulk`
 - `POST /admin/projects/bulk`
-- events, media, and the homepage, about, and settings singletons
+- `POST /admin/events/bulk`
+- media, and the homepage, about, and settings singletons
 
 There is no public registration route. The first administrator is created with `npm run admin:create` in `backend/`, from a private password. That command is not an HTTP route and it is not in the OpenAPI document. OpenAPI for the routes above is at `/api/docs`.
