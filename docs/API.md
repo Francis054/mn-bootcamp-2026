@@ -5,17 +5,22 @@
 Base path: `/api/v1`. Errors use the shape the website already parses:
 
 ```json
-{ "error": { "code": "unauthenticated", "message": "The email or password is not correct." } }
+{
+  "error": {
+    "code": "unauthenticated",
+    "message": "The email or password is not correct."
+  }
+}
 ```
 
 `code` is `validation` (422), `unauthenticated` (401), `forbidden` (403), `not_found` (404), `rate_limited` (429), `server` (500), or `pending` (501). Field problems add `fieldErrors`.
 
 ## Cookies
 
-| Cookie | Who can read it | Path | SameSite | Secure | Domain |
-| --- | --- | --- | --- | --- | --- |
-| `mn_session` | The server only (HttpOnly) | `/api/v1` | `Lax` | In production | Not set |
-| `mn_csrf` | The page, so it can copy the value into `X-CSRF-Token` | `/` | `Lax` | In production | Not set |
+| Cookie       | Who can read it                                        | Path      | SameSite | Secure        | Domain  |
+| ------------ | ------------------------------------------------------ | --------- | -------- | ------------- | ------- |
+| `mn_session` | The server only (HttpOnly)                             | `/api/v1` | `Lax`    | In production | Not set |
+| `mn_csrf`    | The page, so it can copy the value into `X-CSRF-Token` | `/`       | `Lax`    | In production | Not set |
 
 The website already sends `credentials: 'include'` and copies `mn_csrf` into `X-CSRF-Token` when the cookie is present. Keep that. Sign-in is the one change that does not require the header, because the first visit has no cookie yet. Sign-out does require the header once `mn_session` is present. A mismatch is `403` with code `forbidden`.
 
@@ -74,7 +79,38 @@ Idle time is 30 minutes. The session also ends 12 hours after sign-in. Both can 
 - Keep sending `X-CSRF-Token` from `mn_csrf` on sign-out and on later changes.
 - Treat `403` with code `forbidden` as "this role cannot do that", and `401` as "sign in again".
 
-The permission names match `web/src/domain/permissions.ts`. A viewer can read content and manage their own account. An editor can also change content and media. An administrator can also manage users and settings. The server enforces that. The React route guard does not.
+The permission names match `web/src/domain/permissions.ts`. A viewer can read content and manage their own account. An editor can also change content and media, which includes creating, editing, publishing, and deleting classes. An administrator can do that too, and can also manage users and settings. The server enforces that. The React route guard does not. There is no separate publish permission in the website's map, so this API does not invent one.
+
+## Curriculum routes that exist now
+
+Public lists return a row only when `publicationStatus` is `published` and `listing` is not `hidden`. That is stricter than the website's `isPubliclyListable`, which still shows a sample draft. The website should switch to this rule when it calls the API. A missing or unpublished class is `404` with `That page is not available.`
+
+| Method           | Path                                                          | Who                                                                                                                                                              |
+| ---------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET              | `/public/classes` and `/public/classes/:id`                   | Anyone. `PublicLesson`: the lesson without `internalNotes`.                                                                                                      |
+| GET              | `/public/modules` and `/public/modules/:id`                   | Anyone. Same fields as `ModuleInfo`: `id`, `name`, `short`, `icon`, `summary`.                                                                                   |
+| GET              | `/public/phases` and `/public/phases/:id`                     | Anyone. `id` is a number. `modules` is the display names of modules that are themselves public.                                                                  |
+| GET              | `/public/tracks` and `/public/tracks/:id`                     | Anyone. `id`, `name`, `summary`. Names are `Blue team`, `Red team`, and `GRC & Awareness`.                                                                       |
+| GET              | `/admin/classes`                                              | `content.read`. Page `{ items, page, pageSize, total }`.                                                                                                         |
+| GET              | `/admin/classes/:id`                                          | `content.read`. Full lesson, including a draft and `internalNotes`.                                                                                              |
+| POST             | `/admin/classes`                                              | `content.write`.                                                                                                                                                 |
+| PATCH            | `/admin/classes/:id`                                          | `content.write`. Omitted fields stay as they are.                                                                                                                |
+| DELETE           | `/admin/classes/:id`                                          | `content.write`. `{ deleted: true, id }`.                                                                                                                        |
+| POST             | `/admin/classes/:id/publish` and `/unpublish`                 | `content.write`. Publish does not change `listing`. Unpublish sets `draft`.                                                                                      |
+| POST             | `/admin/classes/bulk`                                         | `content.write`. Body `{ ids, action }` of `publish` or `delete`. Response `{ ok, action, count, rejected }`. Missing ids are in `rejected` and are not changed. |
+| GET/POST         | `/admin/tracks`, `/admin/modules`, `/admin/phases`            | Same permissions. Admin lists are arrays, not pages.                                                                                                             |
+| GET/PATCH/DELETE | `/admin/{tracks,modules,phases}/:id`                          | Same permissions.                                                                                                                                                |
+| POST             | `/admin/{tracks,modules,phases}/:id/publish` and `/unpublish` | `content.write`.                                                                                                                                                 |
+
+The class list query uses `filters.moduleId`, `filters.scheduleStatus`, and `filters.publicationStatus` as separate query keys, which is how `liveTransport` already sends them. `sort=week` sorts as a number. If `sort` is omitted, the list is ordered by week ascending. An unknown sort is `422`.
+
+`scheduleStatus` is calculated from the class date and today's date in Africa/Accra. It is not stored.
+
+Field messages for a class match the form: `Give the class a title.`, `Use at least 6 characters.`, `Choose a module.`, `Enter a week from 1 to 18.`, `Pick a date.`, `Write a short summary for the class card.`, `Use at least 20 characters.`
+
+`npm run seed` inserts labelled sample rows when those ids are missing. It is not an HTTP route and it is not in the OpenAPI document. It does not insert foundation-wide counters.
+
+Modules and phases are editable. Foundation-wide counters stay for the settings milestone (`GET/PUT /admin/settings` and the homepage singleton). They are not implemented here.
 
 ## Not in this milestone
 
@@ -84,6 +120,6 @@ These paths from the frontend contract are not implemented. They still answer `4
 - `POST /auth/password-reset/complete`
 - `POST /auth/session/expire` (development-only on the website; it will not be a production route)
 - `POST /admin/account/password`
-- every content, media, and user-admin route
+- trainees, projects, events, media, and the homepage, about, and settings singletons
 
 There is no public registration route. The first administrator is created with `npm run admin:create` in `backend/`, from a private password. That command is not an HTTP route and it is not in the OpenAPI document. OpenAPI for the routes above is at `/api/docs`.

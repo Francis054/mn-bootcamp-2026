@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import request, { type Response } from 'supertest';
-import type { DataSource } from 'typeorm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { runAdminCreate } from '../../src/commands/admin-create.js';
 import { createApp } from '../../src/app.js';
@@ -10,6 +9,7 @@ import { requireAuth, requireRole } from '../../src/modules/auth/require-auth.js
 import { sessionTokenHash } from '../../src/modules/auth/tokens.js';
 import { testEnv } from '../support/app-env.js';
 import { readError, readRecord } from '../support/read-json.js';
+import { revertOurMigrations } from '../support/migrations.js';
 import { openTestDatabase } from '../support/test-database.js';
 
 const PASSWORD = 'Correct-horse-1';
@@ -354,6 +354,7 @@ function appFor(container: AppContainer, nodeEnv?: 'production') {
     logger: container.logger,
     health: container.health,
     authRouter: container.authRouter,
+    curriculumRouter: container.curriculumRouter,
     extraRouters: [probe],
   });
 }
@@ -394,22 +395,4 @@ function cookieHeader(cookies: Record<string, SetCookie>): string {
     .filter((name) => cookies[name]?.value)
     .map((name) => `${name}=${cookies[name]?.value ?? ''}`)
     .join('; ');
-}
-
-const OUR_MIGRATIONS = new Set(['Baseline1792800000000', 'Auth1792868400000']);
-
-async function revertOurMigrations(dataSource: DataSource): Promise<void> {
-  for (;;) {
-    const rows: unknown = await dataSource.query(
-      'SELECT name FROM schema_migrations ORDER BY id DESC',
-    );
-    if (!Array.isArray(rows) || rows.length === 0) return;
-    const row: unknown = rows[0];
-    const name =
-      typeof row === 'object' && row !== null && 'name' in row && typeof row.name === 'string'
-        ? row.name
-        : '';
-    if (!OUR_MIGRATIONS.has(name)) return;
-    await dataSource.undoLastMigration();
-  }
 }

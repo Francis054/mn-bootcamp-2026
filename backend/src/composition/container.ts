@@ -9,6 +9,20 @@ import { Argon2Hasher } from '../modules/auth/password-hasher.js';
 import { SessionEntity } from '../modules/auth/session.entity.js';
 import { SessionRepository } from '../modules/auth/session.repository.js';
 import { SessionService } from '../modules/auth/session.service.js';
+import { CatalogueService } from '../modules/curriculum/catalogue.service.js';
+import { curriculumRouter } from '../modules/curriculum/curriculum.routes.js';
+import { LessonEntity } from '../modules/curriculum/lesson.entity.js';
+import { LessonService } from '../modules/curriculum/lesson.service.js';
+import { ModuleEntity } from '../modules/curriculum/module.entity.js';
+import { PhaseEntity } from '../modules/curriculum/phase.entity.js';
+import {
+  LessonRepository,
+  ModuleRepository,
+  PhaseRepository,
+  TrackRepository,
+} from '../modules/curriculum/repositories.js';
+import { accraToday } from '../modules/curriculum/schedule.js';
+import { TrackEntity } from '../modules/curriculum/track.entity.js';
 import { UserEntity } from '../modules/users/user.entity.js';
 import { UserRepository } from '../modules/users/user.repository.js';
 import { UserService } from '../modules/users/user.service.js';
@@ -26,6 +40,7 @@ export class AppContainer {
   readonly users: UserService;
   readonly sessions: SessionService;
   readonly authRouter: Router;
+  readonly curriculumRouter: Router;
 
   constructor(
     readonly env: AppEnv,
@@ -34,11 +49,14 @@ export class AppContainer {
     users: UserService,
     sessions: SessionService,
     auth: AuthService,
+    catalogue: CatalogueService,
+    lessons: LessonService,
   ) {
     this.health = new HealthService(dataSource, logger);
     this.users = users;
     this.sessions = sessions;
     this.authRouter = authRouter(auth, sessions);
+    this.curriculumRouter = curriculumRouter(catalogue, lessons, sessions);
   }
 
   static async create(env: AppEnv): Promise<AppContainer> {
@@ -56,11 +74,12 @@ export class AppContainer {
       env.sessionIdleTtlMs,
       env.sessionAbsoluteTtlMs,
     );
+    const audit = new AuditRepository(dataSource.getRepository(AuditEventEntity));
     const auth = new AuthService(
       users,
       sessions,
       new LoginThrottleRepository(dataSource),
-      new AuditRepository(dataSource.getRepository(AuditEventEntity)),
+      audit,
       hasher,
       logger,
       {
@@ -70,7 +89,34 @@ export class AppContainer {
       },
       env.sessionSecret,
     );
-    return new AppContainer(env, logger, dataSource, users, sessions, auth);
+    const trackRepository = new TrackRepository(dataSource.getRepository(TrackEntity));
+    const moduleRepository = new ModuleRepository(dataSource.getRepository(ModuleEntity));
+    const phaseRepository = new PhaseRepository(dataSource.getRepository(PhaseEntity));
+    const lessonRepository = new LessonRepository(dataSource.getRepository(LessonEntity));
+    const catalogue = new CatalogueService(
+      trackRepository,
+      moduleRepository,
+      phaseRepository,
+      lessonRepository,
+      audit,
+    );
+    const lessonService = new LessonService(
+      lessonRepository,
+      moduleRepository,
+      phaseRepository,
+      audit,
+      accraToday,
+    );
+    return new AppContainer(
+      env,
+      logger,
+      dataSource,
+      users,
+      sessions,
+      auth,
+      catalogue,
+      lessonService,
+    );
   }
 
   async close(): Promise<void> {

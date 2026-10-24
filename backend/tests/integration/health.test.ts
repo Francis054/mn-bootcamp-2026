@@ -1,9 +1,9 @@
 import request from 'supertest';
-import type { DataSource } from 'typeorm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../../src/app.js';
 import { AppContainer } from '../../src/composition/container.js';
 import { testEnv } from '../support/app-env.js';
+import { MIGRATION_NAMES, revertOurMigrations } from '../support/migrations.js';
 import { openTestDatabase } from '../support/test-database.js';
 
 describe('health against Postgres', () => {
@@ -21,7 +21,7 @@ describe('health against Postgres', () => {
 
   afterAll(async () => {
     if (container?.dataSource.isInitialized) {
-      await revertBaselineIfPresent(container.dataSource);
+      await revertOurMigrations(container.dataSource);
       await container.close();
     }
     if (closeDatabase) await closeDatabase();
@@ -32,7 +32,7 @@ describe('health against Postgres', () => {
     const names: unknown = await container.dataSource.query(
       'SELECT name FROM schema_migrations ORDER BY id',
     );
-    expect(names).toEqual([{ name: 'Baseline1792800000000' }, { name: 'Auth1792868400000' }]);
+    expect(names).toEqual(MIGRATION_NAMES.map((name) => ({ name })));
 
     const app = createApp(container);
     const response = await request(app).get('/api/v1/health').expect(200);
@@ -40,22 +40,3 @@ describe('health against Postgres', () => {
     expect(JSON.stringify(response.body)).not.toContain('postgres');
   });
 });
-
-const OUR_MIGRATIONS = new Set(['Baseline1792800000000', 'Auth1792868400000']);
-
-async function revertBaselineIfPresent(dataSource: DataSource): Promise<void> {
-  for (;;) {
-    const rows: unknown = await dataSource.query(
-      'SELECT name FROM schema_migrations ORDER BY id DESC',
-    );
-    if (!Array.isArray(rows) || rows.length === 0) return;
-    const name = migrationName(rows[0]);
-    if (!name || !OUR_MIGRATIONS.has(name)) return;
-    await dataSource.undoLastMigration();
-  }
-}
-
-function migrationName(row: unknown): string | undefined {
-  if (typeof row !== 'object' || row === null || !('name' in row)) return undefined;
-  return typeof row.name === 'string' ? row.name : undefined;
-}

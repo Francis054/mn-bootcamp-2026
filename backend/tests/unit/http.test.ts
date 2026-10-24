@@ -25,6 +25,7 @@ function appWith(options?: {
     logger: captured.logger,
     health,
     authRouter: Router(),
+    curriculumRouter: Router(),
   });
   return { app, lines: options?.lines ?? captured.lines };
 }
@@ -72,6 +73,7 @@ describe('HTTP pipeline', () => {
       logger: captured.logger,
       health,
       authRouter: Router(),
+      curriculumRouter: Router(),
     });
     const response = await request(app).get('/api/v1/health').expect(500);
     expect(response.body).toEqual({
@@ -150,6 +152,9 @@ describe('HTTP pipeline', () => {
     const loginPath = readRecord(paths['/api/v1/auth/login']);
     const loginPost = readRecord(loginPath.post);
     expect(loginPost.operationId).toBe('login');
+    const classesPath = readRecord(paths['/api/v1/public/classes']);
+    const classesGet = readRecord(classesPath.get);
+    expect(classesGet.operationId).toBe('listPublicClasses');
     const components = readRecord(document.components);
     const schemas = readRecord(components.schemas);
     expect(schemas.ErrorBody).toBeDefined();
