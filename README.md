@@ -8,6 +8,68 @@ This branch holds the two applications side by side.
 
 The static HTML prototype stays on the `prototype` branch.
 
+Deploy notes are in `docs/deployment.md`, `docs/security.md`, `docs/database.md`, and `docs/api-reference.md`. The click-by-click list is `DEPLOY-CHECKLIST.txt`.
+
+## Run locally from scratch
+
+This is for a first run on Windows or Mac, using Visual Studio Code. It uses a PostgreSQL database on your own computer. It does not use the hosted Supabase database.
+
+1. Install Node.js 22 or newer from https://nodejs.org. In VS Code, open Terminal → New Terminal and run `node -v`. You want a version that starts with `v22`.
+2. Install PostgreSQL from https://www.postgresql.org/download/ (the installer from EDB works on both Windows and Mac). Remember the password you choose for the `postgres` user. Leave the server on `localhost` port `5432`.
+3. Create an empty database named `mn_bootcamp_dev`. In the SQL shell that came with PostgreSQL (`psql` or SQL Shell), sign in as `postgres` and run:
+
+```sql
+CREATE DATABASE mn_bootcamp_dev;
+```
+
+4. In VS Code, open this repository on the `dev` branch (File → Open Folder).
+5. In the terminal:
+
+```bash
+cd backend
+npm install
+```
+
+6. Copy the blank example env file. On Mac, or in VS Code’s bash terminal, run `cp .env.example .env`. On Windows Command Prompt, run `copy .env.example .env`. Do not commit `.env`.
+7. Open `backend/.env` and set only these values. Replace the database password with the local one. If that password contains `@`, `#`, `?`, or a space, percent-encode it in the URL. `SESSION_SECRET` can be any text of at least 32 characters; it is only for this computer.
+
+```text
+NODE_ENV=development
+PORT=3000
+DATABASE_URL=postgres://postgres:your-local-password@127.0.0.1:5432/mn_bootcamp_dev
+DATABASE_SSL=false
+FRONTEND_URL=http://127.0.0.1:5173
+SESSION_SECRET=local-only-change-this-to-32-characters-min
+```
+
+Leave Cloudinary and Resend blank. Local development keeps photos and mail in memory.
+
+8. Still in `backend/`:
+
+```bash
+npm run migration:run
+npm run seed
+npm run admin:create -- you@example.com
+```
+
+`npm run seed` loads labelled sample lessons for local development. Do not run it against the hosted database. `npm run admin:create` asks for a password twice and never prints it. The password needs at least 12 characters, with a letter and a number. The command finishes with `Administrator account is ready.`
+
+9. Start the API and leave that terminal open:
+
+```bash
+npm run dev
+```
+
+10. Open a second terminal in VS Code:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+11. Open http://localhost:5173. The API is proxied at `/api/v1`. Sign in at http://localhost:5173/admin/login with the mailbox and password from step 8.
+
 ## Run the website
 
 Start the API on port 3000 first, then:
@@ -61,5 +123,5 @@ frontend/            Vite, React and TypeScript
 frontend/src/styles/ tokens, components, pages, admin and app CSS
 frontend/public/assets/ fonts, photos and the logo
 backend/             HTTP API
-docs/                client, API, architecture, audit and research notes
+docs/                API reference, deployment, security, database, client notes
 ```
