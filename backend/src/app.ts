@@ -1,5 +1,6 @@
-import express, { type Express } from 'express';
+import express, { type Express, type Router } from 'express';
 import type { AppEnv } from './config/env.js';
+import { csrfGuard } from './modules/auth/csrf.js';
 import { healthRouter } from './modules/health/health.routes.js';
 import type { HealthService } from './modules/health/health.service.js';
 import { mountOpenApi } from './openapi/swagger.js';
@@ -15,6 +16,9 @@ export interface AppDependencies {
   env: AppEnv;
   logger: AppLogger;
   health: HealthService;
+  authRouter: Router;
+  /** Mounted before the 404 handler. Tests use this for role checks. */
+  extraRouters?: readonly Router[];
 }
 
 /**
@@ -31,11 +35,17 @@ export function createApp(deps: AppDependencies): Express {
     session: sessionCookiePolicy(deps.env),
     csrf: csrfCookiePolicy(deps.env),
   };
+  app.locals.sessionAbsoluteTtlMs = deps.env.sessionAbsoluteTtlMs;
 
   app.use(requestId());
   app.use(requestLogger(deps.logger));
   applySecurity(app, deps.env);
+  app.use('/api/v1', csrfGuard());
   app.use('/api/v1/health', healthRouter(deps.health));
+  app.use('/api/v1/auth', deps.authRouter);
+  for (const extra of deps.extraRouters ?? []) {
+    app.use(extra);
+  }
   mountOpenApi(app);
   app.use(notFound());
   app.use(errorHandler(deps.logger, deps.env));

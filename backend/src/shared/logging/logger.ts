@@ -21,6 +21,8 @@ export function createLogger(env: AppEnv): AppLogger {
         'DATABASE_URL',
         'SESSION_SECRET',
         'ADMIN_PASSWORD',
+        'ADMIN_BOOTSTRAP_PASSWORD',
+        'passwordHash',
       ],
       censor: '[redacted]',
     },

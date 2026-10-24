@@ -27,6 +27,11 @@ describe('loadEnv', () => {
     expect(env.trustProxy).toBe(false);
     expect(env.logLevel).toBe('info');
     expect(env.rateLimitMax).toBe(300);
+    expect(env.sessionIdleTtlMs).toBe(1_800_000);
+    expect(env.sessionAbsoluteTtlMs).toBe(43_200_000);
+    expect(env.loginFailureLimit).toBe(5);
+    expect(env.loginLockMs).toBe(60_000);
+    expect(env.loginIpFailureLimit).toBe(30);
     expect(env.sessionSecret).toBeUndefined();
   });
 

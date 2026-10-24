@@ -11,6 +11,12 @@ export function testEnv(overrides: Partial<AppEnv> = {}): AppEnv {
     trustProxy: false,
     rateLimitWindowMs: 60_000,
     rateLimitMax: 10_000,
+    sessionSecret: 'test-session-secret-at-least-32-chars',
+    sessionIdleTtlMs: 1_800_000,
+    sessionAbsoluteTtlMs: 43_200_000,
+    loginFailureLimit: 5,
+    loginLockMs: 60_000,
+    loginIpFailureLimit: 30,
     ...overrides,
   };
 }
