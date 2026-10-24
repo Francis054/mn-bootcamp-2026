@@ -4,8 +4,10 @@ import { Avatar, Cover, Photo, Reveal, SplitHeading } from '@/components/Brand';
 import { Icon } from '@/components/Icon';
 import { Netlines } from '@/components/Netlines';
 import { TenMark } from '@/components/TenMark';
+import { EmptyState } from '@/components/feedback';
 import { usePageMeta } from '@/components/SiteChrome';
-import { FOUNDATION_STATS, MODULES, PHASES } from '@/dev/fixtures';
+import { MODULES, PHASES } from '@/dev/fixtures';
+import { usesMockApi } from '@/config/runtime';
 import { currentWeek, formatDate } from '@/domain/format';
 import { usePublicContent } from '@/hooks/useContent';
 import { moduleOf } from './helpers';
@@ -13,10 +15,15 @@ import { moduleOf } from './helpers';
 const PEEK = ['electronics-lab', 'hack-coding-team', 'vr-demo-group', 'presenters-yellow-room'];
 
 export function HomePage() {
-  const { homepage, lessons, projects, trainees, events } = usePublicContent();
+  const content = usePublicContent();
+  const { lessons, projects, trainees, events, media } = content;
+  const homepage = content.homepage;
   usePageMeta('Home');
   const week = currentWeek();
   const peek = useRef<HTMLDivElement>(null);
+  if (content.loading) return <section className="section"><div className="container"><p>Loading the published site…</p></div></section>;
+  if (content.error) return <section className="section"><div className="container"><h1>The published site could not be loaded</h1><p>{content.error}</p></div></section>;
+  if (!homepage) return <section className="section"><div className="container"><h1>The homepage is not published yet.</h1><p>Published homepage copy will appear here.</p></div></section>;
   const featured = [
     ...lessons.filter((lesson) => lesson.scheduleStatus === 'now'),
     ...lessons.filter((lesson) => lesson.scheduleStatus === 'upcoming'),
@@ -203,11 +210,17 @@ export function HomePage() {
             <Reveal className="sec-head__aside"><p className="muted">Photos from Foundation community events. Names are withheld until consent is recorded.</p><Link className="link" to="/gallery">Open the gallery <Icon name="arrow-right" className="i--sm" /></Link></Reveal>
           </div>
           <div className="gal-teaser">
-            {['hack-group-google-wall', 'anniversary-signature-wall', 'guests-smiling', 'electronics-lab', 'vr-group-lounge'].map((file, index) => (
+            {usesMockApi() ? ['hack-group-google-wall', 'anniversary-signature-wall', 'guests-smiling', 'electronics-lab', 'vr-group-lounge'].map((file, index) => (
               <Link className={`m-item gt-${index + 1}`} to="/gallery" key={file} aria-label="Open the gallery">
                 <Photo file={file} alt="" width={1600} height={1066} sizes="(max-width:760px) 50vw, 30vw" />
               </Link>
-            ))}
+            )) : media.length ? media.slice(0, 5).map((item, index) => (
+              <Link className={`m-item gt-${index + 1}`} to="/gallery" key={item.id} aria-label={item.alt || 'Open the gallery'}>
+                {item.src.startsWith('http') || item.src.startsWith('/')
+                  ? <img src={item.src} alt={item.alt} width={item.width || 1600} height={item.height || 1066} />
+                  : <Photo file={item.file} alt={item.alt} width={item.width || 1600} height={item.height || 1066} sizes="(max-width:760px) 50vw, 30vw" />}
+              </Link>
+            )) : <EmptyState icon="image" title="No published photos yet" text="Photos appear here after consent is verified and the album is published." />}
           </div>
         </div>
       </section>
@@ -234,7 +247,7 @@ export function HomePage() {
                   <a className="btn btn--dark" href={homepage.footerCtaHref} target="_blank" rel="noopener">Get involved <span className="arrow"><Icon name="arrow-up-right" className="i--sm" /></span></a>
                   <a className="btn btn--ghost" href="mailto:mninfo@maximnyansa.com">Email the team</a>
                 </div>
-                <p className="muted" style={{ marginTop: 16, fontSize: 13 }}>Foundation-wide figures such as {FOUNDATION_STATS[0]?.value} school projects are self-reported. Permission to treat them as bootcamp statistics is TBC — they are not cohort results.</p>
+                <p className="muted" style={{ marginTop: 16, fontSize: 13 }}>Foundation-wide counters stay off this page until they are published. They are not cohort results.</p>
               </div>
             </div>
           </Reveal>

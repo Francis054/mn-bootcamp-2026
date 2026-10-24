@@ -6,6 +6,7 @@ import { ErrorSummary, Field, SaveBar, bindBeforeUnload } from '@/components/con
 import { ErrorState, LoadingRows, useConfirm, useToast } from '@/components/feedback';
 import { usePageMeta } from '@/components/SiteChrome';
 import { MODULES } from '@/dev/fixtures';
+import { isApiPublic } from '@/domain/publish';
 import type { BootcampEvent, Lesson, Page, Project, PublicationStatus, Trainee } from '@/domain/types';
 import { isApiError } from '@/domain/types';
 import { useAsync } from '@/hooks/useAsync';
@@ -83,7 +84,7 @@ function ClassForm({ initial }: { initial: Lesson | null }) {
   };
   return (
     <form onSubmit={(event) => void submit(event)} onChange={() => setDirty(true)} noValidate>
-      <div className="a-head"><div><h1>{initial ? 'Edit class' : 'New class'}</h1><p>Sample curriculum. Order is still to be confirmed.</p></div>{initial ? <Link className="btn btn--ghost btn--sm" to={`/classes/${initial.id}`}>Preview</Link> : null}</div>
+      <div className="a-head"><div><h1>{initial ? 'Edit class' : 'New class'}</h1><p>Sample curriculum. Order is still to be confirmed.</p></div>{initial ? <Link className="btn btn--ghost btn--sm" to={isApiPublic(initial) ? `/classes/${initial.id}` : `/admin/classes/${initial.id}`}>Preview</Link> : null}</div>
       <ErrorSummary errors={errors} />
       <div className="form-layout">
         <div className="form-stack">
@@ -170,12 +171,12 @@ function TraineeForm({ initial }: { initial: Trainee | null }) {
   };
   return (
     <form onSubmit={(event) => void submit(event)} onChange={() => setDirty(true)} noValidate>
-      <div className="a-head"><div><h1>{initial ? initial.displayName : 'New trainee'}</h1><p>Do not enter a real person’s name. Samples only until consent exists.</p></div>{initial ? <Link className="btn btn--ghost btn--sm" to={`/trainees/${initial.id}`}>Preview</Link> : null}</div>
+      <div className="a-head"><div><h1>{initial ? initial.displayName : 'New trainee'}</h1><p>Do not enter a real person’s name. Samples only until consent exists.</p></div>{initial ? <Link className="btn btn--ghost btn--sm" to={isApiPublic(initial) ? `/trainees/${initial.id}` : `/admin/trainees/${initial.id}`}>Preview</Link> : null}</div>
       <ErrorSummary errors={errors} />
       <div className="form-grid">
         <Field id="displayName" label="Display name" error={errors.displayName}><input className="input" id="displayName" name="displayName" defaultValue={initial?.displayName ?? ''} disabled={!writable} /></Field>
         <Field id="email" label="Email" error={errors.email} hint="Private. Stripped from the public profile."><input className="input" id="email" name="email" type="email" defaultValue={initial?.email ?? ''} disabled={!writable} /></Field>
-        <Field id="track" label="Track"><select className="select" id="track" name="track" defaultValue={initial?.track ?? 'Blue team'} disabled={!writable}><option>Blue team</option><option>Red team</option><option>General</option></select></Field>
+        <Field id="track" label="Track"><select className="select" id="track" name="track" defaultValue={initial?.track ?? 'Blue team'} disabled={!writable}><option>Blue team</option><option>Red team</option><option>GRC & Awareness</option></select></Field>
         <Field id="focus" label="Focus"><select className="select" id="focus" name="focus" defaultValue={initial?.focus ?? 'network'} disabled={!writable}>{MODULES.map((module) => <option key={module.id} value={module.id}>{module.name}</option>)}</select></Field>
         <Field id="skills" label="Skills" className="span-2" hint="Comma separated."><input className="input" id="skills" name="skills" defaultValue={initial?.skills.join(', ') ?? ''} disabled={!writable} /></Field>
         <Field id="bio" label="Bio" className="span-2"><textarea className="textarea" id="bio" name="bio" defaultValue={initial?.bio ?? ''} disabled={!writable} /></Field>
@@ -245,7 +246,7 @@ function ProjectForm({ initial }: { initial: Project | null }) {
   };
   return (
     <form onSubmit={(event) => void submit(event)} onChange={() => setDirty(true)} noValidate>
-      <div className="a-head"><div><h1>{initial ? 'Edit project' : 'New project'}</h1></div>{initial ? <Link className="btn btn--ghost btn--sm" to={`/projects/${initial.id}`}>Preview</Link> : null}</div>
+      <div className="a-head"><div><h1>{initial ? 'Edit project' : 'New project'}</h1></div>{initial ? <Link className="btn btn--ghost btn--sm" to={isApiPublic(initial) ? `/projects/${initial.id}` : `/admin/projects/${initial.id}`}>Preview</Link> : null}</div>
       <ErrorSummary errors={errors} />
       <div className="form-grid">
         <Field id="title" label="Title" error={errors.title} className="span-2"><input className="input" id="title" name="title" defaultValue={initial?.title ?? ''} disabled={!writable} /></Field>
@@ -322,7 +323,7 @@ function EventForm({ initial }: { initial: BootcampEvent | null }) {
   };
   return (
     <form onSubmit={(event) => void submit(event)} onChange={() => setDirty(true)} noValidate>
-      <div className="a-head"><div><h1>{initial ? initial.title : 'New event'}</h1><p>Do not invent a date. Mark it to be confirmed instead.</p></div>{initial ? <Link className="btn btn--ghost btn--sm" to={`/events/${initial.id}`}>Preview</Link> : null}</div>
+      <div className="a-head"><div><h1>{initial ? initial.title : 'New event'}</h1><p>Do not invent a date. Mark it to be confirmed instead.</p></div>{initial ? <Link className="btn btn--ghost btn--sm" to={isApiPublic(initial) ? `/events/${initial.id}` : `/admin/events/${initial.id}`}>Preview</Link> : null}</div>
       <ErrorSummary errors={errors} />
       <div className="form-grid">
         <Field id="title" label="Title" error={errors.title} className="span-2"><input className="input" id="title" name="title" defaultValue={initial?.title ?? ''} disabled={!writable} /></Field>

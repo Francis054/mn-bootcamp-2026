@@ -45,7 +45,7 @@ MN.TRAINEES = Array.from({length:12},(_,i)=>{
   const n=String(i+1).padStart(2,'0');
   const m=MN.MODULES[i%6];
   return { id:i+1, name:`Sample Trainee ${n}`, initials:`T${i+1}`, focus:m.id, hue:hues[i],
-    track: i%3===0?'Blue team':i%3===1?'Red team':'GRC & awareness',
+    track: i%3===0?'Blue team':i%3===1?'Red team':'GRC & Awareness',
     status: 'In training',
     skills: [['Linux','Wireshark','Firewalls'],['Kali Linux','Python','OWASP Top 10'],['Nmap','OpenVAS','Risk reports'],['Autopsy','Chain of custody','Log analysis'],['Phishing drills','Policy writing','Training design'],['SIEM basics','Playbooks','Triage']][i%6] };
 });

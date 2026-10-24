@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { usesMockApi } from '@/config/runtime';
 import { Icon, type IconName } from './Icon';
 
 export function Tabs({ label, value, onChange, tabs }: { label: string; value: string; onChange: (id: string) => void; tabs: Array<{ id: string; label: string }> }) {
@@ -71,7 +72,7 @@ export function ErrorSummary({ errors }: { errors: Record<string, string> }) {
 export function SaveBar({ dirty, pending, onCancel, label = 'Save' }: { dirty: boolean; pending: boolean; onCancel?: string; label?: string }) {
   return (
     <div className={`savebar${dirty ? ' is-dirty' : ''}`}>
-      <span className="status">{dirty ? 'Unsaved changes' : 'Held in the development adapter · not sent to a server'}</span>
+      <span className="status">{dirty ? 'Unsaved changes' : usesMockApi() ? 'Held in the development adapter · not sent to a server' : 'Saved through the API'}</span>
       {onCancel ? <a className="btn btn--ghost btn--sm" href={onCancel}>Cancel</a> : null}
       <button className={`btn btn--dark btn--sm${pending ? ' is-loading' : ''}`} type="submit" disabled={pending}>{label}</button>
     </div>

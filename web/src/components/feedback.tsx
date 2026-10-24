@@ -199,6 +199,7 @@ export function StatusBadge({ status }: { status: string }) {
     sample: ['warning', 'Sample'],
     consent: ['warning', 'Consent pending'],
     pending: ['warning', 'Consent pending'],
+    withdrawn: ['danger', 'Consent withdrawn'],
     active: ['success', 'Active'],
   };
   const [tone, label] = map[status] ?? ['', status];

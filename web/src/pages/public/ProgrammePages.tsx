@@ -166,12 +166,13 @@ export function ClassesPage() {
 
 export function LessonPage() {
   const { id = '' } = useParams();
-  const { lessons } = usePublicContent();
+  const { lessons, loading } = usePublicContent();
   const lesson = lessons.find((item) => item.id === id);
   const index = lessons.findIndex((item) => item.id === id);
   const previous = index > 0 ? lessons[index - 1] : undefined;
   const next = index >= 0 ? lessons[index + 1] : undefined;
   usePageMeta(lesson?.title ?? 'Lesson');
+  if (loading) return <section className="section"><div className="container"><p>Loading the published site…</p></div></section>;
   if (!lesson) {
     return <section className="section"><div className="container"><ErrorState title="This lesson is not available" text="It may be a draft, hidden, or the link may be wrong. Public pages only show published or labelled sample lessons." /></div></section>;
   }

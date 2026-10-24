@@ -6,6 +6,7 @@ import { DragList, ErrorSummary, Field, SaveBar, bindBeforeUnload } from '@/comp
 import { EmptyState, ErrorState, LoadingRows, StatusBadge, useConfirm, useToast } from '@/components/feedback';
 import { Photo } from '@/components/Brand';
 import { usePageMeta } from '@/components/SiteChrome';
+import { usesMockApi } from '@/config/runtime';
 import { ALBUM_LABEL } from '@/dev/fixtures';
 import { ROLE_LABEL } from '@/domain/permissions';
 import type { AboutContent, DevUser, HomepageContent, MediaItem, Milestone, Role, SiteSettings } from '@/domain/types';
@@ -152,13 +153,23 @@ export function MediaPage() {
   const upload = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    const file = (data.get('file') as File | null);
+    const file = data.get('file');
     const alt = String(data.get('alt') ?? '');
-    let src = '';
-    if (file && file.size) src = URL.createObjectURL(file);
+    const album = String(data.get('album') ?? 'community');
+    const chosen = file instanceof File && file.size > 0 ? file : null;
     try {
-      await api({ method: 'POST', path: '/admin/media', body: { alt, caption: alt, album: String(data.get('album') ?? 'community'), src, file: file?.name || 'upload', listing: 'hidden', width: 1600, height: 1066 } });
-      toast('Metadata saved', 'The file stayed in this browser. Nothing was uploaded to storage.');
+      if (chosen) {
+        const body = new FormData();
+        body.set('alt', alt);
+        body.set('caption', alt);
+        body.set('album', album);
+        body.set('file', chosen);
+        await api({ method: 'POST', path: '/admin/media', body });
+        toast('Photo saved', 'It stays hidden until consent is verified and it is published.');
+      } else {
+        await api({ method: 'POST', path: '/admin/media', body: { alt, caption: alt, album } });
+        toast('Metadata saved', usesMockApi() ? 'The file stayed in this browser. Nothing was uploaded to storage.' : 'No file was attached. Add a photo to store it.');
+      }
       setNonce((value) => value + 1);
       event.currentTarget.reset();
     } catch (error) {
@@ -173,7 +184,7 @@ export function MediaPage() {
           <div className="panel__body form-grid">
             <Field id="alt" label="Alt text" hint="No names."><input className="input" id="alt" name="alt" required /></Field>
             <Field id="album" label="Album"><select className="select" id="album" name="album"><option value="community">Community</option><option value="anniversary">10th anniversary</option><option value="hackathon">Hackathon (TBC)</option></select></Field>
-            <Field id="file" label="Local file" hint="Preview only. Not uploaded."><input className="input" id="file" name="file" type="file" accept="image/*" /></Field>
+            <Field id="file" label="Image file" hint="Sent as the photo when a file is chosen."><input className="input" id="file" name="file" type="file" accept="image/*" /></Field>
             <button className="btn btn--dark btn--sm" type="submit">Add to library</button>
           </div>
         </form>
@@ -188,13 +199,22 @@ export function MediaPage() {
       <div className="lesson-grid">
         {rows.map((item) => (
           <article className="card" key={item.id}>
-            <div className="card__media">{item.file !== 'upload' && !item.src.startsWith('blob:') ? <Photo file={item.file} alt={item.alt} width={item.width} height={item.height} sizes="240px" /> : <img src={item.src} alt={item.alt} />}</div>
+            <div className="card__media">{item.src.startsWith('http') || item.src.startsWith('/') ? <img src={item.src} alt={item.alt} width={item.width} height={item.height} /> : item.file && item.file !== 'upload' ? <Photo file={item.file} alt={item.alt} width={item.width} height={item.height} sizes="240px" /> : <img src={item.src} alt={item.alt} />}</div>
             <div className="card__body">
               <div className="card__meta"><StatusBadge status={item.consent} /><StatusBadge status={item.listing} /></div>
               <h3 className="card__title" style={{ fontSize: 16 }}>{item.caption}</h3>
               <p className="muted">{ALBUM_LABEL[item.album]}</p>
+              {auth.allowed('media.write') && item.consent === 'verified' ? <button className="btn btn--ghost btn--xs" type="button" onClick={() => void (async () => {
+                try {
+                  await api({ method: 'POST', path: `/admin/media/${item.id}/withdraw-consent` });
+                  toast('Consent withdrawn', 'The photo is no longer public.');
+                  setNonce((value) => value + 1);
+                } catch (error) {
+                  toast('Could not withdraw consent', isApiError(error) ? error.message : 'Request failed.', 'error');
+                }
+              })()}>Withdraw consent</button> : null}
               {auth.allowed('media.write') ? <button className="btn btn--ghost btn--xs" type="button" onClick={() => void (async () => {
-                const ok = await confirm({ title: 'Remove this image?', text: 'Metadata is removed from the development adapter.', danger: true });
+                const ok = await confirm({ title: 'Remove this image?', text: 'The photo is removed from the library.', danger: true });
                 if (!ok) return;
                 await api({ method: 'DELETE', path: `/admin/media/${item.id}` });
                 setNonce((value) => value + 1);
@@ -212,17 +232,20 @@ export function UsersPage() {
   const toast = useToast();
   const [nonce, setNonce] = useState(0);
   const [email, setEmail] = useState('');
+  const [role, setRole] = useState('');
   const [error, setError] = useState('');
   const record = useAsync(`users:${nonce}`, () => api<DevUser[]>({ method: 'GET', path: '/admin/users' }));
   usePageMeta('Users and roles');
   const invite = async (event: FormEvent) => {
     event.preventDefault();
-    const invalid = emailAddress(email);
+    const invalid = emailAddress(email) ?? (role ? null : 'Choose viewer, editor or administrator.');
     if (invalid) { setError(invalid); return; }
     try {
-      const result = await api<{ delivered: boolean; message: string }>({ method: 'POST', path: '/admin/users/invite', body: { email } });
-      toast('Invitation not sent', result.message, 'info');
+      const result = await api<{ delivered: boolean; message: string }>({ method: 'POST', path: '/admin/users/invite', body: { email, role } });
+      toast(result.delivered ? 'Invitation sent' : 'Account saved', result.message, result.delivered ? 'success' : 'info');
       setEmail('');
+      setRole('');
+      setNonce((value) => value + 1);
     } catch (err) {
       toast('Could not invite', isApiError(err) ? err.message : 'Request failed.', 'error');
     }
@@ -246,7 +269,8 @@ export function UsersPage() {
       </tbody></table>
       {auth.allowed('users.manage') ? (
         <form onSubmit={(event) => void invite(event)} style={{ marginTop: 24 }}>
-          <Field id="invite" label="Invite email" error={error} hint="No message is sent. User provisioning is pending a backend."><input className="input" id="invite" type="email" value={email} onChange={(event) => setEmail(event.target.value)} /></Field>
+          <Field id="invite" label="Invite email" error={error} hint="Choose a role. The invitation does not default to administrator."><input className="input" id="invite" type="email" value={email} onChange={(event) => setEmail(event.target.value)} /></Field>
+          <Field id="invite-role" label="Role"><select className="select" id="invite-role" aria-label="Role for the invitation" value={role} onChange={(event) => setRole(event.target.value)}><option value="">Choose a role</option>{(Object.keys(ROLE_LABEL) as Role[]).map((item) => <option key={item} value={item}>{ROLE_LABEL[item]}</option>)}</select></Field>
           <button className="btn btn--dark btn--sm" type="submit">Invite</button>
         </form>
       ) : <p className="muted">You can see users. Changing roles needs the users.manage permission.</p>}
@@ -306,7 +330,9 @@ export function AccountPage() {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(event.currentTarget));
     try {
-      await api({ method: 'POST', path: '/admin/account/password', body: { current: data.current, next: data.next, confirm: data.confirm } });
+      const result = await api<{ message: string }>({ method: 'POST', path: '/admin/account/password', body: { current: data.current, next: data.next, confirm: data.confirm } });
+      setErrors({});
+      setMessage(result.message);
     } catch (error) {
       if (isApiError(error)) {
         setErrors(error.fieldErrors ?? {});
@@ -322,13 +348,13 @@ export function AccountPage() {
       <form onSubmit={(event) => void submit(event)} noValidate>
         <ErrorSummary errors={errors} />
         <Field id="current" label="Current password" error={errors.current}><input className="input" id="current" name="current" type="password" autoComplete="current-password" /></Field>
-        <Field id="next" label="New password" error={errors.next}><input className="input" id="next" name="next" type="password" autoComplete="new-password" /></Field>
+        <Field id="next" label="New password" error={errors.next} hint={usesMockApi() ? 'At least 8 characters in the development adapter.' : 'At least 12 characters, with a letter and a number.'}><input className="input" id="next" name="next" type="password" autoComplete="new-password" /></Field>
         <Field id="confirm" label="Confirm" error={errors.confirm}><input className="input" id="confirm" name="confirm" type="password" autoComplete="new-password" /></Field>
         <button className="btn btn--dark btn--sm" type="submit">Change password</button>
         {message ? <p role="status">{message}</p> : null}
-        <p className="muted">This always returns pending. The password is not stored.</p>
+        {usesMockApi() ? <p className="muted">This returns pending. The password is not stored.</p> : null}
       </form>
-      <button className="btn btn--ghost btn--sm" type="button" style={{ marginTop: 24 }} onClick={() => void api({ method: 'POST', path: '/auth/session/expire' })}>Expire development session</button>
+      {usesMockApi() ? <button className="btn btn--ghost btn--sm" type="button" style={{ marginTop: 24 }} onClick={() => void api({ method: 'POST', path: '/auth/session/expire' })}>Expire development session</button> : null}
     </>
   );
 }

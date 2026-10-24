@@ -7,6 +7,7 @@ import { EmptyState, ErrorState, LoadingRows, StatusBadge, useConfirm, useToast 
 import { usePageMeta } from '@/components/SiteChrome';
 import { MODULES, moduleName } from '@/dev/fixtures';
 import { formatDate } from '@/domain/format';
+import { isApiPublic } from '@/domain/publish';
 import type { BootcampEvent, Lesson, Page, Project, Trainee } from '@/domain/types';
 import { isApiError } from '@/domain/types';
 import { useAsync } from '@/hooks/useAsync';
@@ -37,7 +38,7 @@ export function ClassListPage() {
           <tr key={lesson.id}><td className="chk"><input type="checkbox" aria-label={`Select ${lesson.title}`} checked={selected.includes(lesson.id)} onChange={(event) => setSelected((current) => event.target.checked ? [...current, lesson.id] : current.filter((id) => id !== lesson.id))} /></td>
             <td><b><Link to={`/admin/classes/${lesson.id}`}>{lesson.title}</Link></b><small>{formatDate(lesson.date)}</small></td>
             <td>W{String(lesson.week).padStart(2, '0')}</td><td>{moduleName(lesson.moduleId)}</td><td>{lesson.format}</td><td><StatusBadge status={lesson.scheduleStatus} /> <StatusBadge status={lesson.listing} /></td>
-            <td className="cell-actions"><RowActions preview={`/classes/${lesson.id}`} edit={`/admin/classes/${lesson.id}`} removePath={`/admin/classes/${lesson.id}`} onDone={() => setNonce((value) => value + 1)} /></td>
+            <td className="cell-actions"><RowActions preview={isApiPublic(lesson) ? `/classes/${lesson.id}` : `/admin/classes/${lesson.id}`} edit={`/admin/classes/${lesson.id}`} removePath={`/admin/classes/${lesson.id}`} onDone={() => setNonce((value) => value + 1)} /></td>
           </tr>
         ))}</tbody>
       </table>
@@ -57,7 +58,7 @@ export function TraineeListPage() {
     <ListShell title="Trainees" text="Sample profiles. Email addresses stay in the admin adapter and are stripped from the public site." newTo="/admin/trainees/new" count={list.data?.total} loading={list.loading} error={list.error?.message} onRetry={() => setNonce((n) => n + 1)}>
       <Filters q={q} onQ={(value) => { setQ(value); setPage(1); }} label="Search trainees" />
       <table className="table table--cards"><thead><tr><th>Name</th><th>Track</th><th>Focus</th><th>Listing</th><th><span className="sr-only">Actions</span></th></tr></thead>
-        <tbody>{list.data?.items.map((trainee) => <tr key={trainee.id}><td><b><Link to={`/admin/trainees/${trainee.id}`}>{trainee.displayName}</Link></b><small>{trainee.email}</small></td><td>{trainee.track}</td><td>{moduleName(trainee.focus)}</td><td><StatusBadge status={trainee.listing} /></td><td className="cell-actions"><RowActions preview={`/trainees/${trainee.id}`} edit={`/admin/trainees/${trainee.id}`} removePath={`/admin/trainees/${trainee.id}`} onDone={() => setNonce((n) => n + 1)} /></td></tr>)}</tbody>
+        <tbody>{list.data?.items.map((trainee) => <tr key={trainee.id}><td><b><Link to={`/admin/trainees/${trainee.id}`}>{trainee.displayName}</Link></b><small>{trainee.email}</small></td><td>{trainee.track}</td><td>{moduleName(trainee.focus)}</td><td><StatusBadge status={trainee.listing} /></td><td className="cell-actions"><RowActions preview={isApiPublic(trainee) ? `/trainees/${trainee.id}` : `/admin/trainees/${trainee.id}`} edit={`/admin/trainees/${trainee.id}`} removePath={`/admin/trainees/${trainee.id}`} onDone={() => setNonce((n) => n + 1)} /></td></tr>)}</tbody>
       </table>
       <Pager page={list.data?.page ?? page} total={list.data?.total ?? 0} pageSize={8} onPage={setPage} />
     </ListShell>
@@ -74,7 +75,7 @@ export function ProjectListPage() {
     <ListShell title="Projects" text="Sample labs. Repository URLs are administrative and are not shown on the public project page." newTo="/admin/projects/new" count={list.data?.total} loading={list.loading} error={list.error?.message} onRetry={() => setNonce((n) => n + 1)}>
       <Filters q={q} onQ={setQ} label="Search projects" />
       <table className="table table--cards"><thead><tr><th>Project</th><th>Type</th><th>Status</th><th><span className="sr-only">Actions</span></th></tr></thead>
-        <tbody>{list.data?.items.map((project) => <tr key={project.id}><td><b><Link to={`/admin/projects/${project.id}`}>{project.title}</Link></b></td><td>{project.type}</td><td><StatusBadge status={project.publicationStatus} /></td><td className="cell-actions"><RowActions preview={`/projects/${project.id}`} edit={`/admin/projects/${project.id}`} removePath={`/admin/projects/${project.id}`} onDone={() => setNonce((n) => n + 1)} /></td></tr>)}</tbody>
+        <tbody>{list.data?.items.map((project) => <tr key={project.id}><td><b><Link to={`/admin/projects/${project.id}`}>{project.title}</Link></b></td><td>{project.type}</td><td><StatusBadge status={project.publicationStatus} /></td><td className="cell-actions"><RowActions preview={isApiPublic(project) ? `/projects/${project.id}` : `/admin/projects/${project.id}`} edit={`/admin/projects/${project.id}`} removePath={`/admin/projects/${project.id}`} onDone={() => setNonce((n) => n + 1)} /></td></tr>)}</tbody>
       </table>
       <Pager page={list.data?.page ?? page} total={list.data?.total ?? 0} pageSize={8} onPage={setPage} />
     </ListShell>
@@ -94,7 +95,7 @@ export function EventListPage() {
         <select className="select" aria-label="Kind" value={kind} onChange={(event) => setKind(event.target.value)}><option value="">Any kind</option><option>Milestone</option><option>Anniversary</option><option>Partner event</option></select>
       </Filters>
       <table className="table table--cards"><thead><tr><th>Event</th><th>When</th><th>Status</th><th><span className="sr-only">Actions</span></th></tr></thead>
-        <tbody>{list.data?.items.map((event) => <tr key={event.id}><td><b><Link to={`/admin/events/${event.id}`}>{event.title}</Link></b><small>{event.place}</small></td><td>{event.whenLabel}</td><td>{event.dateTbc ? <StatusBadge status="tbc" /> : event.sample ? <StatusBadge status="sample" /> : <StatusBadge status={event.verified ? 'verified' : 'draft'} />}</td><td className="cell-actions"><RowActions preview={`/events/${event.id}`} edit={`/admin/events/${event.id}`} removePath={`/admin/events/${event.id}`} onDone={() => setNonce((n) => n + 1)} /></td></tr>)}</tbody>
+        <tbody>{list.data?.items.map((event) => <tr key={event.id}><td><b><Link to={`/admin/events/${event.id}`}>{event.title}</Link></b><small>{event.place}</small></td><td>{event.whenLabel}</td><td>{event.dateTbc ? <StatusBadge status="tbc" /> : event.sample ? <StatusBadge status="sample" /> : <StatusBadge status={event.verified ? 'verified' : 'draft'} />}</td><td className="cell-actions"><RowActions preview={isApiPublic(event) ? `/events/${event.id}` : `/admin/events/${event.id}`} edit={`/admin/events/${event.id}`} removePath={`/admin/events/${event.id}`} onDone={() => setNonce((n) => n + 1)} /></td></tr>)}</tbody>
       </table>
       <Pager page={list.data?.page ?? page} total={list.data?.total ?? 0} pageSize={8} onPage={setPage} />
     </ListShell>
