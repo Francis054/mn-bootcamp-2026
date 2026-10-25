@@ -58,6 +58,9 @@ export class MediaEntity {
   @Column({ name: 'storage_key', type: 'varchar', length: 500, default: '' })
   storageKey!: string;
 
+  @Column({ name: 'uploaded_by', type: 'uuid', nullable: true })
+  uploadedBy!: string | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 

@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Photo, Reveal, SplitHeading } from '@/components/Brand';
 import { Crumbs, usePageMeta } from '@/components/SiteChrome';
+import { ErrorState } from '@/components/feedback';
 import { Icon } from '@/components/Icon';
 import { MODULES } from '@/dev/fixtures';
 import { APP_TODAY, formatDate, parseUtcDate } from '@/domain/format';
@@ -13,6 +14,18 @@ export function moduleOf(id: ModuleId | string): ModuleInfo {
   const first = MODULES[0];
   if (!first) throw new Error('Module catalogue is empty.');
   return first;
+}
+
+/** Keeps the page chrome and replaces a blank list when the API is still waking or has failed. */
+export function PublicGate({ loading, error, children }: { loading: boolean; error: string | null; children: ReactNode }) {
+  if (loading) return <p>Loading the published site…</p>;
+  if (error) return <ErrorState title="This page could not be loaded" text={error} onRetry={() => window.location.reload()} />;
+  return children;
+}
+
+export function SampleMark({ listing, children }: { listing?: string; children: string }) {
+  if (listing === 'public') return null;
+  return <span className="ph">{children}</span>;
 }
 
 export function scheduleText(status: ScheduleStatus): string {

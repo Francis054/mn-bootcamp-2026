@@ -2,24 +2,15 @@ import { useMemo, useSyncExternalStore } from 'react';
 import { api } from '@/api/client';
 import { usesMockApi } from '@/config/runtime';
 import { isPubliclyListable } from '@/domain/publish';
+import { normalizeAbout, normalizeEvents, normalizeHomepage, normalizeLessons, normalizeMedia, normalizeMilestones, normalizeProjects, normalizeStats, normalizeTrainees, type SafePublicMedia } from '@/domain/publicContract';
 import { toPublicEvent, toPublicLesson, toPublicProject, toPublicTrainee } from '@/domain/publicView';
-import type { AboutContent, FoundationStat, HomepageContent, MediaItem, Milestone, PublicEvent, PublicLesson, PublicProject, PublicTrainee } from '@/domain/types';
+import type { AboutContent, FoundationStat, HomepageContent, Milestone, PublicEvent, PublicLesson, PublicProject, PublicTrainee } from '@/domain/types';
 import { isApiError } from '@/domain/types';
 import { FOUNDATION_STATS } from '@/dev/fixtures';
 import { getState, subscribe } from '@/dev/store';
 import { useAsync } from './useAsync';
 
-export interface PublicMediaView {
-  id: string;
-  file: string;
-  src: string;
-  width: number;
-  height: number;
-  caption: string;
-  alt: string;
-  album: string;
-  consent?: MediaItem['consent'];
-}
+export type PublicMediaView = SafePublicMedia;
 
 export interface PublicSite {
   loading: boolean;
@@ -75,7 +66,17 @@ async function loadLivePublic(): Promise<Omit<PublicSite, 'loading' | 'error'>> 
     api<PublicMediaView[]>({ method: 'GET', path: '/public/media' }),
     api<FoundationStat[]>({ method: 'GET', path: '/public/foundation-stats' }),
   ]);
-  return { homepage, about, milestones, lessons, trainees, projects, events, media, foundationStats };
+  return {
+    homepage: normalizeHomepage(homepage),
+    about: normalizeAbout(about),
+    milestones: normalizeMilestones(milestones),
+    lessons: normalizeLessons(lessons),
+    trainees: normalizeTrainees(trainees),
+    projects: normalizeProjects(projects),
+    events: normalizeEvents(events),
+    media: normalizeMedia(media),
+    foundationStats: normalizeStats(foundationStats),
+  };
 }
 
 /** Mock mode keeps the labelled fixture projection. Live mode shows only published API rows. */

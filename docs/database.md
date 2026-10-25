@@ -44,15 +44,30 @@ Paste that only into the Render **Environment** tab as `DATABASE_URL`. Do not pa
 
 In production, `DATABASE_SSL` defaults to `true` when the variable is left empty. Set it to `true` anyway so the choice is visible.
 
-The code turns that flag into Node’s TLS option `{ rejectUnauthorized: true }` in `backend/src/database/data-source.ts`. There is no environment variable for a CA file. The process checks the server certificate against Node’s built-in certificate list. It does not load the Supabase CA you can download from Database settings.
+The code turns that flag into Node’s TLS option `{ rejectUnauthorized: true }` in `backend/src/database/data-source.ts`. Certificate checks stay on. Do not set `DATABASE_SSL=false` to get past a certificate error. Do not set `NODE_TLS_REJECT_UNAUTHORIZED=0`.
 
-Supabase’s own guide asks for `sslmode=require` on the URL so the driver will not fall back to plaintext. Put that on `DATABASE_URL` as well. `require` encrypts the connection. The app’s `rejectUnauthorized: true` also checks the certificate.
+Supabase’s server certificate chains to Supabase’s own CA. That CA is not in Node’s built-in list. Startup then exits with `SELF_SIGNED_CERT_IN_CHAIN` until the process has the CA.
 
-If the process fails at startup with a certificate error, stop. Do not set `DATABASE_SSL=false` to get past it. This build has no setting for a custom CA.
+Download it from the Supabase dashboard:
+
+1. Open the project.
+2. Go to **Project Settings**, then **Database**.
+3. Under **SSL Configuration**, click **Download certificate**.
+4. Open the downloaded file in a text editor. It starts with `-----BEGIN CERTIFICATE-----` and ends with `-----END CERTIFICATE-----`.
+
+On Render, add `DATABASE_SSL_CA` and paste the whole file, including those two lines. Render keeps line breaks. If the box stores the file as one line, put the two characters `\n` where each line break was. The app turns those into real line breaks. A single pair of quotes around the whole value is ignored. The certificate is not printed.
+
+Keep `?sslmode=require` on `DATABASE_URL`. Supabase puts it there so a driver will not fall back to plaintext. Leave it. When `DATABASE_SSL` is empty outside production, `sslmode=require` (also `verify-ca` and `verify-full`) turns SSL on.
+
+The driver would otherwise replace the TLS options with what it parses from that parameter, and the CA would be ignored. `uselibpqcompat=true` together with `sslmode=require` would also turn certificate checks off. Before connecting, the app removes `sslmode` and the other SSL query parameters from the URL it hands the driver, then sets TLS itself: encryption on, certificate check on, host name check on, and the CA from `DATABASE_SSL_CA` when you set it. You do not remove `sslmode=require` from the Render variable.
+
+`npm run migration:run` uses that same path.
+
+A database on your own computer does not need `DATABASE_SSL_CA`. Leave it blank and set `DATABASE_SSL=false`.
 
 ## What runs against production
 
-Run `npm run migration:run` once, before the first real request, and again only when a new migration is added. The command reads `DATABASE_URL` from the environment. It does not print the URL.
+Run `npm run migration:run` once, before the first real request, and again only when a new migration is added. The command reads `DATABASE_URL`, `DATABASE_SSL`, and `DATABASE_SSL_CA` from the environment and connects the same way the server does. It does not print the URL or the certificate.
 
 Do not run `npm run seed` on the hosted database.
 

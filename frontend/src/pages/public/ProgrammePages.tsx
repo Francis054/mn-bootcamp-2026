@@ -9,7 +9,7 @@ import { Netlines } from '@/components/Netlines';
 import { MODULES, PHASES } from '@/dev/fixtures';
 import { currentWeek, formatDate } from '@/domain/format';
 import { usePublicContent } from '@/hooks/useContent';
-import { moduleOf, PageIntro, scheduleText, useTimelineProgress } from './helpers';
+import { moduleOf, PageIntro, PublicGate, SampleMark, scheduleText, useTimelineProgress } from './helpers';
 
 export function BootcampPage() {
   const week = currentWeek();
@@ -57,7 +57,7 @@ export function BootcampPage() {
 }
 
 export function JourneyPage() {
-  const { lessons, events } = usePublicContent();
+  const { lessons, events, loading, error } = usePublicContent();
   const [phase, setPhase] = useState('all');
   const reached = useTimelineProgress(true);
   const week = currentWeek();
@@ -83,7 +83,8 @@ export function JourneyPage() {
             </div>
           </aside>
           <div className="jt__main">
-            <ol className="tl" data-tl>
+            <PublicGate loading={loading} error={error}>
+            {visible.length ? <ol className="tl" data-tl>
               <li className="tl__progress" aria-hidden="true" />
               {PHASES.filter((item) => phase === 'all' || String(item.id) === phase).map((item) => (
                 <li className="tl__phase" id={`ph-${item.id}`} key={item.id}>Phase {item.id} · {item.name}</li>
@@ -112,7 +113,8 @@ export function JourneyPage() {
               {events.filter((event) => event.id === 'graduation').map((event) => (
                 <li className="tl__item tl__item--milestone" key={event.id}><span className="tl__dot" /><Link className="tl__card" to={`/events/${event.id}`}><span className="tl__date">{event.whenLabel}</span><h3>{event.title}</h3><p>{event.summary}</p><span className="tbc">Details to be confirmed</span></Link></li>
               ))}
-            </ol>
+            </ol> : <EmptyState icon="calendar" title="No classes are published yet" text="The weekly plan appears here after a lesson is published. Start and end dates above are already confirmed." />}
+            </PublicGate>
           </div>
         </div>
       </section>
@@ -121,7 +123,7 @@ export function JourneyPage() {
 }
 
 export function ClassesPage() {
-  const { lessons } = usePublicContent();
+  const { lessons, loading, error } = usePublicContent();
   const [params] = useSearchParams();
   const [moduleId, setModuleId] = useState(params.get('module') ?? 'all');
   const [status, setStatus] = useState(params.get('status') ?? 'all');
@@ -132,7 +134,7 @@ export function ClassesPage() {
   }, [lessons, moduleId, sort, status]);
   return (
     <>
-      <PageIntro title="Class archive" crumbs={[{ label: 'Home', to: '/' }, { label: 'Bootcamp' }, { label: 'Classes' }]} eyebrow="Class archive" headline={'Every lesson,\nin one place.'} aside={<><p className="lead">Notes, labs and resources are published after each class.</p><span className="ph" style={{ marginTop: 16 }}>All lessons are samples</span></>} />
+      <PageIntro title="Class archive" crumbs={[{ label: 'Home', to: '/' }, { label: 'Bootcamp' }, { label: 'Classes' }]} eyebrow="Class archive" headline={'Every lesson,\nin one place.'} aside={<><p className="lead">Notes, labs and resources are published after each class.</p>{lessons.some((lesson) => lesson.listing !== 'public') ? <span className="ph" style={{ marginTop: 16 }}>Sample lessons are labelled</span> : null}</>} />
       <section className="section" style={{ paddingTop: 'var(--s-7)' }}>
         <div className="container">
           <Tabs label="Filter by module" value={moduleId} onChange={setModuleId} tabs={[{ id: 'all', label: 'All modules' }, ...MODULES.map((module) => ({ id: module.id, label: module.short }))]} />
@@ -143,7 +145,8 @@ export function ClassesPage() {
             </label>
             <span className="result-count" aria-live="polite">{filtered.length} of {lessons.length} classes</span>
           </div>
-          {filtered.length ? (
+          <PublicGate loading={loading} error={error}>
+          {!loading && !error && lessons.length === 0 ? <EmptyState icon="layers" title="No classes are published yet" text="Lessons appear here after they are saved and published. A hidden listing stays off this page." /> : filtered.length ? (
             <div className="lesson-grid">
               {filtered.map((lesson) => (
                 <Link className="card lesson-card" to={`/classes/${lesson.id}`} key={lesson.id}>
@@ -153,11 +156,12 @@ export function ClassesPage() {
                     <h3 className="card__title">{lesson.title}</h3>
                     <p className="muted" style={{ fontSize: 14, marginTop: 8 }}>w/c {formatDate(lesson.date)} · {lesson.format}</p>
                   </div>
-                  <div className="card__foot"><span className="ph">Sample lesson</span><span className="go"><Icon name="arrow-right" className="i--sm" /></span></div>
+                  <div className="card__foot"><SampleMark listing={lesson.listing}>Sample lesson</SampleMark><span className="go"><Icon name="arrow-right" className="i--sm" /></span></div>
                 </Link>
               ))}
             </div>
           ) : <EmptyState title="No classes match" text="Try another module or status." action={<button className="btn btn--ghost btn--sm" type="button" onClick={() => { setModuleId('all'); setStatus('all'); }}>Reset filters</button>} />}
+          </PublicGate>
         </div>
       </section>
     </>
@@ -166,13 +170,14 @@ export function ClassesPage() {
 
 export function LessonPage() {
   const { id = '' } = useParams();
-  const { lessons, loading } = usePublicContent();
+  const { lessons, loading, error } = usePublicContent();
   const lesson = lessons.find((item) => item.id === id);
   const index = lessons.findIndex((item) => item.id === id);
   const previous = index > 0 ? lessons[index - 1] : undefined;
   const next = index >= 0 ? lessons[index + 1] : undefined;
   usePageMeta(lesson?.title ?? 'Lesson');
   if (loading) return <section className="section"><div className="container"><p>Loading the published site…</p></div></section>;
+  if (error) return <section className="section"><div className="container"><ErrorState title="This lesson could not be loaded" text={error} onRetry={() => window.location.reload()} /></div></section>;
   if (!lesson) {
     return <section className="section"><div className="container"><ErrorState title="This lesson is not available" text="It may be a draft, hidden, or the link may be wrong. Public pages only show published or labelled sample lessons." /></div></section>;
   }
@@ -182,7 +187,7 @@ export function LessonPage() {
       <section className="detail-hero">
         <div className="container">
           <Crumbs items={[{ label: 'Home', to: '/' }, { label: 'Classes', to: '/classes' }, { label: `Week ${lesson.week}` }]} />
-          <div className="flex wrap" style={{ gap: 10, marginTop: 8 }}><span className="tag">{module.name}</span><span className={`st st--${lesson.scheduleStatus}`}>{scheduleText(lesson.scheduleStatus)}</span><span className="ph">Sample lesson content</span></div>
+          <div className="flex wrap" style={{ gap: 10, marginTop: 8 }}><span className="tag">{module.name}</span><span className={`st st--${lesson.scheduleStatus}`}>{scheduleText(lesson.scheduleStatus)}</span><SampleMark listing={lesson.listing}>Sample lesson content</SampleMark></div>
           <h1>{lesson.title}</h1>
           <div className="meta-row"><span><Icon name="calendar" className="i--sm" />Week {lesson.week} · w/c {formatDate(lesson.date, { weekday: 'short', year: 'numeric' })}</span><span><Icon name="clock" className="i--sm" />{lesson.format}</span><span><Icon name="map-pin" className="i--sm" />{lesson.room || 'Tantra Hills, Accra'}</span></div>
           <figure className="detail-media mask-reveal is-in"><Photo file={lesson.cover} alt="" width={1600} height={1066} sizes="100vw" priority /></figure>
@@ -193,7 +198,7 @@ export function LessonPage() {
           <aside className="lesson-layout__side"><nav className="toc sticky" aria-label="On this page"><a href="#overview" className="is-active">Overview</a><a href="#objectives">Objectives</a><a href="#lab">Lab walkthrough</a><a href="#resources">Resources</a></nav></aside>
           <article className="lesson-layout__main prose-wrap">
             <section id="overview"><h2>Overview</h2><p className="lead">{lesson.summary}</p><p className="muted" style={{ marginTop: 16 }}>This is placeholder text showing the layout of a lesson write-up. Real notes will be added by the trainers after each class. Trainer names are not published until consent is recorded.</p></section>
-            <section id="objectives"><h2>Objectives</h2><ul className="objectives">{lesson.objectives.map((item) => <li key={item}><Icon name="check-circle" /><span>{item}</span></li>)}</ul></section>
+            <section id="objectives"><h2>Objectives</h2>{lesson.objectives.length ? <ul className="objectives">{lesson.objectives.map((item) => <li key={item}><Icon name="check-circle" /><span>{item}</span></li>)}</ul> : <p className="muted">Objectives will be added with the lesson notes.</p>}</section>
             <section id="lab"><h2>Lab walkthrough</h2>
               <ol className="steps">
                 <li><h4>Set up the lab environment</h4><p className="muted">{lesson.lab}</p></li>

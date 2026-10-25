@@ -30,6 +30,11 @@ describe('permissions', () => {
     expect(can('editor', 'content.write')).toBe(true);
     expect(can('editor', 'users.manage')).toBe(false);
     expect(can('administrator', 'settings.manage')).toBe(true);
+    expect(can('trainee', 'media.upload')).toBe(true);
+    expect(can('trainee', 'media.write')).toBe(false);
+    expect(can('trainer', 'media.upload')).toBe(true);
+    expect(can('editor', 'media.write')).toBe(true);
+    expect(can('viewer', 'media.upload')).toBe(false);
   });
 });
 

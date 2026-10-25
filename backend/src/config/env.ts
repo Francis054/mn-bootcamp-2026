@@ -22,6 +22,8 @@ export interface AppEnv {
   port: number;
   databaseUrl: string;
   databaseSsl: boolean;
+  /** PEM CA for the database server. Absent when `DATABASE_SSL_CA` is empty. Never log it. */
+  databaseSslCa?: string;
   frontendUrl: string;
   sessionSecret?: string;
   logLevel: LogLevel;
@@ -73,6 +75,15 @@ export function loadEnv(
   const port = readPort(source.PORT, problems);
   const databaseUrl = readDatabaseUrl(source.DATABASE_URL, problems);
   const databaseSsl = readDatabaseSsl(source.DATABASE_SSL, nodeEnv, databaseUrl, problems);
+  const databaseSslCa = readDatabaseSslCa(source.DATABASE_SSL_CA, problems);
+  if (databaseSslCa !== undefined && databaseSslChoiceIsOff(source.DATABASE_SSL, databaseSsl)) {
+    problems.push(
+      'DATABASE_SSL_CA requires DATABASE_SSL=true. Leave DATABASE_SSL_CA blank when SSL is off.',
+    );
+  }
+  if (source.NODE_TLS_REJECT_UNAUTHORIZED?.trim() === '0') {
+    problems.push('NODE_TLS_REJECT_UNAUTHORIZED must not be 0. Certificate checks stay on.');
+  }
   const frontendUrl = readFrontendUrl(source.FRONTEND_URL, nodeEnv, problems);
   const sessionSecret = readSessionSecret(source.SESSION_SECRET, nodeEnv, problems);
   const logLevel = readLogLevel(source.LOG_LEVEL, problems);
@@ -154,6 +165,7 @@ export function loadEnv(
     loginIpFailureLimit,
     uploadMaxBytes,
   };
+  if (databaseSslCa !== undefined) env.databaseSslCa = databaseSslCa;
   if (sessionSecret !== undefined) env.sessionSecret = sessionSecret;
   if (cloudinaryCloudName !== undefined) env.cloudinaryCloudName = cloudinaryCloudName;
   if (cloudinaryApiKey !== undefined) env.cloudinaryApiKey = cloudinaryApiKey;
@@ -202,6 +214,75 @@ function readDatabaseUrl(raw: string | undefined, problems: string[]): string {
     return '';
   }
   return value;
+}
+
+const DATABASE_SSL_CA_MAX_CHARS = 64 * 1024;
+const PEM_BEGIN = '-----BEGIN CERTIFICATE-----';
+const PEM_END = '-----END CERTIFICATE-----';
+
+/**
+ * `DATABASE_SSL` was a valid choice and it turned SSL off. An invalid value
+ * already has its own error, so a CA set beside it should not add a second one.
+ */
+function databaseSslChoiceIsOff(raw: string | undefined, databaseSsl: boolean): boolean {
+  if (databaseSsl) return false;
+  const value = raw?.trim() ?? '';
+  return value === '' || value === 'false';
+}
+
+/**
+ * Optional PEM text. Real line breaks and the two-character sequence `\n`
+ * are both accepted, because a host env box often stores the file as one line.
+ * One matching pair of surrounding quotes is removed. The value is never echoed.
+ */
+function readDatabaseSslCa(raw: string | undefined, problems: string[]): string | undefined {
+  if (raw === undefined) return undefined;
+  const trimmed = raw.trim().replace(/^\uFEFF/, '');
+  if (trimmed === '') return undefined;
+  if (trimmed.length > DATABASE_SSL_CA_MAX_CHARS) {
+    problems.push('DATABASE_SSL_CA is too large.');
+    return undefined;
+  }
+  const normalized = normalizePem(stripMatchingQuotes(trimmed));
+  if (!isPemCertificate(normalized)) {
+    problems.push('DATABASE_SSL_CA must be a PEM certificate.');
+    return undefined;
+  }
+  return normalized;
+}
+
+function stripMatchingQuotes(value: string): string {
+  if (value.length < 2) return value;
+  const first = value.charAt(0);
+  const last = value.charAt(value.length - 1);
+  if ((first === '"' && last === '"') || (first === "'" && last === "'")) {
+    return value.slice(1, -1).trim();
+  }
+  return value;
+}
+
+function normalizePem(value: string): string {
+  return value
+    .replace(/\\r\\n/g, '\n')
+    .replace(/\\n/g, '\n')
+    .replace(/\\r/g, '\n')
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .trim();
+}
+
+function isPemCertificate(value: string): boolean {
+  let rest = value;
+  let count = 0;
+  while (rest.startsWith(PEM_BEGIN)) {
+    const endAt = rest.indexOf(PEM_END);
+    if (endAt === -1) return false;
+    const body = rest.slice(PEM_BEGIN.length, endAt).replace(/\s+/g, '');
+    if (!/^[A-Za-z0-9+/]+={0,2}$/.test(body) || body.length % 4 !== 0) return false;
+    count += 1;
+    rest = rest.slice(endAt + PEM_END.length).trim();
+  }
+  return count > 0 && rest === '';
 }
 
 function readDatabaseSsl(

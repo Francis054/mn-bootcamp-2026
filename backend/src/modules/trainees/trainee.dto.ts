@@ -32,6 +32,14 @@ function skillsTransform({ value }: { value: unknown }): unknown {
   return value.map((item: string) => item.trim()).filter((item) => item.length > 0);
 }
 
+/** A blank link is stored as null. A provided link keeps its trimmed text for validation. */
+function blankLink({ value }: { value: unknown }): unknown {
+  if (value === undefined || value === null) return value;
+  if (typeof value !== 'string') return value;
+  const trimmed = value.trim();
+  return trimmed.length === 0 ? null : trimmed;
+}
+
 /** Body for `POST /admin/trainees`. Messages match the trainee form. */
 export class TraineeCreateDto {
   @rule('displayName', displayNameMessage, 'Enter a display name.')
@@ -68,12 +76,14 @@ export class TraineeCreateDto {
   quote?: string;
 
   @IsOptional()
+  @Transform(blankLink)
   @rule('linkedin', optionalHttpUrlMessage, 'Enter a full link starting with https://')
-  linkedin?: string;
+  linkedin?: string | null;
 
   @IsOptional()
+  @Transform(blankLink)
   @rule('portfolio', optionalHttpUrlMessage, 'Enter a full link starting with https://')
-  portfolio?: string;
+  portfolio?: string | null;
 
   @IsOptional()
   @rule('consentReceived', consentMessage, 'Choose whether consent was received.')
@@ -144,12 +154,14 @@ export class TraineePatchDto {
   quote?: string;
 
   @IsOptional()
+  @Transform(blankLink)
   @rule('linkedin', optionalHttpUrlMessage, 'Enter a full link starting with https://')
-  linkedin?: string;
+  linkedin?: string | null;
 
   @IsOptional()
+  @Transform(blankLink)
   @rule('portfolio', optionalHttpUrlMessage, 'Enter a full link starting with https://')
-  portfolio?: string;
+  portfolio?: string | null;
 
   @IsOptional()
   @rule('consentReceived', consentMessage, 'Choose whether consent was received.')

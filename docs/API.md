@@ -81,7 +81,7 @@ Idle time is 30 minutes. The session also ends 12 hours after sign-in. Both can 
 - Keep sending `X-CSRF-Token` from `mn_csrf` on sign-out and on later changes.
 - Treat `403` with code `forbidden` as "this role cannot do that", and `401` as "sign in again".
 
-The permission names match `frontend/src/domain/permissions.ts`. A viewer can read content and manage their own account. An editor can also change content and media. Content changes use `content.write` and cover classes, trainee profiles, projects, events, the homepage, the about page, and the timeline. Photo changes use `media.write`. Settings, including the foundation counters, use `settings.manage`. Invitations, role changes, and the enquiry inbox use `users.manage`. Listing accounts uses `users.read`. Only an administrator has those permissions. The server enforces that. The React route guard does not. There is no separate publish permission in the website's map, so this API does not invent one.
+The permission names match `frontend/src/domain/permissions.ts`. A trainee or a trainer can read content, upload media, and manage their own account. A viewer can read content and manage their own account. An editor can also change content and publish media. Content changes use `content.write` and cover classes, trainee profiles, projects, events, the homepage, the about page, and the timeline. Photo uploads use `media.upload`. Publishing a photo, confirming consent, and deleting a photo use `media.write`. Settings, including the foundation counters, use `settings.manage`. Invitations, role changes, and the enquiry inbox use `users.manage`. Listing accounts uses `users.read`. Only an administrator has those last permissions. The server enforces that. The React route guard does not. There is no separate publish permission. An administrator may send `{ confirmConsent: true }` on `POST /admin/media/:id/publish` to verify consent and publish together. Any other role that sends `confirmConsent` is refused. An empty publish body still requires consent that was verified earlier and does not change the listing.
 
 ## Curriculum routes that exist now
 
@@ -219,10 +219,10 @@ A JSON `POST /admin/media` cannot set `src`, `consent`, or `publicationStatus`. 
 | GET    | `/public/media` and `/public/media/:id`             | Anyone. `PublicMedia`. Published, visible, and verified only.                               |
 | GET    | `/admin/media`                                      | `content.read`. An array of every photo, including drafts.                                  |
 | GET    | `/admin/media/:id`                                  | `content.read`. Full photo, including a draft and consent bookkeeping.                      |
-| POST   | `/admin/media`                                      | `media.write`. JSON metadata or one multipart image.                                        |
+| POST   | `/admin/media`                                      | `media.upload`. JSON metadata or one multipart image. A trainee or trainer can upload.     |
 | PATCH  | `/admin/media/:id`                                  | `media.write`. Omitted fields stay as they are. Verified consent does not publish.          |
 | DELETE | `/admin/media/:id`                                  | `media.write`. `{ deleted: true, id }`. An upload is removed from storage first.            |
-| POST   | `/admin/media/:id/publish` and `/unpublish`         | `media.write`. Publish does not change `listing`. Unpublish sets `draft`.                   |
+| POST   | `/admin/media/:id/publish` and `/unpublish`         | `media.write`. An empty body does not change `listing`. An administrator may send `confirmConsent` and `listing`. |
 | POST   | `/admin/media/:id/withdraw-consent`                 | `media.write`. Unpublishes immediately and deletes an uploaded object.                      |
 
 There is no `POST /admin/media/bulk`. The class list is the only bulk action.
@@ -239,7 +239,7 @@ Public homepage, about, timeline, and foundation counters are the published copi
 
 `GET /public/about` is `AboutContent`. A PUT that omits `address`, `email`, or `website` leaves those fields as they are. `figuresPermission` records whether the counters may be presented as display-ready. It does not publish the counters.
 
-`GET /admin/milestones` and `GET /public/milestones` are arrays. The array order is the timeline order. The public array is empty until publish.
+`GET /public/milestones` is an array. The array order is the timeline order. The public array is empty until publish. `GET /admin/milestones` is `{ milestones, publicationStatus }` so the editor can show whether the current draft is live. `PUT /admin/milestones` still takes and returns the array.
 
 Foundation counters live on settings. `GET /admin/settings` adds `foundationStats` and `publicationStatus` to the website's settings shape. `GET /public/foundation-stats` returns the published counters, or `[]` when settings are not published. It does not include the contact email. The seed counters are labelled samples with value `0`.
 
@@ -252,7 +252,7 @@ Foundation counters live on settings. `GET /admin/settings` adds `foundationStat
 | GET | `/admin/home`, `/admin/about` | `content.read`. The draft, plus `publicationStatus`. |
 | PUT | `/admin/home`, `/admin/about` | `content.write`. Omitted fields stay. Does not publish. |
 | POST | `/admin/home/publish` and `/unpublish` | `content.write`. The same pair exists for about and milestones. |
-| GET | `/admin/milestones` | `content.read`. The draft array. |
+| GET | `/admin/milestones` | `content.read`. `{ milestones, publicationStatus }`. |
 | PUT | `/admin/milestones` | `content.write`. Body `{ milestones }`. |
 | GET | `/admin/settings` | `settings.manage`. |
 | PUT | `/admin/settings` | `settings.manage`. Site name is required. Contact email must be valid. Omitted counters stay. |
@@ -260,7 +260,7 @@ Foundation counters live on settings. `GET /admin/settings` adds `foundationStat
 
 Field messages include `Enter a site name.`, `Enter your email address.`, `Enter a valid email address, like name@example.com.`, `Enter a link or a site path.`, and `Choose a theme.` A script URL is refused and is not repeated in the error.
 
-`npm run seed` inserts the four singletons as drafts. The homepage lead and two timeline descriptions start with `Sample copy for the development seed.` The counters are `Sample counter` rows with value `0`. Run the command again and it leaves an edited row alone. It does not insert enquiries.
+`npm run seed` inserts the four singletons as drafts. The homepage lead is the public sentence. Two timeline descriptions start with `Sample copy for the development seed.` The counters are `Sample counter` rows with value `0`. Run the command again and it leaves an edited row alone. It does not insert enquiries. Opening an admin content screen also creates a missing draft, so a database that was never seeded can still be edited and published.
 
 ## Account routes that exist now
 
@@ -294,7 +294,7 @@ A missing, used, or expired token is field `token`: `This reset link is missing,
 
 `GET /admin/users` needs `users.read`. The body is an array of public accounts. It has no password hash. A viewer and an editor receive `403`.
 
-`PATCH /admin/users/:id` needs `users.manage`. Body `{ role }`. An unknown role is `Choose viewer, editor or administrator.` Removing your own administrator role is `422`, message `You cannot remove your own administrator access from this session.`, field `role` `Ask another administrator to change your role.` A missing account is `404` `User not found.`
+`PATCH /admin/users/:id` needs `users.manage`. Body `{ role }`. An unknown role is `Choose viewer, editor, trainer, trainee, or administrator.` Removing your own administrator role is `422`, message `You cannot remove your own administrator access from this session.`, field `role` `Ask another administrator to change your role.` A missing account is `404` `User not found.`
 
 `POST /admin/users/invite` needs `users.manage`. Body `{ email, role }`. The role is required. `Choose a role.` when it is missing. The current website sends only `{ email }`, so that call is `422` until the form sends a role. An existing mailbox is `422` `An account with that mailbox already exists.` and the address is not repeated. Success is `{ delivered, message }`. `delivered` is true only when the mail provider accepted the invitation. The account exists either way.
 

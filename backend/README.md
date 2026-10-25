@@ -25,6 +25,7 @@ Open `.env` and set values there. Do not put those values in git, in a pull requ
 | `PORT`                     | `3000` is used when this is empty.                                                                                                                                                      |
 | `DATABASE_URL`             | A Postgres URL. Required. The app will not start without it.                                                                                                                            |
 | `DATABASE_SSL`             | `true` or `false`. Production defaults to `true`. A URL that already says `sslmode=require` also turns SSL on.                                                                          |
+| `DATABASE_SSL_CA`          | Optional PEM for Supabase's CA. Paste the certificate from Database settings, SSL Configuration. Real line breaks or `\n` both work. Leave blank when SSL is off. Not printed.          |
 | `FRONTEND_URL`             | The one public website origin, for example `http://127.0.0.1:5173` in development. Production refuses to start if it is missing. A path on the end is ignored. Only the origin is kept. |
 | `SESSION_SECRET`           | At least 32 characters. Required in production. The server uses it to hash session cookies. It is never printed. Sign-in answers with a plain error when it is missing.                 |
 | `SESSION_IDLE_TTL_MS`      | How long a session can sit unused. `1800000` (30 minutes) when empty.                                                                                                                   |
@@ -103,7 +104,7 @@ TypeORM is the library that talks to PostgreSQL. `synchronize` is off. The progr
 
 `src/database/migrations/1792800000000-Baseline.ts` is the first migration. It creates no tables. It marks the start of the history. `1792868400000-Auth.ts` adds `users`, `sessions`, `login_throttles`, and `audit_events`. `1792886400000-Curriculum.ts` adds `tracks`, `modules`, `phases`, and `lessons`, and it extends the audit table with the curriculum actions. New migrations are new files, and each class is registered in `src/database/data-source.ts`.
 
-`src/database/cli-data-source.ts` is what the migration commands load. They read the same environment as the server.
+`src/database/cli-data-source.ts` is what the migration commands load. They read the same environment as the server, including `DATABASE_SSL` and `DATABASE_SSL_CA`, and they open the database with the same TLS options.
 
 ```bash
 npm run migration:run     # apply new migrations
@@ -191,7 +192,7 @@ Roles are `viewer`, `editor`, and `administrator`. A route can ask for a minimum
 
 ## Where this will run
 
-The database is a free Supabase Postgres project in `eu-central-1`. The project ref is `psxzqwztgjkqnnncxddc`. This API does not use Supabase Auth or Supabase Storage. TypeORM connects with `DATABASE_URL` from the host, over TLS (`DATABASE_SSL=true`).
+The database is a free Supabase Postgres project in `eu-central-1`. The project ref is `psxzqwztgjkqnnncxddc`. This API does not use Supabase Auth or Supabase Storage. TypeORM connects with `DATABASE_URL` from the host, over TLS (`DATABASE_SSL=true`). Set `DATABASE_SSL_CA` to the PEM certificate from Supabase Database settings, SSL Configuration. That CA is not in Node's list, so the process cannot check the server certificate without it. Verification stays on. Do not set `NODE_TLS_REJECT_UNAUTHORIZED=0`. `npm run migration:run` uses those same TLS options.
 
 The API process is a free Render web service. Put `DATABASE_URL`, `SESSION_SECRET`, and `FRONTEND_URL` in Render's environment, not in git. Set `TRUST_PROXY=true` there, because Render is the proxy in front of the process. `FRONTEND_URL` is the one public origin.
 
@@ -275,7 +276,7 @@ The event list has no bulk action. Search matches the title and the place. `filt
 
 ## Gallery
 
-A public photo is a row whose workflow is `published`, whose listing is not `hidden`, and whose consent is `verified`. Drafts, pending consent, withdrawn consent, and hidden rows stay on the admin routes. A sample label does not put a draft on the public site. Marking consent verified does not publish the photo. Publish is a separate step, and it is refused until consent is already verified. Sending both in one edit is refused.
+A public photo is a row whose workflow is `published`, whose listing is not `hidden`, and whose consent is `verified`. Drafts, pending consent, withdrawn consent, and hidden rows stay on the admin routes. A sample label does not put a draft on the public site. Marking consent verified does not publish the photo. A body-less publish is refused until consent is already verified, and it does not change the listing. Sending both in one edit is refused. An administrator may send `{ confirmConsent: true, listing: "public" }` on the publish route to verify consent and publish together. Another role that sends `confirmConsent` is refused.
 
 `GET /api/v1/public/media` returns the id, file, src, width, height, caption, alt, and album. It leaves out the listing, the workflow, consent, and the storage key. The admin list is an array, not a page. Album filters stay in the browser.
 
@@ -283,7 +284,7 @@ A JSON create starts as pending, draft, and hidden, with an empty src. A file up
 
 `POST /api/v1/admin/media/:id/withdraw-consent` sets consent to withdrawn, returns the workflow to draft, hides the listing, clears src, and deletes an uploaded object from storage. A static seed row has no uploaded object, so withdrawal only clears the metadata. If storage cannot delete the object, the photo is already off the public site and the key is kept so the request can be tried again. The audit row stores the action and the photo id. It does not store the alt text, the caption, the address, or the file bytes.
 
-An editor and an administrator both change photos. That is the website's `media.write` permission. A viewer can read the admin list. A change needs the session cookie and the matching `X-CSRF-Token` header. There is no media bulk action.
+Uploading uses `media.upload`. A trainee, a trainer, an editor, and an administrator can upload. Publishing, editing, and deleting use `media.write`. A viewer can read the admin list. A change needs the session cookie and the matching `X-CSRF-Token` header. There is no media bulk action.
 
 `npm run seed` also inserts three labelled placeholders: `sample-banner`, `sample-bench`, and `sample-mark`. They are drawings and banners, not photographs of people. Consent is pending and the workflow is draft, so the public gallery does not include them. Run the command again and it leaves an edited row alone.
 
@@ -293,7 +294,7 @@ A public page is the last published copy. Editors read the draft on the admin ro
 
 The homepage includes the announcement banner: `announcement` and `showAnnouncement`. There is no separate announcements list. The about page keeps its address, email, and website when a save omits them. `figuresPermission` records display permission for the counters. It does not publish them.
 
-The timeline is one list. `PUT /api/v1/admin/milestones` takes `{ milestones }` and stores that order. The public list is empty until publish.
+The timeline is one list. `GET /api/v1/admin/milestones` returns `{ milestones, publicationStatus }`. `PUT /api/v1/admin/milestones` takes `{ milestones }` and returns the array. It stores that order and does not publish. The public list is empty until publish.
 
 Foundation counters live on settings. Only an administrator can read or change settings. That permission is `settings.manage`. An editor can change the homepage, the about page, and the timeline with `content.write`. A viewer can read those drafts and cannot open settings. A change needs the session cookie and the matching `X-CSRF-Token` header. The audit row stores the action and the document id. It does not store the headline, the mission, the contact email, or the counter labels.
 

@@ -33,7 +33,7 @@ npm run build
 | Admin lists | `GET /admin/classes`, `/admin/trainees`, `/admin/projects`, `/admin/events` with `q`, `page`, `pageSize`, `sort`, `dir`, `filters.*` |
 | Admin writes | `POST` / `PATCH` / `DELETE` on those resources, `POST /admin/classes/bulk` |
 | Media | `GET /admin/media`, `POST /admin/media` as JSON metadata or `multipart/form-data` (`alt`, `caption`, `album`, `file`), `POST /admin/media/:id/withdraw-consent`, `DELETE /admin/media/:id` |
-| Content | `GET` / `PUT` `/admin/home`, `/admin/about`, `/admin/milestones`, `/admin/settings` |
+| Content | `GET` / `PUT` `/admin/home`, `/admin/about`, `/admin/settings`. `GET /admin/milestones` returns `{ milestones, publicationStatus }`. `PUT /admin/milestones` takes `{ milestones }`. `GET /admin/enquiries` lists contact-form messages for `users.manage`. |
 | Accounts | `GET /admin/users`, `PATCH /admin/users/:id` with `{ role }`, `POST /admin/users/invite` with `{ email, role }`, `POST /admin/account/password` with `{ current, next, confirm }` |
 
 Stored passwords use at least 12 characters. The login form still asks for at least 8, which is the login check.

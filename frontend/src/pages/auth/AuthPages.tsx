@@ -183,9 +183,10 @@ export function SessionExpiredPage() {
 
 export function ForbiddenPage() {
   usePageMeta('Access denied');
+  const mock = usesMockApi();
   return (
     <main id="main" className="section"><div className="container" style={{ maxWidth: 640 }}>
-      <div className="empty denied"><h1>You don’t have access to that screen</h1><p>Your development role does not include this permission. Hiding the link is not the security boundary — the adapter refused the route. A future backend must refuse it again.</p><Link className="btn btn--ghost" to="/admin">Back to overview</Link></div>
+      <div className="empty denied"><h1>You don’t have access to that screen</h1><p>{mock ? 'Your development role does not include this permission. Hiding the link is not the security boundary — the adapter refused the route.' : 'Your role does not include this permission. The API refuses the request as well.'}</p><Link className="btn btn--ghost" to="/admin">Back to overview</Link></div>
     </div></main>
   );
 }

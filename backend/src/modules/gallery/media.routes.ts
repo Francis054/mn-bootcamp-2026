@@ -1,9 +1,9 @@
 import { Router, type Request } from 'express';
-import { requirePermission } from '../auth/require-auth.js';
+import { requireAnyPermission, requirePermission } from '../auth/require-auth.js';
 import { validateDto } from '../../shared/validation/validate-dto.js';
 import type { Actor } from '../curriculum/actor.js';
 import { imageSizeMessage } from './media.rules.js';
-import { MediaCreateDto, MediaPatchDto } from './media.dto.js';
+import { MediaCreateDto, MediaPatchDto, MediaPublishDto } from './media.dto.js';
 import type { MediaService } from './media.service.js';
 import { readMediaUpload } from './upload.js';
 
@@ -29,7 +29,7 @@ export function mountAdminMedia(admin: Router, media: MediaService, maxBytes: nu
       .then((rows) => res.json(rows))
       .catch(next);
   });
-  admin.post('/media', requirePermission('media.write'), (req, res, next) => {
+  admin.post('/media', requireAnyPermission(['media.upload']), (req, res, next) => {
     const type = req.header('content-type') ?? '';
     if (type.includes('multipart/form-data')) {
       readMediaUpload(req, maxBytes, imageSizeMessage(maxBytes))
@@ -62,8 +62,11 @@ export function mountAdminMedia(admin: Router, media: MediaService, maxBytes: nu
       .catch(next);
   });
   admin.post('/media/:id/publish', requirePermission('media.write'), (req, res, next) => {
-    media
-      .publish(param(req), actorFrom(req))
+    const raw: unknown = req.body;
+    const payload: object =
+      raw !== null && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+    validateDto(MediaPublishDto, payload)
+      .then((dto) => media.publish(param(req), dto, actorFrom(req)))
       .then((row) => res.json(row))
       .catch(next);
   });
@@ -84,6 +87,7 @@ export function mountAdminMedia(admin: Router, media: MediaService, maxBytes: nu
 function actorFrom(req: Request): Actor {
   return {
     userId: req.user?.id ?? null,
+    role: req.user?.role ?? null,
     ip: req.ip ?? null,
     requestId: req.id,
   };

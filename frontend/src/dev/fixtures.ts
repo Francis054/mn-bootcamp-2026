@@ -335,6 +335,8 @@ export const SETTINGS: SiteSettings = {
   accent: '#88CC00',
   reduceMotion: false,
   notifications: { projects: true, consent: true, digest: false },
+  foundationStats: FOUNDATION_STATS,
+  publicationStatus: 'draft',
 };
 
 export const PHASES = [

@@ -326,6 +326,19 @@ body.admin{background:var(--paper);font-size:15px}
   .a-head__actions .btn{flex:1;justify-content:center}
 }
 @media (max-width:520px){.a-stats{grid-template-columns:1fr 1fr;gap:12px}.a-stat{padding:16px}.a-stat b{font-size:28px}.quick{grid-template-columns:1fr}.media-grid{grid-template-columns:repeat(2,1fr);gap:10px;padding:12px}.activity time{display:none}}
+.admin-topbar .avatar.avatar--sm{flex:none;line-height:1;overflow:hidden}
+@media (max-width:760px){
+  .admin-topbar .avatar.avatar--sm{width:48px;height:48px;font-size:16px}
+  .activity .a-ic,.a-stat__ic{width:44px;height:44px;flex:none}
+  .a-stat__top{align-items:center}
+  .badge{font-size:13px;padding:6px 12px;white-space:normal}
+  .activity li{align-items:center}
+  .activity li>div{min-width:0;flex:1}
+  .chart{overflow-x:auto}
+  .chart__col{min-width:36px;flex:none}
+  .chart__col small{font-size:12px}
+  .media-item .mi-flag .badge{font-size:12px}
+}
 @media (prefers-reduced-motion:reduce){.chart__bar{animation:none}.admin-shell,.admin-sidebar,.preview__frame{transition:none}}
 /* admin callout */
 .admin-main .callout{display:flex;gap:12px;align-items:flex-start;padding:14px 18px;border-radius:12px;background:var(--gold-100);border:1px solid #EBD3A6;font-size:14.5px;line-height:1.5}

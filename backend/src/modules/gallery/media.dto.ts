@@ -1,4 +1,4 @@
-import { IsOptional, ValidateBy } from 'class-validator';
+import { IsBoolean, IsOptional, ValidateBy } from 'class-validator';
 import {
   albumMessage,
   altMessage,
@@ -67,6 +67,21 @@ export class MediaPatchDto {
   @IsOptional()
   @rule('publicationStatus', publicationMessage, 'Choose a workflow state.')
   publicationStatus?: string;
+
+  @IsOptional()
+  @rule('listing', listingMessage, 'Choose a listing.')
+  listing?: string;
+}
+
+/**
+ * Body for `POST /admin/media/:id/publish`.
+ * An empty body still requires consent that was verified earlier and does not change the listing.
+ * An administrator may set `confirmConsent` to verify and publish together, and may set `listing`.
+ */
+export class MediaPublishDto {
+  @IsOptional()
+  @IsBoolean({ message: 'Confirm consent with true or omit it.' })
+  confirmConsent?: boolean;
 
   @IsOptional()
   @rule('listing', listingMessage, 'Choose a listing.')

@@ -44,7 +44,7 @@ function sampleHomepage(): HomepageContent {
   return {
     eyebrow: '2026 Cybersecurity Bootcamp',
     headline: 'Learn.\nBuild.\n*Secure the Future.*',
-    lead: `${SAMPLE_NOTE} A free, in-person cybersecurity bootcamp in Accra, from network security to incident response.`,
+    lead: 'A free, in-person cybersecurity bootcamp in Accra, from network security to incident response. Follow the 2026 cohort from its first week to graduation.',
     ctaLabel: 'Explore the bootcamp',
     ctaHref: '/bootcamp',
     theme: 'dark',

@@ -90,6 +90,7 @@ describe('trainee rules', () => {
       'Enter a valid email address, like name@example.com.',
     );
     expect(optionalHttpUrlMessage('')).toBeUndefined();
+    expect(optionalHttpUrlMessage(null)).toBeUndefined();
     expect(optionalHttpUrlMessage('linkedin.com/in/someone')).toBe(
       'Enter a full link starting with https://',
     );
@@ -125,6 +126,28 @@ describe('trainee rules', () => {
         'track',
       ].sort(),
     );
+  });
+
+  it('turns a blank portfolio or LinkedIn link into null', async () => {
+    const dto = await validateDto(TraineeCreateDto, {
+      displayName: 'Sample Trainee',
+      email: 'trainee@example.test',
+      track: 'Blue team',
+      focus: 'network',
+      linkedin: '  ',
+      portfolio: '',
+    });
+    expect(dto.linkedin).toBeNull();
+    expect(dto.portfolio).toBeNull();
+    await expect(
+      validateDto(TraineeCreateDto, {
+        displayName: 'Sample Trainee',
+        email: 'trainee@example.test',
+        track: 'Blue team',
+        focus: 'network',
+        portfolio: 'not-a-url',
+      }),
+    ).rejects.toBeInstanceOf(ApiError);
   });
 
   it('rejects a privileged field and an unknown sort', async () => {

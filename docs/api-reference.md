@@ -58,7 +58,7 @@ An unpublished homepage or about page is 404. The website shows “The homepage 
 
 ## Admin content
 
-Drafts are saved with `PUT`. The public site reads the published copy, which changes only on `POST .../publish`. The current screens save the draft and do not call publish. See `DEPLOY-CHECKLIST.txt`.
+Drafts are saved with `PUT`. The public site reads the published copy, which changes only on `POST .../publish`. The admin screens for the homepage, about page, timeline, and settings include Publish and Unpublish. See `DEPLOY-CHECKLIST.txt`.
 
 | Method | Path |
 | --- | --- |

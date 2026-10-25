@@ -26,6 +26,7 @@ interface SampleMedia {
   listing: Listing;
   storageProvider: StorageLabel;
   storageKey: string;
+  uploadedBy: null;
 }
 
 export function buildSampleMedia(): SampleMedia[] {
@@ -54,5 +55,6 @@ function row(id: string, album: AlbumId, caption: string): SampleMedia {
     listing: 'hidden',
     storageProvider: 'static',
     storageKey: '',
+    uploadedBy: null,
   };
 }

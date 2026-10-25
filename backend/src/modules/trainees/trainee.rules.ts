@@ -35,8 +35,9 @@ export function focusMessage(value: unknown): string | undefined {
   return undefined;
 }
 
-/** Optional link. Blank is allowed. A value must be an http or https URL, matching the form. */
+/** Optional link. Blank and null are allowed. A value must be an http or https URL, matching the form. */
 export function optionalHttpUrlMessage(value: unknown): string | undefined {
+  if (value === undefined || value === null) return undefined;
   if (typeof value !== 'string') return 'Enter a full link starting with https://';
   const trimmed = value.trim();
   if (trimmed.length === 0) return undefined;

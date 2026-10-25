@@ -122,7 +122,7 @@ export const contentPaths = {
       operationId: 'listAdminMilestones',
       summary: 'Timeline draft',
       description:
-        'Requires content.read. A bare array, in the stored order. The form reorders this array.',
+        'Requires content.read. Returns { milestones, publicationStatus }. milestones is the draft array in stored order. publicationStatus says whether that draft is on the public site. PUT still accepts and returns the array only.',
     },
     put: {
       operationId: 'updateMilestones',

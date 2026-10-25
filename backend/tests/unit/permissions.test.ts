@@ -13,6 +13,12 @@ describe('roles and permissions', () => {
     expect(can('editor', 'settings.manage')).toBe(false);
     expect(can('administrator', 'users.manage')).toBe(true);
     expect(can('administrator', 'settings.manage')).toBe(true);
+    expect(can('trainee', 'media.upload')).toBe(true);
+    expect(can('trainee', 'media.write')).toBe(false);
+    expect(can('trainer', 'media.upload')).toBe(true);
+    expect(can('editor', 'media.upload')).toBe(true);
+    expect(roleAtLeast('administrator', 'editor')).toBe(true);
+    expect(roleAtLeast('trainee', 'viewer')).toBe(false);
   });
 
   it('orders viewer, then editor, then administrator', () => {

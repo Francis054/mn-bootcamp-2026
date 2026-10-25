@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '@/auth/AuthProvider';
+import { RoutedBoundary } from '@/components/RouteErrorBoundary';
 import { ConfirmProvider, LightboxProvider, ToastProvider } from '@/components/feedback';
 import { App } from '@/App';
 import './styles/tokens.css';
@@ -21,9 +22,11 @@ createRoot(root).render(
       <ToastProvider>
         <ConfirmProvider>
           <LightboxProvider>
-            <AuthProvider>
-              <App />
-            </AuthProvider>
+            <RoutedBoundary>
+              <AuthProvider>
+                <App />
+              </AuthProvider>
+            </RoutedBoundary>
           </LightboxProvider>
         </ConfirmProvider>
       </ToastProvider>

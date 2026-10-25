@@ -16,6 +16,7 @@ import {
   readSettings,
 } from './content.rules.js';
 import type { ContentRepository } from './content.repository.js';
+import { buildSampleContent } from './sample-content.js';
 import type {
   AboutContent,
   AdminAbout,
@@ -57,12 +58,12 @@ export class ContentService {
   }
 
   async getAdminHome(): Promise<AdminHomepage> {
-    const row = await this.require('homepage');
+    const row = await this.ensure('homepage');
     return { ...requireHomepage(row.draft), publicationStatus: row.publicationStatus };
   }
 
   async updateHome(body: unknown, actor: Actor): Promise<AdminHomepage> {
-    const row = await this.require('homepage');
+    const row = await this.ensure('homepage');
     const next = mergeHomepage(requireHomepage(row.draft), body);
     return this.saveDocument(row, next, actor, 'homepage');
   }
@@ -78,12 +79,12 @@ export class ContentService {
   }
 
   async getAdminAbout(): Promise<AdminAbout> {
-    const row = await this.require('about');
+    const row = await this.ensure('about');
     return { ...requireAbout(row.draft), publicationStatus: row.publicationStatus };
   }
 
   async updateAbout(body: unknown, actor: Actor): Promise<AdminAbout> {
-    const row = await this.require('about');
+    const row = await this.ensure('about');
     const next = mergeAbout(requireAbout(row.draft), body);
     return this.saveDocument(row, next, actor, 'about');
   }
@@ -98,13 +99,16 @@ export class ContentService {
     return { ...requireAbout(row.draft), publicationStatus: row.publicationStatus };
   }
 
-  async listAdminMilestones(): Promise<Milestone[]> {
-    const row = await this.require('milestones');
-    return requireMilestones(row.draft);
+  async listAdminMilestones(): Promise<{
+    milestones: Milestone[];
+    publicationStatus: PublicationStatus;
+  }> {
+    const row = await this.ensure('milestones');
+    return { milestones: requireMilestones(row.draft), publicationStatus: row.publicationStatus };
   }
 
   async updateMilestones(body: unknown, actor: Actor): Promise<Milestone[]> {
-    const row = await this.require('milestones');
+    const row = await this.ensure('milestones');
     const next = mergeMilestones(requireMilestones(row.draft), body);
     row.draft = { milestones: next };
     await this.content.save(row);
@@ -123,12 +127,12 @@ export class ContentService {
   }
 
   async getAdminSettings(): Promise<AdminSettings> {
-    const row = await this.require('settings');
+    const row = await this.ensure('settings');
     return { ...requireSettings(row.draft), publicationStatus: row.publicationStatus };
   }
 
   async updateSettings(body: unknown, actor: Actor): Promise<AdminSettings> {
-    const row = await this.require('settings');
+    const row = await this.ensure('settings');
     const next = mergeSettings(requireSettings(row.draft), body);
     return this.saveDocument(row, next, actor, 'settings');
   }
@@ -170,7 +174,7 @@ export class ContentService {
   }
 
   private async publishRow(id: ContentId, actor: Actor): Promise<ContentSingletonEntity> {
-    const row = await this.require(id);
+    const row = await this.ensure(id);
     const same =
       row.publicationStatus === 'published' &&
       JSON.stringify(row.publishedDocument) === JSON.stringify(row.draft);
@@ -184,7 +188,7 @@ export class ContentService {
   }
 
   private async unpublishRow(id: ContentId, actor: Actor): Promise<ContentSingletonEntity> {
-    const row = await this.require(id);
+    const row = await this.ensure(id);
     if (row.publicationStatus !== 'draft' || row.publishedDocument !== null) {
       row.publishedDocument = null;
       row.publicationStatus = 'draft';
@@ -198,6 +202,20 @@ export class ContentService {
     const row = await this.content.findById(id);
     if (!row) throw new ApiError('not_found', 'Content not found.');
     return row;
+  }
+
+  /** Admin reads and writes create the labelled draft when the row was never seeded. */
+  private async ensure(id: ContentId): Promise<ContentSingletonEntity> {
+    const existing = await this.content.findById(id);
+    if (existing) return existing;
+    const sample = buildSampleContent().find((row) => row.id === id);
+    if (!sample) throw new ApiError('not_found', 'Content not found.');
+    return this.content.insert({
+      id: sample.id,
+      draft: sample.draft,
+      publishedDocument: sample.publishedDocument,
+      publicationStatus: sample.publicationStatus,
+    });
   }
 
   private writeAudit(

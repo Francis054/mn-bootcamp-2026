@@ -162,7 +162,9 @@ export class AccountService {
     requestId: string;
   }): Promise<PublicUser> {
     if (!isRole(input.role)) {
-      throw new ApiError('validation', CHECK, { role: 'Choose viewer, editor or administrator.' });
+      throw new ApiError('validation', CHECK, {
+        role: 'Choose viewer, editor, trainer, trainee, or administrator.',
+      });
     }
     if (input.actorId === input.userId && input.role !== 'administrator') {
       throw new ApiError(
@@ -199,7 +201,9 @@ export class AccountService {
     const problems = inviteProblems(input.email, input.role);
     if (Object.keys(problems).length > 0) throw new ApiError('validation', CHECK, problems);
     if (!isRole(input.role)) {
-      throw new ApiError('validation', CHECK, { role: 'Choose viewer, editor or administrator.' });
+      throw new ApiError('validation', CHECK, {
+        role: 'Choose viewer, editor, trainer, trainee, or administrator.',
+      });
     }
     const email = input.email.trim().toLowerCase();
     const role: Role = input.role;

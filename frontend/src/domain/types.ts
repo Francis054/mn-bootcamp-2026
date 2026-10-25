@@ -1,10 +1,11 @@
 /** Frontend models for the `/api/v1` contract. The live client sends cookies, not stored tokens. */
 
-export type Role = 'viewer' | 'editor' | 'administrator';
+export type Role = 'trainee' | 'trainer' | 'viewer' | 'editor' | 'administrator';
 
 export type Permission =
   | 'content.read'
   | 'content.write'
+  | 'media.upload'
   | 'media.write'
   | 'users.read'
   | 'users.manage'
@@ -68,8 +69,8 @@ export interface Trainee {
   skills: string[];
   bio: string;
   quote: string;
-  linkedin: string;
-  portfolio: string;
+  linkedin: string | null;
+  portfolio: string | null;
   consentReceived: boolean;
   listing: Listing;
   publicationStatus: PublicationStatus;
@@ -145,6 +146,7 @@ export interface MediaItem {
   consent: 'verified' | 'pending' | 'withdrawn';
   publicationStatus: PublicationStatus;
   listing: Listing;
+  uploadedBy?: string | null;
 }
 
 export interface Milestone {
@@ -163,6 +165,7 @@ export interface AboutContent {
   email: string;
   website: string;
   figuresPermission: boolean;
+  publicationStatus?: PublicationStatus;
 }
 
 export interface HomepageContent {
@@ -176,6 +179,7 @@ export interface HomepageContent {
   showAnnouncement: boolean;
   footerCtaHeading: string;
   footerCtaHref: string;
+  publicationStatus?: PublicationStatus;
 }
 
 export interface FoundationStat {
@@ -203,7 +207,9 @@ export interface EnquiryRecord {
   topic: string;
   message: string;
   createdAt: string;
-  delivered: false;
+  handled?: boolean;
+  notified?: boolean;
+  delivered?: false;
 }
 
 export interface SiteSettings {
@@ -213,6 +219,8 @@ export interface SiteSettings {
   accent: string;
   reduceMotion: boolean;
   notifications: { projects: boolean; consent: boolean; digest: boolean };
+  foundationStats?: FoundationStat[];
+  publicationStatus?: PublicationStatus;
 }
 
 export interface SessionUser {
