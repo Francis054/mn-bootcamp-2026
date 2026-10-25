@@ -159,6 +159,33 @@ export interface MediaItem {
   uploadedBy?: string | null;
 }
 
+export interface WorkPhoto {
+  id: string;
+  traineeId: string;
+  projectId: string | null;
+  src: string;
+  width: number;
+  height: number;
+  alt: string;
+  caption: string;
+  publicationStatus: PublicationStatus;
+  listing: Listing;
+  storageProvider?: string;
+  uploadedBy?: string | null;
+  updatedAt?: string;
+}
+
+export interface PublicWorkPhoto {
+  id: string;
+  traineeId: string;
+  projectId: string | null;
+  src: string;
+  width: number;
+  height: number;
+  alt: string;
+  caption: string;
+}
+
 export interface Milestone {
   id: string;
   year: string;

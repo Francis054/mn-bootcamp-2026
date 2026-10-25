@@ -38,6 +38,9 @@ import { EventService } from '../modules/events/event.service.js';
 import { MediaEntity } from '../modules/gallery/media.entity.js';
 import { MediaRepository } from '../modules/gallery/media.repository.js';
 import { MediaService } from '../modules/gallery/media.service.js';
+import { WorkPhotoEntity } from '../modules/work-photos/work-photo.entity.js';
+import { WorkPhotoRepository } from '../modules/work-photos/work-photo.repository.js';
+import { WorkPhotoService } from '../modules/work-photos/work-photo.service.js';
 import { createMail } from '../modules/mail/create-mail.js';
 import type { EmailProvider } from '../modules/mail/email-provider.js';
 import { createStorage } from '../modules/storage/create-storage.js';
@@ -83,6 +86,7 @@ export class AppContainer {
     projects: ProjectService,
     events: EventService,
     media: MediaService,
+    workPhotos: WorkPhotoService,
     storage: StorageProvider,
     content: ContentService,
     mail: EmailProvider,
@@ -107,6 +111,7 @@ export class AppContainer {
       sessions,
       accounts,
       enquiries,
+      workPhotos,
     );
   }
 
@@ -225,6 +230,14 @@ export class AppContainer {
       env.uploadMaxBytes,
       () => new Date(),
     );
+    const workPhotoService = new WorkPhotoService(
+      new WorkPhotoRepository(dataSource.getRepository(WorkPhotoEntity)),
+      traineeRepository,
+      projectRepository,
+      audit,
+      storage,
+      env.uploadMaxBytes,
+    );
     return new AppContainer(
       env,
       logger,
@@ -238,6 +251,7 @@ export class AppContainer {
       projectService,
       eventService,
       mediaService,
+      workPhotoService,
       storage,
       contentService,
       mail,

@@ -7,6 +7,7 @@ import type {
   Lesson,
   MediaItem,
   Milestone,
+  WorkPhoto,
   Project,
   PublicationStatus,
   SiteSettings,
@@ -20,6 +21,7 @@ export interface ContentState {
   projects: Project[];
   events: BootcampEvent[];
   media: MediaItem[];
+  workPhotos: WorkPhoto[];
   milestones: Milestone[];
   milestonePublicationStatus: PublicationStatus;
   about: AboutContent;
@@ -41,6 +43,7 @@ export function createInitialState(): ContentState {
     projects: buildProjects(),
     events: buildEvents(),
     media: buildMedia(),
+    workPhotos: [],
     milestones: buildMilestones(),
     milestonePublicationStatus: 'draft',
     about: structuredClone(ABOUT),
