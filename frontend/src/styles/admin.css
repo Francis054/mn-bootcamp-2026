@@ -8,7 +8,7 @@ body.admin{background:var(--paper);font-size:15px}
 
 /* ---- Sidebar ---- */
 .admin-sidebar{position:sticky;top:0;height:100vh;background:var(--forest-800);color:#E9F0EA;display:flex;flex-direction:column;overflow:hidden;z-index:60}
-.sb-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:18px 16px 18px 20px;border-bottom:1px solid var(--line-dark);min-height:72px}
+.sb-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:18px 16px 18px 20px;border-bottom:1px solid var(--line-dark);min-height:72px;flex-shrink:0}
 .sb-brand{display:flex;align-items:center;gap:12px;color:#fff;text-decoration:none;min-width:0}
 .sb-brand .wordmark__mark{width:36px;height:36px;border-radius:10px;background:var(--mn-lime);color:var(--forest-900);display:grid;place-items:center;flex:none}
 .sb-brand .wordmark__mark svg{width:20px;height:20px}
@@ -16,7 +16,7 @@ body.admin{background:var(--paper);font-size:15px}
 .sb-brand small{display:block;font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;color:rgba(233,240,234,.6);text-transform:uppercase;white-space:nowrap}
 .admin-sidebar .icon-btn{color:rgba(233,240,234,.7)}
 .admin-sidebar .icon-btn:hover{background:rgba(255,255,255,.08);color:#fff}
-.sb-nav{flex:1;overflow-y:auto;padding:12px 12px 20px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}
+.sb-nav{flex:1 1 auto;min-height:0;overflow-y:auto;padding:12px 12px 20px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}
 .sb-group{margin-top:16px}
 .sb-label{display:block;font-family:var(--font-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:rgba(233,240,234,.45);padding:0 12px 8px;white-space:nowrap}
 .sb-link{position:relative;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;color:rgba(233,240,234,.78);text-decoration:none;font-size:14.5px;font-weight:500;white-space:nowrap;transition:background var(--d-fast,150ms),color var(--d-fast,150ms)}
@@ -26,7 +26,7 @@ body.admin{background:var(--paper);font-size:15px}
 .sb-link[aria-current="page"]::before{content:"";position:absolute;left:-12px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--mn-lime)}
 .sb-link[aria-current="page"] .i{color:var(--mn-lime)}
 .sb-link:focus-visible{outline:2px solid var(--mn-lime);outline-offset:-2px}
-.sb-foot{padding:16px 12px 20px;border-top:1px solid var(--line-dark)}
+.sb-foot{padding:16px 12px 20px;border-top:1px solid var(--line-dark);flex-shrink:0}
 .sb-logo{padding:0 8px 12px}
 .sb-logo .logo-plate{display:inline-flex;background:#fff;padding:8px 10px;border-radius:8px}
 /* collapsed */

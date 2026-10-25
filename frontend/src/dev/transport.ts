@@ -1,5 +1,5 @@
 import { toPublicEvent, toPublicLesson, toPublicProject, toPublicTrainee } from '@/domain/publicView';
-import { ApiError, type ApiErrorCode, type BootcampEvent, type Lesson, type ListQuery, type MediaItem, type Page, type Permission, type Project, type Role, type SearchHit, type Trainee } from '@/domain/types';
+import { ApiError, type ApiErrorCode, type BootcampEvent, type Lesson, type ListQuery, type MediaItem, type Page, type Permission, type Project, type Role, type SearchHit, type Trainee, type WorkPhoto } from '@/domain/types';
 import { can } from '@/domain/permissions';
 import { isPubliclyListable } from '@/domain/publish';
 import { includesQuery, newId, paginate, scheduleFor, slugify } from '@/domain/format';
@@ -8,6 +8,7 @@ import { collect, emailAddress, httpUrl, minLength, required } from '@/domain/va
 import { currentEnv } from '@/config/runtime';
 import type { ApiRequest } from '@/api/liveTransport';
 import { MODULES, mediaSrc } from './fixtures';
+import { readWorkPhotoDataUrl, workPhotoFieldErrors, workPhotoFileError } from '@/domain/workPhoto';
 import { clearSession, markSessionExpired, readActiveSession, setSession } from './session';
 import { getState, updateState } from './store';
 
@@ -169,6 +170,7 @@ function formFields(value: unknown): Record<string, unknown> {
     const fields: Record<string, unknown> = {};
     value.forEach((item, key) => {
       if (typeof item === 'string') fields[key] = item;
+      else if (item instanceof File && item.size > 0 && key === 'file') fields.file = item;
     });
     return fields;
   }
@@ -206,6 +208,7 @@ async function route(method: string, path: string, query: ListQuery & Record<str
   if (method === 'GET' && path === '/public/events') return getState().events.filter(isPubliclyListable).map(toPublicEvent);
   if (method === 'GET' && path.startsWith('/public/events/')) return publicOne(getState().events, path.split('/')[3] ?? '', toPublicEvent);
   if (method === 'GET' && path === '/public/media') return getState().media.filter(isPubliclyListable);
+  if (method === 'GET' && path === '/public/work-photos') return publicWorkPhotos(query);
   if (method === 'POST' && path === '/public/enquiries') return createEnquiry(body);
 
   if (path.startsWith('/admin/')) requireUser('content.read');
@@ -255,6 +258,12 @@ async function route(method: string, path: string, query: ListQuery & Record<str
   if (method === 'POST' && /^\/admin\/media\/[^/]+\/withdraw-consent$/.test(path)) return withdrawMedia(id);
   if (method === 'PATCH' && path.startsWith('/admin/media/')) return patchMedia(id, body);
   if (method === 'DELETE' && path.startsWith('/admin/media/')) return remove('media.write', 'media', id);
+
+  if (method === 'GET' && path === '/admin/work-photos') return listWorkPhotos(query);
+  if (method === 'POST' && path === '/admin/work-photos') return addWorkPhoto(body);
+  if (method === 'POST' && /^\/admin\/work-photos\/[^/]+\/publish$/.test(path)) return publishWorkPhoto(id);
+  if (method === 'POST' && /^\/admin\/work-photos\/[^/]+\/unpublish$/.test(path)) return unpublishWorkPhoto(id);
+  if (method === 'DELETE' && /^\/admin\/work-photos\/[^/]+$/.test(path)) return removeWorkPhoto(id);
 
   if (method === 'GET' && path === '/admin/milestones') return { milestones: getState().milestones, publicationStatus: getState().milestonePublicationStatus };
   if (method === 'PUT' && path === '/admin/milestones') return saveNew('content.write', () => updateState((s) => ({ ...s, milestones: Array.isArray(body.milestones) ? body.milestones as typeof s.milestones : s.milestones })).milestones);
@@ -831,6 +840,119 @@ function invite(body: Record<string, unknown>) {
   const email = String(body.email ?? '');
   assertFields(collect({ email: emailAddress(email) }));
   return { invited: false, delivered: false, message: 'No invitation was sent. User provisioning is pending a backend.' };
+}
+
+function publicWorkPhotos(query: ListQuery & Record<string, string>) {
+  return getState().workPhotos
+    .filter((photo) => photo.publicationStatus === 'published' && photo.listing !== 'hidden')
+    .filter((photo) => !query.traineeId || photo.traineeId === query.traineeId)
+    .filter((photo) => !query.projectId || photo.projectId === query.projectId)
+    .map(toPublicWorkPhoto);
+}
+
+function listWorkPhotos(query: ListQuery & Record<string, string>) {
+  requireAdministrator();
+  return getState().workPhotos.filter((photo) => {
+    if (query.traineeId && photo.traineeId !== query.traineeId) return false;
+    if (query.projectId && photo.projectId !== query.projectId) return false;
+    return true;
+  });
+}
+
+async function addWorkPhoto(body: Record<string, unknown>): Promise<WorkPhoto> {
+  const actor = requireAdministrator();
+  const traineeId = String(body.traineeId ?? '').trim();
+  const projectId = String(body.projectId ?? '').trim();
+  const alt = String(body.alt ?? '');
+  const caption = String(body.caption ?? '');
+  const file = body.file instanceof File ? body.file : undefined;
+  const problems = workPhotoFieldErrors({ traineeId, alt, caption, fileCount: file ? 1 : 0 });
+  const trainee = getState().trainees.find((item) => item.id === traineeId);
+  if (!problems.traineeId && !trainee) problems.traineeId = 'Choose a trainee.';
+  if (projectId) {
+    const project = getState().projects.find((item) => item.id === projectId);
+    const linked = project?.traineeIds ?? [];
+    if (!project) problems.projectId = 'Choose a project.';
+    else if (linked.length > 0 && !linked.includes(traineeId)) problems.projectId = 'Choose a project this trainee is on.';
+  }
+  if (file) {
+    const fileProblem = workPhotoFileError(file);
+    if (fileProblem) problems.file = fileProblem;
+  }
+  assertFields(problems);
+  if (!file) fail('validation', 'Check the highlighted fields.', 422, { file: 'Choose an image.' });
+  let stored: { src: string; width: number; height: number };
+  try {
+    stored = await readWorkPhotoDataUrl(file);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Use a JPEG, PNG, or WebP image.';
+    fail('validation', 'Check the highlighted fields.', 422, { file: message });
+  }
+  const item: WorkPhoto = {
+    id: newId('work'),
+    traineeId,
+    projectId: projectId || null,
+    src: stored.src,
+    width: stored.width,
+    height: stored.height,
+    alt: alt.trim(),
+    caption: caption.trim() || alt.trim(),
+    publicationStatus: 'draft',
+    listing: 'hidden',
+    storageProvider: 'memory',
+    uploadedBy: actor.id,
+    updatedAt: new Date().toISOString(),
+  };
+  updateState((s) => ({ ...s, workPhotos: [item, ...s.workPhotos] }));
+  return item;
+}
+
+function publishWorkPhoto(id: string): WorkPhoto {
+  requireAdministrator();
+  const current = getState().workPhotos.find((photo) => photo.id === id);
+  if (!current) fail('not_found', 'Image not found.', 404);
+  const next: WorkPhoto = {
+    ...current,
+    publicationStatus: 'published',
+    listing: current.listing === 'hidden' ? 'public' : current.listing,
+  };
+  updateState((s) => ({ ...s, workPhotos: s.workPhotos.map((photo) => (photo.id === id ? next : photo)) }));
+  return next;
+}
+
+function unpublishWorkPhoto(id: string): WorkPhoto {
+  requireAdministrator();
+  const current = getState().workPhotos.find((photo) => photo.id === id);
+  if (!current) fail('not_found', 'Image not found.', 404);
+  const next: WorkPhoto = { ...current, publicationStatus: 'draft' };
+  updateState((s) => ({ ...s, workPhotos: s.workPhotos.map((photo) => (photo.id === id ? next : photo)) }));
+  return next;
+}
+
+function removeWorkPhoto(id: string) {
+  requireAdministrator();
+  if (!getState().workPhotos.some((photo) => photo.id === id)) fail('not_found', 'Record not found.', 404);
+  updateState((s) => ({ ...s, workPhotos: s.workPhotos.filter((photo) => photo.id !== id) }));
+  return { deleted: true, id };
+}
+
+function toPublicWorkPhoto(photo: WorkPhoto) {
+  return {
+    id: photo.id,
+    traineeId: photo.traineeId,
+    projectId: photo.projectId,
+    src: photo.src,
+    width: photo.width,
+    height: photo.height,
+    alt: photo.alt,
+    caption: photo.caption,
+  };
+}
+
+function requireAdministrator() {
+  const user = requireUser('content.read');
+  if (user.role !== 'administrator') fail('forbidden', 'You do not have access to that.', 403);
+  return user;
 }
 
 function search(q: string): SearchHit[] {

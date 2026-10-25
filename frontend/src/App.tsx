@@ -10,6 +10,7 @@ const AccountPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => (
 const ContentEditorPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.ContentEditorPage })));
 const EnquiriesPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.EnquiriesPage })));
 const MediaPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.MediaPage })));
+const WorkPhotosPage = lazy(() => import('@/pages/admin/WorkPhotosPage').then((m) => ({ default: m.WorkPhotosPage })));
 const SettingsPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.SettingsPage })));
 const StatesPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.StatesPage })));
 const TimelineEditorPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.TimelineEditorPage })));
@@ -94,6 +95,7 @@ export function App() {
         <Route path="events/new" element={<Waiting><EventEditor /></Waiting>} />
         <Route path="events/:id" element={<Waiting><EventEditor /></Waiting>} />
         <Route path="media" element={<Waiting><MediaPage /></Waiting>} />
+        <Route path="work-photos" element={<Waiting><WorkPhotosPage /></Waiting>} />
         <Route path="content" element={<Waiting><ContentEditorPage /></Waiting>} />
         <Route path="timeline" element={<Waiting><TimelineEditorPage /></Waiting>} />
         <Route path="about" element={<Waiting><AboutEditorPage /></Waiting>} />

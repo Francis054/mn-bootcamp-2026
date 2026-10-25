@@ -25,6 +25,8 @@ import { mountAdminEvents, mountPublicEvents } from '../events/event.routes.js';
 import type { EventService } from '../events/event.service.js';
 import { mountAdminMedia, mountPublicMedia } from '../gallery/media.routes.js';
 import type { MediaService } from '../gallery/media.service.js';
+import { mountAdminWorkPhotos, mountPublicWorkPhotos } from '../work-photos/work-photo.routes.js';
+import type { WorkPhotoService } from '../work-photos/work-photo.service.js';
 import { mountAdminProjects, mountPublicProjects } from '../projects/project.routes.js';
 import type { ProjectService } from '../projects/project.service.js';
 import {
@@ -47,6 +49,7 @@ export function curriculumRouter(
   sessions: SessionService,
   accounts: AccountService,
   enquiries: EnquiryService,
+  workPhotos: WorkPhotoService,
   storage: StorageProvider,
 ): Router {
   const router = Router();
@@ -111,6 +114,7 @@ export function curriculumRouter(
   mountPublicProjects(router, projects);
   mountPublicEvents(router, events);
   mountPublicMedia(router, media);
+  mountPublicWorkPhotos(router, workPhotos);
   mountPublicContent(router, content);
   mountPublicEnquiries(router, enquiries);
 
@@ -124,6 +128,7 @@ export function curriculumRouter(
   mountAdminProjects(admin, projects);
   mountAdminEvents(admin, events);
   mountAdminMedia(admin, media, maxBytes);
+  mountAdminWorkPhotos(admin, workPhotos, maxBytes);
   mountAdminContent(admin, content);
   mountAccountAdmin(admin, accounts, enquiries);
   router.use('/admin', admin);

@@ -8,6 +8,7 @@ import { publicHttpsUrl } from '@/domain/publicContract';
 import type { PublicProject, PublicTrainee } from '@/domain/types';
 import { usePublicContent } from '@/hooks/useContent';
 import { moduleOf, PublicGate, SampleMark } from './helpers';
+import { PublicWorkPhotos } from './WorkPhotos';
 import {
   challengeCopy,
   coverKind,
@@ -63,7 +64,10 @@ export function ProjectPage() {
       {!project ? (
         <section className="section"><div className="container"><ErrorState title="This project is not available" text="Drafts and hidden listings stay off this page. Publish the project with a public or sample listing to show it." /></div></section>
       ) : (
-        <ProjectCaseStudy project={project} projects={projects} trainees={trainees} active={active} onSelect={setActive} />
+        <>
+          <ProjectCaseStudy project={project} projects={projects} trainees={trainees} active={active} onSelect={setActive} />
+          <PublicWorkPhotos projectId={project.id} heading="Photos from the work" />
+        </>
       )}
     </PublicGate>
   );

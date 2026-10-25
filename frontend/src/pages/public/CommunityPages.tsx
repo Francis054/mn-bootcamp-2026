@@ -16,6 +16,7 @@ import { isApiError } from '@/domain/types';
 import { collect, emailAddress, minLength, required } from '@/domain/validate';
 import { usePublicContent } from '@/hooks/useContent';
 import { downloadCalendar, EventRow, moduleOf, PageIntro, PublicGate, SampleMark, TraineeArt } from './helpers';
+import { PublicWorkPhotos } from './WorkPhotos';
 
 export { ProjectPage } from './ProjectPage';
 
@@ -100,6 +101,7 @@ export function TraineePage() {
           </div>
         </div>
       </section>
+      <PublicWorkPhotos traineeId={trainee.id} heading="Photos of this trainee at work" />
     </>
     )}
     </PublicGate>

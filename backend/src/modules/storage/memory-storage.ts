@@ -24,3 +24,7 @@ export class MemoryStorage implements StorageProvider {
     return Promise.resolve();
   }
 }
+
+export function isMemoryStorage(storage: StorageProvider): storage is MemoryStorage {
+  return storage instanceof MemoryStorage;
+}

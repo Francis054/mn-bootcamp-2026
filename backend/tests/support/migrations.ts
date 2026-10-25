@@ -12,6 +12,7 @@ export const MIGRATION_NAMES = [
   'Accounts1793404800000',
   'RolesAndOptionalLinks1793577600000',
   'CatalogueLinks1793664000000',
+  'WorkPhotos1793750400000',
   'TraineePhoto1793836800000',
 ] as const;
 

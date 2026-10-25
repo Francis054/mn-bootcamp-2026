@@ -10,9 +10,11 @@ import type {
   PublicLesson,
   PublicProject,
   PublicTrainee,
+  PublicWorkPhoto,
   PublicationStatus,
   ScheduleStatus,
 } from './types';
+import { isDirectWorkPhotoSrc } from './workPhoto';
 
 export interface SafePublicMedia {
   id: string;
@@ -258,6 +260,26 @@ export function normalizeMedia(value: unknown): SafePublicMedia[] {
       alt: text(row.alt),
       album: text(row.album, 'community'),
       ...(consent ? { consent } : {}),
+    }];
+  });
+}
+
+export function normalizeWorkPhotos(value: unknown): PublicWorkPhoto[] {
+  return asList(value).flatMap((item) => {
+    const row = record(item);
+    if (!row || typeof row.id !== 'string' || typeof row.alt !== 'string') return [];
+    const src = text(row.src);
+    if (!isDirectWorkPhotoSrc(src) && !src.startsWith('memory:')) return [];
+    const projectId = typeof row.projectId === 'string' && row.projectId ? row.projectId : null;
+    return [{
+      id: row.id,
+      traineeId: text(row.traineeId),
+      projectId,
+      src,
+      width: typeof row.width === 'number' ? row.width : 1600,
+      height: typeof row.height === 'number' ? row.height : 1066,
+      alt: row.alt,
+      caption: text(row.caption, row.alt),
     }];
   });
 }

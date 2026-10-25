@@ -19,7 +19,11 @@ export function isPrivateApiPath(path: string): boolean {
 }
 
 export function isPublicWritePath(method: string, path: string): boolean {
-  return method !== 'GET' && method !== 'HEAD' && (path === '/api/v1/public' || path.startsWith('/api/v1/public/'));
+  return (
+    method !== 'GET' &&
+    method !== 'HEAD' &&
+    (path === '/api/v1/public' || path.startsWith('/api/v1/public/'))
+  );
 }
 
 /**
@@ -44,10 +48,13 @@ function wrapPublicJson(res: Response): void {
   const sendJson = res.json.bind(res);
   res.json = (body) => {
     const status = res.statusCode;
-    res.setHeader(
-      'Cache-Control',
-      status >= 200 && status < 300 ? PUBLIC_GET_CACHE_CONTROL : PRIVATE_CACHE_CONTROL,
-    );
+    // A route can opt out, for example when a published photo must disappear immediately.
+    if (!res.getHeader('Cache-Control')) {
+      res.setHeader(
+        'Cache-Control',
+        status >= 200 && status < 300 ? PUBLIC_GET_CACHE_CONTROL : PRIVATE_CACHE_CONTROL,
+      );
+    }
     return sendJson(body);
   };
 }

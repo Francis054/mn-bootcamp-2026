@@ -2,7 +2,10 @@ import { Router } from 'express';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { createApp } from '../../src/app.js';
-import { PRIVATE_CACHE_CONTROL, PUBLIC_GET_CACHE_CONTROL } from '../../src/shared/http/cache-control.js';
+import {
+  PRIVATE_CACHE_CONTROL,
+  PUBLIC_GET_CACHE_CONTROL,
+} from '../../src/shared/http/cache-control.js';
 import { PUBLIC_READ_RATE_LIMIT_MAX, readRateLimitMax } from '../../src/shared/http/rate-limit.js';
 import { HealthService } from '../../src/modules/health/health.service.js';
 import { testEnv } from '../support/app-env.js';
@@ -161,7 +164,10 @@ describe('HTTP pipeline', () => {
   it('counts each visitor separately when one proxy hop is trusted', async () => {
     const { app } = appWith({ rateLimitMax: 1, trustProxy: true });
     await request(app).post('/api/v1/missing').set('X-Forwarded-For', '203.0.113.5').expect(404);
-    const firstVisitor = await request(app).post('/api/v1/missing').set('X-Forwarded-For', '203.0.113.5').expect(429);
+    const firstVisitor = await request(app)
+      .post('/api/v1/missing')
+      .set('X-Forwarded-For', '203.0.113.5')
+      .expect(429);
     expect(readError(firstVisitor.body).code).toBe('rate_limited');
     await request(app).post('/api/v1/missing').set('X-Forwarded-For', '203.0.113.9').expect(404);
     await request(app).get('/api/v1/health').set('X-Forwarded-For', '203.0.113.5').expect(200);
@@ -236,6 +242,10 @@ describe('HTTP pipeline', () => {
     curriculum.get('/public/classes/:id', (req, res) => {
       res.json({ id: req.params.id, title: 'Packets' });
     });
+    curriculum.get('/public/work-photos', (_req, res) => {
+      res.setHeader('Cache-Control', 'private, no-store');
+      res.json([]);
+    });
     const { app } = appWith({ curriculumRouter: curriculum });
     const first = await request(app).get('/api/v1/public/home').expect(200);
     expect(first.headers['cache-control']).toBe(PUBLIC_GET_CACHE_CONTROL);
@@ -251,6 +261,8 @@ describe('HTTP pipeline', () => {
     expect(detail.headers['cache-control']).toBe(PUBLIC_GET_CACHE_CONTROL);
     const missing = await request(app).get('/api/v1/public/missing').expect(404);
     expect(missing.headers['cache-control']).toBe(PRIVATE_CACHE_CONTROL);
+    const fresh = await request(app).get('/api/v1/public/work-photos').expect(200);
+    expect(fresh.headers['cache-control']).toBe('private, no-store');
   });
 
   it('refuses to store admin, sign-in, and public writes', async () => {
