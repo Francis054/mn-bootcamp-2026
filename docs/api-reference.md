@@ -50,6 +50,8 @@ These return published rows only. A hidden listing is omitted. Trainee profiles 
 | GET | `/api/v1/public/events/{id}` |
 | GET | `/api/v1/public/media` |
 | GET | `/api/v1/public/media/{id}` |
+| GET | `/api/v1/public/site-images` |
+| GET | `/api/v1/public/site-images/{key}` |
 | POST | `/api/v1/public/enquiries` |
 
 The phase id is one digit from 1 to 9. The enquiry body is `name`, `email`, `topic`, `message`, `consent`, and the honeypot `company` (leave it empty).
@@ -129,6 +131,22 @@ An administrator uploads pictures of a trainee working. Other roles cannot add, 
 | POST | `/api/v1/admin/work-photos/{id}/unpublish` |
 
 `POST` is `multipart/form-data` with `traineeId`, optional `projectId`, `alt`, optional `caption`, and `file`. JPEG, PNG, and WebP only. The public list accepts optional `traineeId` and `projectId`.
+
+## Site images
+
+The logo and the built-in page photographs. Anyone can read them. The list uses the same public cache as the other public reads. Only an administrator can change one. The keys are fixed in the catalogue. Create stores a catalogue key that is missing from the database. It does not invent a new key. There is no delete.
+
+| Method | Path |
+| --- | --- |
+| GET | `/api/v1/public/site-images` |
+| GET | `/api/v1/public/site-images/{key}` |
+| GET | `/api/v1/admin/site-images` |
+| POST | `/api/v1/admin/site-images` |
+| PATCH | `/api/v1/admin/site-images/{key}` |
+| POST | `/api/v1/admin/site-images/{key}/image` |
+| POST | `/api/v1/admin/site-images/{key}/reset` |
+
+`POST /admin/site-images` is JSON `{ "key" }`. `PATCH` is JSON `{ "alt" }`. Alt may be empty. `POST .../image` is `multipart/form-data` with `file` and `alt`, using the same storage as profile photos and the gallery. JPEG, PNG, and WebP only, at most `UPLOAD_MAX_BYTES`. Reset puts the bundled file back and removes an uploaded object. See `docs/site-images.md`.
 
 ## Accounts
 

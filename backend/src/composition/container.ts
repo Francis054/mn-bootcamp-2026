@@ -38,6 +38,9 @@ import { EventService } from '../modules/events/event.service.js';
 import { MediaEntity } from '../modules/gallery/media.entity.js';
 import { MediaRepository } from '../modules/gallery/media.repository.js';
 import { MediaService } from '../modules/gallery/media.service.js';
+import { SiteImageEntity } from '../modules/site-images/site-image.entity.js';
+import { SiteImageRepository } from '../modules/site-images/site-image.repository.js';
+import { SiteImageService } from '../modules/site-images/site-image.service.js';
 import { WorkPhotoEntity } from '../modules/work-photos/work-photo.entity.js';
 import { WorkPhotoRepository } from '../modules/work-photos/work-photo.repository.js';
 import { WorkPhotoService } from '../modules/work-photos/work-photo.service.js';
@@ -87,6 +90,7 @@ export class AppContainer {
     events: EventService,
     media: MediaService,
     workPhotos: WorkPhotoService,
+    siteImages: SiteImageService,
     storage: StorageProvider,
     content: ContentService,
     mail: EmailProvider,
@@ -112,6 +116,7 @@ export class AppContainer {
       accounts,
       enquiries,
       workPhotos,
+      siteImages,
       storage,
     );
   }
@@ -241,6 +246,12 @@ export class AppContainer {
       storage,
       env.uploadMaxBytes,
     );
+    const siteImageService = new SiteImageService(
+      new SiteImageRepository(dataSource.getRepository(SiteImageEntity)),
+      audit,
+      storage,
+      env.uploadMaxBytes,
+    );
     return new AppContainer(
       env,
       logger,
@@ -255,6 +266,7 @@ export class AppContainer {
       eventService,
       mediaService,
       workPhotoService,
+      siteImageService,
       storage,
       contentService,
       mail,

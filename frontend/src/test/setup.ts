@@ -11,6 +11,7 @@ import { cleanup } from '@testing-library/react';
 import { afterEach } from 'vitest';
 import { resetPublicCacheForTests } from '@/api/publicCache';
 import { resetPublicLoadForTests } from '@/hooks/useContent';
+import { resetSiteImagesForTests } from '@/hooks/useSiteImages';
 import { setEnvForTests } from '@/config/runtime';
 import { clearSession } from '@/dev/session';
 import { resetState } from '@/dev/store';
@@ -37,5 +38,6 @@ afterEach(() => {
   clearSession();
   resetPublicCacheForTests();
   resetPublicLoadForTests();
+  resetSiteImagesForTests();
   setEnvForTests(null);
 });

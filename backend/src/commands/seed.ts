@@ -21,6 +21,8 @@ import { MediaEntity } from '../modules/gallery/media.entity.js';
 import { MediaRepository } from '../modules/gallery/media.repository.js';
 import { ProjectEntity } from '../modules/projects/project.entity.js';
 import { ProjectRepository } from '../modules/projects/project.repository.js';
+import { SiteImageEntity } from '../modules/site-images/site-image.entity.js';
+import { SiteImageRepository } from '../modules/site-images/site-image.repository.js';
 import { TraineeEntity } from '../modules/trainees/trainee.entity.js';
 import { TraineeRepository } from '../modules/trainees/trainee.repository.js';
 import { postgresCode } from '../shared/persistence/postgres-error.js';
@@ -52,6 +54,7 @@ export async function runSeed(options: SeedIO = {}): Promise<number> {
         new EventRepository(dataSource.getRepository(EventEntity)),
         new MediaRepository(dataSource.getRepository(MediaEntity)),
         new ContentRepository(dataSource.getRepository(ContentSingletonEntity)),
+        new SiteImageRepository(dataSource.getRepository(SiteImageEntity)),
       );
       await seed.run();
       stdout('Sample curriculum is ready.');
