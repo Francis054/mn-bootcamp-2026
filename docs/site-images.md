@@ -87,7 +87,7 @@ Do this in one change, with the same key in both catalogues:
 1. Add the picture under `frontend/public/assets/` (or point `url` at an `https` address you already host).
 2. Add the slot to `backend/src/modules/site-images/catalogue.ts` and to `frontend/src/domain/siteImages.ts`. Copy the key, label, description, url, alt, width, height, and fit. The backend unit test fails if those four strings (`key`, `url`, `alt`, `label`) disagree. Set `tagline` to `''` unless the slot is the community badge.
 3. Render it with `<SiteImage slot="your-key" />`. The community badge is `<CommunityBadge />`, not a plain image, so the foundation plate stays live. Pass `sizes` when the file has an 800 and a 1600 webp pair. Pass `priority` when it is the first large picture on the page.
-4. If migration `SiteImages1793923200000` has already been applied, add a new migration that inserts the row with `ON CONFLICT ("key") DO NOTHING`. Do not edit the shipped migration. `npm run seed` also inserts missing keys and does not overwrite a row an administrator has changed. Do not run seed on the hosted database.
+4. If migration `SiteImages1794009600000` has already been applied, add a new migration that inserts the row with `ON CONFLICT ("key") DO NOTHING`. Do not edit the shipped migration. `npm run seed` also inserts missing keys and does not overwrite a row an administrator has changed. Do not run seed on the hosted database.
 5. Changing a label or a default url after a row exists needs an `UPDATE` in a new migration. Limit that update to rows still on the old default, so a custom upload is left alone.
 
 Fit is `cover` or `contain`. Use `contain` for a logo and for the wide group photo, so the whole picture stays visible.

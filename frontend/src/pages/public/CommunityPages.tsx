@@ -117,7 +117,7 @@ export function ProjectsPage() {
   return (
     <PublicGate loading={loading} error={error}>
     <>
-      <PageIntro dark title="Projects & labs" crumbs={[{ label: 'Home', to: '/' }, { label: 'Bootcamp' }, { label: 'Projects & labs' }]} eyebrow="Projects & labs" headline={'Built in the lab.\nReady for the field.'} aside={<><p className="lead">Every bootcamp includes a real-life project. Finished work appears here after it is published.</p>{projects.some((project) => project.listing !== 'public') ? <span className="ph" style={{ marginTop: 16 }}>Sample projects are labelled</span> : null}</>}>
+      <PageIntro dark title="Projects & labs" crumbs={[{ label: 'Home', to: '/' }, { label: 'Bootcamp' }, { label: 'Projects & labs' }]} eyebrow="Projects & labs" headline={'Built in the lab.\nReady for the field.'} aside={<><p className="lead">Each week has a practical session from 2:00 to 4:00 p.m. and a deliverable. Finished project pages appear here after they are published.</p>{projects.some((project) => project.listing !== 'public') ? <span className="ph" style={{ marginTop: 16 }}>Sample projects are labelled</span> : null}</>}>
         <Netlines />
       </PageIntro>
       <section className="section">

@@ -9,11 +9,13 @@ const PROVIDER = `'static', 'memory', 'cloudinary', 'unconfigured'`;
  * catalogue: the community badge, the parent-organisation plate, and the
  * page photographs. It does nothing
  * when a key is already stored. This migration has not shipped, so the
- * catalogue here is the corrected slot list. Down drops only this table and
- * the audit actions this migration added.
+ * catalogue here is the corrected slot list. Its timestamp is the day after
+ * Timetable1793923200000. The timetable migration keeps that earlier timestamp
+ * because databases that already ran main have applied it. Down drops only
+ * this table and the audit actions this migration added.
  */
-export class SiteImages1793923200000 implements MigrationInterface {
-  name = 'SiteImages1793923200000';
+export class SiteImages1794009600000 implements MigrationInterface {
+  name = 'SiteImages1794009600000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`

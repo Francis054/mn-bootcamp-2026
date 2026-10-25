@@ -7,21 +7,31 @@ import { SiteImage } from '@/components/SiteImage';
 import { TenMark } from '@/components/TenMark';
 import { EmptyState } from '@/components/feedback';
 import { usePageMeta } from '@/components/SiteChrome';
-import { MODULES, PHASES } from '@/dev/fixtures';
 import { usesMockApi } from '@/config/runtime';
-import { currentWeek, formatDate } from '@/domain/format';
+import { currentWeek, formatDate, parseUtcDate } from '@/domain/format';
+import { outlineLines, weeksOf } from '@/domain/timetable';
 import { useAuth } from '@/auth/AuthProvider';
 import { usePublicContent } from '@/hooks/useContent';
 import { useSiteImage } from '@/hooks/useSiteImages';
+import { useTimetable } from '@/hooks/useTimetable';
 import { moduleOf, PublicGate, SampleMark, TraineeArt } from './helpers';
 
 export function HomePage() {
   const content = usePublicContent();
-  const { lessons, projects, trainees, events, media } = content;
+  const timetable = useTimetable();
+  const { projects, trainees, events, media } = content;
   const homepage = content.homepage;
   const auth = useAuth();
   usePageMeta('Home');
-  const week = currentWeek();
+  const week = timetable.data?.currentWeek ?? currentWeek();
+  const outlineWeeks = weeksOf(timetable.data);
+  const featuredWeeks = [
+    outlineWeeks.find((item) => item.number === week),
+    ...outlineWeeks.filter((item) => item.number > week),
+  ].filter((item) => item !== undefined).slice(0, 3);
+  const endsOn = timetable.data?.programme?.endsOn ?? '2026-12-25';
+  const featureProject = projects[0];
+  const sideProjects = [projects[2], projects[5]].filter((item) => item !== undefined);
   const peek = useRef<HTMLDivElement>(null);
   const peekPhotos = [
     useSiteImage('home-class-peek-1'),
@@ -29,12 +39,6 @@ export function HomePage() {
     useSiteImage('home-class-peek-3'),
     useSiteImage('home-class-peek-4'),
   ];
-  const featured = [
-    ...lessons.filter((lesson) => lesson.scheduleStatus === 'now'),
-    ...lessons.filter((lesson) => lesson.scheduleStatus === 'upcoming'),
-  ].slice(0, 4);
-  const featureProject = projects[0];
-  const sideProjects = [projects[2], projects[5]].filter((item) => item !== undefined);
   const movePeek = (index: number) => (event: MouseEvent) => {
     const node = peek.current;
     const image = node?.querySelector('img');
@@ -73,7 +77,7 @@ export function HomePage() {
               </Reveal>
               <dl className="hero__facts">
                 <div><dt>Starts</dt><dd>5 Oct 2026</dd></div>
-                <div><dt>Ends</dt><dd>December 2026</dd></div>
+                <div><dt>Ends</dt><dd>{formatDate(endsOn, { year: 'numeric' })}</dd></div>
                 <div><dt>Cost</dt><dd>Free</dd></div>
                 <div><dt>Where</dt><dd>Tantra Hills, Accra</dd></div>
               </dl>
@@ -87,17 +91,17 @@ export function HomePage() {
                 <span className="label">Cohort status · live</span>
                 <b>Week {week} of the bootcamp</b>
                 <div className="meter" style={{ ['--p' as string]: week / 12 }}><i /></div>
-                <span className="label" style={{ display: 'block', marginTop: 8, fontSize: 10 }}>Indicative 12-week plan · TBC</span>
+                <span className="label" style={{ display: 'block', marginTop: 8, fontSize: 10 }}>12 weeks · 5 Oct – 25 Dec 2026</span>
               </Reveal>
             </div>
           </div>
         </div>
         <a className="scroll-cue" href="#intro"><span />Scroll</a>
       </section>
-      <div className="marquee" aria-label="Bootcamp modules">
+      <div className="marquee" aria-label="Weekly topics">
         <div className="marquee__track">
-          {[0, 1].map((copy) => MODULES.map((module) => (
-            <div className="marquee__item" key={`${copy}-${module.id}`} aria-hidden={copy === 1 || undefined}>{module.name}</div>
+          {[0, 1].map((copy) => (outlineWeeks.length ? outlineWeeks : [{ id: 'bootcamp', title: 'Cybersecurity Bootcamp' }]).map((item) => (
+            <div className="marquee__item" key={`${copy}-${item.id}`} aria-hidden={copy === 1 || undefined}>{item.title}</div>
           )))}
         </div>
       </div>
@@ -107,7 +111,7 @@ export function HomePage() {
           <h2 id="intro-title" className="statement" style={{ marginTop: 24 }}>Maxim Nyansa means <span className="hl-under">maximal wisdom.</span> <span className="soft">For ten years, the Foundation has turned that idea into careers in tech.</span></h2>
           <div className="intro-grid">
             <div className="intro-card"><span className="num">01 — Mission</span><h3>Career perspectives through IT</h3><blockquote>“To create career perspectives for young people with the use of information technology.”</blockquote></div>
-            <div className="intro-card"><span className="num">02 — The bootcamp</span><h3>Free, practical, in person</h3><p>Six areas of security practice, taught hands-on at the Foundation’s premises in Tantra Hills, Accra, from October to December 2026.</p></div>
+            <div className="intro-card"><span className="num">02 — The bootcamp</span><h3>Free, practical, in person</h3><p>Twelve weeks, from 5 October to 25 December 2026, taught in person at the Foundation’s premises in Tantra Hills, Accra. Each weekday starts with devotion at 8:00 a.m.</p></div>
             <div className="intro-card"><span className="num">03 — The symbol</span><h3>Climbing the right tree</h3><p>The logo is an Adinkra symbol meaning “climbing the right tree”: whoever works for a good cause can expect the help of others.</p><Link className="link" to="/about" style={{ marginTop: 16 }}>About the Foundation <Icon name="arrow-right" className="i--sm" /></Link></div>
           </div>
         </div>
@@ -115,39 +119,46 @@ export function HomePage() {
       <section className="section section--dark" aria-labelledby="journey-title" style={{ position: 'relative', overflow: 'hidden' }}>
         <div className="container">
           <div className="sec-head">
-            <div className="sec-head__title"><Reveal><span className="eyebrow">The three-month journey</span></Reveal><SplitHeading id="journey-title" className="h2" text={'From first packet\nto incident playbook.'} /></div>
-            <Reveal className="sec-head__aside"><p className="muted">The cohort started on 5 October 2026 and finishes in December. The phase structure below is indicative until the curriculum is confirmed.</p><span className="tbc">Phase plan to be confirmed</span></Reveal>
+            <div className="sec-head__title"><Reveal><span className="eyebrow">The three-month journey</span></Reveal><SplitHeading id="journey-title" className="h2" text={'From foundations\nto the capstone.'} /></div>
+            <Reveal className="sec-head__aside"><p className="muted">The cohort runs from 5 October to 25 December 2026, in the three blocks on the timetable.</p><Link className="link" to="/schedule">Open the daily timetable <Icon name="arrow-right" className="i--sm" /></Link></Reveal>
           </div>
           <div className="phases">
-            {PHASES.map((phase) => (
-              <article className={`phase${phase.id === 1 ? ' is-now' : ''}`} key={phase.id}>
-                <span className="phase__n">0{phase.id}</span>
-                <h3>{phase.name}</h3>
-                <p>{phase.summary}</p>
-                <ul>{phase.modules.map((name) => <li className="tag" key={name}>{name}</li>)}</ul>
-                <div className="phase__foot"><span>{phase.months}</span><span className={`st ${phase.id === 1 ? 'st--now' : 'st--upcoming'}`}>{phase.id === 1 ? 'In progress' : 'Upcoming'}</span></div>
-              </article>
-            ))}
+            {(timetable.data?.blocks ?? []).map((block) => {
+              const numbers = block.weeks.map((item) => item.number);
+              const active = numbers.includes(week);
+              const done = numbers.length > 0 && numbers.every((number) => number < week);
+              const first = block.weeks[0];
+              const last = block.weeks[block.weeks.length - 1];
+              return (
+                <article className={`phase${active ? ' is-now' : ''}`} key={block.id}>
+                  <span className="phase__n">0{block.sortOrder}</span>
+                  <h3>{block.name}</h3>
+                  <p>{block.professionalismTheme}. {block.cybersecurityTheme}.</p>
+                  <ul>{block.weeks.map((item) => <li className="tag" key={item.id}>{item.title}</li>)}</ul>
+                  <div className="phase__foot"><span>{first && last ? `${formatDate(first.startsOn)} – ${formatDate(fridayOn(last.startsOn))}` : ''}</span><span className={`st ${active ? 'st--now' : done ? 'st--done' : 'st--upcoming'}`}>{active ? 'In progress' : done ? 'Completed' : 'Upcoming'}</span></div>
+                </article>
+              );
+            })}
           </div>
           <Reveal>
-            <div className="cohort-bar"><span className="label">5 Oct</span><div className="meter" style={{ ['--p' as string]: week / 12 }}><i /></div><span className="label">Dec 2026</span><Link className="btn btn--ghost-light btn--sm" to="/journey">Full timeline</Link></div>
+            <div className="cohort-bar"><span className="label">5 Oct</span><div className="meter" style={{ ['--p' as string]: week / 12 }}><i /></div><span className="label">25 Dec</span><Link className="btn btn--ghost-light btn--sm" to="/schedule">Daily timetable</Link></div>
           </Reveal>
         </div>
       </section>
       <section className="section" aria-labelledby="classes-title">
         <div className="container">
           <div className="sec-head">
-            <div className="sec-head__title"><Reveal><span className="eyebrow">Featured classes</span></Reveal><Reveal><h2 id="classes-title" className="h2">This week and what’s next.</h2></Reveal></div>
-            <Reveal className="sec-head__aside">{featured.some((lesson) => lesson.listing !== 'public') ? <span className="ph">Sample lessons — placeholders</span> : null}<Link className="link" to="/classes">Open the class archive <Icon name="arrow-right" className="i--sm" /></Link></Reveal>
+            <div className="sec-head__title"><Reveal><span className="eyebrow">This week</span></Reveal><Reveal><h2 id="classes-title" className="h2">What the timetable says.</h2></Reveal></div>
+            <Reveal className="sec-head__aside"><p className="muted">Lesson write-ups in the class archive are samples. This list is the week’s title, topic and deliverable.</p><Link className="link" to="/schedule">Open the schedule <Icon name="arrow-right" className="i--sm" /></Link></Reveal>
           </div>
           <div className="rows">
-            {featured.length ? null : <EmptyState icon="layers" title="No classes are published yet" text="This week’s lessons appear here after they are published." />}
-            {featured.map((lesson, index) => (
-              <Link className="row-link" key={lesson.id} to={`/classes/${lesson.id}`} onMouseEnter={movePeek(index)} onMouseMove={movePeek(index)} onMouseLeave={() => peek.current?.classList.remove('is-on')}>
-                <span className="wk">Week<b>{String(lesson.week).padStart(2, '0')}</b></span>
-                <div>{lesson.listing === 'public' ? null : <span className="ph" style={{ marginBottom: 10 }}>Week {lesson.week} — sample lesson</span>}<h3>{lesson.title}</h3></div>
-                <span className="row-mod tag">{moduleOf(lesson.moduleId).name}</span>
-                <span className={`row-status st st--${lesson.scheduleStatus}`}>{lesson.scheduleStatus === 'done' ? 'Completed' : lesson.scheduleStatus === 'now' ? 'This week' : `w/c ${formatDate(lesson.date)}`}</span>
+            {featuredWeeks.length ? null : <EmptyState icon="calendar" title="The timetable is not loaded yet" text="Week titles appear here from the published schedule." />}
+            {featuredWeeks.map((item, index) => (
+              <Link className="row-link" key={item.id} to={`/schedule?week=${item.number}`} onMouseEnter={movePeek(index)} onMouseMove={movePeek(index)} onMouseLeave={() => peek.current?.classList.remove('is-on')}>
+                <span className="wk">Week<b>{String(item.number).padStart(2, '0')}</b></span>
+                <div><h3>{item.title}</h3><p className="muted">{outlineLines(item.cybersecurity)[0]}</p></div>
+                <span className="row-mod tag">{item.deliverables[0]?.title ?? 'Weekly deliverable'}</span>
+                <span className={`row-status st ${item.number === week ? 'st--now' : 'st--upcoming'}`}>{item.number === week ? 'This week' : `w/c ${formatDate(item.startsOn)}`}</span>
                 <span className="go"><Icon name="arrow-right" /></span>
               </Link>
             ))}
@@ -158,7 +169,7 @@ export function HomePage() {
         <div className="container">
           <div className="sec-head">
             <div className="sec-head__title"><Reveal><span className="eyebrow">Projects & labs</span></Reveal><Reveal><h2 id="proj-title" className="h2">Practice on real problems, safely.</h2></Reveal></div>
-            <Reveal className="sec-head__aside"><p className="muted">Every module ends in a practical lab. Project pages will fill in as the cohort completes them.</p><Link className="link" to="/projects">All projects <Icon name="arrow-right" className="i--sm" /></Link></Reveal>
+            <Reveal className="sec-head__aside"><p className="muted">Each week includes a practical session from 2:00 to 4:00 p.m. and a weekly deliverable. Assignments sit outside class. Project pages fill in as the cohort completes them.</p><Link className="link" to="/projects">All projects <Icon name="arrow-right" className="i--sm" /></Link></Reveal>
           </div>
           <div className="proj-feature">
             {featureProject ? <div className="pf-main"><ProjectCard project={featureProject} large /></div> : <EmptyState icon="layers" title="No projects are published yet" text="Labs and case studies appear here after they are published." />}
@@ -283,6 +294,12 @@ export function HomePage() {
 /** The floating class preview is small, so a bundled pair uses the 800-wide file. */
 function hoverSrc(url: string): string {
   return url.includes('-1600.webp') ? url.replace('-1600.webp', '-800.webp') : url;
+}
+
+function fridayOn(startsOn: string): string {
+  const date = parseUtcDate(startsOn);
+  date.setUTCDate(date.getUTCDate() + 4);
+  return date.toISOString().slice(0, 10);
 }
 
 function ProjectCard({ project, large = false }: { project: { id: string; title: string; type: string; cover: string; moduleId: string; listing?: string }; large?: boolean }) {

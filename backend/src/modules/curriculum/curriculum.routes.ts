@@ -38,6 +38,8 @@ import {
 } from '../trainees/trainee.routes.js';
 import type { TraineeService } from '../trainees/trainee.service.js';
 import type { StorageProvider } from '../storage/storage-provider.js';
+import { mountAdminTimetable, mountPublicTimetable } from '../timetable/timetable.routes.js';
+import type { TimetableService } from '../timetable/timetable.service.js';
 
 export function curriculumRouter(
   catalogue: CatalogueService,
@@ -54,6 +56,7 @@ export function curriculumRouter(
   workPhotos: WorkPhotoService,
   siteImages: SiteImageService,
   storage: StorageProvider,
+  timetable: TimetableService,
 ): Router {
   const router = Router();
 
@@ -121,6 +124,7 @@ export function curriculumRouter(
   mountPublicSiteImages(router, siteImages);
   mountPublicContent(router, content);
   mountPublicEnquiries(router, enquiries);
+  mountPublicTimetable(router, timetable);
 
   const admin = Router();
   admin.use(requireAuth(sessions), requirePermission('content.read'));
@@ -136,6 +140,7 @@ export function curriculumRouter(
   mountAdminSiteImages(admin, siteImages, maxBytes);
   mountAdminContent(admin, content);
   mountAccountAdmin(admin, accounts, enquiries);
+  mountAdminTimetable(admin, timetable);
   router.use('/admin', admin);
   return router;
 }

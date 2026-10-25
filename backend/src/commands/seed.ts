@@ -26,6 +26,7 @@ import { SiteImageRepository } from '../modules/site-images/site-image.repositor
 import { TraineeEntity } from '../modules/trainees/trainee.entity.js';
 import { TraineeRepository } from '../modules/trainees/trainee.repository.js';
 import { postgresCode } from '../shared/persistence/postgres-error.js';
+import { runTimetableImport } from './import-timetable.js';
 
 export interface SeedIO {
   env?: NodeJS.ProcessEnv;
@@ -57,6 +58,14 @@ export async function runSeed(options: SeedIO = {}): Promise<number> {
         new SiteImageRepository(dataSource.getRepository(SiteImageEntity)),
       );
       await seed.run();
+      const imported = await runTimetableImport({
+        dataSource,
+        env,
+        loadDotenv: false,
+        stdout,
+        stderr,
+      });
+      if (imported !== 0) return imported;
       stdout('Sample curriculum is ready.');
       return 0;
     } finally {

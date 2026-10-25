@@ -7,9 +7,10 @@ import { Icon, type IconName } from './Icon';
 const MENU: Array<{ id: string; label: string; to?: string; items?: Array<{ id: string; label: string; to: string; sub: string; icon: IconName }> }> = [
   { id: 'home', label: 'Home', to: '/' },
   { id: 'bootcamp', label: 'Bootcamp', items: [
-    { id: 'overview', label: 'Overview', to: '/bootcamp', sub: 'What the 2026 programme covers', icon: 'shield' },
-    { id: 'journey', label: 'Three-month journey', to: '/journey', sub: 'Oct – Dec 2026, phase by phase', icon: 'commit' },
-    { id: 'classes', label: 'Class archive', to: '/classes', sub: 'Weekly lessons and labs', icon: 'book' },
+    { id: 'overview', label: 'Overview', to: '/bootcamp', sub: 'The 12-week Cybersecurity Bootcamp', icon: 'shield' },
+    { id: 'schedule', label: 'Schedule', to: '/schedule', sub: 'Daily timetable, 5 Oct – 25 Dec', icon: 'calendar' },
+    { id: 'journey', label: 'Three-month journey', to: '/journey', sub: '5 Oct – 25 Dec 2026, week by week', icon: 'commit' },
+    { id: 'classes', label: 'Class archive', to: '/classes', sub: 'Sample lesson notes', icon: 'book' },
     { id: 'projects', label: 'Projects & labs', to: '/projects', sub: 'Practical work from the cohort', icon: 'terminal' },
   ] },
   { id: 'trainees', label: 'Trainees', to: '/trainees' },
@@ -106,10 +107,10 @@ export function SiteFooter() {
         <div className="footer-top">
           <div className="footer-brand">
             <Lockup />
-            <p>A community site for the free 2026 Cyber Security Bootcamp, run by the Maxim Nyansa Foundation — creating career perspectives for young people with information technology since 2016.</p>
+            <p>A community site for the free 2026 Cybersecurity Bootcamp, run by the Maxim Nyansa Foundation — creating career perspectives for young people with information technology since 2016.</p>
           </div>
           <div><h3>Bootcamp</h3><ul>
-            <li><Link to="/bootcamp">Overview</Link></li><li><Link to="/journey">Journey</Link></li><li><Link to="/classes">Class archive</Link></li><li><Link to="/projects">Projects & labs</Link></li><li><Link to="/trainees">Trainees</Link></li>
+            <li><Link to="/bootcamp">Overview</Link></li><li><Link to="/schedule">Schedule</Link></li><li><Link to="/journey">Journey</Link></li><li><Link to="/classes">Class archive</Link></li><li><Link to="/projects">Projects & labs</Link></li><li><Link to="/trainees">Trainees</Link></li>
           </ul></div>
           <div><h3>Community</h3><ul>
             <li><Link to="/events">Events</Link></li><li><Link to="/gallery">Gallery</Link></li><li><Link to="/anniversary">10 Years of Impact</Link></li><li><Link to="/about">About the Foundation</Link></li>
@@ -183,7 +184,7 @@ export function ProtoFlag() {
 
 export function usePageMeta(title: string) {
   useEffect(() => {
-    document.title = `${title} · 2026 Cyber Bootcamp · Maxim Nyansa Foundation`;
+    document.title = `${title} · 2026 Cybersecurity Bootcamp · Maxim Nyansa Foundation`;
   }, [title]);
 }
 

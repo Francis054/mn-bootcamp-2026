@@ -22,12 +22,13 @@ describe('community badge', () => {
         <Lockup />
       </MemoryRouter>,
     );
-    const link = screen.getByRole('link', { name: /cyber bootcamp/i });
+    const link = screen.getByRole('link', { name: /2026 cybersecurity bootcamp/i });
     const art = link.querySelector(`img[src="${COMMUNITY_BADGE_BARE}"]`);
     expect(art).not.toBeNull();
     expect(art).toHaveAttribute('alt', '');
     expect(link.querySelector('img[src="/assets/logo/maxim-nyansa-foundation-logo.png"]')).not.toBeNull();
-    expect(link).toHaveTextContent('Cyber Bootcamp');
+    expect(link).toHaveTextContent('Cybersecurity');
+    expect(link).toHaveTextContent('Bootcamp · 2026');
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });

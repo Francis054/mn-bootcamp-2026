@@ -15,6 +15,7 @@ const GROUPS: Array<{ label: string; items: Array<{ id: string; label: string; i
   { label: 'Workspace', items: [{ id: 'overview', label: 'Overview', icon: 'grid', to: '/admin', end: true, permission: 'content.read' }] },
   { label: 'Content', items: [
     { id: 'classes', label: 'Classes', icon: 'book', to: '/admin/classes', permission: 'content.read' },
+    { id: 'timetable', label: 'Timetable', icon: 'calendar', to: '/admin/classes/timetable', permission: 'content.read' },
     { id: 'trainees', label: 'Trainees', icon: 'users', to: '/admin/trainees', permission: 'content.read' },
     { id: 'projects', label: 'Projects', icon: 'terminal', to: '/admin/projects', permission: 'content.read' },
     { id: 'events', label: 'Events', icon: 'calendar', to: '/admin/events', permission: 'content.read' },

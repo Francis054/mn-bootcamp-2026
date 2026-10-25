@@ -82,7 +82,7 @@ export function LoginPage() {
       <aside className="login__art" aria-hidden="true">
         <SiteImage slot="sign-in-panel" priority alt="" />
         <CommunityBadge className="login__mark" priority />
-        <span className="a-sub" style={{ color: 'var(--mn-lime)' }}>Maxim Nyansa Foundation · Cyber Security Bootcamp 2026</span>
+        <span className="a-sub" style={{ color: 'var(--mn-lime)' }}>Maxim Nyansa Foundation · Cybersecurity Bootcamp 2026</span>
         <h2 style={{ marginTop: 16 }}>Publish the journey, <em>week by week.</em></h2>
       </aside>
     </div></main>

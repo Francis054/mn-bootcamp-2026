@@ -48,10 +48,10 @@ function assignIcon(rel: string, href: string): void {
 
 export function Lockup({ to = '/' }: { to?: string }) {
   return (
-    <Link className="lockup" to={to} aria-label="2026 Cyber Bootcamp by Maxim Nyansa Foundation — home">
+    <Link className="lockup" to={to} aria-label="2026 Cybersecurity Bootcamp by Maxim Nyansa Foundation — home">
       <span className="wordmark">
         <span className="wordmark__mark"><Mark /></span>
-        <span className="wordmark__text"><b>Cyber Bootcamp</b><small>2026 · Accra</small></span>
+        <span className="wordmark__text"><b>Cybersecurity</b><small>Bootcamp · 2026</small></span>
       </span>
       <span className="lockup__divider" aria-hidden="true" />
       <OfficialLogo />
