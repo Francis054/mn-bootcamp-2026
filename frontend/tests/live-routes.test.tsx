@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AuthProvider } from '@/auth/AuthProvider';
@@ -138,6 +138,45 @@ describe('live API routes', () => {
       });
       view.unmount();
     }
+  });
+
+  it('shows a stored profile photo on the home card and the public profile', async () => {
+    setEnvForTests(LIVE);
+    const photo = 'https://res.cloudinary.com/demo/image/upload/v1/mn/photo.jpg';
+    const trainee = {
+      id: 't1',
+      displayName: 'Sample Person',
+      initials: 'SP',
+      hue: 140,
+      track: 'Blue team',
+      focus: 'network',
+      listing: 'public',
+      statusLabel: 'In training',
+      photoUrl: photo,
+    };
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('/auth/session')) return json({ authenticated: false });
+      if (url.includes('/public/home')) {
+        return json({ headline: 'Learn.\nBuild.\n*Secure the Future.*', lead: 'A free bootcamp.', eyebrow: '2026' });
+      }
+      if (url.includes('/public/about')) {
+        return json({ error: { code: 'not_found', message: 'Content not found.' } }, 404);
+      }
+      if (url.includes('/public/trainees')) return json([trainee]);
+      if (url.includes('/public/')) return json([]);
+      return json({ error: { code: 'not_found', message: 'Not found.' } }, 404);
+    }));
+
+    const home = renderAt('/');
+    const card = await screen.findByRole('link', { name: /Sample Person/ });
+    expect(within(card).getByRole('img', { name: 'Sample Person' })).toHaveAttribute('src', photo);
+    expect(within(card).queryByText('Placeholder')).not.toBeInTheDocument();
+    home.unmount();
+
+    renderAt('/trainees/t1');
+    expect(await screen.findByRole('img', { name: 'Sample Person' })).toHaveAttribute('src', photo);
+    expect(screen.queryByText('Placeholder portrait')).not.toBeInTheDocument();
   });
 
   it('sends every admin route to a visible gate when the session is anonymous', async () => {

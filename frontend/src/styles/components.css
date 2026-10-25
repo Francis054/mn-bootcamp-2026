@@ -172,6 +172,7 @@ a.card:hover,.card.is-hover{transform:translateY(-4px);box-shadow:var(--shadow-3
 .card__media{position:relative;overflow:hidden;aspect-ratio:4/3;background:var(--paper-2)}
 .card__media img{width:100%;height:100%;object-fit:cover;transition:transform 900ms var(--ease-out)}
 a.card:hover .card__media img{transform:scale(1.05)}
+a.card:hover .card__media img[data-fit="contain"]{transform:none}
 .card__body{padding:var(--s-5)}
 .card__meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
 .card__title{font-size:var(--fs-h4);letter-spacing:-.02em;line-height:1.2}
@@ -361,6 +362,8 @@ a.card:hover .go{background:var(--mn-lime);transform:rotate(-45deg)}
 .js .mask-reveal img{transform:scale(1.18);transition:transform 1600ms var(--ease-out);transition-delay:calc(var(--i,0) * 120ms + 200ms)}
 .js .mask-reveal.is-in{clip-path:inset(0 0 0 0)}
 .js .mask-reveal.is-in img{transform:scale(1)}
+.js .mask-reveal img[data-fit="contain"],
+.js .mask-reveal.is-in img[data-fit="contain"]{transform:none}
 .split-line{display:block;overflow:hidden;padding-bottom:.08em;margin-bottom:-.08em}
 .split-line>span{display:inline-block}
 .js .split-line>span{transform:translateY(105%);transition:transform 1000ms var(--ease-out);transition-delay:calc(var(--l,0) * 110ms + 120ms)}

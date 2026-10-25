@@ -93,7 +93,7 @@ Each resource below has the same shape: list and create on the collection, then 
 | GET, POST `/api/v1/admin/modules` | GET, PATCH, DELETE, plus POST `.../publish` and `.../unpublish` | |
 | GET, POST `/api/v1/admin/phases` | GET, PATCH, DELETE, plus POST `.../publish` and `.../unpublish` | |
 | GET, POST `/api/v1/admin/classes` | GET, PATCH, DELETE, plus POST `.../publish` and `.../unpublish` | POST `/api/v1/admin/classes/bulk` |
-| GET, POST `/api/v1/admin/trainees` | GET, PATCH, DELETE, plus POST `.../publish` and `.../unpublish` | Publish requires consent |
+| GET, POST `/api/v1/admin/trainees` | GET, PATCH, DELETE, plus POST `.../publish` and `.../unpublish` | Publish requires consent. POST `/api/v1/admin/trainees/photo` uploads the profile photo. |
 | GET, POST `/api/v1/admin/projects` | GET, PATCH, DELETE, plus POST `.../publish` and `.../unpublish` | |
 | GET, POST `/api/v1/admin/events` | GET, PATCH, DELETE, plus POST `.../publish` and `.../unpublish` | |
 

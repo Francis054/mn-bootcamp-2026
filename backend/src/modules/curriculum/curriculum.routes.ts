@@ -29,8 +29,13 @@ import { mountAdminWorkPhotos, mountPublicWorkPhotos } from '../work-photos/work
 import type { WorkPhotoService } from '../work-photos/work-photo.service.js';
 import { mountAdminProjects, mountPublicProjects } from '../projects/project.routes.js';
 import type { ProjectService } from '../projects/project.service.js';
-import { mountAdminTrainees, mountPublicTrainees } from '../trainees/trainee.routes.js';
+import {
+  mountAdminTrainees,
+  mountPublicTraineePhotos,
+  mountPublicTrainees,
+} from '../trainees/trainee.routes.js';
 import type { TraineeService } from '../trainees/trainee.service.js';
+import type { StorageProvider } from '../storage/storage-provider.js';
 
 export function curriculumRouter(
   catalogue: CatalogueService,
@@ -45,6 +50,7 @@ export function curriculumRouter(
   accounts: AccountService,
   enquiries: EnquiryService,
   workPhotos: WorkPhotoService,
+  storage: StorageProvider,
 ): Router {
   const router = Router();
 
@@ -104,6 +110,7 @@ export function curriculumRouter(
       .catch(next);
   });
   mountPublicTrainees(router, trainees);
+  mountPublicTraineePhotos(router, storage);
   mountPublicProjects(router, projects);
   mountPublicEvents(router, events);
   mountPublicMedia(router, media);
@@ -117,7 +124,7 @@ export function curriculumRouter(
   mountModules(admin, catalogue);
   mountPhases(admin, catalogue);
   mountClasses(admin, lessons);
-  mountAdminTrainees(admin, trainees);
+  mountAdminTrainees(admin, trainees, maxBytes);
   mountAdminProjects(admin, projects);
   mountAdminEvents(admin, events);
   mountAdminMedia(admin, media, maxBytes);

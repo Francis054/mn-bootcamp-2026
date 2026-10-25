@@ -132,7 +132,9 @@ The track check is `Blue team`, `Red team`, or `GRC & Awareness`. `General` and 
 | POST   | `/admin/trainees`                              | `content.write`.                                                                                                             |
 | PATCH  | `/admin/trainees/:id`                          | `content.write`. Omitted fields stay as they are. Withdrawal unpublishes immediately.                                        |
 | DELETE | `/admin/trainees/:id`                          | `content.write`. `{ deleted: true, id }`.                                                                                    |
+| POST   | `/admin/trainees/photo`                        | `content.write`. One JPEG, PNG, or WebP. Returns `{ photoUrl, storageKey }`. A viewer, trainee, or trainer is refused. |
 | POST   | `/admin/trainees/:id/publish` and `/unpublish` | `content.write`. Publish requires consent and does not change `listing`. Unpublish sets `draft` and leaves consent as it is. |
+| GET    | `/public/uploads/:key`                         | Anyone. The image bytes when the photo is kept in memory. Cloudinary photos are not served here. |
 
 There is no `POST /admin/trainees/bulk`. The class list is the only bulk action. The trainee list in the website has no bulk bar.
 
@@ -143,6 +145,8 @@ Field messages match the form: `Enter a display name.`, `Enter your email addres
 A module that still has trainee profiles cannot be deleted until those profiles are moved or deleted. A trainee who is still listed on a project cannot be deleted until they are removed from that project.
 
 `linksShareConsent` is the agreement that lets a published project show its code and demo links. It is separate from profile consent. Clearing it does not unpublish the profile. The timestamps and the account id that recorded it stay on the admin trainee. They are not on `PublicTrainee`.
+
+`photoUrl` is the profile photo. It is null until an editor saves one. `POST /admin/trainees/photo` stores the file and returns `photoUrl` and `photoStorageKey`. The profile save sends both. `photoUrl: null` removes the photo and deletes the stored file. `photoStorageKey` stays off the public profile. `GET /public/uploads/:key` serves a photo kept in memory. When Cloudinary is configured, `photoUrl` is the https address Cloudinary returns.
 
 ## Project routes that exist now
 

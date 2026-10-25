@@ -69,9 +69,13 @@ export function pictureSource(file: string): { src: string; srcSet?: string } | 
   return null;
 }
 
+/** These files are one wide group photo. Every frame must show the whole line, not a crop. */
+const WHOLE_GROUP = new Set(['participant-portrait', 'participant-phone']);
+
 export function Photo({ file, alt, width, height, sizes, priority = false, onError }: { file: string; alt: string; width: number; height: number; sizes?: string; priority?: boolean; onError?: () => void }) {
   const picture = pictureSource(file);
   if (!picture) return null;
+  const whole = WHOLE_GROUP.has(file.trim());
   return (
     <img
       src={picture.src}
@@ -83,6 +87,8 @@ export function Photo({ file, alt, width, height, sizes, priority = false, onErr
       loading={priority ? 'eager' : 'lazy'}
       decoding="async"
       fetchPriority={priority ? 'high' : 'auto'}
+      data-fit={whole ? 'contain' : undefined}
+      style={whole ? { objectFit: 'contain', objectPosition: 'center' } : undefined}
       onError={onError}
     />
   );

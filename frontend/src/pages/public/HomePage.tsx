@@ -1,6 +1,6 @@
 import { useRef, type MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { Avatar, Cover, Photo, Reveal, SplitHeading } from '@/components/Brand';
+import { Cover, Photo, Reveal, SplitHeading } from '@/components/Brand';
 import { Icon } from '@/components/Icon';
 import { Netlines } from '@/components/Netlines';
 import { TenMark } from '@/components/TenMark';
@@ -11,7 +11,7 @@ import { usesMockApi } from '@/config/runtime';
 import { currentWeek, formatDate } from '@/domain/format';
 import { useAuth } from '@/auth/AuthProvider';
 import { usePublicContent } from '@/hooks/useContent';
-import { moduleOf, PublicGate, SampleMark } from './helpers';
+import { moduleOf, PublicGate, SampleMark, TraineeArt } from './helpers';
 
 const PEEK = ['electronics-lab', 'hack-coding-team', 'vr-demo-group', 'presenters-yellow-room'];
 
@@ -70,7 +70,7 @@ export function HomePage() {
             </div>
             <div className="hero__media" aria-label="Photos from the Maxim Nyansa community">
               <Reveal as="span" reveal="scale" i={6} className="hm-frame" aria-hidden="true" />
-              <Reveal as="figure" mask parallax={0.04} i={0} className="hm-1"><Photo file="participant-portrait" alt="A participant at a Maxim Nyansa community event" width={1066} height={1600} sizes="(max-width:1100px) 60vw, 34vw" priority /></Reveal>
+              <Reveal as="figure" mask parallax={0.04} i={0} className="hm-1"><Photo file="participant-portrait" alt="The Maxim Nyansa Foundation group in white 10-year shirts, posed in front of the anniversary banner" width={1600} height={756} sizes="(max-width:1100px) 100vw, 40vw" priority /></Reveal>
               <Reveal as="figure" mask i={1} className="hm-2"><Photo file="hack-coding-team" alt="A team working together at a laptop" width={1600} height={1066} sizes="(max-width:1100px) 50vw, 20vw" priority /></Reveal>
               <Reveal as="figure" mask i={2} className="hm-3"><Photo file="vr-headset-moment" alt="Trying out a VR headset at an event" width={1600} height={1066} sizes="(max-width:1100px) 45vw, 18vw" /></Reveal>
               <Reveal className="status-card" i={7}>
@@ -166,7 +166,7 @@ export function HomePage() {
             {trainees.length ? null : <EmptyState icon="users" title="No public profiles yet" text="Trainee cards appear after consent is recorded and the profile is published." />}
             {trainees.slice(0, 6).map((trainee) => (
               <Link className="tcard" to={`/trainees/${trainee.id}`} key={trainee.id}>
-                <div className="tcard__art" style={{ ['--h' as string]: trainee.hue }}><span className="ph">Placeholder</span><Avatar initials={trainee.initials} hue={trainee.hue} /></div>
+                <TraineeArt trainee={trainee} variant="card" />
                 <div className="tcard__body"><h3>{trainee.displayName}</h3><p>Focus: {moduleOf(trainee.focus).name}</p></div>
               </Link>
             ))}

@@ -5,6 +5,7 @@ import { runSeed } from '../../src/commands/seed.js';
 import { createApp } from '../../src/app.js';
 import type { AppContainer } from '../../src/composition/container.js';
 import { AppContainer as Container } from '../../src/composition/container.js';
+import { MemoryStorage } from '../../src/modules/storage/memory-storage.js';
 import { revertOurMigrations } from '../support/migrations.js';
 import { testEnv } from '../support/app-env.js';
 import { readError, readRecord } from '../support/read-json.js';
@@ -18,6 +19,10 @@ const LINK = 'https://profiles.example.test/private-link';
 const PORTFOLIO = 'https://profiles.example.test/private-portfolio';
 const BLOCK_EMAIL = 'module.block@example.test';
 const BLOCK_NAME = 'Module Block Profile';
+const TINY_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+  'base64',
+);
 
 describe('trainees', () => {
   let container: AppContainer | undefined;
@@ -381,6 +386,143 @@ describe('trainees', () => {
     expect(JSON.stringify(count)).toContain('"total":14');
   });
 
+  it('lets an editor upload a profile photo and refuses a viewer', async () => {
+    const app = appFor(useContainer());
+    const editor = await signIn(app, 'editor@example.test');
+    const viewer = await signIn(app, 'viewer@example.test');
+    await useContainer().users.createUser({
+      email: 'trainee.photo@example.test',
+      password: PASSWORD,
+      role: 'trainee',
+      displayName: 'Trainee Photo',
+    });
+    const traineeUser = await signIn(app, 'trainee.photo@example.test');
+    const created = await request(app)
+      .post('/api/v1/admin/trainees')
+      .set('Cookie', editor.cookie)
+      .set('X-CSRF-Token', editor.csrf)
+      .send(
+        traineeBody({
+          email: 'photo.profile@example.test',
+          displayName: 'Photo Profile Label',
+          consentReceived: true,
+          listing: 'public',
+          publicationStatus: 'published',
+        }),
+      )
+      .expect(201);
+    const id = text(readRecord(created.body).id);
+    expect(readRecord(created.body).photoUrl).toBeNull();
+
+    await request(app)
+      .post('/api/v1/admin/trainees/photo')
+      .attach('file', TINY_PNG, { filename: 'portrait.png', contentType: 'image/png' })
+      .expect(401);
+    await request(app)
+      .post('/api/v1/admin/trainees/photo')
+      .set('Cookie', viewer.cookie)
+      .set('X-CSRF-Token', viewer.csrf)
+      .attach('file', TINY_PNG, { filename: 'portrait.png', contentType: 'image/png' })
+      .expect(403);
+    await request(app)
+      .post('/api/v1/admin/trainees/photo')
+      .set('Cookie', traineeUser.cookie)
+      .set('X-CSRF-Token', traineeUser.csrf)
+      .attach('file', TINY_PNG, { filename: 'portrait.png', contentType: 'image/png' })
+      .expect(403);
+    await request(app)
+      .post('/api/v1/admin/trainees/photo')
+      .set('Cookie', editor.cookie)
+      .attach('file', TINY_PNG, { filename: 'portrait.png', contentType: 'image/png' })
+      .expect(403);
+
+    const fake = await request(app)
+      .post('/api/v1/admin/trainees/photo')
+      .set('Cookie', editor.cookie)
+      .set('X-CSRF-Token', editor.csrf)
+      .attach('file', Buffer.from('not-an-image'), {
+        filename: 'portrait.jpg',
+        contentType: 'image/jpeg',
+      })
+      .expect(422);
+    expect(field(fake.body, 'photoUrl')).toBe('Use a JPEG, PNG, or WebP image.');
+    expect(JSON.stringify(fake.body)).not.toContain('not-an-image');
+    expect(JSON.stringify(fake.body)).not.toContain('portrait.jpg');
+
+    const uploaded = await request(app)
+      .post('/api/v1/admin/trainees/photo')
+      .set('Cookie', editor.cookie)
+      .set('X-CSRF-Token', editor.csrf)
+      .attach('file', TINY_PNG, { filename: 'real-name.jpg', contentType: 'image/jpeg' })
+      .expect(201);
+    const photo = readRecord(uploaded.body);
+    const photoUrl = text(photo.photoUrl);
+    const key = text(photo.storageKey);
+    expect(photoUrl).toBe(`/api/v1/public/uploads/${key}`);
+    expect(JSON.stringify(photo)).not.toContain('real-name');
+    const memory = memoryOf(useContainer());
+    expect(memory.objects.has(key)).toBe(true);
+
+    const image = await request(app).get(photoUrl).expect(200);
+    expect(image.headers['content-type']).toBe('image/png');
+    expect(Buffer.isBuffer(image.body)).toBe(true);
+
+    const mismatched = await request(app)
+      .patch(`/api/v1/admin/trainees/${id}`)
+      .set('Cookie', editor.cookie)
+      .set('X-CSRF-Token', editor.csrf)
+      .send({ photoUrl, photoStorageKey: '22222222-2222-2222-2222-222222222222' })
+      .expect(422);
+    expect(field(mismatched.body, 'photoUrl')).toBe('Use a JPEG, PNG, or WebP image.');
+
+    const saved = await request(app)
+      .patch(`/api/v1/admin/trainees/${id}`)
+      .set('Cookie', editor.cookie)
+      .set('X-CSRF-Token', editor.csrf)
+      .send({ photoUrl, photoStorageKey: key })
+      .expect(200);
+    expect(readRecord(saved.body).photoUrl).toBe(photoUrl);
+    expect(readRecord(saved.body).photoStorageKey).toBe(key);
+
+    const visible = await request(app).get(`/api/v1/public/trainees/${id}`).expect(200);
+    const shown = readRecord(visible.body);
+    expect(shown.photoUrl).toBe(photoUrl);
+    expect(shown.displayName).toBe('Photo Profile Label');
+    expect(shown).not.toHaveProperty('photoStorageKey');
+    expect(shown).not.toHaveProperty('email');
+
+    const replacement = await request(app)
+      .post('/api/v1/admin/trainees/photo')
+      .set('Cookie', editor.cookie)
+      .set('X-CSRF-Token', editor.csrf)
+      .attach('file', TINY_PNG, { filename: 'next.png', contentType: 'image/png' })
+      .expect(201);
+    const next = readRecord(replacement.body);
+    const nextKey = text(next.storageKey);
+    await request(app)
+      .patch(`/api/v1/admin/trainees/${id}`)
+      .set('Cookie', editor.cookie)
+      .set('X-CSRF-Token', editor.csrf)
+      .send({ photoUrl: next.photoUrl, photoStorageKey: nextKey })
+      .expect(200);
+    expect(memory.objects.has(key)).toBe(false);
+    expect(memory.objects.has(nextKey)).toBe(true);
+
+    const cleared = await request(app)
+      .patch(`/api/v1/admin/trainees/${id}`)
+      .set('Cookie', editor.cookie)
+      .set('X-CSRF-Token', editor.csrf)
+      .send({ photoUrl: null })
+      .expect(200);
+    expect(readRecord(cleared.body).photoUrl).toBeNull();
+    expect(readRecord(cleared.body).photoStorageKey).toBeNull();
+    expect(memory.objects.has(nextKey)).toBe(false);
+    await request(app).get(text(next.photoUrl)).expect(404);
+
+    const hidden = await request(app).get(`/api/v1/public/trainees/${id}`).expect(200);
+    expect(readRecord(hidden.body).photoUrl).toBeNull();
+  });
+
   function useContainer(): AppContainer {
     if (!container) throw new Error('The test database was not opened.');
     return container;
@@ -415,6 +557,13 @@ function appFor(container: AppContainer) {
     authRouter: container.authRouter,
     curriculumRouter: container.curriculumRouter,
   });
+}
+
+function memoryOf(container: AppContainer): MemoryStorage {
+  if (!(container.storage instanceof MemoryStorage)) {
+    throw new Error('The test provider is not the in-memory store.');
+  }
+  return container.storage;
 }
 
 function text(value: unknown): string {
