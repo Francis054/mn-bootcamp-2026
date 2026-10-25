@@ -104,7 +104,11 @@ export interface Project {
   internalNotes: string;
 }
 
-export type PublicProject = Omit<Project, 'internalNotes' | 'repositoryUrl' | 'demoUrl' | 'shareAgreed' | 'labOnlyConfirmed' | 'traineeIds' | 'lessonIds'>;
+export type PublicProject = Omit<Project, 'internalNotes' | 'repositoryUrl' | 'demoUrl' | 'shareAgreed' | 'labOnlyConfirmed' | 'traineeIds' | 'lessonIds'> & {
+  /** Present only when every linked trainee has agreed to share the link. */
+  repositoryUrl?: string;
+  demoUrl?: string;
+};
 
 export type EventBody =
   | { kind: 'callout'; tone: 'lime' | 'warn' | 'plain'; title: string; text: string }

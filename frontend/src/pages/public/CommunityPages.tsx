@@ -17,6 +17,8 @@ import { collect, emailAddress, minLength, required } from '@/domain/validate';
 import { usePublicContent } from '@/hooks/useContent';
 import { downloadCalendar, EventRow, moduleOf, PageIntro, PublicGate, SampleMark } from './helpers';
 
+export { ProjectPage } from './ProjectPage';
+
 export function TraineesPage() {
   const { trainees, loading, error } = usePublicContent();
   const [focus, setFocus] = useState('all');
@@ -140,34 +142,6 @@ export function ProjectsPage() {
         </div>
       </section>
     </>
-    </PublicGate>
-  );
-}
-
-export function ProjectPage() {
-  const { id = '' } = useParams();
-  const { projects, loading, error } = usePublicContent();
-  const project = projects.find((item) => item.id === id);
-  usePageMeta(project?.title ?? 'Project');
-  return (
-    <PublicGate loading={loading} error={error} errorTitle="This project could not be loaded">
-    {!project ? (
-      <section className="section"><div className="container"><ErrorState title="This project is not available" text="Drafts and hidden listings stay off this page. Publish the project with a public or sample listing to show it." /></div></section>
-    ) : (
-    <section className="section">
-      <div className="container">
-        <ol className="crumbs"><li><Link to="/">Home</Link></li><li><Link to="/projects">Projects</Link></li><li aria-current="page">{project.title}</li></ol>
-        <div className="flex wrap" style={{ gap: 10, marginTop: 24 }}><span className="tag">{project.type}</span><SampleMark listing={project.listing}>Sample project</SampleMark><span className="tag">{moduleOf(project.moduleId).name}</span></div>
-        <h1 style={{ marginTop: 16 }}>{project.title}</h1>
-        <p className="lead">{project.abstract}</p>
-        <figure className="detail-media" style={{ marginTop: 32 }}><Photo file={project.image} alt="" width={1600} height={1066} sizes="100vw" /></figure>
-        <div className="split" style={{ marginTop: 48 }}>
-          <div><h2>Approach</h2>{(project.steps ?? []).length ? <ol className="steps">{(project.steps ?? []).map((step) => <li key={step}><h4>{step}</h4><p className="muted">Placeholder step. Real write-ups will be added when a team agrees to share the work.</p></li>)}</ol> : <p className="muted">The approach will be added when the team shares the write-up.</p>}</div>
-          <aside><div className="callout"><h3>Tools</h3><p>{project.tools || 'Tools will be listed with the write-up.'}</p><p className="muted" style={{ marginTop: 12 }}>Repository and demo links stay private until a share agreement is recorded. They are not on this page.</p><p style={{ marginTop: 12 }}>{(project.team ?? []).length ? `Team: ${(project.team ?? []).join(', ')}` : 'No team names are published yet.'}</p></div></aside>
-        </div>
-      </div>
-    </section>
-    )}
     </PublicGate>
   );
 }
