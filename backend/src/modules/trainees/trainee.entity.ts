@@ -39,6 +39,14 @@ export class TraineeEntity {
   @Column({ type: 'varchar', length: 500, nullable: true })
   portfolio!: string | null;
 
+  /** Public address of the profile photo. Null until an editor uploads one. */
+  @Column({ name: 'photo_url', type: 'varchar', length: 1000, nullable: true })
+  photoUrl!: string | null;
+
+  /** Provider key for the photo, so replace and remove can delete the previous object. */
+  @Column({ name: 'photo_storage_key', type: 'varchar', length: 200, nullable: true })
+  photoStorageKey!: string | null;
+
   @Column({ name: 'consent_received', type: 'boolean' })
   consentReceived!: boolean;
 

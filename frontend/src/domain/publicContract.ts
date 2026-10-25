@@ -1,3 +1,4 @@
+import { displayPhotoUrl } from './photo';
 import type {
   AboutContent,
   EventBody,
@@ -152,6 +153,7 @@ export function normalizeTrainees(value: unknown): PublicTrainee[] {
       skills: lines(row.skills),
       bio: text(row.bio),
       quote: text(row.quote),
+      photoUrl: displayPhotoUrl(row.photoUrl),
       listing: listing(row.listing),
       publicationStatus: status(row.publicationStatus),
       statusLabel: text(row.statusLabel, 'In training'),

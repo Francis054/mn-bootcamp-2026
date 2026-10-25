@@ -165,6 +165,7 @@ export function buildTrainees(): Trainee[] {
       quote: 'Sample quote — the trainee’s own words go here.',
       linkedin: '',
       portfolio: '',
+      photoUrl: null,
       consentReceived: false,
       listing: 'sample',
       publicationStatus: 'published',

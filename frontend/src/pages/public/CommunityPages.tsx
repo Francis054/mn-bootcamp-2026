@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '@/api/client';
-import { Avatar, CountUp, OfficialLogo, Photo, SplitHeading } from '@/components/Brand';
+import { CountUp, OfficialLogo, Photo, SplitHeading } from '@/components/Brand';
 import { Chips, ErrorSummary, Field, Tabs } from '@/components/controls';
 import { EmptyState, ErrorState, useLightbox, useToast } from '@/components/feedback';
 import { Loader } from '@/components/Loader';
@@ -15,7 +15,7 @@ import { APP_TODAY, parseUtcDate } from '@/domain/format';
 import { isApiError } from '@/domain/types';
 import { collect, emailAddress, minLength, required } from '@/domain/validate';
 import { usePublicContent } from '@/hooks/useContent';
-import { downloadCalendar, EventRow, moduleOf, PageIntro, PublicGate, SampleMark } from './helpers';
+import { downloadCalendar, EventRow, moduleOf, PageIntro, PublicGate, SampleMark, TraineeArt } from './helpers';
 
 export { ProjectPage } from './ProjectPage';
 
@@ -42,7 +42,7 @@ export function TraineesPage() {
               <div className="t-grid">
                 {rows.map((trainee) => (
                   <Link className="tcard" to={`/trainees/${trainee.id}`} key={trainee.id}>
-                    <div className="tcard__art" style={{ ['--h' as string]: trainee.hue }}><span className="ph">Placeholder</span><Avatar initials={trainee.initials} hue={trainee.hue} /></div>
+                    <TraineeArt trainee={trainee} variant="card" />
                     <div className="tcard__body"><h3>{trainee.displayName}</h3><p>{trainee.track} · {moduleOf(trainee.focus).short}</p><div className="tcard__tags">{(trainee.skills ?? []).slice(0, 2).map((skill) => <span className="tag" key={skill}>{skill}</span>)}</div></div>
                   </Link>
                 ))}
@@ -73,7 +73,7 @@ export function TraineePage() {
         <div className="container">
           <ol className="crumbs"><li><Link to="/">Home</Link></li><li><Link to="/trainees">Trainees</Link></li><li aria-current="page">{trainee.displayName}</li></ol>
           <div className="profile-head__grid" style={{ marginTop: 32 }}>
-            <div className="profile-art mask-reveal is-in" style={{ ['--h' as string]: trainee.hue }}><span className="ph">Placeholder portrait</span><Avatar initials={trainee.initials} hue={trainee.hue} size="lg" /></div>
+            <TraineeArt trainee={trainee} variant="profile" />
             <div>
               <div className="flex wrap" style={{ gap: 10 }}><span className="badge badge--lime">{trainee.statusLabel}</span><SampleMark listing={trainee.listing}>Sample profile — placeholder</SampleMark></div>
               <h1 style={{ marginTop: 16 }}>{trainee.displayName}</h1>

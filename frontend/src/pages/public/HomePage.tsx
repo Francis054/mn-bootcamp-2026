@@ -1,6 +1,6 @@
 import { useRef, type MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { Avatar, Cover, Photo, Reveal, SplitHeading } from '@/components/Brand';
+import { Cover, Photo, Reveal, SplitHeading } from '@/components/Brand';
 import { Icon } from '@/components/Icon';
 import { Netlines } from '@/components/Netlines';
 import { TenMark } from '@/components/TenMark';
@@ -11,7 +11,7 @@ import { usesMockApi } from '@/config/runtime';
 import { currentWeek, formatDate } from '@/domain/format';
 import { useAuth } from '@/auth/AuthProvider';
 import { usePublicContent } from '@/hooks/useContent';
-import { moduleOf, PublicGate, SampleMark } from './helpers';
+import { moduleOf, PublicGate, SampleMark, TraineeArt } from './helpers';
 
 const PEEK = ['electronics-lab', 'hack-coding-team', 'vr-demo-group', 'presenters-yellow-room'];
 
@@ -166,7 +166,7 @@ export function HomePage() {
             {trainees.length ? null : <EmptyState icon="users" title="No public profiles yet" text="Trainee cards appear after consent is recorded and the profile is published." />}
             {trainees.slice(0, 6).map((trainee) => (
               <Link className="tcard" to={`/trainees/${trainee.id}`} key={trainee.id}>
-                <div className="tcard__art" style={{ ['--h' as string]: trainee.hue }}><span className="ph">Placeholder</span><Avatar initials={trainee.initials} hue={trainee.hue} /></div>
+                <TraineeArt trainee={trainee} variant="card" />
                 <div className="tcard__body"><h3>{trainee.displayName}</h3><p>Focus: {moduleOf(trainee.focus).name}</p></div>
               </Link>
             ))}
