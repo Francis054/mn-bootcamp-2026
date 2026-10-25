@@ -19,6 +19,20 @@ function renderAt(path: string) {
 }
 
 describe('public routes', () => {
+  it('renders the bootcamp overview from the prototype', async () => {
+    renderAt('/bootcamp');
+    expect(await screen.findByRole('heading', { name: /six disciplines/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /what the cohort learns/i })).toBeInTheDocument();
+    expect(screen.getByText('Topics verified')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /practical first/i })).toBeInTheDocument();
+    expect(screen.getByText('Does the bootcamp cost anything?')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /see the plan week by week/i })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /what the cohort studies/i })).not.toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /twelve weeks on the timetable/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /foundations & secure systems/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /see the timetable/i })).toBeInTheDocument();
+  });
+
   it('renders the home story and verified facts', async () => {
     renderAt('/');
     expect(await screen.findByRole('heading', { name: /secure the future/i })).toBeInTheDocument();

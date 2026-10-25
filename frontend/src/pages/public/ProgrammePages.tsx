@@ -5,7 +5,7 @@ import { SiteImage } from '@/components/SiteImage';
 import { Crumbs, usePageMeta } from '@/components/SiteChrome';
 import { Chips, Tabs } from '@/components/controls';
 import { EmptyState, ErrorState } from '@/components/feedback';
-import { Icon } from '@/components/Icon';
+import { Icon, type IconName } from '@/components/Icon';
 import { Netlines } from '@/components/Netlines';
 import { MODULES } from '@/dev/fixtures';
 import { currentWeek, formatDate, parseUtcDate } from '@/domain/format';
@@ -14,14 +14,21 @@ import { usePublicContent } from '@/hooks/useContent';
 import { useTimetable } from '@/hooks/useTimetable';
 import { moduleOf, PageIntro, PublicGate, SampleMark, scheduleText, useTimelineProgress } from './helpers';
 
+const OVERVIEW_STEPS = [
+  { title: 'Hands-on practice', text: 'Learning by doing, in labs and on real tools rather than slides alone.' },
+  { title: 'Soft skills', text: 'Communication, teamwork and presenting findings, all part of the programme.' },
+  { title: 'Career coaching', text: 'Support to turn new skills into job applications and interviews.' },
+  { title: 'A real-life project', text: 'Each bootcamp includes a practical project applied to a real problem.' },
+] as const;
+
 export function BootcampPage() {
   const timetable = useTimetable();
   const week = timetable.data?.currentWeek ?? currentWeek();
   const ends = timetable.data?.programme?.endsOn ?? '2026-12-25';
+  const blocks = timetable.data?.blocks ?? [];
   return (
     <>
-      <PageIntro dark title="Bootcamp overview" crumbs={[{ label: 'Home', to: '/' }, { label: 'Bootcamp' }, { label: 'Overview' }]} eyebrow="Cybersecurity Bootcamp 2026" headline={'Twelve weeks.\nThree blocks.\nZero cost.'} aside={<><Reveal><HatMark className="hat-seal hat-seal--hero" /></Reveal><Reveal><p className="lead">A practical, in-person programme at the Maxim Nyansa Foundation in Accra, from 5 October to 25 December 2026.</p></Reveal><Reveal><div className="flex wrap" style={{ marginTop: 24 }}><Link className="btn" to="/schedule">See the timetable <span className="arrow"><Icon name="arrow-right" className="i--sm" /></span></Link><a className="btn btn--ghost-light" href="https://maximnyansaapplications.com/" target="_blank" rel="noopener">Applications site <Icon name="external" className="i--sm" /></a></div></Reveal></>}>
-        <Netlines />
+      <PageIntro dark backdrop={<Netlines />} headlineClassName="is-wide" title="Bootcamp overview" crumbs={[{ label: 'Home', to: '/' }, { label: 'Bootcamp' }, { label: 'Overview' }]} eyebrow="Cyber Security Bootcamp 2026" headline={'Six disciplines.\nOne cohort.\nZero cost.'} aside={<><Reveal><HatMark className="hat-seal hat-seal--hero" /></Reveal><Reveal><p className="lead">A practical, in-person programme at the Maxim Nyansa Foundation in Accra, built around the skills security teams hire for. Training runs from 5 October to {formatDate(ends, { year: 'numeric' })}.</p></Reveal><Reveal><div className="flex wrap" style={{ marginTop: 24 }}><Link className="btn" to="/journey">Follow the journey <span className="arrow"><Icon name="arrow-right" className="i--sm" /></span></Link><Link className="btn btn--ghost-light" to="/schedule">See the timetable <span className="arrow"><Icon name="arrow-right" className="i--sm" /></span></Link><a className="btn btn--ghost-light" href="https://maximnyansaapplications.com/" target="_blank" rel="noopener">Applications site <Icon name="external" className="i--sm" /></a></div></Reveal></>}>
         <dl className="facts" style={{ marginTop: 64 }}>
           <div><dt>Training starts</dt><dd>5 Oct 2026</dd></div>
           <div><dt>Training ends</dt><dd>{formatDate(ends, { year: 'numeric' })}</dd></div>
@@ -34,17 +41,40 @@ export function BootcampPage() {
       <section className="section" aria-labelledby="mod-title">
         <div className="container">
           <div className="sec-head">
-            <div className="sec-head__title"><span className="eyebrow"><HatMark />The three blocks</span><h2 id="mod-title" className="h2">What the cohort studies.</h2></div>
-            <div className="sec-head__aside"><p className="muted">Block names, week order and topics come from the timetable. Sample lesson notes in the archive use a separate set of tags.</p><Link className="link" to="/schedule">Daily timetable <Icon name="arrow-right" className="i--sm" /></Link></div>
+            <div className="sec-head__title"><Reveal><span className="eyebrow"><HatMark />Curriculum</span></Reveal><Reveal><h2 id="mod-title" className="h2">What the cohort learns.</h2></Reveal></div>
+            <Reveal className="sec-head__aside"><p className="muted">The six areas below are confirmed by the Foundation. Their order and weekly split are still to be confirmed.</p><span className="verified">Topics verified</span></Reveal>
           </div>
-          <div className="mod-grid">
-            {(timetable.data?.blocks ?? []).map((block) => (
-              <article className="mod" key={block.id}>
-                <span className="mod__n">0{block.sortOrder}</span>
-                <h3>{block.name}</h3>
-                <p>{block.professionalismTheme}. {block.cybersecurityTheme}.</p>
-                <ul className="objectives">{block.weeks.map((item) => <li key={item.id}><span>Week {item.number} · {item.title}</span></li>)}</ul>
-                <Link className="link" to={`/schedule?week=${block.weeks[0]?.number ?? 1}`}>Open this block <Icon name="arrow-right" className="i--sm" /></Link>
+          <div className="modules">
+            {MODULES.map((module, index) => (
+              <article className="module" key={module.id}>
+                <span className="mi"><Icon name={module.icon as IconName} /></span>
+                <div>
+                  <span className="n">Module {String(index + 1).padStart(2, '0')}</span>
+                  <h3>{module.name}</h3>
+                  <p className="muted">{module.summary}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+      <section className="section section--paper" aria-labelledby="blocks-title">
+        <div className="container">
+          <div className="sec-head">
+            <div className="sec-head__title"><Reveal><span className="eyebrow">The three blocks</span></Reveal><Reveal><h2 id="blocks-title" className="h2">Twelve weeks on the timetable.</h2></Reveal></div>
+            <Reveal className="sec-head__aside"><p className="muted">Block names, week order and topics come from the timetable. Sample lesson notes in the archive use a separate set of tags.</p><Link className="link" to="/schedule">Daily timetable <Icon name="arrow-right" className="i--sm" /></Link></Reveal>
+          </div>
+          <div className="modules">
+            {blocks.map((block) => (
+              <article className="module" key={block.id}>
+                <span className="mi" aria-hidden="true">{String(block.sortOrder).padStart(2, '0')}</span>
+                <div>
+                  <span className="n">Block {String(block.sortOrder).padStart(2, '0')}</span>
+                  <h3>{block.name}</h3>
+                  <p className="muted">{block.professionalismTheme}. {block.cybersecurityTheme}.</p>
+                  <ul className="objectives">{block.weeks.map((item) => <li key={item.id}><span>Week {item.number} · {item.title}</span></li>)}</ul>
+                  <Link className="link" to={`/schedule?week=${block.weeks[0]?.number ?? 1}`}>Open this block <Icon name="arrow-right" className="i--sm" /></Link>
+                </div>
               </article>
             ))}
           </div>
@@ -53,10 +83,42 @@ export function BootcampPage() {
           <p className="muted" style={{ marginTop: 28 }}>Week {week} of 12. Week 12 includes integrated exam revision and a 40-question mock assessment.</p>
         </div>
       </section>
-      <section className="section section--paper">
+      <section className="section section--paper" aria-labelledby="how-title">
         <div className="container split">
-          <div className="split__a"><span className="eyebrow">Who it is for</span><h2 className="h2" style={{ marginTop: 16 }}>Young people building a start in cybersecurity.</h2></div>
-          <div className="split__b"><p className="lead">The 2020 pilot, requested by earlier trainees, ran at Tantra Hills with 14 participants. This 2026 cohort is a separate programme. Trainee numbers for 2026 are not published here.</p><span className="ph">Cohort size TBC</span></div>
+          <div className="split__a">
+            <div className="sticky">
+              <Reveal><span className="eyebrow">How training works</span></Reveal>
+              <Reveal><h2 id="how-title" className="h2" style={{ margin: '20px 0' }}>Practical first. Career-ready by design.</h2></Reveal>
+              <Reveal><p className="muted">The Foundation’s IT professional training combines technical practice with the skills that help graduates get hired.</p></Reveal>
+              <Reveal><figure className="photo" style={{ marginTop: 32, aspectRatio: '4 / 3' }}><Photo file="presenters-yellow-room" alt="Presenters speaking to a room" width={1600} height={1066} sizes="(max-width:900px) 100vw, 40vw" /></figure></Reveal>
+            </div>
+          </div>
+          <div className="split__b">
+            <ol className="steps">
+              {OVERVIEW_STEPS.map((step) => (
+                <li key={step.title}><h4>{step.title}</h4><p className="muted">{step.text}</p></li>
+              ))}
+              <li><h4>Certification exams</h4><p className="muted">Foundation bootcamps include EXIN certification exams. <span className="tbc">Exams for this cohort to be confirmed</span></p></li>
+            </ol>
+            <Reveal><div className="callout callout--lime" style={{ marginTop: 16 }}><h3>Where it all started</h3><p>The Foundation piloted its first cybersecurity bootcamp in 2020 with 14 trainees. The 2026 cohort builds on that pilot.</p></div></Reveal>
+          </div>
+        </div>
+      </section>
+      <section className="section" aria-labelledby="faq-title">
+        <div className="container split">
+          <div className="split__a"><Reveal><span className="eyebrow">Questions</span></Reveal><Reveal><h2 id="faq-title" className="h2" style={{ marginTop: 20 }}>Good to know.</h2></Reveal></div>
+          <div className="split__b">
+            <details className="faq" open><summary>Does the bootcamp cost anything?<span className="pm"><Icon name="plus" className="i--sm" /></span></summary><div className="faq-body">No. The 2026 Cyber Security Bootcamp is free.</div></details>
+            <details className="faq"><summary>Where does training happen?<span className="pm"><Icon name="plus" className="i--sm" /></span></summary><div className="faq-body">In person at the Maxim Nyansa Foundation premises, Coral Avenue – Tantra Hills, Accra.</div></details>
+            <details className="faq"><summary>When does it run?<span className="pm"><Icon name="plus" className="i--sm" /></span></summary><div className="faq-body">Training started on 5 October 2026 and ends on {formatDate(ends, { year: 'numeric' })}. The graduation date is still to be confirmed.</div></details>
+            <details className="faq"><summary>Can I still apply?<span className="pm"><Icon name="plus" className="i--sm" /></span></summary><div className="faq-body">Applications were taken through maximnyansaapplications.com. This cohort has already started, so watch the Foundation’s channels for the next intake. <span className="ph">Next intake copy to be confirmed</span></div></details>
+            <details className="faq"><summary>How long is the programme?<span className="pm"><Icon name="plus" className="i--sm" /></span></summary><div className="faq-body">About three months. The Foundation’s pages describe bootcamp lengths of 12 to 18 weeks, so the exact length for 2026 is to be confirmed.</div></details>
+          </div>
+        </div>
+      </section>
+      <section className="section" style={{ paddingTop: 0 }}>
+        <div className="container">
+          <Reveal reveal="scale"><div className="cta-block"><h2>See the plan week by week.</h2><div className="cta-side"><p>Follow the indicative timeline from week one to graduation.</p><Link className="btn btn--dark" to="/journey">Open the journey <span className="arrow"><Icon name="arrow-right" className="i--sm" /></span></Link></div></div></Reveal>
         </div>
       </section>
     </>
