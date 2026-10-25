@@ -1,146 +1,42 @@
 /** Built-in pictures. Keys, labels, and addresses match the API catalogue. */
 
+/** Bare artwork. The plate and the banner are drawn on top while the slot is still this default. */
+export const COMMUNITY_BADGE_BARE = '/assets/logo/community-badge-bare.webp';
+
+export const DEFAULT_BADGE_TAGLINE = 'STRONGER TOGETHER';
+
 export const SITE_IMAGE_SLOTS = [
   {
     key: 'community-logo',
-    label: 'Community logo (black hat vs ethical hat)',
-    description: 'The black hat facing the ethical hat. Used as the seal on the homepage, the bootcamp page, empty states, the not-found page, and the about page.',
-    url: '/assets/logo/logo-mark.svg',
+    label: 'Community logo',
+    description: 'The approved community badge (black hat and ethical hat). Header, footer, sign-in panel, admin sidebar, empty states, the loading screen, and the favicon. While this slot is the original artwork, the foundation logo and the badge tagline are drawn on top. A replacement image is shown on its own.',
+    url: '/assets/logo/community-badge.webp',
     alt: 'Cyber Bootcamp community logo',
-    width: 120,
-    height: 40,
+    width: 1024,
+    height: 1024,
     fit: 'contain',
-  },
-  {
-    key: 'community-logo-icon',
-    label: 'Community logo, compact icon (black hat vs ethical hat)',
-    description: 'The compact hat icon beside the Cyber Bootcamp name in the public header, the footer, the sign-in brand, and the admin sidebar.',
-    url: '/assets/logo/logo-icon.svg',
-    alt: 'Cyber Bootcamp icon',
-    width: 64,
-    height: 20,
-    fit: 'contain',
-  },
-  {
-    key: 'community-wordmark',
-    label: 'Community wordmark on dark (black hat vs ethical hat)',
-    description: 'The hat pair with the Cyber Bootcamp name, on the dark sign-in panel.',
-    url: '/assets/logo/logo-wordmark-on-dark.svg',
-    alt: 'Cyber Bootcamp community logo with wordmark',
-    width: 320,
-    height: 64,
-    fit: 'contain',
+    tagline: 'STRONGER TOGETHER',
   },
   {
     key: 'foundation-logo',
-    label: 'Parent organisation logo (Maxim Nyansa Foundation)',
-    description: 'The Maxim Nyansa Foundation plate beside the community logo in the header and footer, on the sign-in form, in the admin sidebar, and on the about page. This is the parent organisation, not the community logo.',
+    label: 'Maxim Nyansa Foundation logo',
+    description: 'The parent-organisation wordmark. It is drawn inside the community badge, in the header and footer plate, on the sign-in form, in the admin sidebar, on the about page, and in the loader footer. It is not the community logo. A larger PNG or WebP stays sharper. SVG files are not accepted.',
     url: '/assets/logo/maxim-nyansa-foundation-logo.png',
     alt: 'Maxim Nyansa Foundation logo',
     width: 200,
     height: 41,
     fit: 'contain',
   },
-  {
-    key: 'home-hero-main',
-    label: 'Homepage hero, main photo',
-    description: 'The large photo on the homepage hero. The frame stays wide so a group photo is not cropped.',
-    url: '/assets/img/participant-portrait-1600.webp',
-    alt: 'The Maxim Nyansa Foundation group in white 10-year shirts, posed in front of the anniversary banner',
-    width: 1600,
-    height: 756,
-    fit: 'contain',
-  },
-  {
-    key: 'home-hero-side',
-    label: 'Homepage hero, side photo',
-    description: 'The upper small photo on the homepage hero.',
-    url: '/assets/img/hack-coding-team-1600.webp',
-    alt: 'A team working together at a laptop',
-    width: 1600,
-    height: 1066,
-    fit: 'cover',
-  },
-  {
-    key: 'home-hero-accent',
-    label: 'Homepage hero, accent photo',
-    description: 'The lower small photo on the homepage hero.',
-    url: '/assets/img/vr-headset-moment-1600.webp',
-    alt: 'Trying out a VR headset at an event',
-    width: 1600,
-    height: 1066,
-    fit: 'cover',
-  },
-  {
-    key: 'home-class-peek-1',
-    label: 'Homepage class row, first hover photo',
-    description: 'The picture that follows the pointer on the first featured class. Later rows repeat these four pictures.',
-    url: '/assets/img/electronics-lab-1600.webp',
-    alt: 'Hands-on work at a Foundation build table',
-    width: 1600,
-    height: 1066,
-    fit: 'cover',
-  },
-  {
-    key: 'home-class-peek-2',
-    label: 'Homepage class row, second hover photo',
-    description: 'The pointer picture for the second featured class row.',
-    url: '/assets/img/hack-coding-team-1600.webp',
-    alt: 'A team working together at a laptop',
-    width: 1600,
-    height: 1066,
-    fit: 'cover',
-  },
-  {
-    key: 'home-class-peek-3',
-    label: 'Homepage class row, third hover photo',
-    description: 'The pointer picture for the third featured class row.',
-    url: '/assets/img/vr-demo-group-1600.webp',
-    alt: 'A group gathered around a VR demonstration',
-    width: 1600,
-    height: 1066,
-    fit: 'cover',
-  },
-  {
-    key: 'home-class-peek-4',
-    label: 'Homepage class row, fourth hover photo',
-    description: 'The pointer picture for the fourth featured class row.',
-    url: '/assets/img/presenters-yellow-room-1600.webp',
-    alt: 'Presenters speaking in a yellow room',
-    width: 1600,
-    height: 1066,
-    fit: 'cover',
-  },
-  {
-    key: 'bootcamp-banner',
-    label: 'Bootcamp overview banner',
-    description: 'The wide photo under the facts on the bootcamp overview page.',
-    url: '/assets/img/electronics-lab-1600.webp',
-    alt: 'Hands-on work at a Foundation build table',
-    width: 1600,
-    height: 1066,
-    fit: 'cover',
-  },
-  {
-    key: 'about-banner',
-    label: 'About page banner',
-    description: 'The wide photo under the introduction on the about page.',
-    url: '/assets/img/anniversary-group-outdoor-1600.webp',
-    alt: 'An outdoor group photo at a Foundation event',
-    width: 1600,
-    height: 1067,
-    fit: 'cover',
-  },
-  {
-    key: 'sign-in-panel',
-    label: 'Sign-in panel photo',
-    description: 'The photograph behind the words on the sign-in page.',
-    url: '/assets/img/electronics-lab-1600.webp',
-    alt: 'Hands-on work at a Foundation build table',
-    width: 1600,
-    height: 1067,
-    fit: 'cover',
-  },
+  { key: 'home-hero-main', label: 'Homepage hero, main photo', description: 'The large photo on the homepage hero. The frame stays wide so a group photo is not cropped.', url: '/assets/img/participant-portrait-1600.webp', alt: 'The Maxim Nyansa Foundation group in white 10-year shirts, posed in front of the anniversary banner', width: 1600, height: 756, fit: 'contain' },
+  { key: 'home-hero-side', label: 'Homepage hero, side photo', description: 'The upper small photo on the homepage hero.', url: '/assets/img/hack-coding-team-1600.webp', alt: 'A team working together at a laptop', width: 1600, height: 1066, fit: 'cover' },
+  { key: 'home-hero-accent', label: 'Homepage hero, accent photo', description: 'The lower small photo on the homepage hero.', url: '/assets/img/vr-headset-moment-1600.webp', alt: 'Trying out a VR headset at an event', width: 1600, height: 1066, fit: 'cover' },
+  { key: 'home-class-peek-1', label: 'Homepage class row, first hover photo', description: 'The picture that follows the pointer on the first featured class. Later rows repeat these four pictures.', url: '/assets/img/electronics-lab-1600.webp', alt: 'Hands-on work at a Foundation build table', width: 1600, height: 1066, fit: 'cover' },
+  { key: 'home-class-peek-2', label: 'Homepage class row, second hover photo', description: 'The pointer picture for the second featured class row.', url: '/assets/img/hack-coding-team-1600.webp', alt: 'A team working together at a laptop', width: 1600, height: 1066, fit: 'cover' },
+  { key: 'home-class-peek-3', label: 'Homepage class row, third hover photo', description: 'The pointer picture for the third featured class row.', url: '/assets/img/vr-demo-group-1600.webp', alt: 'A group gathered around a VR demonstration', width: 1600, height: 1066, fit: 'cover' },
+  { key: 'home-class-peek-4', label: 'Homepage class row, fourth hover photo', description: 'The pointer picture for the fourth featured class row.', url: '/assets/img/presenters-yellow-room-1600.webp', alt: 'Presenters speaking in a yellow room', width: 1600, height: 1066, fit: 'cover' },
+  { key: 'bootcamp-banner', label: 'Bootcamp overview banner', description: 'The wide photo under the facts on the bootcamp overview page.', url: '/assets/img/electronics-lab-1600.webp', alt: 'Hands-on work at a Foundation build table', width: 1600, height: 1066, fit: 'cover' },
+  { key: 'about-banner', label: 'About page banner', description: 'The wide photo under the introduction on the about page.', url: '/assets/img/anniversary-group-outdoor-1600.webp', alt: 'An outdoor group photo at a Foundation event', width: 1600, height: 1067, fit: 'cover' },
+  { key: 'sign-in-panel', label: 'Sign-in panel photo', description: 'The photograph behind the words on the sign-in page.', url: '/assets/img/electronics-lab-1600.webp', alt: 'Hands-on work at a Foundation build table', width: 1600, height: 1067, fit: 'cover' },
 ] as const;
 
 export type SiteImageKey = (typeof SITE_IMAGE_SLOTS)[number]['key'];
@@ -155,6 +51,7 @@ export interface SiteImageSlot {
   width: number;
   height: number;
   fit: SiteImageFit;
+  tagline?: string;
 }
 
 export interface SiteImageAdmin {
@@ -168,6 +65,7 @@ export interface SiteImageAdmin {
   fit: SiteImageFit;
   defaultUrl: string;
   defaultAlt: string;
+  tagline: string;
   usingDefault: boolean;
   updatedAt: string;
   updatedBy: string | null;
@@ -182,6 +80,9 @@ export interface ResolvedSiteImage {
   fallbackSrc: string;
   srcSet?: string;
   fallbackSrcSet?: string;
+  tagline: string;
+  /** The community slot is still the bundled badge, so the plate and banner are drawn on top. */
+  liveBadge: boolean;
 }
 
 const ASSET_PATH = /^\/assets\/(?:[a-z0-9][a-z0-9._-]*\/)*[a-z0-9][a-z0-9._-]*$/i;
@@ -190,6 +91,12 @@ const DATA_IMAGE = /^data:image\/(jpeg|png|webp);base64,[a-z0-9+/]+={0,2}$/i;
 const PAIR = /^\/assets\/img\/([a-z0-9-]+)-1600\.webp$/i;
 
 const BY_KEY = new Map(SITE_IMAGE_SLOTS.map((slot) => [slot.key, slot]));
+
+export function slotTagline(slot: object | null | undefined): string {
+  if (!slot || !('tagline' in slot)) return '';
+  const value = slot.tagline;
+  return typeof value === 'string' ? value : '';
+}
 
 export function siteImageSlot(key: string): SiteImageSlot | undefined {
   return BY_KEY.get(key as SiteImageKey);
@@ -227,33 +134,31 @@ export function siteImageAltError(value: string): string | undefined {
   return undefined;
 }
 
-export function resolveSiteImage(key: SiteImageKey, remote?: { url?: unknown; alt?: unknown; width?: unknown; height?: unknown; fit?: unknown } | null): ResolvedSiteImage {
+export function siteImageTaglineError(value: string): string | undefined {
+  if (/[\r\n]/.test(value)) return 'Use a single line.';
+  if (value.trim().length > 40) return 'Use at most 40 characters.';
+  return undefined;
+}
+
+export function resolveSiteImage(key: SiteImageKey, remote?: { url?: unknown; alt?: unknown; width?: unknown; height?: unknown; fit?: unknown; tagline?: unknown } | null): ResolvedSiteImage {
   const fallback = BY_KEY.get(key);
   if (!fallback) {
-    return { src: '', alt: '', width: 1, height: 1, fit: 'cover', fallbackSrc: '' };
+    return { src: '', alt: '', width: 1, height: 1, fit: 'cover', fallbackSrc: '', tagline: '', liveBadge: false };
   }
   const remoteUrl = remote ? safeSiteImageUrl(remote.url) : null;
   const src = remoteUrl ?? fallback.url;
   const alt = remote && typeof remote.alt === 'string' && remote.alt.trim().length <= 300 ? remote.alt.trim() : fallback.alt;
+  const tagline = remote && typeof remote.tagline === 'string' && remote.tagline.trim().length <= 40 && !/[\r\n]/.test(remote.tagline) ? remote.tagline.trim() : slotTagline(fallback);
   const width = positive(remote?.width) ?? fallback.width;
   const height = positive(remote?.height) ?? fallback.height;
   const fit: SiteImageFit = remote?.fit === 'contain' || remote?.fit === 'cover' ? remote.fit : fallback.fit;
   const srcSet = bundledSrcSet(src);
   const fallbackSrcSet = bundledSrcSet(fallback.url);
-  return {
-    src,
-    alt,
-    width,
-    height,
-    fit,
-    fallbackSrc: fallback.url,
-    ...(srcSet ? { srcSet } : {}),
-    ...(fallbackSrcSet ? { fallbackSrcSet } : {}),
-  };
+  return { src, alt, width, height, fit, fallbackSrc: fallback.url, tagline, liveBadge: key === 'community-logo' && src === fallback.url, ...(srcSet ? { srcSet } : {}), ...(fallbackSrcSet ? { fallbackSrcSet } : {}) };
 }
 
-export function indexSiteImages(body: unknown): Map<SiteImageKey, { url: string; alt: unknown; width: unknown; height: unknown; fit: unknown }> {
-  const map = new Map<SiteImageKey, { url: string; alt: unknown; width: unknown; height: unknown; fit: unknown }>();
+export function indexSiteImages(body: unknown): Map<SiteImageKey, { url: string; alt: unknown; width: unknown; height: unknown; fit: unknown; tagline: unknown }> {
+  const map = new Map<SiteImageKey, { url: string; alt: unknown; width: unknown; height: unknown; fit: unknown; tagline: unknown }>();
   if (!Array.isArray(body)) return map;
   for (const item of body) {
     if (!item || typeof item !== 'object') continue;
@@ -261,41 +166,17 @@ export function indexSiteImages(body: unknown): Map<SiteImageKey, { url: string;
     if (typeof record.key !== 'string' || !isSiteImageKey(record.key)) continue;
     const url = safeSiteImageUrl(record.url);
     if (!url) continue;
-    map.set(record.key, { url, alt: record.alt, width: record.width, height: record.height, fit: record.fit });
+    map.set(record.key, { url, alt: record.alt, width: record.width, height: record.height, fit: record.fit, tagline: record.tagline });
   }
   return map;
 }
 
 export function defaultSiteImageRecords(updatedAt = '2026-10-01T00:00:00.000Z'): SiteImageAdmin[] {
-  return SITE_IMAGE_SLOTS.map((slot) => ({
-    key: slot.key,
-    label: slot.label,
-    description: slot.description,
-    url: slot.url,
-    alt: slot.alt,
-    width: slot.width,
-    height: slot.height,
-    fit: slot.fit,
-    defaultUrl: slot.url,
-    defaultAlt: slot.alt,
-    usingDefault: true,
-    updatedAt,
-    updatedBy: null,
-  }));
+  return SITE_IMAGE_SLOTS.map((slot) => ({ key: slot.key, label: slot.label, description: slot.description, url: slot.url, alt: slot.alt, width: slot.width, height: slot.height, fit: slot.fit, defaultUrl: slot.url, defaultAlt: slot.alt, tagline: slotTagline(slot), usingDefault: true, updatedAt, updatedBy: null }));
 }
 
 export function toPublicSiteImage(row: SiteImageAdmin) {
-  return {
-    key: row.key,
-    label: row.label,
-    description: row.description,
-    url: safeSiteImageUrl(row.url) ?? row.defaultUrl,
-    alt: row.alt,
-    width: row.width,
-    height: row.height,
-    fit: row.fit,
-    updatedAt: row.updatedAt,
-  };
+  return { key: row.key, label: row.label, description: row.description, url: safeSiteImageUrl(row.url) ?? row.defaultUrl, alt: row.alt, width: row.width, height: row.height, fit: row.fit, tagline: row.tagline, updatedAt: row.updatedAt };
 }
 
 export function readAdminSiteImages(body: unknown): SiteImageAdmin[] {
@@ -308,10 +189,10 @@ export function readAdminSiteImages(body: unknown): SiteImageAdmin[] {
   return rows.sort((a, b) => (order.get(a.key as SiteImageKey) ?? 999) - (order.get(b.key as SiteImageKey) ?? 999) || a.key.localeCompare(b.key));
 }
 
-export function slotDefaults(key: string): { url: string; alt: string; width: number; height: number; fit: SiteImageFit } | undefined {
+export function slotDefaults(key: string): { url: string; alt: string; width: number; height: number; fit: SiteImageFit; tagline: string } | undefined {
   const slot = siteImageSlot(key);
   if (!slot) return undefined;
-  return { url: slot.url, alt: slot.alt, width: slot.width, height: slot.height, fit: slot.fit };
+  return { url: slot.url, alt: slot.alt, width: slot.width, height: slot.height, fit: slot.fit, tagline: slotTagline(slot) };
 }
 
 function readAdminRow(value: unknown): SiteImageAdmin | undefined {
@@ -323,18 +204,19 @@ function readAdminRow(value: unknown): SiteImageAdmin | undefined {
   const url = safeSiteImageUrl(row.url) ?? fallback?.url;
   const defaultUrl = safeSiteImageUrl(row.defaultUrl) ?? fallback?.url ?? url;
   if (!url || !defaultUrl) return undefined;
-  const fit: SiteImageFit = row.fit === 'contain' || row.fit === 'cover' ? row.fit : fallback?.fit ?? 'cover';
+  const fit: SiteImageFit = row.fit === 'contain' || row.fit === 'cover' ? row.fit : (fallback?.fit ?? 'cover');
   return {
     key: row.key,
     label: row.label,
     description: row.description,
     url,
-    alt: typeof row.alt === 'string' ? row.alt.slice(0, 300) : fallback?.alt ?? '',
+    alt: typeof row.alt === 'string' ? row.alt.slice(0, 300) : (fallback?.alt ?? ''),
     width: positive(row.width) ?? fallback?.width ?? 1600,
     height: positive(row.height) ?? fallback?.height ?? 1066,
     fit,
     defaultUrl,
-    defaultAlt: typeof row.defaultAlt === 'string' ? row.defaultAlt : fallback?.alt ?? '',
+    defaultAlt: typeof row.defaultAlt === 'string' ? row.defaultAlt : (fallback?.alt ?? ''),
+    tagline: typeof row.tagline === 'string' ? row.tagline.slice(0, 40) : (fallback?.tagline ?? ''),
     usingDefault: row.usingDefault === true,
     updatedAt: typeof row.updatedAt === 'string' ? row.updatedAt : '',
     updatedBy: typeof row.updatedBy === 'string' ? row.updatedBy : null,

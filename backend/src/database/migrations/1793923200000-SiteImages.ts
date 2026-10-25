@@ -6,8 +6,8 @@ const PROVIDER = `'static', 'memory', 'cloudinary', 'unconfigured'`;
 
 /**
  * Built-in pictures an administrator can replace. The insert is the current
- * catalogue: the community hat logo (mark, compact icon, and dark wordmark),
- * the parent-organisation plate, and the page photographs. It does nothing
+ * catalogue: the community badge, the parent-organisation plate, and the
+ * page photographs. It does nothing
  * when a key is already stored. This migration has not shipped, so the
  * catalogue here is the corrected slot list. Down drops only this table and
  * the audit actions this migration added.
@@ -30,6 +30,8 @@ export class SiteImages1793923200000 implements MigrationInterface {
         "default_alt" varchar(300) NOT NULL,
         "default_width" int NOT NULL,
         "default_height" int NOT NULL,
+        "tagline" varchar(40) NOT NULL DEFAULT '',
+        "default_tagline" varchar(40) NOT NULL DEFAULT '',
         "storage_provider" varchar(32) NOT NULL,
         "storage_key" varchar(500) NOT NULL DEFAULT '',
         "updated_by" uuid REFERENCES "users" ("id") ON DELETE SET NULL,
@@ -53,8 +55,9 @@ export class SiteImages1793923200000 implements MigrationInterface {
         INSERT INTO "site_images" (
           "key", "label", "description", "url", "alt", "width", "height", "fit",
           "default_url", "default_alt", "default_width", "default_height",
+          "tagline", "default_tagline",
           "storage_provider", "storage_key"
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
         ON CONFLICT ("key") DO NOTHING
         `,
         [
@@ -70,6 +73,8 @@ export class SiteImages1793923200000 implements MigrationInterface {
           row.defaultAlt,
           row.defaultWidth,
           row.defaultHeight,
+          row.tagline,
+          row.defaultTagline,
           row.storageProvider,
           row.storageKey,
         ],

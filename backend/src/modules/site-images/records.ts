@@ -10,6 +10,7 @@ export interface PublicSiteImage {
   width: number;
   height: number;
   fit: SiteImageFit;
+  tagline: string;
   updatedAt: string;
 }
 

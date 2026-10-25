@@ -1,24 +1,49 @@
 import { useEffect, useState, type CSSProperties, type ElementType, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { CommunityBadge } from '@/components/CommunityBadge';
 import { SiteImage } from '@/components/SiteImage';
+import { useSiteImage } from '@/hooks/useSiteImages';
 
-/** Compact community icon: black hat facing the ethical hat. Decorative beside the wordmark. */
+/** Compact crop of the community badge, beside the wordmark. */
 export function Mark({ className }: { className?: string }) {
-  return <SiteImage slot="community-logo-icon" className={className} alt="" priority />;
+  return <CommunityBadge variant="mark" className={className} priority />;
 }
 
-/** Primary pair, for seals and empty states. Pass a label when the image is not next to the name. */
+/** Full community badge, for seals and empty states. Pass a label when the image is not next to the name. */
 export function HatMark({ className = 'hat-seal', label = '' }: { className?: string; label?: string }) {
-  return <SiteImage slot="community-logo" className={className} alt={label} />;
+  return <CommunityBadge variant="full" className={className} label={label} />;
 }
 
-/** Parent-organisation plate. The community mark is Mark and HatMark, not this image. */
+/** Parent-organisation plate. Never the main community mark. */
 export function OfficialLogo({ width }: { width?: number }) {
   return (
     <span className="logo-plate">
-      <SiteImage slot="foundation-logo" priority style={width ? { width } : undefined} />
+      <SiteImage slot="foundation-logo" priority style={width ? { maxWidth: width, width: 'auto', height: 'auto' } : undefined} />
     </span>
   );
+}
+
+/** Point the tab icon at the community logo once the slot list has loaded. */
+export function CommunityIconLinks() {
+  const image = useSiteImage('community-logo');
+  useEffect(() => {
+    const custom = image.src !== image.fallbackSrc;
+    assignIcon('icon', custom ? image.src : '/assets/logo/favicon-32.png');
+    assignIcon('apple-touch-icon', custom ? image.src : '/assets/logo/apple-touch-icon.png');
+  }, [image.fallbackSrc, image.src]);
+  return null;
+}
+
+function assignIcon(rel: string, href: string): void {
+  let link = document.querySelector<HTMLLinkElement>(`link[rel="${rel}"]`);
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = rel;
+    document.head.append(link);
+  }
+  if (link.getAttribute('href') === href) return;
+  link.href = href;
+  link.type = href.endsWith('.svg') ? 'image/svg+xml' : href.endsWith('.webp') ? 'image/webp' : 'image/png';
 }
 
 export function Lockup({ to = '/' }: { to?: string }) {

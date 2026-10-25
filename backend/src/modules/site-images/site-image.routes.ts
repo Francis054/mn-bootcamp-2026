@@ -43,7 +43,13 @@ export function mountAdminSiteImages(
   });
   router.patch('/:key', (req, res, next) => {
     validateDto(SiteImageAltDto, req.body)
-      .then((dto) => images.updateAlt(keyParam(req), dto.alt, actorFrom(req)))
+      .then((dto) =>
+        images.updateAlt(
+          keyParam(req),
+          dto.tagline === undefined ? { alt: dto.alt } : { alt: dto.alt, tagline: dto.tagline },
+          actorFrom(req),
+        ),
+      )
       .then((row) => res.json(row))
       .catch(next);
   });

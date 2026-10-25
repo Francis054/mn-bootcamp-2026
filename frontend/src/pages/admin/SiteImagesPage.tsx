@@ -5,8 +5,9 @@ import { ErrorSummary, Field } from '@/components/controls';
 import { EmptyState, ErrorState, LoadingRows, useConfirm, useToast } from '@/components/feedback';
 import { usePageMeta } from '@/components/SiteChrome';
 import { useAdminForm } from '@/components/adminForm';
+import { CommunityBadge } from '@/components/CommunityBadge';
 import { profilePhotoFileProblem } from '@/domain/photo';
-import { readAdminSiteImages, siteImageAltError, type SiteImageAdmin } from '@/domain/siteImages';
+import { readAdminSiteImages, siteImageAltError, siteImageTaglineError, type SiteImageAdmin } from '@/domain/siteImages';
 import { isApiError } from '@/domain/types';
 import { refreshSiteImages } from '@/hooks/useSiteImages';
 import { useAsync } from '@/hooks/useAsync';
@@ -22,7 +23,12 @@ export function SiteImagesPage() {
   if (!isAdmin) {
     return (
       <>
-        <div className="a-head"><div><h1>Site images</h1><p>Only an administrator can change the community logo, the parent-organisation plate, and the built-in page photographs.</p></div></div>
+        <div className="a-head">
+          <div>
+            <h1>Site images</h1>
+            <p>Only an administrator can change the community logo, the Maxim Nyansa Foundation logo, and the built-in page photographs.</p>
+          </div>
+        </div>
         <EmptyState icon="image" title="Administrators only" text="Sign in with an administrator account to replace these pictures." />
       </>
     );
@@ -33,14 +39,19 @@ export function SiteImagesPage() {
       <div className="a-head">
         <div>
           <h1>Site images</h1>
-          <p>These are the community hat logo, the parent-organisation plate, and the photographs built into the pages. Replacing one updates the public site. Reset puts the original file back. Gallery photos, trainee portraits, and project pictures stay on their own pages.</p>
+          <p>
+            Replace the community badge or the Maxim Nyansa Foundation logo and the public site updates without a redeploy. On the original badge, the foundation logo and the tagline are drawn on top, so a new foundation file also updates the plate inside the badge. Uploading a community logo replaces that whole badge. Gallery photos, trainee portraits, and project pictures stay on their own
+            pages.
+          </p>
         </div>
       </div>
       {record.loading ? <LoadingRows /> : null}
       {record.error ? <ErrorState title="Could not load site images" text={record.error.message} onRetry={() => setNonce((value) => value + 1)} /> : null}
       {!record.loading && !record.error && !rows.length ? <EmptyState icon="image" title="No image slots yet" text="The slots appear after the database migration has run." /> : null}
       <div style={{ display: 'grid', gap: 16 }}>
-        {rows.map((row) => <SiteImageCard key={row.key} row={row} onSaved={() => setNonce((value) => value + 1)} />)}
+        {rows.map((row) => (
+          <SiteImageCard key={row.key} row={row} onSaved={() => setNonce((value) => value + 1)} />
+        ))}
       </div>
     </>
   );
@@ -57,15 +68,19 @@ function SiteImageCard({ row, onSaved }: { row: SiteImageAdmin; onSaved: () => v
   const confirm = useConfirm();
   const form = useAdminForm();
   const [alt, setAlt] = useState(row.alt);
+  const [tagline, setTagline] = useState(row.tagline);
   const [preview, setPreview] = useState(row.url);
   const [pending, setPending] = useState(false);
   const altId = `${row.key}-alt`;
   const fileId = `${row.key}-file`;
+  const taglineId = `${row.key}-tagline`;
+  const logoSlot = row.key === 'community-logo' || row.key === 'foundation-logo';
 
   useEffect(() => {
     setAlt(row.alt);
+    setTagline(row.tagline);
     setPreview(row.url);
-  }, [row.alt, row.url]);
+  }, [row.alt, row.tagline, row.url]);
 
   const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -75,6 +90,10 @@ function SiteImageCard({ row, onSaved }: { row: SiteImageAdmin; onSaved: () => v
     const problems: Record<string, string> = {};
     const altProblem = siteImageAltError(alt);
     if (altProblem) problems[altId] = altProblem;
+    if (row.key === 'community-logo') {
+      const taglineProblem = siteImageTaglineError(tagline);
+      if (taglineProblem) problems[taglineId] = taglineProblem;
+    }
     if (file) {
       const fileProblem = profilePhotoFileProblem(file);
       if (fileProblem) problems[fileId] = fileProblem;
@@ -87,11 +106,11 @@ function SiteImageCard({ row, onSaved }: { row: SiteImageAdmin; onSaved: () => v
         body.set('alt', alt.trim());
         body.set('file', file);
         await api({ method: 'POST', path: `/admin/site-images/${row.key}/image`, body });
-        toast('Image saved', 'The public site will show this picture.');
-      } else {
-        await api({ method: 'PATCH', path: `/admin/site-images/${row.key}`, body: { alt: alt.trim() } });
-        toast('Alt text saved', 'The description on the public page was updated.');
       }
+      if (!file || (row.key === 'community-logo' && tagline.trim() !== row.tagline)) {
+        await api({ method: 'PATCH', path: `/admin/site-images/${row.key}`, body: row.key === 'community-logo' ? { alt: alt.trim(), tagline: tagline.trim() } : { alt: alt.trim() } });
+      }
+      toast(file ? 'Image saved' : 'Alt text saved', 'The public site will show this change.');
       form.setErrors({});
       refreshSiteImages();
       onSaved();
@@ -101,6 +120,7 @@ function SiteImageCard({ row, onSaved }: { row: SiteImageAdmin; onSaved: () => v
         const mapped: Record<string, string> = {};
         if (fields.alt) mapped[altId] = fields.alt;
         if (fields.file) mapped[fileId] = fields.file;
+        if (fields.tagline) mapped[taglineId] = fields.tagline;
         form.applyServer(Object.keys(mapped).length ? mapped : fields);
       }
       toast('Could not save', isApiError(error) ? error.message : 'Request failed.', 'error');
@@ -110,12 +130,7 @@ function SiteImageCard({ row, onSaved }: { row: SiteImageAdmin; onSaved: () => v
   };
 
   const reset = async () => {
-    const ok = await confirm({
-      title: `Reset ${row.label}?`,
-      text: 'The original picture and description will be used again. An uploaded file will be removed.',
-      ok: 'Reset',
-      danger: true,
-    });
+    const ok = await confirm({ title: `Reset ${row.label}?`, text: 'The original picture and description will be used again. An uploaded file will be removed.', ok: 'Reset', danger: true });
     if (!ok) return;
     setPending(true);
     try {
@@ -138,32 +153,84 @@ function SiteImageCard({ row, onSaved }: { row: SiteImageAdmin; onSaved: () => v
       </div>
       <form onSubmit={(event) => void save(event)} noValidate>
         <div className="panel__body form-grid">
-          <p className="muted full" style={{ margin: 0 }}>{row.description}</p>
-          <img
-            className="site-image-preview full"
-            src={preview}
-            alt=""
-            width={row.width}
-            height={row.height}
-            style={{ objectFit: row.fit }}
-            onError={() => {
-              if (preview !== row.defaultUrl) setPreview(row.defaultUrl);
-            }}
-          />
-          <ErrorSummary errors={form.errors} labels={{ [altId]: 'Alt text', [fileId]: 'Replacement image' }} summaryRef={form.summaryRef} />
+          <p className="muted full" style={{ margin: 0 }}>
+            {row.description}
+          </p>
+          {row.key === 'community-logo' ? (
+            <CommunityBadge className="site-image-preview full" label="Community logo preview" />
+          ) : (
+            <img
+              className={`site-image-preview full${logoSlot ? ' site-image-preview--logo' : ''}`}
+              src={preview}
+              alt=""
+              width={row.width}
+              height={row.height}
+              style={{ objectFit: 'contain' }}
+              onError={() => {
+                if (preview !== row.defaultUrl) setPreview(row.defaultUrl);
+              }}
+            />
+          )}
+          <ErrorSummary errors={form.errors} labels={{ [altId]: 'Alt text', [fileId]: 'Replacement image', [taglineId]: 'Badge tagline' }} summaryRef={form.summaryRef} />
+          {row.key === 'community-logo' ? (
+            <Field id={taglineId} label="Badge tagline" error={form.errors[taglineId]} hint="Shown on the banner of the original badge. Hidden after you upload a replacement image. Leave it blank to hide the banner. Default: STRONGER TOGETHER.">
+              <input
+                className="input"
+                id={taglineId}
+                name="tagline"
+                value={tagline}
+                maxLength={40}
+                onChange={(event) => {
+                  setTagline(event.target.value);
+                  form.clearFixed(taglineId, siteImageTaglineError(event.target.value));
+                }}
+              />
+            </Field>
+          ) : null}
           <Field id={altId} label={`Alt text for ${row.label}`} error={form.errors[altId]} hint="What a visitor who cannot see the picture should hear. Leave this empty only when the picture is decorative.">
-            <input className="input" id={altId} name="alt" value={alt} onChange={(event) => { setAlt(event.target.value); form.clearFixed(altId, siteImageAltError(event.target.value)); }} />
+            <input
+              className="input"
+              id={altId}
+              name="alt"
+              value={alt}
+              onChange={(event) => {
+                setAlt(event.target.value);
+                form.clearFixed(altId, siteImageAltError(event.target.value));
+              }}
+            />
           </Field>
-          <Field id={fileId} label={`Replacement image for ${row.label}`} error={form.errors[fileId]} hint="JPEG, PNG, or WebP. Leave this empty to change only the alt text.">
+          <Field id={fileId} label={`Replacement image for ${row.label}`} error={form.errors[fileId]} hint={fileHint(row.key)}>
             <input className="input" id={fileId} name="file" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" />
           </Field>
-          {row.updatedAt ? <p className="muted full" style={{ margin: 0 }}>Updated {updatedOn(row.updatedAt)}</p> : null}
+          {row.updatedAt ? (
+            <p className="muted full" style={{ margin: 0 }}>
+              Updated {updatedOn(row.updatedAt)}
+            </p>
+          ) : null}
         </div>
         <div className="panel__foot">
-          <button className="btn btn--dark btn--sm" type="submit" disabled={pending}>{pending ? 'Saving…' : 'Save'}</button>
-          {row.usingDefault ? <span /> : <button className="btn btn--ghost btn--sm" type="button" disabled={pending} onClick={() => void reset()}>Reset to original</button>}
+          <button className="btn btn--dark btn--sm" type="submit" disabled={pending}>
+            {pending ? 'Saving…' : 'Save'}
+          </button>
+          {row.usingDefault ? (
+            <span />
+          ) : (
+            <button className="btn btn--ghost btn--sm" type="button" disabled={pending} onClick={() => void reset()}>
+              Reset to original
+            </button>
+          )}
         </div>
       </form>
     </article>
   );
+}
+
+function fileHint(key: string): string {
+  if (key === 'community-logo') {
+    return 'JPEG, PNG, or WebP. A square picture works best. Uploading a file replaces the whole badge, including the foundation plate and the tagline. SVG files are not accepted.';
+  }
+  if (key === 'foundation-logo') {
+    return 'JPEG, PNG, or WebP. The bundled file is 200 pixels wide, so a larger PNG or WebP stays sharper in the small plate. SVG files are not accepted. Leave this empty to change only the alt text.';
+  }
+  return 'JPEG, PNG, or WebP. Leave this empty to change only the alt text.';
 }

@@ -1,6 +1,7 @@
 import { lazy, Suspense, type ReactNode } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { RequireAccess } from '@/auth/AuthProvider';
+import { BootScreen } from '@/components/BootScreen';
 import { AfterBoot, RouteFallback } from '@/components/Loader';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { PublicLayout } from '@/layouts/PublicLayout';
@@ -57,6 +58,8 @@ function Waiting({ children }: { children: ReactNode }) {
 
 export function App() {
   return (
+    <>
+    <BootScreen />
     <Routes>
       <Route element={<PublicLayout />}>
         <Route index element={<Waiting><HomePage /></Waiting>} handle={{ page: 'home', tone: 'dark', title: 'Home' }} />
@@ -108,5 +111,6 @@ export function App() {
         <Route path="settings" element={<Waiting><RequireAccess permission="settings.manage"><SettingsPage /></RequireAccess></Waiting>} />
       </Route>
     </Routes>
+    </>
   );
 }

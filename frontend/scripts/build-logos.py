@@ -14,7 +14,7 @@ from pathlib import Path
 from fontTools.pens.svgPathPen import SVGPathPen
 from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from shapely import affinity
 from shapely.geometry import Point, Polygon
 from shapely.ops import unary_union
@@ -499,5 +499,141 @@ def main():
     export_rasters()
 
 
+BRAND = ROOT / "scripts" / "brand"
+POPPINS_BLACK = BRAND / "Poppins-Black.ttf"
+BADGE_TAGLINE = "STRONGER TOGETHER"
+
+
+def circular_rgba(im: Image.Image) -> Image.Image:
+    """Transparent outside the outer lime ring. Matches the loader mask."""
+    im = im.convert("RGBA")
+    width, height = im.size
+    scale = 4
+    mask = Image.new("L", (width * scale, height * scale), 0)
+    draw = ImageDraw.Draw(mask)
+    radius = width * scale * 0.492
+    cx, cy = width * scale / 2, height * scale / 2
+    draw.ellipse((cx - radius, cy - radius, cx + radius, cy + radius), fill=255)
+    mask = mask.resize((width, height), Image.Resampling.LANCZOS)
+    mask = mask.filter(ImageFilter.GaussianBlur(max(0.6, width * 0.012)))
+    im.putalpha(mask)
+    return im
+
+
+def compose_approved_badge(bare: Image.Image, foundation: Image.Image) -> Image.Image:
+    """concept-a plus the cream foundation plate and the STRONGER TOGETHER banner.
+
+    Geometry matches badge-compose-reference.py at 1024px. The live site draws
+    the plate and the banner in HTML so an uploaded foundation logo stays current.
+    This flattened file is the static fallback (favicon crop, social card, no-JS).
+    """
+    im = bare.convert("RGBA")
+    logo = foundation.convert("RGBA")
+    draw = ImageDraw.Draw(im)
+    logo_w = 250
+    logo_h = int(logo_w * 41 / 200)
+    plate_w, plate_h = logo_w + 44, logo_h + 30
+    cx, cy = 512, 770
+    x0 = cx - plate_w // 2
+    y0 = cy - plate_h // 2
+    draw.rounded_rectangle(
+        [x0, y0, x0 + plate_w, y0 + plate_h],
+        radius=plate_h // 2,
+        fill=(246, 247, 242, 255),
+        outline=(136, 204, 0, 255),
+        width=3,
+    )
+    fitted = logo.resize((logo_w, logo_h), Image.Resampling.LANCZOS)
+    im.paste(fitted, (cx - logo_w // 2, cy - logo_h // 2), fitted)
+    draw = ImageDraw.Draw(im)
+    draw.rounded_rectangle(
+        [362, 905, 662, 949],
+        radius=22,
+        fill=(10, 31, 22, 255),
+        outline=(136, 204, 0, 255),
+        width=3,
+    )
+    font = ImageFont.truetype(str(POPPINS_BLACK), 17)
+    gap = 2
+    widths = [draw.textlength(char, font=font) + gap for char in BADGE_TAGLINE]
+    x = 512 - sum(widths) / 2
+    for char, width in zip(BADGE_TAGLINE, widths):
+        draw.text((x, 916), char, font=font, fill=(136, 204, 0, 255))
+        x += width
+    return im
+
+
+def emblem_crop(im: Image.Image, size: int) -> Image.Image:
+    """Hats and lime ring, without the plate or the banner. Readable at 16–32px."""
+    side = 640
+    left = (1024 - side) // 2
+    top = 48
+    crop = im.crop((left, top, left + side, top + side))
+    return crop.resize((size, size), Image.Resampling.LANCZOS)
+
+
+def save_rgba(im: Image.Image, stem: str) -> None:
+    png = OUT / f"{stem}.png"
+    webp = OUT / f"{stem}.webp"
+    # A 256-colour PNG stays under 100 KB. The WebP keeps the full gradient.
+    quantized = im.quantize(colors=256, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE)
+    quantized.save(png, "PNG", optimize=True)
+    im.save(webp, "WEBP", quality=82, method=6)
+    print(f"wrote {stem}.png ({png.stat().st_size} bytes), {stem}.webp ({webp.stat().st_size} bytes)")
+
+
+def subset_poppins() -> None:
+    from fontTools.subset import Options, Subsetter
+    from fontTools.ttLib import TTFont
+
+    font = TTFont(str(POPPINS_BLACK))
+    options = Options()
+    options.flavor = "woff2"
+    options.layout_features = ["kern"]
+    options.desubroutinize = True
+    subsetter = Subsetter(options=options)
+    subsetter.populate(unicodes=list(range(0x20, 0x7F)))
+    subsetter.subset(font)
+    dest = ROOT / "public" / "assets" / "fonts" / "Poppins-Black-latin.woff2"
+    font.flavor = "woff2"
+    font.save(str(dest))
+    print(f"wrote Poppins-Black-latin.woff2 ({dest.stat().st_size} bytes)")
+
+
+def social_card(badge: Image.Image) -> Image.Image:
+    width, height = 1200, 630
+    img = Image.new("RGB", (width, height), (10, 31, 22))
+    overlay = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+    draw.ellipse((-180, -240, 560, 420), fill=(136, 204, 0, 46))
+    draw.ellipse((760, -180, 1380, 380), fill=(217, 164, 65, 40))
+    card = Image.alpha_composite(img.convert("RGBA"), overlay)
+    mark = badge.resize((480, 480), Image.Resampling.LANCZOS)
+    card.paste(mark, ((width - 480) // 2, (height - 480) // 2 - 8), mark)
+    return card.convert("RGB")
+
+
+def build_community_badge() -> None:
+    """Circular community badge, header crop, favicon, apple touch, and social card."""
+    concept = Image.open(BRAND / "concept-a.jpg").convert("RGB").resize((1024, 1024), Image.Resampling.LANCZOS)
+    foundation = Image.open(OUT / "maxim-nyansa-foundation-logo.png")
+    bare = circular_rgba(concept)
+    composed = circular_rgba(compose_approved_badge(concept, foundation))
+    save_rgba(bare, "community-badge-bare")
+    save_rgba(composed, "community-badge")
+    for size, name in ((16, "favicon-16.png"), (32, "favicon-32.png"), (180, "apple-touch-icon.png"), (192, "community-badge-mark.png")):
+        emblem_crop(composed, size).save(OUT / name, "PNG", optimize=True)
+        print(f"wrote {name}")
+    social_card(composed).save(OUT / "og-image.png", "PNG", optimize=True)
+    print(f"wrote og-image.png ({(OUT / 'og-image.png').stat().st_size} bytes)")
+    subset_poppins()
+
+
 if __name__ == "__main__":
-    main()
+    import sys
+
+    if "--badge-only" in sys.argv:
+        build_community_badge()
+    else:
+        main()
+        build_community_badge()

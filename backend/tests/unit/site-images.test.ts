@@ -33,8 +33,6 @@ describe('site image catalogue', () => {
     expect(new Set(keys).size).toBe(keys.length);
     expect(keys).toEqual([
       'community-logo',
-      'community-logo-icon',
-      'community-wordmark',
       'foundation-logo',
       'home-hero-main',
       'home-hero-side',
@@ -110,7 +108,8 @@ describe('site image service', () => {
 
     const before = await service.listPublic();
     expect(before).toHaveLength(SITE_IMAGE_SLOTS.length);
-    expect(before[0]?.url).toBe('/assets/logo/logo-mark.svg');
+    expect(before[0]?.url).toBe('/assets/logo/community-badge.webp');
+    expect(before[0]?.tagline).toBe('STRONGER TOGETHER');
     expect(before.find((row) => row.key === 'foundation-logo')?.url).toBe(
       '/assets/logo/maxim-nyansa-foundation-logo.png',
     );
@@ -183,13 +182,13 @@ describe('site image service', () => {
       );
     expect(fake).toMatchObject({ fieldErrors: { file: 'Use a JPEG, PNG, or WebP image.' } });
 
-    const longAlt = await service.updateAlt('about-banner', 'x'.repeat(301), ACTOR).then(
+    const longAlt = await service.updateAlt('about-banner', { alt: 'x'.repeat(301) }, ACTOR).then(
       () => null,
       (error: unknown) => error,
     );
     expect(longAlt).toMatchObject({ fieldErrors: { alt: 'Use at most 300 characters.' } });
 
-    const cleared = await service.updateAlt('about-banner', '   ', ACTOR);
+    const cleared = await service.updateAlt('about-banner', { alt: '   ' }, ACTOR);
     expect(cleared.alt).toBe('');
     expect(storage.objects.size).toBe(0);
   });
@@ -268,6 +267,8 @@ function clone(row: SiteImageEntity): SiteImageEntity {
     defaultAlt: row.defaultAlt,
     defaultWidth: row.defaultWidth,
     defaultHeight: row.defaultHeight,
+    tagline: row.tagline,
+    defaultTagline: row.defaultTagline,
     storageProvider: row.storageProvider,
     storageKey: row.storageKey,
     updatedBy: row.updatedBy,

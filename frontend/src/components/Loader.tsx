@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { CommunityBadge } from '@/components/CommunityBadge';
+import { useBootCovering, useBootHold } from '@/components/bootHold';
 
 /** Wait this long before a loader appears, so a fast response never flashes one. */
 export const LOADER_SHOW_DELAY_MS = 150;
@@ -28,32 +30,23 @@ export function AfterBoot({ children }: { children: ReactNode }) {
   return children;
 }
 
-export function Loader({
-  variant = 'page',
-  message = 'Loading the bootcamp…',
-  label,
-}: {
-  variant?: LoaderVariant;
-  message?: string;
-  label?: string;
-}) {
+export function Loader({ variant = 'page', message = 'Loading the bootcamp…', label }: { variant?: LoaderVariant; message?: string; label?: string }) {
   const text = label ?? message;
   useEffect(() => {
     if (variant === 'inline') return;
     dismissBootSplash();
   }, [variant]);
-  const art = (
-    <span className="brand-loader__stage" aria-hidden="true">
-      <span className="brand-loader__ring" />
-      <span className="brand-loader__ring brand-loader__ring--inner" />
-      <span className="brand-loader__orbit"><i /><i /><i /></span>
-      <span className="brand-loader__hats">
-        <img className="brand-loader__hat brand-loader__hat--black" src="/assets/logo/hat-black.svg" alt="" width={120} height={74} />
-        <span className="brand-loader__spark" />
-        <img className="brand-loader__hat brand-loader__hat--ethical" src="/assets/logo/hat-ethical.svg" alt="" width={120} height={74} />
+  const art =
+    variant === 'inline' ? (
+      <span className="brand-loader__stage" aria-hidden="true">
+        <span className="brand-loader__ring" />
       </span>
-    </span>
-  );
+    ) : (
+      <span className="brand-loader__stage" aria-hidden="true">
+        <CommunityBadge className="brand-loader__badge" />
+        <span className="brand-loader__ring" />
+      </span>
+    );
   if (variant === 'inline') {
     return (
       <span className="brand-loader brand-loader--inline" role="status" aria-live="polite">
@@ -66,8 +59,12 @@ export function Loader({
     <div className={`brand-loader brand-loader--${variant}`} role="status" aria-live="polite" aria-busy="true">
       <span className="sr-only">{text}</span>
       {art}
-      <p className="brand-loader__kicker" aria-hidden="true">Maxim Nyansa</p>
-      <p className="brand-loader__message" aria-hidden="true">{message}</p>
+      <p className="brand-loader__kicker" aria-hidden="true">
+        Maxim Nyansa
+      </p>
+      <p className="brand-loader__message" aria-hidden="true">
+        {message}
+      </p>
     </div>
   );
 }
@@ -97,19 +94,9 @@ export function useDeferredLoading(active: boolean): boolean {
   return visible;
 }
 
-export function LoadGate({
-  pending,
-  variant = 'page',
-  message = 'Loading the bootcamp…',
-  label,
-  children,
-}: {
-  pending: boolean;
-  variant?: LoaderVariant;
-  message?: string;
-  label?: string;
-  children: ReactNode;
-}) {
+export function LoadGate({ pending, variant = 'page', message = 'Loading the bootcamp…', label, children }: { pending: boolean; variant?: LoaderVariant; message?: string; label?: string; children: ReactNode }) {
+  useBootHold(variant === 'page' && pending);
+  const covering = useBootCovering();
   const show = useDeferredLoading(pending);
   const [reveal, setReveal] = useState(false);
   useEffect(() => {
@@ -122,6 +109,9 @@ export function LoadGate({
     }
     dismissBootSplash();
   }, [pending, show]);
+  if (variant === 'page' && covering) {
+    return pending ? null : <div className="loader-ready">{children}</div>;
+  }
   if (pending || show) {
     if (!show) return <div className={`loader-hold loader-hold--${variant}`} aria-hidden="true" />;
     return <Loader variant={variant} message={message} label={label} />;
@@ -131,7 +121,10 @@ export function LoadGate({
 
 /** Suspense fallback. A very fast chunk never flashes the loader. */
 export function RouteFallback({ variant = 'page' }: { variant?: 'page' | 'panel' }) {
+  useBootHold(variant === 'page');
+  const covering = useBootCovering();
   const show = useDeferredLoading(true);
+  if (variant === 'page' && covering) return null;
   if (!show) return <div className={`loader-hold loader-hold--${variant}`} aria-hidden="true" />;
   return <Loader variant={variant} message="Loading the bootcamp…" />;
 }

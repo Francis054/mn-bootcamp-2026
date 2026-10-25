@@ -8,7 +8,7 @@ import { collect, emailAddress, httpUrl, minLength, required } from '@/domain/va
 import { currentEnv } from '@/config/runtime';
 import type { ApiRequest } from '@/api/liveTransport';
 import { MODULES, mediaSrc } from './fixtures';
-import { SITE_IMAGE_SLOTS, isSiteImageKey, siteImageAltError, slotDefaults, toPublicSiteImage } from '@/domain/siteImages';
+import { SITE_IMAGE_SLOTS, isSiteImageKey, siteImageAltError, siteImageTaglineError, slotDefaults, slotTagline, toPublicSiteImage } from '@/domain/siteImages';
 import { readWorkPhotoDataUrl, workPhotoFieldErrors, workPhotoFileError } from '@/domain/workPhoto';
 import { clearSession, markSessionExpired, readActiveSession, setSession } from './session';
 import { getState, updateState } from './store';
@@ -989,6 +989,7 @@ function createSiteImage(body: Record<string, unknown>) {
     fit: slot.fit,
     defaultUrl: slot.url,
     defaultAlt: slot.alt,
+    tagline: slotTagline(slot),
     usingDefault: true,
     updatedAt: new Date().toISOString(),
     updatedBy: actor.id,
@@ -1038,7 +1039,14 @@ function patchSiteImageAlt(key: string, body: Record<string, unknown>) {
   const alt = String(body.alt ?? '');
   const altProblem = siteImageAltError(alt);
   if (altProblem) fail('validation', 'Check the highlighted fields.', 422, { alt: altProblem });
-  const next = markSiteImage(current, { alt: alt.trim(), updatedBy: actor.id });
+  let nextTagline = current.tagline;
+  if (body.tagline !== undefined) {
+    if (typeof body.tagline !== 'string') fail('validation', 'Check the highlighted fields.', 422, { tagline: 'Use plain text.' });
+    const taglineProblem = siteImageTaglineError(body.tagline);
+    if (taglineProblem) fail('validation', 'Check the highlighted fields.', 422, { tagline: taglineProblem });
+    nextTagline = body.tagline.trim();
+  }
+  const next = markSiteImage(current, { alt: alt.trim(), tagline: nextTagline, updatedBy: actor.id });
   updateState((s) => ({ ...s, siteImages: s.siteImages.map((row) => (row.key === key ? next : row)) }));
   return next;
 }
@@ -1055,6 +1063,7 @@ function resetSiteImage(key: string) {
     width: defaults.width,
     height: defaults.height,
     fit: defaults.fit,
+    tagline: defaults.tagline,
     updatedBy: actor.id,
   });
   updateState((s) => ({ ...s, siteImages: s.siteImages.map((row) => (row.key === key ? next : row)) }));
@@ -1072,7 +1081,8 @@ function markSiteImage(
     && next.url === defaults.url
     && next.alt === defaults.alt
     && next.width === defaults.width
-    && next.height === defaults.height,
+    && next.height === defaults.height
+    && next.tagline === defaults.tagline,
   );
   return next;
 }
