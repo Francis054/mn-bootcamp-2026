@@ -69,14 +69,20 @@ export function buildMedia(): MediaItem[] {
   }));
 }
 
-const TITLES: Record<string, [string, string]> = {
-  network: ['How networks really move data', 'Firewalls, segmentation and VPNs'],
-  ethical: ['The ethical hacker’s mindset and the law', 'Reconnaissance in a safe lab'],
-  vuln: ['Scanning and prioritising vulnerabilities', 'Writing a vulnerability report'],
-  forensics: ['Evidence handling basics', 'Reading the story in a disk image'],
-  awareness: ['Spotting social engineering', 'Designing an awareness session'],
-  incident: ['The incident response lifecycle', 'Tabletop exercise: a simulated breach'],
-};
+const WEEK_TITLES = [
+  'Foundations and professional orientation',
+  'TCP/IP networking',
+  'Computer systems and secure workstations',
+  'Security management, risk and governance',
+  'Application security and secure development',
+  'Database security',
+  'Cryptography and secure communications',
+  'Identity and access management',
+  'Cloud computing and cloud security',
+  'Authorised vulnerability assessment',
+  'AI and cybersecurity automations',
+  'Incident response, exam revision and capstone',
+];
 
 const OBJECTIVES: Record<string, string[]> = {
   network: ['Explain how packets move between networks', 'Configure a basic firewall rule set', 'Recognise insecure network services'],
@@ -101,12 +107,9 @@ const FORMATS = ['Lecture + lab', 'Hands-on lab', 'Workshop', 'Lecture + lab', '
 const COVERS = ['hack-coding-team', 'electronics-lab', 'vr-demo-group', 'presenters-yellow-room', 'trio-google-neon', 'participant-phone', 'vr-headset-moment', 'arc-wall-trio', 'duo-google-wall', 'guests-seated', 'vr-group-lounge', 'selfie-orange-wall'];
 
 export function buildLessons(): Lesson[] {
-  const seen: Record<string, number> = {};
   return ORDER.map((moduleId, index) => {
-    const slot = seen[moduleId] ?? 0;
-    seen[moduleId] = slot + 1;
-    const title = TITLES[moduleId]?.[slot % 2] ?? 'Sample lesson';
     const week = index + 1;
+    const title = WEEK_TITLES[index] ?? 'Sample lesson';
     const date = weekStart(week);
     const scheduleStatus = scheduleFor(date);
     return {
@@ -122,12 +125,12 @@ export function buildLessons(): Lesson[] {
       publicationStatus: scheduleStatus === 'upcoming' ? 'scheduled' : 'published',
       listing: 'sample',
       room: 'ICT lab — to be confirmed',
-      summary: `Week ${week} of the bootcamp focuses on ${moduleName(moduleId).toLowerCase()}: ${title.charAt(0).toLowerCase()}${title.slice(1)}.`,
+      summary: `Sample lesson notes for week ${week} (${title}). The daily timetable is the schedule. Objectives and the lab below are still placeholders.`,
       objectives: OBJECTIVES[moduleId] ?? [],
       lab: '# Sample lab steps\n1. Start the isolated lab VM\n2. Follow the trainer walkthrough\n3. Record findings in your notebook',
       codeSample: CODE[moduleId] ?? '',
       cover: COVERS[index] ?? 'electronics-lab',
-      internalNotes: 'Sample fixture. Curriculum order is still to be confirmed.',
+      internalNotes: 'Sample lesson notes. The timetable workbook is the schedule.',
       updatedAt: '2026-10-24T10:00:00Z',
     };
   });
@@ -216,7 +219,7 @@ export function buildEvents(): BootcampEvent[] {
       id: 'start', title: 'Bootcamp training starts', date: '2026-10-05', dateTbc: false,
       whenLabel: 'Mon 5 Oct 2026', place: 'Maxim Nyansa Foundation premises, Tantra Hills, Accra',
       kind: 'Milestone', verified: true, sample: false,
-      summary: 'The free, in-person 2026 Cyber Security Bootcamp begins.',
+      summary: 'The free, in-person 2026 Cybersecurity Bootcamp begins.',
       body: { kind: 'callout', tone: 'lime', title: 'Day one', text: 'Training began at the Maxim Nyansa Foundation premises in Tantra Hills, Accra. The bootcamp is free and in person.' },
       source: 'Bootcamp 2026 announcement — maximnyansa.com and the Foundation’s LinkedIn.',
       sourceUrl: 'https://www.linkedin.com/posts/maxim-nyansa-foundation_applications-are-open-for-the-maxim-nyansa-activity-7496108200585404418-jX54',
@@ -269,11 +272,11 @@ export function buildEvents(): BootcampEvent[] {
     },
     {
       id: 'graduation', title: 'Graduation', date: '2026-12-18', dateTbc: true,
-      whenLabel: 'December 2026 · date TBC', place: 'To be confirmed',
+      whenLabel: 'Training ends 25 Dec 2026 · ceremony TBC', place: 'To be confirmed',
       kind: 'Milestone', verified: false, sample: false,
-      summary: 'Training ends in December 2026. Graduation details are still to be confirmed.',
-      body: { kind: 'placeholder', text: 'Training ends in December 2026. The graduation date, venue and format are still to be confirmed.' },
-      source: 'Training ends December 2026 (verified). Event details unconfirmed.',
+      summary: 'Training ends on 25 December 2026. The graduation ceremony date, venue and format are still to be confirmed.',
+      body: { kind: 'placeholder', text: 'Training ends on 25 December 2026. The graduation ceremony date, venue and format are still to be confirmed.' },
+      source: 'Training ends 25 December 2026 (timetable). Ceremony details unconfirmed.',
       sourceUrl: 'https://maximnyansa.com/',
       image: 'anniversary-group-outdoor', showOnAnniversary: false, calendarDownload: false, startTime: '', endTime: '',
       publicationStatus: 'published', listing: 'public', internalNotes: 'Do not publish a graduation date until the Foundation confirms it.',
@@ -289,7 +292,7 @@ export function buildMilestones(): Milestone[] {
     { id: 'y2019', year: '2019', title: 'Milestone to be supplied', description: 'Awaiting a confirmed highlight from the Foundation.', source: '' },
     { id: 'y2020', year: '2020', title: 'First cybersecurity bootcamp', description: 'A pilot requested by earlier trainees, run as an intensive bootcamp at the Tantra Hills training centre with 14 trainees.', source: 'Foundation post, Jan 2020' },
     { id: 'y2021', year: '2021–25', title: 'Milestones to be supplied', description: 'Alumni year groups exist for every year to 2025. Highlights to be confirmed.', source: '' },
-    { id: 'y2026', year: '2026', title: 'Ten years, and a new cohort', description: 'The 2026 Cyber Security Bootcamp begins on 5 Oct, followed by the GNBCC reception on 8 Oct and the Grand Durbar on 10 Oct.', source: 'maximnyansa.com, GNBCC' },
+    { id: 'y2026', year: '2026', title: 'Ten years, and a new cohort', description: 'The 2026 Cybersecurity Bootcamp begins on 5 Oct, followed by the GNBCC reception on 8 Oct and the Grand Durbar on 10 Oct.', source: 'maximnyansa.com, GNBCC' },
   ];
 }
 
@@ -306,7 +309,7 @@ export const ABOUT: AboutContent = {
 export const HOMEPAGE: HomepageContent = {
   eyebrow: '2026 Cybersecurity Bootcamp',
   headline: 'Learn.\nBuild.\n*Secure the Future.*',
-  lead: 'A free, in-person cybersecurity bootcamp in Accra, from network security to incident response. Follow the 2026 cohort from its first week to graduation.',
+  lead: 'A free, in-person cybersecurity bootcamp in Accra. Twelve weeks, from 5 October to 25 December 2026.',
   ctaLabel: 'Explore the bootcamp',
   ctaHref: '/bootcamp',
   theme: 'dark',
@@ -330,7 +333,7 @@ export const DEV_USERS: DevUser[] = [
 ];
 
 export const SETTINGS: SiteSettings = {
-  siteName: '2026 Cyber Bootcamp',
+  siteName: '2026 Cybersecurity Bootcamp',
   timeZone: 'Africa/Accra (GMT)',
   contactEmail: 'mninfo@maximnyansa.com',
   accent: '#88CC00',
@@ -341,7 +344,7 @@ export const SETTINGS: SiteSettings = {
 };
 
 export const PHASES = [
-  { id: 1 as const, name: 'Foundations', months: 'October', summary: 'How networks work, how they are defended, and the ethics and law of security testing.', modules: ['Network security', 'Ethical hacking'] },
-  { id: 2 as const, name: 'Find & analyse', months: 'November', summary: 'Finding weaknesses before attackers do, and reading the evidence they leave behind.', modules: ['Vulnerability assessment', 'Digital forensics'] },
-  { id: 3 as const, name: 'Respond & protect', months: 'December', summary: 'Handling incidents calmly and helping people around you stay safe online.', modules: ['Incident response', 'Security awareness'] },
+  { id: 1 as const, name: 'Foundations & Secure Systems', months: '5 Oct – 30 Oct', summary: 'Professional foundation, then cybersecurity foundations: the CIA triad, risk, threats, vulnerabilities and controls.', modules: ['Professional foundation', 'Cybersecurity foundations'] },
+  { id: 2 as const, name: 'Applications, Data & Cryptography', months: '2 Nov – 27 Nov', summary: 'Professional practice, then applications, databases and cryptography.', modules: ['Professional practice', 'Applications and information'] },
+  { id: 3 as const, name: 'Identity, Cloud, Threats & Capstone', months: '30 Nov – 25 Dec', summary: 'Career readiness, then identity, cloud, authorised vulnerability assessment, AI and the capstone.', modules: ['Career readiness', 'Security operations'] },
 ];

@@ -6,6 +6,7 @@ import { mediaPaths, mediaSchemas } from './media-docs.js';
 import { workPhotoPaths, workPhotoSchemas } from './work-photo-docs.js';
 import { projectPaths, projectSchemas } from './project-docs.js';
 import { traineePaths, traineeSchemas } from './trainee-docs.js';
+import { timetablePaths, timetableSchemas } from './timetable-docs.js';
 
 export const openApiSpec = {
   openapi: '3.0.3',
@@ -119,6 +120,7 @@ export const openApiSpec = {
     ...workPhotoPaths,
     ...contentPaths,
     ...accountPaths,
+    ...timetablePaths,
   },
   components: {
     schemas: {
@@ -213,6 +215,7 @@ export const openApiSpec = {
       ...workPhotoSchemas,
       ...contentSchemas,
       ...accountSchemas,
+      ...timetableSchemas,
     },
   },
 };

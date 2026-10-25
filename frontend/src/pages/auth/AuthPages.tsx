@@ -79,7 +79,7 @@ export function LoginPage() {
       </section>
       <aside className="login__art" aria-hidden="true">
         <img src="/assets/img/electronics-lab-1600.webp" width={1600} height={1067} alt="" />
-        <span className="a-sub" style={{ color: 'var(--mn-lime)' }}>Maxim Nyansa Foundation · Cyber Security Bootcamp 2026</span>
+        <span className="a-sub" style={{ color: 'var(--mn-lime)' }}>Maxim Nyansa Foundation · Cybersecurity Bootcamp 2026</span>
         <h2 style={{ marginTop: 16 }}>Publish the journey, <em>week by week.</em></h2>
       </aside>
     </div></main>

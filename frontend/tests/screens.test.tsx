@@ -32,7 +32,15 @@ describe('public routes', () => {
     expect(await screen.findByRole('heading', { name: /every lesson/i })).toBeInTheDocument();
     await user.click(screen.getByRole('tab', { name: 'Network' }));
     expect(screen.getByText(/of 12 classes/)).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: /how networks|firewalls/i }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: /foundations and professional orientation|tcp\/ip networking/i }).length).toBeGreaterThan(0);
+  });
+
+  it('shows the daily timetable for the current week', async () => {
+    renderAt('/schedule');
+    expect(await screen.findByRole('heading', { name: /twelve weeks/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /computer systems and secure workstations/i })).toBeInTheDocument();
+    expect(screen.getAllByText(/Morning devotion/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/25 Dec 2026/).length).toBeGreaterThan(0);
   });
 
   it('shows a not-found state for an unknown lesson', async () => {

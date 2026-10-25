@@ -108,7 +108,7 @@ function ClassForm({ initial }: { initial: Lesson | null }) {
   };
   return (
     <form ref={formRef} onSubmit={(event) => { event.preventDefault(); void submit(event.currentTarget, false); }} onChange={(event) => { setDirty(true); const id = eventTargetId(event.target); if (!id || !formRef.current) return; const problems = classFieldErrors(read(formRef.current), modeRef.current); admin.clearFixed(id, problems[id]); }} noValidate>
-      <div className="a-head"><div><h1>{initial ? 'Edit class' : 'New class'}</h1><p>Sample curriculum. Order is still to be confirmed.</p></div>{initial ? <Link className="btn btn--ghost btn--sm" to={isApiPublic(initial) ? `/classes/${initial.id}` : `/admin/classes/${initial.id}`}>Preview</Link> : null}</div>
+      <div className="a-head"><div><h1>{initial ? 'Edit class' : 'New class'}</h1><p>Sample lesson notes. The timetable is 12 weeks, 5 October to 25 December 2026. The module field is an archive tag.</p></div>{initial ? <Link className="btn btn--ghost btn--sm" to={isApiPublic(initial) ? `/classes/${initial.id}` : `/admin/classes/${initial.id}`}>Preview</Link> : null}</div>
       <FormLegend />
       <ErrorSummary errors={admin.errors} labels={CLASS_LABELS} summaryRef={admin.summaryRef} />
       <div className="form-layout">
@@ -116,8 +116,8 @@ function ClassForm({ initial }: { initial: Lesson | null }) {
           <section className="panel"><div className="panel__head"><h2>Basics</h2></div><div className="panel__body form-grid">
             <Field id="title" label="Class title" required error={admin.errors.title} className="full"><input className="input" id="title" name="title" defaultValue={initial?.title ?? ''} disabled={!writable} /></Field>
             <Field id="slug" label="URL slug" required={false} error={admin.errors.slug}><input className="input" id="slug" name="slug" defaultValue={initial?.slug ?? ''} disabled={!writable} /></Field>
-            <Field id="moduleId" label="Module" required error={admin.errors.moduleId}><select className="select" id="moduleId" name="moduleId" defaultValue={initial?.moduleId ?? ''} disabled={!writable}><option value="">Choose…</option>{modules.map((module) => <option key={module.id} value={module.id}>{module.name}</option>)}</select></Field>
-            <Field id="week" label="Week" required error={admin.errors.week}><input className="input" id="week" name="week" type="number" min={1} max={18} defaultValue={initial?.week ?? 1} disabled={!writable} /></Field>
+            <Field id="moduleId" label="Module" required error={admin.errors.moduleId} hint="Archive tag for the sample catalogue. Not a timetable block."><select className="select" id="moduleId" name="moduleId" defaultValue={initial?.moduleId ?? ''} disabled={!writable}><option value="">Choose…</option>{modules.map((module) => <option key={module.id} value={module.id}>{module.name}</option>)}</select></Field>
+            <Field id="week" label="Week" required error={admin.errors.week} hint="The published timetable is weeks 1–12."><input className="input" id="week" name="week" type="number" min={1} max={18} defaultValue={initial?.week ?? 1} disabled={!writable} /></Field>
             <Field id="date" label="Date" required error={admin.errors.date}><input className="input" id="date" name="date" type="date" defaultValue={initial?.date ?? '2026-10-05'} disabled={!writable} /></Field>
             <Field id="format" label="Format" required={false}><select className="select" id="format" name="format" defaultValue={initial?.format ?? 'Lecture + lab'} disabled={!writable}><option>Lecture + lab</option><option>Hands-on lab</option><option>Workshop</option></select></Field>
             <Field id="room" label="Room" required={false}><input className="input" id="room" name="room" defaultValue={initial?.room ?? ''} disabled={!writable} /></Field>
