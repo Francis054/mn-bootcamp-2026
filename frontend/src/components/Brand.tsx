@@ -1,13 +1,14 @@
 import { useEffect, useState, type CSSProperties, type ElementType, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
+/** Compact community icon: black hat facing the ethical hat. Decorative beside the wordmark. */
 export function Mark({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M12 2.8l7.5 2.9v5.6c0 4.8-3.2 8-7.5 9.9-4.3-1.9-7.5-5.1-7.5-9.9V5.7z" />
-      <path d="M12 7.5v9M8.5 10.5L12 7.5l3.5 3" />
-    </svg>
-  );
+  return <img className={className} src="/assets/logo/logo-icon.svg" alt="" width={64} height={20} decoding="async" />;
+}
+
+/** Primary pair, for seals and empty states. Pass a label when the image is not next to the name. */
+export function HatMark({ className = 'hat-seal', label = '' }: { className?: string; label?: string }) {
+  return <img className={className} src="/assets/logo/logo-mark.svg" alt={label} width={120} height={40} decoding="async" />;
 }
 
 export function OfficialLogo({ width }: { width?: number }) {

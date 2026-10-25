@@ -47,10 +47,11 @@ export function Loader({
       <span className="brand-loader__ring" />
       <span className="brand-loader__ring brand-loader__ring--inner" />
       <span className="brand-loader__orbit"><i /><i /><i /></span>
-      <svg className="brand-loader__mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 2.8l7.5 2.9v5.6c0 4.8-3.2 8-7.5 9.9-4.3-1.9-7.5-5.1-7.5-9.9V5.7z" />
-        <path d="M12 7.5v9M8.5 10.5L12 7.5l3.5 3" />
-      </svg>
+      <span className="brand-loader__hats">
+        <img className="brand-loader__hat brand-loader__hat--black" src="/assets/logo/hat-black.svg" alt="" width={120} height={74} />
+        <span className="brand-loader__spark" />
+        <img className="brand-loader__hat brand-loader__hat--ethical" src="/assets/logo/hat-ethical.svg" alt="" width={120} height={74} />
+      </span>
     </span>
   );
   if (variant === 'inline') {

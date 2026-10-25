@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { Photo, Reveal } from '@/components/Brand';
+import { HatMark, Photo, Reveal } from '@/components/Brand';
 import { Crumbs, usePageMeta } from '@/components/SiteChrome';
 import { Chips, Tabs } from '@/components/controls';
 import { EmptyState, ErrorState } from '@/components/feedback';
@@ -15,7 +15,7 @@ export function BootcampPage() {
   const week = currentWeek();
   return (
     <>
-      <PageIntro dark title="Bootcamp overview" crumbs={[{ label: 'Home', to: '/' }, { label: 'Bootcamp' }, { label: 'Overview' }]} eyebrow="Cyber Security Bootcamp 2026" headline={'Six disciplines.\nOne cohort.\nZero cost.'} aside={<><Reveal><p className="lead">A practical, in-person programme at the Maxim Nyansa Foundation in Accra, built around the skills security teams hire for.</p></Reveal><Reveal><div className="flex wrap" style={{ marginTop: 24 }}><Link className="btn" to="/journey">Follow the journey <span className="arrow"><Icon name="arrow-right" className="i--sm" /></span></Link><a className="btn btn--ghost-light" href="https://maximnyansaapplications.com/" target="_blank" rel="noopener">Applications site <Icon name="external" className="i--sm" /></a></div></Reveal></>}>
+      <PageIntro dark title="Bootcamp overview" crumbs={[{ label: 'Home', to: '/' }, { label: 'Bootcamp' }, { label: 'Overview' }]} eyebrow="Cyber Security Bootcamp 2026" headline={'Six disciplines.\nOne cohort.\nZero cost.'} aside={<><Reveal><HatMark className="hat-seal hat-seal--hero" /></Reveal><Reveal><p className="lead">A practical, in-person programme at the Maxim Nyansa Foundation in Accra, built around the skills security teams hire for.</p></Reveal><Reveal><div className="flex wrap" style={{ marginTop: 24 }}><Link className="btn" to="/journey">Follow the journey <span className="arrow"><Icon name="arrow-right" className="i--sm" /></span></Link><a className="btn btn--ghost-light" href="https://maximnyansaapplications.com/" target="_blank" rel="noopener">Applications site <Icon name="external" className="i--sm" /></a></div></Reveal></>}>
         <Netlines />
         <dl className="facts" style={{ marginTop: 64 }}>
           <div><dt>Training starts</dt><dd>5 Oct 2026</dd></div>
@@ -29,7 +29,7 @@ export function BootcampPage() {
       <section className="section" aria-labelledby="mod-title">
         <div className="container">
           <div className="sec-head">
-            <div className="sec-head__title"><span className="eyebrow">The six modules</span><h2 id="mod-title" className="h2">What the cohort studies.</h2></div>
+            <div className="sec-head__title"><span className="eyebrow"><HatMark />The six modules</span><h2 id="mod-title" className="h2">What the cohort studies.</h2></div>
             <div className="sec-head__aside"><p className="muted">Topics are confirmed. The weekly order is still to be confirmed, so the sequence below is a labelled sample.</p><span className="tbc">Order TBC</span></div>
           </div>
           <div className="mod-grid">

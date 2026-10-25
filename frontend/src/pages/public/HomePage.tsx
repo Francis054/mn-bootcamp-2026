@@ -1,6 +1,6 @@
 import { useRef, type MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { Cover, Photo, Reveal, SplitHeading } from '@/components/Brand';
+import { Cover, HatMark, Photo, Reveal, SplitHeading } from '@/components/Brand';
 import { Icon } from '@/components/Icon';
 import { Netlines } from '@/components/Netlines';
 import { TenMark } from '@/components/TenMark';
@@ -93,7 +93,7 @@ export function HomePage() {
       </div>
       <section className="section" id="intro" aria-labelledby="intro-title">
         <div className="container">
-          <Reveal><span className="eyebrow">Why this bootcamp</span></Reveal>
+          <Reveal><span className="eyebrow"><HatMark />Why this bootcamp</span></Reveal>
           <h2 id="intro-title" className="statement" style={{ marginTop: 24 }}>Maxim Nyansa means <span className="hl-under">maximal wisdom.</span> <span className="soft">For ten years, the Foundation has turned that idea into careers in tech.</span></h2>
           <div className="intro-grid">
             <div className="intro-card"><span className="num">01 — Mission</span><h3>Career perspectives through IT</h3><blockquote>“To create career perspectives for young people with the use of information technology.”</blockquote></div>

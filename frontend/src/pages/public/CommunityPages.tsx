@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '@/api/client';
-import { CountUp, OfficialLogo, Photo, SplitHeading } from '@/components/Brand';
+import { CountUp, HatMark, OfficialLogo, Photo, SplitHeading } from '@/components/Brand';
 import { Chips, ErrorSummary, Field, Tabs } from '@/components/controls';
 import { EmptyState, ErrorState, useLightbox, useToast } from '@/components/feedback';
 import { Loader } from '@/components/Loader';
@@ -448,6 +448,6 @@ function ContactCard({ icon, label, text, href, note }: { icon: IconName; label:
 export function NotFoundPage() {
   usePageMeta('Page not found');
   return (
-    <section className="section"><div className="container"><ErrorState title="That page is not on this site" text="Use the menu to get back to the bootcamp, or open the class archive." /></div></section>
+    <section className="section"><div className="container"><HatMark className="hat-seal hat-seal--block" label="Cyber Bootcamp" /><ErrorState title="That page is not on this site" text="Use the menu to get back to the bootcamp, or open the class archive." /></div></section>
   );
 }

@@ -156,7 +156,10 @@ export function LightboxProvider({ children }: { children: ReactNode }) {
 export function EmptyState({ icon = 'search', title, text, action }: { icon?: 'search' | 'users' | 'layers' | 'calendar' | 'image' | 'mail'; title: string; text?: string; action?: ReactNode }) {
   return (
     <div className="empty">
-      <div className="empty__art"><Icon name={icon} className="i--lg" /></div>
+      <div className="empty__art">
+        <img className="empty__mark" src="/assets/logo/logo-mark.svg" alt="" width={96} height={32} />
+        <span className="empty__badge"><Icon name={icon} /></span>
+      </div>
       <h3>{title}</h3>
       {text ? <p className="muted">{text}</p> : null}
       {action}

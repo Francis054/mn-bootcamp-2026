@@ -10,8 +10,8 @@ body.admin{background:var(--paper);font-size:15px}
 .admin-sidebar{position:sticky;top:0;height:100vh;background:var(--forest-800);color:#E9F0EA;display:flex;flex-direction:column;overflow:hidden;z-index:60}
 .sb-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:18px 16px 18px 20px;border-bottom:1px solid var(--line-dark);min-height:72px;flex-shrink:0}
 .sb-brand{display:flex;align-items:center;gap:12px;color:#fff;text-decoration:none;min-width:0}
-.sb-brand .wordmark__mark{width:36px;height:36px;border-radius:10px;background:var(--mn-lime);color:var(--forest-900);display:grid;place-items:center;flex:none}
-.sb-brand .wordmark__mark svg{width:20px;height:20px}
+.sb-brand .wordmark__mark{width:46px;height:32px;border-radius:10px;background:var(--mn-lime);color:var(--forest-900);display:grid;place-items:center;flex:none}
+.sb-brand .wordmark__mark svg,.sb-brand .wordmark__mark img{width:38px;height:22px}
 .sb-brand b{display:block;font-family:var(--font-display);font-size:16px;line-height:1.1;white-space:nowrap}
 .sb-brand small{display:block;font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;color:rgba(233,240,234,.6);text-transform:uppercase;white-space:nowrap}
 .admin-sidebar .icon-btn{color:rgba(233,240,234,.7)}
@@ -243,6 +243,7 @@ body.admin{background:var(--paper);font-size:15px}
 .login__brand{display:flex;align-items:center;gap:16px;margin-bottom:48px;flex-wrap:wrap}
 .login__art{position:relative;background:var(--forest-800);color:#fff;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;padding:56px}
 .login__art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.35;filter:saturate(.7)}
+.login__art img.login__mark{position:relative;inset:auto;width:min(320px,100%);height:auto;object-fit:contain;opacity:1;filter:none;margin-bottom:18px}
 .login__art::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(14,42,30,.2),rgba(14,42,30,.92))}
 .login__art>*{position:relative;z-index:1}
 .login__art h2{font-size:clamp(32px,3.6vw,52px);letter-spacing:-.04em;line-height:1.02;max-width:14ch}
@@ -355,6 +356,7 @@ body.admin{background:var(--paper);font-size:15px}
 .drag-item{grid-template-columns:auto 96px minmax(0,1fr) auto}
 .drag-item .yr{white-space:nowrap}
 .empty .empty__art .i{width:30px;height:30px}
+.empty .empty__badge .i{width:15px;height:15px}
 @media (max-width:760px){.drag-item{grid-template-columns:auto 80px minmax(0,1fr)}.drag-item .yr{font-size:18px}}
 @media (max-width:760px){
   .table--cards tr{grid-template-columns:auto minmax(0,1fr)}

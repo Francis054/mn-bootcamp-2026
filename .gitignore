@@ -12,4 +12,6 @@ test-results/
 *.log
 .DS_Store
 *.tsbuildinfo
+showreel/.cache/
+showreel/__pycache__/
 frontend/playwright/.cache/
