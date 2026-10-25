@@ -93,7 +93,7 @@ Each resource below has the same shape: list and create on the collection, then 
 | GET, POST `/api/v1/admin/modules` | GET, PATCH, DELETE, plus POST `.../publish` and `.../unpublish` | |
 | GET, POST `/api/v1/admin/phases` | GET, PATCH, DELETE, plus POST `.../publish` and `.../unpublish` | |
 | GET, POST `/api/v1/admin/classes` | GET, PATCH, DELETE, plus POST `.../publish` and `.../unpublish` | POST `/api/v1/admin/classes/bulk` |
-| GET, POST `/api/v1/admin/trainees` | GET, PATCH, DELETE, plus POST `.../publish` and `.../unpublish` | Publish requires consent |
+| GET, POST `/api/v1/admin/trainees` | GET, PATCH, DELETE, plus POST `.../publish` and `.../unpublish` | Publish requires consent. POST `/api/v1/admin/trainees/photo` uploads the profile photo. |
 | GET, POST `/api/v1/admin/projects` | GET, PATCH, DELETE, plus POST `.../publish` and `.../unpublish` | |
 | GET, POST `/api/v1/admin/events` | GET, PATCH, DELETE, plus POST `.../publish` and `.../unpublish` | |
 
@@ -111,6 +111,24 @@ Each resource below has the same shape: list and create on the collection, then 
 | POST | `/api/v1/admin/media/{id}/withdraw-consent` |
 
 `POST` accepts JSON metadata or `multipart/form-data` with `alt`, `caption`, `album`, and `file`. A new photo starts unpublished. `PATCH` with `{ "consent": "verified" }` records consent and does not publish. Publish is refused until consent is verified. The public gallery also requires `listing` other than `hidden`.
+
+## Work photos
+
+An administrator uploads pictures of a trainee working. Other roles cannot add, publish, or remove them. A new photo is a hidden draft. Publish makes it public. It then appears for that trainee, and for the project when one was chosen.
+
+| Method | Path |
+| --- | --- |
+| GET | `/api/v1/public/work-photos` |
+| GET | `/api/v1/public/work-photos/{id}/file` |
+| GET | `/api/v1/admin/work-photos` |
+| POST | `/api/v1/admin/work-photos` |
+| GET | `/api/v1/admin/work-photos/{id}` |
+| GET | `/api/v1/admin/work-photos/{id}/file` |
+| DELETE | `/api/v1/admin/work-photos/{id}` |
+| POST | `/api/v1/admin/work-photos/{id}/publish` |
+| POST | `/api/v1/admin/work-photos/{id}/unpublish` |
+
+`POST` is `multipart/form-data` with `traineeId`, optional `projectId`, `alt`, optional `caption`, and `file`. JPEG, PNG, and WebP only. The public list accepts optional `traineeId` and `projectId`.
 
 ## Accounts
 

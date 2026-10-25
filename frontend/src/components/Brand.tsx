@@ -44,18 +44,52 @@ export function Cover({ kind, label }: { kind: string; label?: string }) {
   );
 }
 
-export function Photo({ file, alt, width, height, sizes, priority = false }: { file: string; alt: string; width: number; height: number; sizes?: string; priority?: boolean }) {
+/** Local gallery slugs keep the sized webp pair. Full https addresses, including Cloudinary, are used as given. */
+export function pictureSource(file: string): { src: string; srcSet?: string } | null {
+  const value = file.trim();
+  if (!value) return null;
+  if (/^https:\/\//i.test(value)) {
+    try {
+      const url = new URL(value);
+      if (url.protocol !== 'https:' || url.username || url.password) return null;
+      return { src: value };
+    } catch {
+      return null;
+    }
+  }
+  if (value.startsWith('/') && !value.startsWith('//') && !value.includes('..') && !value.includes('\\')) {
+    return { src: value };
+  }
+  if (/^[a-z0-9-]+$/i.test(value)) {
+    return {
+      src: `/assets/img/${value}-1600.webp`,
+      srcSet: `/assets/img/${value}-800.webp 800w, /assets/img/${value}-1600.webp 1600w`,
+    };
+  }
+  return null;
+}
+
+/** These files are one wide group photo. Every frame must show the whole line, not a crop. */
+const WHOLE_GROUP = new Set(['participant-portrait', 'participant-phone']);
+
+export function Photo({ file, alt, width, height, sizes, priority = false, onError }: { file: string; alt: string; width: number; height: number; sizes?: string; priority?: boolean; onError?: () => void }) {
+  const picture = pictureSource(file);
+  if (!picture) return null;
+  const whole = WHOLE_GROUP.has(file.trim());
   return (
     <img
-      src={`/assets/img/${file}-1600.webp`}
-      srcSet={`/assets/img/${file}-800.webp 800w, /assets/img/${file}-1600.webp 1600w`}
-      sizes={sizes}
+      src={picture.src}
+      srcSet={picture.srcSet}
+      sizes={picture.srcSet ? sizes : undefined}
       width={width}
       height={height}
       alt={alt}
       loading={priority ? 'eager' : 'lazy'}
       decoding="async"
       fetchPriority={priority ? 'high' : 'auto'}
+      data-fit={whole ? 'contain' : undefined}
+      style={whole ? { objectFit: 'contain', objectPosition: 'center' } : undefined}
+      onError={onError}
     />
   );
 }

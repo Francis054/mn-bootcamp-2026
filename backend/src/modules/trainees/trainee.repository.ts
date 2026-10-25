@@ -1,3 +1,4 @@
+import { groupedIds, replaceIds } from '../../shared/persistence/id-links.js';
 import { BaseRepository } from '../../shared/persistence/base-repository.js';
 import type { TraineeEntity } from './trainee.entity.js';
 
@@ -32,6 +33,25 @@ export class TraineeRepository extends BaseRepository<TraineeEntity> {
       flags.set(id, consent);
     }
     return flags;
+  }
+
+  lessonIdsByTrainee(traineeIds: readonly string[]): Promise<Map<string, string[]>> {
+    return groupedIds(
+      (sql, params) => this.repository.manager.query(sql, params),
+      'trainee_lessons',
+      traineeIds,
+    );
+  }
+
+  replaceLessons(traineeId: string, lessonIds: readonly string[]): Promise<void> {
+    return this.repository.manager.transaction((manager) =>
+      replaceIds(
+        (sql, params) => manager.query(sql, params),
+        'trainee_lessons',
+        traineeId,
+        lessonIds,
+      ),
+    );
   }
 
   insert(trainee: Omit<TraineeEntity, 'createdAt' | 'updatedAt'>): Promise<TraineeEntity> {

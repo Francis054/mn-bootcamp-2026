@@ -11,6 +11,7 @@ import {
   type PublicationStatus,
 } from '../curriculum/publication.js';
 import { ApiError } from '../../shared/errors/api-error.js';
+import { postgresCode, postgresConstraint } from '../../shared/persistence/postgres-error.js';
 import type { EventCreateDto, EventPatchDto } from './event.dto.js';
 import type { EventEntity } from './event.entity.js';
 import type { EventRepository } from './event.repository.js';
@@ -25,6 +26,9 @@ const SOURCE_URL = 'Enter a full link starting with https://';
 export class EventService {
   constructor(
     private readonly events: EventRepository,
+    private readonly lessons: { findById(id: string): Promise<{ id: string } | null> },
+    private readonly projects: { findById(id: string): Promise<{ id: string } | null> },
+    private readonly media: { findById(id: string): Promise<{ id: string } | null> },
     private readonly audit: AuditRepository,
     private readonly now: () => Date,
   ) {}
@@ -44,7 +48,9 @@ export class EventService {
   }
 
   async listAdmin(query: EventListQuery): Promise<Page<EventRecord>> {
-    let rows = (await this.events.findAll()).map((row) => this.toRecord(row));
+    const stored = await this.events.findAll();
+    const links = await this.eventLinks(stored.map((row) => row.id));
+    let rows = stored.map((row) => this.toRecord(row, links.for(row.id)));
     const needle = query.q.toLowerCase();
     if (needle) {
       rows = rows.filter((event) => `${event.title} ${event.place}`.toLowerCase().includes(needle));
@@ -68,7 +74,7 @@ export class EventService {
   }
 
   async getAdmin(id: string): Promise<EventRecord> {
-    return this.toRecord(await this.requireEvent(id, 'Event not found.'));
+    return this.present(await this.requireEvent(id, 'Event not found.'));
   }
 
   async create(dto: EventCreateDto, actor: Actor): Promise<EventRecord> {
@@ -81,6 +87,12 @@ export class EventService {
     const summary = dto.summary.trim();
     this.assertSchedule({ date, dateTbc, startTime, endTime });
     this.assertSource(verified, sourceUrl);
+    const lessonIds = unique(dto.lessonIds ?? []);
+    const projectIds = unique(dto.projectIds ?? []);
+    const mediaIds = unique(dto.mediaIds ?? []);
+    await this.assertIds(lessonIds, this.lessons, 'lessonIds', 'Choose a class.');
+    await this.assertIds(projectIds, this.projects, 'projectIds', 'Choose a project.');
+    await this.assertIds(mediaIds, this.media, 'mediaIds', 'Choose a photo.');
     const saved = await this.events.insert({
       id: randomUUID(),
       title: dto.title.trim(),
@@ -104,8 +116,9 @@ export class EventService {
       listing: listingOr(dto.listing, 'sample'),
       internalNotes: dto.internalNotes ?? '',
     });
+    await this.writeLinks(saved.id, { lessonIds, projectIds, mediaIds });
     await this.writeAudit(actor, 'created', saved.id);
-    return this.toRecord(saved);
+    return this.present(saved);
   }
 
   async update(id: string, patch: EventPatchDto, actor: Actor): Promise<EventRecord> {
@@ -119,6 +132,16 @@ export class EventService {
     const summary = patch.summary?.trim() ?? current.summary;
     this.assertSchedule({ date, dateTbc, startTime, endTime });
     this.assertSource(verified, sourceUrl);
+    const currentLinks = await this.eventLinks([id]);
+    const lessonIds =
+      patch.lessonIds !== undefined ? unique(patch.lessonIds) : currentLinks.for(id).lessonIds;
+    const projectIds =
+      patch.projectIds !== undefined ? unique(patch.projectIds) : currentLinks.for(id).projectIds;
+    const mediaIds =
+      patch.mediaIds !== undefined ? unique(patch.mediaIds) : currentLinks.for(id).mediaIds;
+    await this.assertIds(lessonIds, this.lessons, 'lessonIds', 'Choose a class.');
+    await this.assertIds(projectIds, this.projects, 'projectIds', 'Choose a project.');
+    await this.assertIds(mediaIds, this.media, 'mediaIds', 'Choose a photo.');
     current.title = patch.title?.trim() ?? current.title;
     current.date = date;
     current.dateTbc = dateTbc;
@@ -142,8 +165,19 @@ export class EventService {
     if (patch.listing !== undefined) current.listing = listingOr(patch.listing, current.listing);
     if (patch.internalNotes !== undefined) current.internalNotes = patch.internalNotes;
     const saved = await this.events.save(current);
+    if (
+      patch.lessonIds !== undefined ||
+      patch.projectIds !== undefined ||
+      patch.mediaIds !== undefined
+    ) {
+      const links: { lessonIds?: string[]; projectIds?: string[]; mediaIds?: string[] } = {};
+      if (patch.lessonIds !== undefined) links.lessonIds = lessonIds;
+      if (patch.projectIds !== undefined) links.projectIds = projectIds;
+      if (patch.mediaIds !== undefined) links.mediaIds = mediaIds;
+      await this.writeLinks(saved.id, links);
+    }
     await this.writeAudit(actor, 'updated', saved.id);
-    return this.toRecord(saved);
+    return this.present(saved);
   }
 
   async publish(id: string, actor: Actor): Promise<EventRecord> {
@@ -153,7 +187,7 @@ export class EventService {
       await this.events.save(current);
       await this.writeAudit(actor, 'published', current.id);
     }
-    return this.toRecord(current);
+    return this.present(current);
   }
 
   async unpublish(id: string, actor: Actor): Promise<EventRecord> {
@@ -163,7 +197,7 @@ export class EventService {
       await this.events.save(current);
       await this.writeAudit(actor, 'unpublished', current.id);
     }
-    return this.toRecord(current);
+    return this.present(current);
   }
 
   async remove(id: string, actor: Actor): Promise<{ deleted: true; id: string }> {
@@ -171,6 +205,52 @@ export class EventService {
     await this.events.remove(current);
     await this.writeAudit(actor, 'deleted', id);
     return { deleted: true, id };
+  }
+
+  private async present(row: EventEntity): Promise<EventRecord> {
+    const links = await this.eventLinks([row.id]);
+    return this.toRecord(row, links.for(row.id));
+  }
+
+  private async eventLinks(ids: readonly string[]) {
+    const [lessons, projects, media] = await Promise.all([
+      this.events.lessonIdsByEvent(ids),
+      this.events.projectIdsByEvent(ids),
+      this.events.mediaIdsByEvent(ids),
+    ]);
+    return {
+      for: (id: string) => ({
+        lessonIds: lessons.get(id) ?? [],
+        projectIds: projects.get(id) ?? [],
+        mediaIds: media.get(id) ?? [],
+      }),
+    };
+  }
+
+  private async writeLinks(
+    id: string,
+    links: { lessonIds?: string[]; projectIds?: string[]; mediaIds?: string[] },
+  ): Promise<void> {
+    try {
+      if (links.lessonIds) await this.events.replaceLessons(id, links.lessonIds);
+      if (links.projectIds) await this.events.replaceProjects(id, links.projectIds);
+      if (links.mediaIds) await this.events.replaceMedia(id, links.mediaIds);
+    } catch (error) {
+      throw mappedLink(error);
+    }
+  }
+
+  private async assertIds(
+    ids: readonly string[],
+    store: { findById(id: string): Promise<{ id: string } | null> },
+    field: string,
+    message: string,
+  ): Promise<void> {
+    for (const id of ids) {
+      if (!(await store.findById(id))) {
+        throw new ApiError('validation', 'Check the highlighted fields.', { [field]: message });
+      }
+    }
   }
 
   private bodyOr(value: unknown, summary: string): EventBody {
@@ -201,7 +281,14 @@ export class EventService {
     return row;
   }
 
-  private toRecord(row: EventEntity): EventRecord {
+  private toRecord(
+    row: EventEntity,
+    links: { lessonIds: string[]; projectIds: string[]; mediaIds: string[] } = {
+      lessonIds: [],
+      projectIds: [],
+      mediaIds: [],
+    },
+  ): EventRecord {
     return {
       id: row.id,
       title: row.title,
@@ -224,6 +311,9 @@ export class EventService {
       publicationStatus: row.publicationStatus,
       listing: row.listing,
       internalNotes: row.internalNotes,
+      lessonIds: links.lessonIds,
+      projectIds: links.projectIds,
+      mediaIds: links.mediaIds,
       updatedAt: isoTimestamp(row.updatedAt),
     };
   }
@@ -238,6 +328,28 @@ export class EventService {
       subjectId: id,
     });
   }
+}
+
+function unique(ids: readonly string[]): string[] {
+  return [...new Set(ids)];
+}
+
+function mappedLink(error: unknown): unknown {
+  if (postgresCode(error) !== '23503') return error;
+  const constraint = postgresConstraint(error) ?? '';
+  if (constraint.includes('project')) {
+    return new ApiError('validation', 'Check the highlighted fields.', {
+      projectIds: 'Choose a project.',
+    });
+  }
+  if (constraint.includes('media')) {
+    return new ApiError('validation', 'Check the highlighted fields.', {
+      mediaIds: 'Choose a photo.',
+    });
+  }
+  return new ApiError('validation', 'Check the highlighted fields.', {
+    lessonIds: 'Choose a class.',
+  });
 }
 
 function compareEvents(left: EventRecord, right: EventRecord, sort: EventSort): number {

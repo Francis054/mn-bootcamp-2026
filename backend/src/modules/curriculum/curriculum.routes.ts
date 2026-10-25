@@ -25,10 +25,17 @@ import { mountAdminEvents, mountPublicEvents } from '../events/event.routes.js';
 import type { EventService } from '../events/event.service.js';
 import { mountAdminMedia, mountPublicMedia } from '../gallery/media.routes.js';
 import type { MediaService } from '../gallery/media.service.js';
+import { mountAdminWorkPhotos, mountPublicWorkPhotos } from '../work-photos/work-photo.routes.js';
+import type { WorkPhotoService } from '../work-photos/work-photo.service.js';
 import { mountAdminProjects, mountPublicProjects } from '../projects/project.routes.js';
 import type { ProjectService } from '../projects/project.service.js';
-import { mountAdminTrainees, mountPublicTrainees } from '../trainees/trainee.routes.js';
+import {
+  mountAdminTrainees,
+  mountPublicTraineePhotos,
+  mountPublicTrainees,
+} from '../trainees/trainee.routes.js';
 import type { TraineeService } from '../trainees/trainee.service.js';
+import type { StorageProvider } from '../storage/storage-provider.js';
 
 export function curriculumRouter(
   catalogue: CatalogueService,
@@ -42,6 +49,8 @@ export function curriculumRouter(
   sessions: SessionService,
   accounts: AccountService,
   enquiries: EnquiryService,
+  workPhotos: WorkPhotoService,
+  storage: StorageProvider,
 ): Router {
   const router = Router();
 
@@ -101,9 +110,11 @@ export function curriculumRouter(
       .catch(next);
   });
   mountPublicTrainees(router, trainees);
+  mountPublicTraineePhotos(router, storage);
   mountPublicProjects(router, projects);
   mountPublicEvents(router, events);
   mountPublicMedia(router, media);
+  mountPublicWorkPhotos(router, workPhotos);
   mountPublicContent(router, content);
   mountPublicEnquiries(router, enquiries);
 
@@ -113,10 +124,11 @@ export function curriculumRouter(
   mountModules(admin, catalogue);
   mountPhases(admin, catalogue);
   mountClasses(admin, lessons);
-  mountAdminTrainees(admin, trainees);
+  mountAdminTrainees(admin, trainees, maxBytes);
   mountAdminProjects(admin, projects);
   mountAdminEvents(admin, events);
   mountAdminMedia(admin, media, maxBytes);
+  mountAdminWorkPhotos(admin, workPhotos, maxBytes);
   mountAdminContent(admin, content);
   mountAccountAdmin(admin, accounts, enquiries);
   router.use('/admin', admin);

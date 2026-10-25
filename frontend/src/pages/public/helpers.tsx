@@ -1,12 +1,37 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { Photo, Reveal, SplitHeading } from '@/components/Brand';
+import { Avatar, Photo, Reveal, SplitHeading } from '@/components/Brand';
+import { displayPhotoUrl } from '@/domain/photo';
+import { LoadGate } from '@/components/Loader';
 import { Crumbs, usePageMeta } from '@/components/SiteChrome';
 import { ErrorState } from '@/components/feedback';
 import { Icon } from '@/components/Icon';
 import { MODULES } from '@/dev/fixtures';
 import { APP_TODAY, formatDate, parseUtcDate } from '@/domain/format';
 import type { ModuleId, ModuleInfo, PublicEvent, ScheduleStatus } from '@/domain/types';
+
+export function TraineeArt({
+  trainee,
+  variant,
+}: {
+  trainee: { photoUrl?: string | null; displayName: string; initials: string; hue: number };
+  variant: 'card' | 'profile';
+}) {
+  const photo = displayPhotoUrl(trainee.photoUrl);
+  const className = variant === 'profile' ? 'profile-art mask-reveal is-in' : 'tcard__art';
+  return (
+    <div className={className} style={{ ['--h' as string]: trainee.hue }}>
+      {photo ? (
+        <img className="trainee-photo" src={photo} alt={trainee.displayName} />
+      ) : (
+        <>
+          <span className="ph">{variant === 'profile' ? 'Placeholder portrait' : 'Placeholder'}</span>
+          <Avatar initials={trainee.initials} hue={trainee.hue} size={variant === 'profile' ? 'lg' : undefined} />
+        </>
+      )}
+    </div>
+  );
+}
 
 export function moduleOf(id: ModuleId | string): ModuleInfo {
   const found = MODULES.find((item) => item.id === id);
@@ -16,11 +41,29 @@ export function moduleOf(id: ModuleId | string): ModuleInfo {
   return first;
 }
 
-/** Keeps the page chrome and replaces a blank list when the API is still waking or has failed. */
-export function PublicGate({ loading, error, children }: { loading: boolean; error: string | null; children: ReactNode }) {
-  if (loading) return <p>Loading the published site…</p>;
-  if (error) return <ErrorState title="This page could not be loaded" text={error} onRetry={() => window.location.reload()} />;
-  return children;
+/** Full-page gate. Empty copy is only rendered once loading has really finished. */
+export function PublicGate({
+  loading,
+  error,
+  errorTitle = 'This page could not be loaded',
+  children,
+}: {
+  loading: boolean;
+  error: string | null;
+  errorTitle?: string;
+  children: ReactNode;
+}) {
+  return (
+    <LoadGate pending={loading} variant="page" message="Loading the bootcamp…">
+      {error ? (
+        <section className="section">
+          <div className="container">
+            <ErrorState title={errorTitle} text={error} onRetry={() => window.location.reload()} />
+          </div>
+        </section>
+      ) : children}
+    </LoadGate>
+  );
 }
 
 export function SampleMark({ listing, children }: { listing?: string; children: string }) {
@@ -101,26 +144,41 @@ export function EventRow({ event, index = 0 }: { event: PublicEvent; index?: num
 export function useTimelineProgress(active: boolean) {
   const [reached, setReached] = useState(0);
   useEffect(() => {
-    const root = document.querySelector<HTMLElement>('[data-tl]');
-    const bar = root?.querySelector<HTMLElement>('.tl__progress');
-    const items = [...(root?.querySelectorAll<HTMLElement>('.tl__item') ?? [])];
-    if (!root || !bar) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      bar.style.height = 'calc(100% - 16px)';
-      setReached(items.length);
-      return;
-    }
-    const update = () => {
-      const rect = root.getBoundingClientRect();
-      const mid = window.innerHeight * 0.6;
-      const progress = Math.max(0, Math.min(1, (mid - rect.top) / rect.height));
-      bar.style.height = `${progress * (rect.height - 16)}px`;
-      const count = items.filter((item) => item.getBoundingClientRect().top < mid).length;
-      setReached(count);
+    if (!active) return;
+    let removeScroll = () => {};
+    let observer: MutationObserver | undefined;
+    const attach = () => {
+      const root = document.querySelector<HTMLElement>('[data-tl]');
+      const bar = root?.querySelector<HTMLElement>('.tl__progress');
+      const items = [...(root?.querySelectorAll<HTMLElement>('.tl__item') ?? [])];
+      if (!root || !bar) return false;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        bar.style.height = 'calc(100% - 16px)';
+        setReached(items.length);
+        return true;
+      }
+      const update = () => {
+        const rect = root.getBoundingClientRect();
+        const mid = window.innerHeight * 0.6;
+        const progress = rect.height ? Math.max(0, Math.min(1, (mid - rect.top) / rect.height)) : 0;
+        bar.style.height = `${progress * (rect.height - 16)}px`;
+        setReached(items.filter((item) => item.getBoundingClientRect().top < mid).length);
+      };
+      update();
+      window.addEventListener('scroll', update, { passive: true });
+      removeScroll = () => window.removeEventListener('scroll', update);
+      return true;
     };
-    update();
-    window.addEventListener('scroll', update, { passive: true });
-    return () => window.removeEventListener('scroll', update);
+    if (!attach()) {
+      observer = new MutationObserver(() => {
+        if (attach()) observer?.disconnect();
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    }
+    return () => {
+      removeScroll();
+      observer?.disconnect();
+    };
   }, [active]);
   return reached;
 }

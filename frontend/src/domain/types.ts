@@ -71,14 +71,16 @@ export interface Trainee {
   quote: string;
   linkedin: string | null;
   portfolio: string | null;
+  photoUrl: string | null;
   consentReceived: boolean;
   listing: Listing;
   publicationStatus: PublicationStatus;
   statusLabel: string;
   internalNotes: string;
+  lessonIds?: string[];
 }
 
-export type PublicTrainee = Omit<Trainee, 'email' | 'internalNotes' | 'linkedin' | 'portfolio' | 'consentReceived'>;
+export type PublicTrainee = Omit<Trainee, 'email' | 'internalNotes' | 'linkedin' | 'portfolio' | 'consentReceived' | 'lessonIds'>;
 
 export interface Project {
   id: string;
@@ -92,6 +94,8 @@ export interface Project {
   tools: string;
   steps: string[];
   team: string[];
+  traineeIds?: string[];
+  lessonIds?: string[];
   repositoryUrl: string;
   demoUrl: string;
   labOnlyConfirmed: boolean;
@@ -101,7 +105,11 @@ export interface Project {
   internalNotes: string;
 }
 
-export type PublicProject = Omit<Project, 'internalNotes' | 'repositoryUrl' | 'demoUrl' | 'shareAgreed' | 'labOnlyConfirmed'>;
+export type PublicProject = Omit<Project, 'internalNotes' | 'repositoryUrl' | 'demoUrl' | 'shareAgreed' | 'labOnlyConfirmed' | 'traineeIds' | 'lessonIds'> & {
+  /** Present only when every linked trainee has agreed to share the link. */
+  repositoryUrl?: string;
+  demoUrl?: string;
+};
 
 export type EventBody =
   | { kind: 'callout'; tone: 'lime' | 'warn' | 'plain'; title: string; text: string }
@@ -130,9 +138,12 @@ export interface BootcampEvent {
   publicationStatus: PublicationStatus;
   listing: Listing;
   internalNotes: string;
+  lessonIds?: string[];
+  projectIds?: string[];
+  mediaIds?: string[];
 }
 
-export type PublicEvent = Omit<BootcampEvent, 'internalNotes'>;
+export type PublicEvent = Omit<BootcampEvent, 'internalNotes' | 'lessonIds' | 'projectIds' | 'mediaIds'>;
 
 export interface MediaItem {
   id: string;
@@ -147,6 +158,33 @@ export interface MediaItem {
   publicationStatus: PublicationStatus;
   listing: Listing;
   uploadedBy?: string | null;
+}
+
+export interface WorkPhoto {
+  id: string;
+  traineeId: string;
+  projectId: string | null;
+  src: string;
+  width: number;
+  height: number;
+  alt: string;
+  caption: string;
+  publicationStatus: PublicationStatus;
+  listing: Listing;
+  storageProvider?: string;
+  uploadedBy?: string | null;
+  updatedAt?: string;
+}
+
+export interface PublicWorkPhoto {
+  id: string;
+  traineeId: string;
+  projectId: string | null;
+  src: string;
+  width: number;
+  height: number;
+  alt: string;
+  caption: string;
 }
 
 export interface Milestone {

@@ -6,13 +6,13 @@ export function toPublicLesson(lesson: Lesson): PublicLesson {
 }
 
 export function toPublicTrainee(trainee: Trainee): PublicTrainee {
-  return stripKeys(trainee, ['email', 'internalNotes', 'linkedin', 'portfolio', 'consentReceived']);
+  return stripKeys(trainee, ['email', 'internalNotes', 'linkedin', 'portfolio', 'consentReceived', 'lessonIds']);
 }
 
 export function toPublicProject(project: Project): PublicProject {
-  return stripKeys(project, ['internalNotes', 'repositoryUrl', 'demoUrl', 'shareAgreed', 'labOnlyConfirmed']);
+  return stripKeys(project, ['internalNotes', 'repositoryUrl', 'demoUrl', 'shareAgreed', 'labOnlyConfirmed', 'traineeIds', 'lessonIds']);
 }
 
 export function toPublicEvent(event: BootcampEvent): PublicEvent {
-  return stripKeys(event, ['internalNotes']);
+  return stripKeys(event, ['internalNotes', 'lessonIds', 'projectIds', 'mediaIds']);
 }

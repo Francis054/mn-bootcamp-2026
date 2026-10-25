@@ -140,8 +140,9 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
      Example: 60000
 
    RATE_LIMIT_MAX
-     What: how many requests one address may make in that window.
-       Health checks are not counted.
+     What: how many sign-in, password-reset, and write requests one address may make in that window.
+       Page reads and the session check allow 600 in that window. Health checks are not counted.
+       On Render, leave TRUST_PROXY true so visitors are not all counted as one address.
      Example: 300
 
    SESSION_IDLE_TTL_MS

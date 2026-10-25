@@ -1,3 +1,4 @@
+import { idListMessage } from '../../shared/validation/id-list.js';
 import { isListing, isPublicationStatus } from '../curriculum/publication.js';
 import { isTraineeTrack } from './tracks.js';
 
@@ -95,6 +96,56 @@ export function publicationMessage(value: unknown): string | undefined {
 
 export function listingMessage(value: unknown): string | undefined {
   if (typeof value !== 'string' || !isListing(value)) return 'Choose a listing.';
+  return undefined;
+}
+
+export function lessonIdsMessage(value: unknown): string | undefined {
+  return idListMessage(value, 'Choose a class.', 'Choose at most 40 classes.');
+}
+
+const LOCAL_PHOTO =
+  /^\/api\/v1\/public\/uploads\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const STORAGE_KEY =
+  /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|mn\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+const PHOTO = 'Use a JPEG, PNG, or WebP image.';
+
+/** A stored photo address: an https URL, or the local stand-in path. */
+export function photoUrlMessage(value: unknown): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value !== 'string') return PHOTO;
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return undefined;
+  if (LOCAL_PHOTO.test(trimmed)) return undefined;
+  if (trimmed.length > 1000) return PHOTO;
+  try {
+    const url = new URL(trimmed);
+    if (url.protocol !== 'https:' || url.username || url.password) return PHOTO;
+  } catch {
+    return PHOTO;
+  }
+  return undefined;
+}
+
+export function photoStorageKeyMessage(value: unknown): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value !== 'string') return PHOTO;
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return undefined;
+  if (!STORAGE_KEY.test(trimmed)) return PHOTO;
+  return undefined;
+}
+
+/** The key has to belong to the address, so a save cannot delete a different object. */
+export function photoPairMessage(
+  photoUrl: string,
+  storageKey: string | null | undefined,
+): string | undefined {
+  const key = storageKey?.trim() ?? '';
+  if (!key || photoStorageKeyMessage(key)) return PHOTO;
+  if (LOCAL_PHOTO.test(photoUrl)) {
+    const id = photoUrl.slice('/api/v1/public/uploads/'.length);
+    if (id.toLowerCase() !== key.toLowerCase()) return PHOTO;
+  }
   return undefined;
 }
 

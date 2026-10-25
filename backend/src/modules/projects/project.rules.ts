@@ -1,3 +1,4 @@
+import { idListMessage } from '../../shared/validation/id-list.js';
 import { isListing, isPublicationStatus } from '../curriculum/publication.js';
 import { projectUrlProblem } from './project-url.js';
 import { isProjectType } from './project-types.js';
@@ -54,12 +55,11 @@ export function teamMessage(value: unknown): string | undefined {
 }
 
 export function traineeIdsMessage(value: unknown): string | undefined {
-  if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) {
-    return 'Choose a trainee.';
-  }
-  if (value.length > 20) return 'Choose at most 20 trainees.';
-  if (value.some((item: string) => !/^[A-Za-z0-9-]{1,64}$/.test(item))) return 'Choose a trainee.';
-  return undefined;
+  return idListMessage(value, 'Choose a trainee.', 'Choose at most 20 trainees.', 20);
+}
+
+export function lessonIdsMessage(value: unknown): string | undefined {
+  return idListMessage(value, 'Choose a class.', 'Choose at most 40 classes.');
 }
 
 export function plainTextMessage(value: unknown, max: number): string | undefined {

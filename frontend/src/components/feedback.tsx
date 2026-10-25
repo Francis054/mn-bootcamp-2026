@@ -1,4 +1,5 @@
-import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Loader } from './Loader';
 import { Icon } from './Icon';
 
 type ToastKind = 'success' | 'error' | 'info';
@@ -175,13 +176,7 @@ export function ErrorState({ title, text, onRetry }: { title: string; text: stri
 }
 
 export function LoadingRows() {
-  const label = useId();
-  return (
-    <div aria-busy="true" aria-labelledby={label}>
-      <span id={label} className="sr-only">Loading</span>
-      {Array.from({ length: 4 }, (_, index) => <div className="skel-row" key={index}><span className="skel sq" /><span className="skel" /><span className="skel" /><span className="skel" /></div>)}
-    </div>
-  );
+  return <Loader variant="panel" message="Loading the bootcamp…" label="Loading" />;
 }
 
 export function StatusBadge({ status }: { status: string }) {

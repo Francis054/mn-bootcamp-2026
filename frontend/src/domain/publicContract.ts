@@ -1,3 +1,4 @@
+import { displayPhotoUrl } from './photo';
 import type {
   AboutContent,
   EventBody,
@@ -9,9 +10,11 @@ import type {
   PublicLesson,
   PublicProject,
   PublicTrainee,
+  PublicWorkPhoto,
   PublicationStatus,
   ScheduleStatus,
 } from './types';
+import { isDirectWorkPhotoSrc } from './workPhoto';
 
 export interface SafePublicMedia {
   id: string;
@@ -152,6 +155,7 @@ export function normalizeTrainees(value: unknown): PublicTrainee[] {
       skills: lines(row.skills),
       bio: text(row.bio),
       quote: text(row.quote),
+      photoUrl: displayPhotoUrl(row.photoUrl),
       listing: listing(row.listing),
       publicationStatus: status(row.publicationStatus),
       statusLabel: text(row.statusLabel, 'In training'),
@@ -159,10 +163,26 @@ export function normalizeTrainees(value: unknown): PublicTrainee[] {
   });
 }
 
+/** A public https link with no embedded password. Anything else stays off the page. */
+export function publicHttpsUrl(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > 500) return undefined;
+  try {
+    const url = new URL(trimmed);
+    if (url.protocol !== 'https:' || url.username || url.password) return undefined;
+    return trimmed;
+  } catch {
+    return undefined;
+  }
+}
+
 export function normalizeProjects(value: unknown): PublicProject[] {
   return asList(value).flatMap((item) => {
     const row = record(item);
     if (!row || typeof row.id !== 'string' || typeof row.title !== 'string') return [];
+    const repositoryUrl = publicHttpsUrl(row.repositoryUrl);
+    const demoUrl = publicHttpsUrl(row.demoUrl);
     return [{
       id: row.id,
       title: row.title,
@@ -177,6 +197,8 @@ export function normalizeProjects(value: unknown): PublicProject[] {
       team: lines(row.team),
       publicationStatus: status(row.publicationStatus),
       listing: listing(row.listing),
+      ...(repositoryUrl ? { repositoryUrl } : {}),
+      ...(demoUrl ? { demoUrl } : {}),
     }];
   });
 }
@@ -238,6 +260,26 @@ export function normalizeMedia(value: unknown): SafePublicMedia[] {
       alt: text(row.alt),
       album: text(row.album, 'community'),
       ...(consent ? { consent } : {}),
+    }];
+  });
+}
+
+export function normalizeWorkPhotos(value: unknown): PublicWorkPhoto[] {
+  return asList(value).flatMap((item) => {
+    const row = record(item);
+    if (!row || typeof row.id !== 'string' || typeof row.alt !== 'string') return [];
+    const src = text(row.src);
+    if (!isDirectWorkPhotoSrc(src) && !src.startsWith('memory:')) return [];
+    const projectId = typeof row.projectId === 'string' && row.projectId ? row.projectId : null;
+    return [{
+      id: row.id,
+      traineeId: text(row.traineeId),
+      projectId,
+      src,
+      width: typeof row.width === 'number' ? row.width : 1600,
+      height: typeof row.height === 'number' ? row.height : 1066,
+      alt: row.alt,
+      caption: text(row.caption, row.alt),
     }];
   });
 }

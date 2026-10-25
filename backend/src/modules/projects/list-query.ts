@@ -1,4 +1,5 @@
 import { ApiError } from '../../shared/errors/api-error.js';
+import { filterEntries, readPositive, readString } from '../../shared/validation/query-fields.js';
 import { isProjectType } from './project-types.js';
 
 const SORTS = ['title', 'type', 'moduleId', 'publicationStatus', 'updatedAt'] as const;
@@ -35,17 +36,13 @@ export function readProjectListQuery(query: Record<string, unknown>): ProjectLis
   if (dirRaw !== 'asc' && dirRaw !== 'desc') fieldErrors.dir = 'Choose asc or desc.';
 
   const filters: ProjectListQuery['filters'] = {};
-  for (const [key, value] of Object.entries(query)) {
-    if (!key.startsWith('filters.')) continue;
-    const name = key.slice('filters.'.length);
-    const text = readString(value);
-    if (!text) continue;
+  for (const { key, name, value } of filterEntries(query)) {
     if (name !== 'type') {
       fieldErrors[key] = 'That filter is not available.';
       continue;
     }
-    if (!isProjectType(text)) fieldErrors[key] = 'Choose a type.';
-    else filters.type = text;
+    if (!isProjectType(value)) fieldErrors[key] = 'Choose a type.';
+    else filters.type = value;
   }
 
   if (Object.keys(fieldErrors).length > 0) {
@@ -60,31 +57,5 @@ export function readProjectListQuery(query: Record<string, unknown>): ProjectLis
     filters,
   };
   if (sort) parsed.sort = sort;
-  return parsed;
-}
-
-function readString(value: unknown): string | undefined {
-  if (typeof value !== 'string') return undefined;
-  const trimmed = value.trim();
-  return trimmed === '' ? undefined : trimmed;
-}
-
-function readPositive(
-  value: unknown,
-  fallback: number,
-  name: string,
-  fieldErrors: Record<string, string>,
-): number {
-  if (value === undefined || value === '') return fallback;
-  const raw = typeof value === 'string' ? value : '';
-  if (!/^[0-9]+$/.test(raw)) {
-    fieldErrors[name] = 'Use a whole number.';
-    return fallback;
-  }
-  const parsed = Number(raw);
-  if (parsed < 1) {
-    fieldErrors[name] = 'Use a whole number of at least 1.';
-    return fallback;
-  }
   return parsed;
 }

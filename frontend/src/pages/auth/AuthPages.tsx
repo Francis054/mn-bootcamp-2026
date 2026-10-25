@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '@/api/client';
 import { OfficialLogo } from '@/components/Brand';
 import { ErrorSummary, Field } from '@/components/controls';
+import { Loader } from '@/components/Loader';
 import { Icon } from '@/components/Icon';
 import { ShellMark, usePageMeta } from '@/components/SiteChrome';
 import { usesMockApi } from '@/config/runtime';
@@ -72,7 +73,7 @@ export function LoginPage() {
           </Field>
           {mock ? <label className="check"><input type="checkbox" name="developmentAck" /> I understand this development sign-in is not production authentication</label> : null}
           {errors.developmentAck ? <div className="error-msg" role="alert">{errors.developmentAck}</div> : null}
-          <button className={`btn btn--dark${pending ? ' is-loading' : ''}`} type="submit" style={{ justifyContent: 'center', marginTop: 16 }} disabled={pending}>Sign in <span className="arrow"><Icon name="arrow-right" className="i--sm" /></span></button>
+          <button className={`btn btn--dark${pending ? ' is-loading' : ''}`} type="submit" style={{ justifyContent: 'center', marginTop: 16 }} disabled={pending} aria-busy={pending || undefined}>{pending ? <Loader variant="inline" label="Signing in" /> : null}Sign in <span className="arrow"><Icon name="arrow-right" className="i--sm" /></span></button>
           <p style={{ marginTop: 16 }}><Link to="/admin/forgot-password">Forgot password?</Link></p>
         </form>
       </section>

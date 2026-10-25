@@ -11,7 +11,7 @@ export const traineePaths = {
       operationId: 'listPublicTrainees',
       summary: 'Published trainee profiles that have consent',
       description:
-        'A row is returned only when publicationStatus is published, listing is not hidden, and consentReceived is true. The response omits email, linkedin, portfolio, internalNotes, consentReceived, and the consent timestamps. Sample seed rows are published but have no consent, so they are not in this list.',
+        'A row is returned only when publicationStatus is published, listing is not hidden, and consentReceived is true. The response omits email, linkedin, portfolio, internalNotes, consentReceived, the consent timestamps, and photoStorageKey. photoUrl is included and is null until a photo is saved. Sample seed rows are published but have no consent, so they are not in this list.',
       responses: {
         '200': {
           description: 'Public profiles, ordered by display name.',
@@ -58,6 +58,35 @@ export const traineePaths = {
         '401': { description: 'Sign in.', content: errorRef },
         '403': { description: 'Role or CSRF refusal.', content: errorRef },
         '422': { description: 'Field errors.', content: errorRef },
+      },
+    },
+  },
+  '/api/v1/admin/trainees/photo': {
+    post: {
+      operationId: 'uploadTraineePhoto',
+      summary: 'Upload a trainee profile photo',
+      description:
+        'Requires content.write. An editor and an administrator both have that permission. A trainee, trainer, or viewer does not. The body is multipart with one JPEG, PNG, or WebP file. The bytes are sniffed. The file name is not trusted. The cap is UPLOAD_MAX_BYTES. The response is { photoUrl, storageKey }. Saving the trainee profile stores those two values. Development keeps the bytes in memory and returns a same-origin photoUrl. Production uses Cloudinary when it is configured.',
+      responses: {
+        '201': { description: 'The photo address and the storage key.' },
+        '401': { description: 'Sign in.', content: errorRef },
+        '403': { description: 'Role or CSRF refusal.', content: errorRef },
+        '422': {
+          description: 'The file is missing, too large, or not a JPEG, PNG, or WebP.',
+          content: errorRef,
+        },
+      },
+    },
+  },
+  '/api/v1/public/uploads/{key}': {
+    get: {
+      operationId: 'getStoredUpload',
+      summary: 'A profile photo kept in memory',
+      description:
+        'Used when Cloudinary is not configured. The key is the id returned with the upload. A missing photo is 404. Cloudinary addresses are loaded from Cloudinary, not from this path.',
+      responses: {
+        '200': { description: 'The image bytes.' },
+        '404': { description: 'No stored photo for that key.', content: errorRef },
       },
     },
   },
@@ -110,6 +139,8 @@ export const traineeSchemas = {
       'quote',
       'linkedin',
       'portfolio',
+      'photoUrl',
+      'photoStorageKey',
       'consentReceived',
       'listing',
       'publicationStatus',
@@ -124,11 +155,14 @@ export const traineeSchemas = {
       email: { type: 'string' },
       track: { type: 'string', enum: ['Blue team', 'Red team', 'GRC & Awareness'] },
       focus: { type: 'string' },
+      lessonIds: { type: 'array', items: { type: 'string' } },
       skills: { type: 'array', items: { type: 'string' } },
       bio: { type: 'string' },
       quote: { type: 'string' },
-      linkedin: { type: 'string' },
-      portfolio: { type: 'string' },
+      linkedin: { type: 'string', nullable: true },
+      portfolio: { type: 'string', nullable: true },
+      photoUrl: { type: 'string', nullable: true },
+      photoStorageKey: { type: 'string', nullable: true },
       consentReceived: { type: 'boolean' },
       consentReceivedAt: { type: 'string', format: 'date-time', nullable: true },
       consentRecordedBy: { type: 'string', nullable: true },
@@ -146,7 +180,7 @@ export const traineeSchemas = {
   PublicTrainee: {
     type: 'object',
     description:
-      'A trainee without email, linkedin, portfolio, internalNotes, consentReceived, or consent bookkeeping.',
+      'A trainee without email, linkedin, portfolio, internalNotes, photoStorageKey, consentReceived, or consent bookkeeping. photoUrl is null until a photo is saved.',
     required: [
       'id',
       'displayName',
@@ -157,6 +191,7 @@ export const traineeSchemas = {
       'skills',
       'bio',
       'quote',
+      'photoUrl',
       'listing',
       'publicationStatus',
       'statusLabel',
@@ -171,6 +206,7 @@ export const traineeSchemas = {
       skills: { type: 'array', items: { type: 'string' } },
       bio: { type: 'string' },
       quote: { type: 'string' },
+      photoUrl: { type: 'string', nullable: true },
       listing: { type: 'string' },
       publicationStatus: { type: 'string' },
       statusLabel: { type: 'string' },

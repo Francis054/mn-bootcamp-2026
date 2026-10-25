@@ -14,7 +14,7 @@ import {
 import type { ModuleRepository } from '../curriculum/repositories.js';
 import { slugify } from '../curriculum/slug.js';
 import { ApiError } from '../../shared/errors/api-error.js';
-import { postgresCode } from '../../shared/persistence/postgres-error.js';
+import { postgresCode, postgresConstraint } from '../../shared/persistence/postgres-error.js';
 import type { TraineeRepository } from '../trainees/trainee.repository.js';
 import type { ProjectListQuery, ProjectSort } from './list-query.js';
 import { isGithubRepositoryUrl, type RepositoryVisibility } from './project-url.js';
@@ -30,6 +30,7 @@ export class ProjectService {
     private readonly projects: ProjectRepository,
     private readonly modules: ModuleRepository,
     private readonly trainees: TraineeRepository,
+    private readonly lessons: { findById(id: string): Promise<{ id: string } | null> },
     private readonly audit: AuditRepository,
     private readonly repositories: RepositoryVisibility,
   ) {}
@@ -59,8 +60,12 @@ export class ProjectService {
 
   async listAdmin(query: ProjectListQuery): Promise<Page<ProjectRecord>> {
     const stored = await this.projects.findAll();
-    const links = await this.projects.traineeIdsByProject(stored.map((row) => row.id));
-    let rows = stored.map((row) => this.toRecord(row, links.get(row.id) ?? [], null));
+    const ids = stored.map((row) => row.id);
+    const links = await this.projects.traineeIdsByProject(ids);
+    const lessonLinks = await this.projects.lessonIdsByProject(ids);
+    let rows = stored.map((row) =>
+      this.toRecord(row, links.get(row.id) ?? [], null, lessonLinks.get(row.id) ?? []),
+    );
     const needle = query.q.toLowerCase();
     if (needle) {
       rows = rows.filter((project) =>
@@ -80,9 +85,10 @@ export class ProjectService {
   async getAdmin(id: string): Promise<ProjectRecord> {
     const row = await this.requireProject(id, 'Project not found.');
     const traineeIds = (await this.projects.traineeIdsByProject([row.id])).get(row.id) ?? [];
+    const lessonIds = (await this.projects.lessonIdsByProject([row.id])).get(row.id) ?? [];
     const consent = await this.trainees.consentFlags(traineeIds);
     const note = await this.repositoryNote(row, traineeIds, consent);
-    return this.toRecord(row, traineeIds, note);
+    return this.toRecord(row, traineeIds, note, lessonIds);
   }
 
   async create(dto: ProjectCreateDto, actor: Actor): Promise<ProjectRecord> {
@@ -100,7 +106,9 @@ export class ProjectService {
     }
     await this.assertModule(moduleId);
     const traineeIds = unique(dto.traineeIds ?? []);
+    const lessonIds = unique(dto.lessonIds ?? []);
     await this.assertTrainees(traineeIds);
+    await this.assertLessons(lessonIds);
     const saved = await this.insert({
       id: randomUUID(),
       title,
@@ -122,6 +130,7 @@ export class ProjectService {
       internalNotes: dto.internalNotes ?? '',
     });
     await this.projects.replaceTrainees(saved.id, traineeIds);
+    await this.projects.replaceLessons(saved.id, lessonIds);
     await this.writeAudit(actor, 'created', saved.id);
     return this.getAdmin(saved.id);
   }
@@ -145,7 +154,12 @@ export class ProjectService {
       patch.traineeIds !== undefined
         ? unique(patch.traineeIds)
         : ((await this.projects.traineeIdsByProject([id])).get(id) ?? []);
+    const lessonIds =
+      patch.lessonIds !== undefined
+        ? unique(patch.lessonIds)
+        : ((await this.projects.lessonIdsByProject([id])).get(id) ?? []);
     await this.assertTrainees(traineeIds);
+    await this.assertLessons(lessonIds);
     current.title = title;
     current.slug = slug;
     current.type = type;
@@ -167,6 +181,7 @@ export class ProjectService {
     if (patch.listing !== undefined) current.listing = listingOr(patch.listing, current.listing);
     const saved = await this.save(current);
     if (patch.traineeIds !== undefined) await this.projects.replaceTrainees(saved.id, traineeIds);
+    if (patch.lessonIds !== undefined) await this.projects.replaceLessons(saved.id, lessonIds);
     await this.writeAudit(actor, 'updated', saved.id);
     return this.getAdmin(saved.id);
   }
@@ -250,6 +265,16 @@ export class ProjectService {
     }
   }
 
+  private async assertLessons(lessonIds: readonly string[]): Promise<void> {
+    for (const lessonId of lessonIds) {
+      if (!(await this.lessons.findById(lessonId))) {
+        throw new ApiError('validation', 'Check the highlighted fields.', {
+          lessonIds: 'Choose a class.',
+        });
+      }
+    }
+  }
+
   private async assertTrainees(traineeIds: readonly string[]): Promise<void> {
     for (const traineeId of traineeIds) {
       if (!(await this.trainees.findById(traineeId))) {
@@ -292,6 +317,7 @@ export class ProjectService {
     row: ProjectEntity,
     traineeIds: string[],
     repositoryLinkNote: string | null,
+    lessonIds: string[] = [],
   ): ProjectRecord {
     return {
       id: row.id,
@@ -306,6 +332,7 @@ export class ProjectService {
       steps: row.steps,
       team: row.team,
       traineeIds,
+      lessonIds,
       repositoryUrl: row.repositoryUrl,
       demoUrl: row.demoUrl,
       labOnlyConfirmed: row.labOnlyConfirmed,
@@ -354,6 +381,17 @@ function listingOr(value: string | undefined, fallback: Listing): Listing {
 
 function mappedWrite(error: unknown): unknown {
   if (postgresCode(error) === '23503') {
+    const constraint = postgresConstraint(error) ?? '';
+    if (constraint.includes('trainee')) {
+      return new ApiError('validation', 'Check the highlighted fields.', {
+        traineeIds: 'Choose a trainee.',
+      });
+    }
+    if (constraint.includes('lesson')) {
+      return new ApiError('validation', 'Check the highlighted fields.', {
+        lessonIds: 'Choose a class.',
+      });
+    }
     return new ApiError('validation', 'Check the highlighted fields.', {
       moduleId: 'Choose a module.',
     });

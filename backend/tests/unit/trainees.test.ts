@@ -27,6 +27,8 @@ const profile: TraineeRecord = {
   quote: 'Sample quote.',
   linkedin: 'https://profiles.example.test/private-link',
   portfolio: 'https://profiles.example.test/private-portfolio',
+  photoUrl: null,
+  photoStorageKey: null,
   consentReceived: true,
   consentReceivedAt: '2026-10-24T00:00:00.000Z',
   consentRecordedBy: 'account-id',
@@ -39,6 +41,7 @@ const profile: TraineeRecord = {
   publicationStatus: 'published',
   statusLabel: 'In training',
   internalNotes: 'Development fixture. Do not replace with a real person without written consent.',
+  lessonIds: [],
   updatedAt: '2026-10-24T00:00:00.000Z',
 };
 
@@ -119,6 +122,7 @@ describe('trainee rules', () => {
         'id',
         'initials',
         'listing',
+        'photoUrl',
         'publicationStatus',
         'quote',
         'skills',

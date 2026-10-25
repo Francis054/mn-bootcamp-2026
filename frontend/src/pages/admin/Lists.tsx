@@ -6,7 +6,8 @@ import { Icon } from '@/components/Icon';
 import { EmptyState, ErrorState, LoadingRows, StatusBadge, useConfirm, useToast } from '@/components/feedback';
 import { usePageMeta } from '@/components/SiteChrome';
 import { usesMockApi } from '@/config/runtime';
-import { MODULES, moduleName } from '@/dev/fixtures';
+import { moduleName } from '@/dev/fixtures';
+import { useModules } from './options';
 import { formatDate } from '@/domain/format';
 import { isApiPublic } from '@/domain/publish';
 import type { BootcampEvent, Lesson, Page, Project, Trainee } from '@/domain/types';
@@ -25,12 +26,13 @@ export function ClassListPage() {
   const [page, setPage] = useState(1);
   const [nonce, setNonce] = useState(0);
   const [selected, setSelected] = useState<string[]>([]);
+  const modules = useModules();
   const list = useList<Lesson>('/admin/classes', { q, page, pageSize: 8, sort: 'week', dir: 'asc', filters: { moduleId, scheduleStatus: status } }, nonce);
   usePageMeta('Classes');
   return (
     <ListShell title="Classes" text="Weekly lessons for the 2026 cohort. Titles and order are samples." newTo="/admin/classes/new" count={list.data?.total} loading={list.loading} error={list.error?.message} onRetry={() => setNonce((value) => value + 1)}>
       <Filters q={q} onQ={setQ} label="Search classes">
-        <select className="select" aria-label="Module" value={moduleId} onChange={(event) => { setModuleId(event.target.value); setPage(1); }}><option value="">All modules</option>{MODULES.map((module) => <option key={module.id} value={module.id}>{module.name}</option>)}</select>
+        <select className="select" aria-label="Module" value={moduleId} onChange={(event) => { setModuleId(event.target.value); setPage(1); }}><option value="">All modules</option>{modules.map((module) => <option key={module.id} value={module.id}>{module.name}</option>)}</select>
         <select className="select" aria-label="Status" value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }}><option value="">Any status</option><option value="done">Completed</option><option value="now">This week</option><option value="upcoming">Upcoming</option></select>
       </Filters>
       <BulkBar path="/admin/classes/bulk" ids={selected} onDone={() => { setSelected([]); setNonce((value) => value + 1); }} />

@@ -1,9 +1,10 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '@/api/client';
-import { Avatar, CountUp, OfficialLogo, Photo, SplitHeading } from '@/components/Brand';
+import { CountUp, OfficialLogo, Photo, SplitHeading } from '@/components/Brand';
 import { Chips, ErrorSummary, Field, Tabs } from '@/components/controls';
 import { EmptyState, ErrorState, useLightbox, useToast } from '@/components/feedback';
+import { Loader } from '@/components/Loader';
 import { Icon, type IconName } from '@/components/Icon';
 import { Netlines } from '@/components/Netlines';
 import { TenMark } from '@/components/TenMark';
@@ -14,7 +15,10 @@ import { APP_TODAY, parseUtcDate } from '@/domain/format';
 import { isApiError } from '@/domain/types';
 import { collect, emailAddress, minLength, required } from '@/domain/validate';
 import { usePublicContent } from '@/hooks/useContent';
-import { downloadCalendar, EventRow, moduleOf, PageIntro, PublicGate, SampleMark } from './helpers';
+import { downloadCalendar, EventRow, moduleOf, PageIntro, PublicGate, SampleMark, TraineeArt } from './helpers';
+import { PublicWorkPhotos } from './WorkPhotos';
+
+export { ProjectPage } from './ProjectPage';
 
 export function TraineesPage() {
   const { trainees, loading, error } = usePublicContent();
@@ -25,6 +29,7 @@ export function TraineesPage() {
     return (focus === 'all' || trainee.focus === focus) && text.includes(query.trim().toLowerCase());
   });
   return (
+    <PublicGate loading={loading} error={error}>
     <>
       <PageIntro title="Trainees" crumbs={[{ label: 'Home', to: '/' }, { label: 'Trainees' }]} eyebrow="The 2026 cohort" headline={usesMockApi() ? 'Twelve sample\nprofiles.' : trainees.length ? 'The people\nin this cohort.' : 'Profiles after\nconsent.'} aside={<p className="lead">{usesMockApi() ? 'Names, photos and links appear only after each person gives consent. Every card here is a labelled placeholder.' : 'Names, photos and links appear only after each person gives consent and the profile is published.'}</p>} />
       <section className="section" style={{ paddingTop: 'var(--s-7)' }}>
@@ -34,21 +39,20 @@ export function TraineesPage() {
             <Tabs label="Filter by focus" value={focus} onChange={setFocus} tabs={[{ id: 'all', label: 'All focuses' }, ...MODULES.map((module) => ({ id: module.id, label: module.short }))]} />
             <span className="result-count" aria-live="polite">{rows.length} profiles</span>
           </div>
-          <PublicGate loading={loading} error={error}>
             {!loading && !error && trainees.length === 0 ? <EmptyState icon="users" title="No public profiles yet" text="A profile is listed after the person consents and an administrator publishes it." /> : rows.length ? (
               <div className="t-grid">
                 {rows.map((trainee) => (
                   <Link className="tcard" to={`/trainees/${trainee.id}`} key={trainee.id}>
-                    <div className="tcard__art" style={{ ['--h' as string]: trainee.hue }}><span className="ph">Placeholder</span><Avatar initials={trainee.initials} hue={trainee.hue} /></div>
+                    <TraineeArt trainee={trainee} variant="card" />
                     <div className="tcard__body"><h3>{trainee.displayName}</h3><p>{trainee.track} · {moduleOf(trainee.focus).short}</p><div className="tcard__tags">{(trainee.skills ?? []).slice(0, 2).map((skill) => <span className="tag" key={skill}>{skill}</span>)}</div></div>
                   </Link>
                 ))}
               </div>
             ) : <EmptyState icon="users" title="No profiles match" text="Try another focus or clear the search." action={<button className="btn btn--ghost btn--sm" type="button" onClick={() => { setFocus('all'); setQuery(''); }}>Reset</button>} />}
-          </PublicGate>
         </div>
       </section>
     </>
+    </PublicGate>
   );
 }
 
@@ -59,17 +63,18 @@ export function TraineePage() {
   const [tab, setTab] = useState('about');
   const toast = useToast();
   usePageMeta(trainee?.displayName ?? 'Trainee');
-  if (loading) return <section className="section"><div className="container"><p>Loading the published site…</p></div></section>;
-  if (error) return <section className="section"><div className="container"><ErrorState title="This profile could not be loaded" text={error} onRetry={() => window.location.reload()} /></div></section>;
-  if (!trainee) return <section className="section"><div className="container"><ErrorState title="This profile is not public" text="Profiles stay hidden until they are a published record or a labelled sample. Private contact details are never sent to this page." /></div></section>;
-  const related = projects.filter((project) => project.moduleId === trainee.focus).slice(0, 2);
+  const related = projects.filter((project) => project.moduleId === trainee?.focus).slice(0, 2);
   return (
+    <PublicGate loading={loading} error={error} errorTitle="This profile could not be loaded">
+    {!trainee ? (
+      <section className="section"><div className="container"><ErrorState title="This profile is not public" text="Profiles stay hidden until they are a published record or a labelled sample. Private contact details are never sent to this page." /></div></section>
+    ) : (
     <>
       <section className="profile-head">
         <div className="container">
           <ol className="crumbs"><li><Link to="/">Home</Link></li><li><Link to="/trainees">Trainees</Link></li><li aria-current="page">{trainee.displayName}</li></ol>
           <div className="profile-head__grid" style={{ marginTop: 32 }}>
-            <div className="profile-art mask-reveal is-in" style={{ ['--h' as string]: trainee.hue }}><span className="ph">Placeholder portrait</span><Avatar initials={trainee.initials} hue={trainee.hue} size="lg" /></div>
+            <TraineeArt trainee={trainee} variant="profile" />
             <div>
               <div className="flex wrap" style={{ gap: 10 }}><span className="badge badge--lime">{trainee.statusLabel}</span><SampleMark listing={trainee.listing}>Sample profile — placeholder</SampleMark></div>
               <h1 style={{ marginTop: 16 }}>{trainee.displayName}</h1>
@@ -96,7 +101,10 @@ export function TraineePage() {
           </div>
         </div>
       </section>
+      <PublicWorkPhotos traineeId={trainee.id} heading="Photos of this trainee at work" />
     </>
+    )}
+    </PublicGate>
   );
 }
 
@@ -106,6 +114,7 @@ export function ProjectsPage() {
   const types = ['Lab', 'CTF', 'Case study', 'Community project', 'Capstone'];
   const rows = projects.filter((project) => !type || project.type === type);
   return (
+    <PublicGate loading={loading} error={error}>
     <>
       <PageIntro dark title="Projects & labs" crumbs={[{ label: 'Home', to: '/' }, { label: 'Bootcamp' }, { label: 'Projects & labs' }]} eyebrow="Projects & labs" headline={'Built in the lab.\nReady for the field.'} aside={<><p className="lead">Every bootcamp includes a real-life project. Finished work appears here after it is published.</p>{projects.some((project) => project.listing !== 'public') ? <span className="ph" style={{ marginTop: 16 }}>Sample projects are labelled</span> : null}</>}>
         <Netlines />
@@ -116,7 +125,6 @@ export function ProjectsPage() {
             <Tabs label="Filter by type" value={type} onChange={setType} tabs={[{ id: '', label: 'All' }, ...types.map((item) => ({ id: item, label: item === 'Community project' ? 'Community' : item === 'Case study' ? 'Case studies' : item === 'Lab' ? 'Labs' : item }))]} />
             <span className="result-count" aria-live="polite">{rows.length} projects</span>
           </div>
-          <PublicGate loading={loading} error={error}>
           {!loading && !error && projects.length === 0 ? <EmptyState icon="layers" title="No projects are published yet" text="A project appears here after it is published and its listing is not hidden." /> : rows.length ? (
             <div className="lesson-grid">
               {rows.map((project) => (
@@ -127,7 +135,6 @@ export function ProjectsPage() {
               ))}
             </div>
           ) : <EmptyState icon="layers" title="Nothing here yet" text="Projects of this type will appear as the cohort completes them." />}
-          </PublicGate>
         </div>
       </section>
       <section className="section section--paper">
@@ -137,31 +144,7 @@ export function ProjectsPage() {
         </div>
       </section>
     </>
-  );
-}
-
-export function ProjectPage() {
-  const { id = '' } = useParams();
-  const { projects, loading, error } = usePublicContent();
-  const project = projects.find((item) => item.id === id);
-  usePageMeta(project?.title ?? 'Project');
-  if (loading) return <section className="section"><div className="container"><p>Loading the published site…</p></div></section>;
-  if (error) return <section className="section"><div className="container"><ErrorState title="This project could not be loaded" text={error} onRetry={() => window.location.reload()} /></div></section>;
-  if (!project) return <section className="section"><div className="container"><ErrorState title="This project is not available" text="Drafts and hidden listings stay off this page. Publish the project with a public or sample listing to show it." /></div></section>;
-  return (
-    <section className="section">
-      <div className="container">
-        <ol className="crumbs"><li><Link to="/">Home</Link></li><li><Link to="/projects">Projects</Link></li><li aria-current="page">{project.title}</li></ol>
-        <div className="flex wrap" style={{ gap: 10, marginTop: 24 }}><span className="tag">{project.type}</span><SampleMark listing={project.listing}>Sample project</SampleMark><span className="tag">{moduleOf(project.moduleId).name}</span></div>
-        <h1 style={{ marginTop: 16 }}>{project.title}</h1>
-        <p className="lead">{project.abstract}</p>
-        <figure className="detail-media" style={{ marginTop: 32 }}><Photo file={project.image} alt="" width={1600} height={1066} sizes="100vw" /></figure>
-        <div className="split" style={{ marginTop: 48 }}>
-          <div><h2>Approach</h2>{(project.steps ?? []).length ? <ol className="steps">{(project.steps ?? []).map((step) => <li key={step}><h4>{step}</h4><p className="muted">Placeholder step. Real write-ups will be added when a team agrees to share the work.</p></li>)}</ol> : <p className="muted">The approach will be added when the team shares the write-up.</p>}</div>
-          <aside><div className="callout"><h3>Tools</h3><p>{project.tools || 'Tools will be listed with the write-up.'}</p><p className="muted" style={{ marginTop: 12 }}>Repository and demo links stay private until a share agreement is recorded. They are not on this page.</p><p style={{ marginTop: 12 }}>{(project.team ?? []).length ? `Team: ${(project.team ?? []).join(', ')}` : 'No team names are published yet.'}</p></div></aside>
-        </div>
-      </div>
-    </section>
+    </PublicGate>
   );
 }
 
@@ -176,6 +159,7 @@ export function EventsPage() {
     return true;
   });
   return (
+    <PublicGate loading={loading} error={error}>
     <>
       <PageIntro title="Events" crumbs={[{ label: 'Home', to: '/' }, { label: 'Events' }]} eyebrow="Events & milestones" headline={'Where the cohort\nmeets the community.'} aside={<p className="lead">Each event is marked as verified, sample, or to be confirmed. The hackathon’s link to the bootcamp is unconfirmed.</p>} />
       <section className="section" style={{ paddingTop: 'var(--s-7)' }}>
@@ -184,12 +168,11 @@ export function EventsPage() {
             <Chips label="Filter events" value={filter} onChange={setFilter} options={[{ id: 'all', label: 'All' }, { id: 'upcoming', label: 'Upcoming' }, { id: 'past', label: 'Past' }, { id: 'Anniversary', label: 'Anniversary' }, { id: 'Milestone', label: 'Milestones' }]} />
             <span className="result-count" aria-live="polite">{rows.length} events</span>
           </div>
-          <PublicGate loading={loading} error={error}>
             {!loading && !error && events.length === 0 ? <EmptyState icon="calendar" title="No events are published yet" text="An event appears here after it is published and its listing is not hidden." /> : rows.length ? <div className="ev-list">{rows.map((event, index) => <EventRow event={event} index={index} key={event.id} />)}</div> : <EmptyState icon="calendar" title="No events in this view" text="Try another filter. Upcoming, past, anniversary, and milestone views use the published list." />}
-          </PublicGate>
         </div>
       </section>
     </>
+    </PublicGate>
   );
 }
 
@@ -198,11 +181,12 @@ export function EventPage() {
   const { events, loading, error } = usePublicContent();
   const event = events.find((item) => item.id === id);
   usePageMeta(event?.title ?? 'Event');
-  if (loading) return <section className="section"><div className="container"><p>Loading the published site…</p></div></section>;
-  if (error) return <section className="section"><div className="container"><ErrorState title="This event could not be loaded" text={error} onRetry={() => window.location.reload()} /></div></section>;
-  if (!event) return <section className="section"><div className="container"><ErrorState title="This event is not available" text="It may still be a hidden draft, or the link may be wrong." /></div></section>;
-  const canCalendar = event.calendarDownload && !event.dateTbc;
+  const canCalendar = Boolean(event && event.calendarDownload && !event.dateTbc);
   return (
+    <PublicGate loading={loading} error={error} errorTitle="This event could not be loaded">
+    {!event ? (
+      <section className="section"><div className="container"><ErrorState title="This event is not available" text="It may still be a hidden draft, or the link may be wrong." /></div></section>
+    ) : (
     <section className="section">
       <div className="container">
         <ol className="crumbs"><li><Link to="/">Home</Link></li><li><Link to="/events">Events</Link></li><li aria-current="page">{event.title}</li></ol>
@@ -226,6 +210,8 @@ export function EventPage() {
         </div>
       </div>
     </section>
+    )}
+    </PublicGate>
   );
 }
 
@@ -236,6 +222,7 @@ export function GalleryPage() {
   const rows = media.filter((item) => !album || item.album === album);
   const items = useMemo(() => rows.map((item) => ({ src: item.src.startsWith('http') || item.src.startsWith('/') ? item.src : `/assets/img/${item.file || 'electronics-lab'}-1600.webp`, alt: item.alt, caption: item.caption, category: ALBUM_LABEL[item.album as keyof typeof ALBUM_LABEL] ?? item.album, width: item.width, height: item.height })), [rows]);
   return (
+    <PublicGate loading={loading} error={error}>
     <>
       <PageIntro title="Gallery" crumbs={[{ label: 'Home', to: '/' }, { label: 'Gallery' }]} eyebrow="Gallery" headline={'Moments worth\nremembering.'} aside={<><p className="lead">Open a photo, then use the arrow keys to browse and Escape to close.</p><p className="muted" style={{ marginTop: 12 }}>People are not named. The Foundation has confirmed consent for the included photographs.</p></>} />
       <section className="section" style={{ paddingTop: 'var(--s-7)' }}>
@@ -244,7 +231,6 @@ export function GalleryPage() {
             <Tabs label="Filter photos" value={album} onChange={setAlbum} tabs={[{ id: '', label: 'All' }, { id: 'anniversary', label: '10th anniversary' }, { id: 'hackathon', label: 'Hackathon (TBC)' }, { id: 'community', label: 'Community' }]} />
             <span className="result-count" aria-live="polite">{rows.length} photos</span>
           </div>
-          <PublicGate loading={loading} error={error}>
           {!loading && !error && media.length === 0 ? <EmptyState icon="image" title="No photos are published yet" text="A photo appears here after consent is verified and an administrator publishes it." /> : rows.length ? (
             <div className="masonry">
               {rows.map((item, index) => (
@@ -255,20 +241,21 @@ export function GalleryPage() {
               ))}
             </div>
           ) : <EmptyState icon="image" title="No photos in this album" text="Try another album, or publish photos into this one." />}
-          </PublicGate>
         </div>
       </section>
     </>
+    </PublicGate>
   );
 }
 
 export function AboutPage() {
   const { about, milestones, foundationStats, loading, error } = usePublicContent();
   usePageMeta('About');
-  if (loading) return <section className="section"><div className="container"><p>Loading the published site…</p></div></section>;
-  if (error) return <section className="section"><div className="container"><ErrorState title="The about page could not be loaded" text={error} /></div></section>;
-  if (!about) return <section className="section"><div className="container"><h1>The about page is not published yet.</h1></div></section>;
   return (
+    <PublicGate loading={loading} error={error} errorTitle="The about page could not be loaded">
+    {!about ? (
+      <section className="section"><div className="container"><h1>The about page is not published yet.</h1></div></section>
+    ) : (
     <>
       <PageIntro title="About" crumbs={[{ label: 'Home', to: '/' }, { label: 'About' }]} eyebrow="About the Foundation" headline={'Maximal wisdom,\nshared widely.'} aside={<><OfficialLogo width={180} /><p className="lead">Established in Ghana in 2016 to create career perspectives for young Africans through information technology.</p></>} />
       <section className="section" style={{ paddingTop: 0 }}><div className="container"><figure className="detail-media"><Photo file="anniversary-group-outdoor" alt="An outdoor group photo at a Foundation event" width={1600} height={1067} sizes="100vw" /></figure></div></section>
@@ -305,10 +292,12 @@ export function AboutPage() {
         </section>
       ) : (
         <section className="section">
-          <div className="container"><p className="muted">Foundation counters stay hidden until they are published. Address: {about.address}. Email: <a href={`mailto:${about.email}`}>{about.email}</a>.</p></div>
+          <div className="container"><p className="muted">Foundation counters stay hidden until they are published. Address: {about.address}. Email: <a href={`mailto:${about.email}`}>{about.email}</a>.</p>          </div>
         </section>
       )}
     </>
+    )}
+    </PublicGate>
   );
 }
 
@@ -324,6 +313,7 @@ export function AnniversaryPage() {
     requestAnimationFrame(() => node.classList.add('is-in'));
   };
   return (
+    <PublicGate loading={loading} error={error}>
     <>
       <section className="anni-hero">
         <div className="container anni-hero__grid">
@@ -351,9 +341,7 @@ export function AnniversaryPage() {
         <div className="container">
           <h2 className="h2">October 2026</h2>
           <div className="ev-list" style={{ marginTop: 28 }}>
-            <PublicGate loading={loading} error={error}>
               {featured.length ? featured.map((event, index) => <EventRow event={event} index={index} key={event.id} />) : <p>No anniversary events are published yet. The story above still stands.</p>}
-            </PublicGate>
           </div>
         </div>
       </section>
@@ -364,6 +352,7 @@ export function AnniversaryPage() {
         </div>
       </section>
     </>
+    </PublicGate>
   );
 }
 
@@ -440,7 +429,7 @@ export function ContactPage() {
                   <input id="company" name="company" type="text" tabIndex={-1} autoComplete="off" defaultValue="" />
                 </div>
                 {errors.form ? <p role="alert">{errors.form}</p> : null}
-                <button className={`btn${pending ? ' is-loading' : ''}`} type="submit" disabled={pending}>Send enquiry</button>
+                <button className={`btn${pending ? ' is-loading' : ''}`} type="submit" disabled={pending} aria-busy={pending || undefined}>{pending ? <Loader variant="inline" label="Sending" /> : null}Send enquiry</button>
               </form>
             )}
           </div>

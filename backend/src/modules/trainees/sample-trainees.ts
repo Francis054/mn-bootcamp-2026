@@ -31,6 +31,8 @@ export interface SampleTrainee {
   quote: string;
   linkedin: string | null;
   portfolio: string | null;
+  photoUrl: null;
+  photoStorageKey: null;
   consentReceived: boolean;
   consentReceivedAt: null;
   consentRecordedBy: null;
@@ -65,6 +67,8 @@ export function buildSampleTrainees(): SampleTrainee[] {
       quote: 'Sample quote — the trainee’s own words go here.',
       linkedin: null,
       portfolio: null,
+      photoUrl: null,
+      photoStorageKey: null,
       consentReceived: false,
       consentReceivedAt: null,
       consentRecordedBy: null,

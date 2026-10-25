@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { cloneElement, isValidElement, useEffect, useRef, useState, type FormEvent, type ReactElement, type ReactNode, type Ref } from 'react';
 import { usesMockApi } from '@/config/runtime';
+import { Loader } from './Loader';
 import { Icon, type IconName } from './Icon';
 
 export function Tabs({ label, value, onChange, tabs }: { label: string; value: string; onChange: (id: string) => void; tabs: Array<{ id: string; label: string }> }) {
@@ -47,25 +48,76 @@ export function Chips({ label, value, onChange, options }: { label: string; valu
   );
 }
 
-export function Field({ id, label, error, hint, children, className = '' }: { id: string; label: string; error?: string; hint?: string; children: ReactNode; className?: string }) {
+export function Field({ id, label, error, hint, children, className = '', required }: { id: string; label: string; error?: string; hint?: string; children: ReactNode; className?: string; required?: boolean }) {
+  const control = required === undefined || !isValidElement(children)
+    ? children
+    : cloneElement(children as ReactElement<{ 'aria-required'?: boolean; 'aria-invalid'?: boolean; 'aria-describedby'?: string }>, {
+      'aria-required': required ? true : undefined,
+      'aria-invalid': error ? true : undefined,
+      'aria-describedby': error ? `${id}-err` : undefined,
+    });
   return (
     <div className={`field${className ? ` ${className}` : ''}${error ? ' has-error' : ''}`}>
-      <label htmlFor={id}>{label}</label>
-      {children}
+      <label htmlFor={id}>
+        {label}
+        {required === true ? <><span className="req" aria-hidden="true"> *</span><span className="sr-only"> required</span></> : null}
+        {required === false ? <span className="opt"> (optional)</span> : null}
+      </label>
+      {control}
       {hint ? <span className="hint">{hint}</span> : null}
       <div className="error-msg" id={`${id}-err`}>{error ? <><Icon name="alert" className="i--sm" />{error}</> : null}</div>
     </div>
   );
 }
 
-export function ErrorSummary({ errors }: { errors: Record<string, string> }) {
+export function FormLegend() {
+  return <p className="form-legend"><span className="req" aria-hidden="true">*</span> Required</p>;
+}
+
+export function ErrorSummary({ errors, labels, summaryRef }: { errors: Record<string, string>; labels?: Record<string, string>; summaryRef?: Ref<HTMLDivElement> }) {
   const entries = Object.entries(errors);
   if (!entries.length) return <div className="error-summary" role="alert" />;
+  const count = entries.length;
+  const heading = labels
+    ? `Please fill in ${count} required ${count === 1 ? 'field' : 'fields'}`
+    : `${count} ${count > 1 ? 'fields need' : 'field needs'} attention`;
   return (
-    <div className="error-summary is-on" role="alert" tabIndex={-1}>
-      <h2><Icon name="alert" className="i--sm" /> {entries.length} {entries.length > 1 ? 'fields need' : 'field needs'} attention</h2>
-      <ul>{entries.map(([id, message]) => <li key={id}><a href={`#${id}`}>{message}</a></li>)}</ul>
+    <div className="error-summary is-on" role="alert" tabIndex={-1} ref={summaryRef}>
+      <h2><Icon name="alert" className="i--sm" /> {heading}</h2>
+      <ul>{entries.map(([id, message]) => <li key={id}><a href={`#${id}`} onClick={(event) => jumpToField(event, id)}>{labels?.[id] ?? message}</a></li>)}</ul>
     </div>
+  );
+}
+
+export function jumpToField(event: { preventDefault: () => void }, id: string) {
+  event.preventDefault();
+  const node = document.getElementById(id);
+  node?.scrollIntoView?.({ block: 'center' });
+  node?.focus();
+}
+
+export function BusyButton({
+  pending,
+  children,
+  busyLabel,
+  className = 'btn btn--sm',
+  type = 'button',
+  disabled,
+  onClick,
+}: {
+  pending: boolean;
+  children: ReactNode;
+  busyLabel: string;
+  className?: string;
+  type?: 'button' | 'submit';
+  disabled?: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <button className={`${className}${pending ? ' is-loading' : ''}`} type={type} disabled={disabled ?? pending} aria-busy={pending || undefined} onClick={onClick}>
+      {pending ? <Loader variant="inline" label={busyLabel} /> : null}
+      {children}
+    </button>
   );
 }
 
@@ -75,7 +127,7 @@ export function SaveBar({ dirty, pending, onCancel, label = 'Save', extra }: { d
       <span className="status">{dirty ? 'Unsaved changes' : usesMockApi() ? 'Held in the development adapter · not sent to a server' : 'Saved through the API'}</span>
       {onCancel ? <a className="btn btn--ghost btn--sm" href={onCancel}>Cancel</a> : null}
       {extra}
-      <button className={`btn btn--dark btn--sm${pending ? ' is-loading' : ''}`} type="submit" disabled={pending}>{label}</button>
+      <BusyButton pending={pending} type="submit" className="btn btn--dark btn--sm" busyLabel="Saving">{label}</BusyButton>
     </div>
   );
 }
@@ -84,8 +136,8 @@ export function PublishActions({ status, pending, onPublish, onUnpublish }: { st
   return (
     <>
       <span className="badge">{status === 'published' ? 'Published' : 'Draft'}</span>
-      <button className="btn btn--sm" type="button" disabled={pending} onClick={onPublish}>Publish</button>
-      <button className="btn btn--ghost btn--sm" type="button" disabled={pending || status !== 'published'} onClick={onUnpublish}>Unpublish</button>
+      <BusyButton pending={pending} className="btn btn--sm" busyLabel="Publishing" onClick={onPublish}>Publish</BusyButton>
+      <BusyButton pending={pending} className="btn btn--ghost btn--sm" busyLabel="Updating" disabled={pending || status !== 'published'} onClick={onUnpublish}>Unpublish</BusyButton>
     </>
   );
 }

@@ -7,9 +7,65 @@
 <meta name="description" content="Learn. Build. Secure the Future. Follow the free 2026 Cybersecurity Bootcamp by the Maxim Nyansa Foundation in Accra.">
 <meta name="theme-color" content="#0E2A1E">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2388CC00'/%3E%3Cpath d='M16 6l8 3v6c0 5-3.4 8.4-8 10.4C11.4 23.4 8 20 8 15V9z' fill='none' stroke='%230E2A1E' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/assets/fonts/fonts.css">
+<style>
+  html,body{margin:0;min-height:100%;background:#0e2a1e}
+  #boot{
+    position:fixed;inset:0;z-index:400;display:grid;justify-items:center;align-content:center;gap:18px;
+    background:
+      radial-gradient(980px 560px at 8% -8%, rgba(169,207,62,.42), transparent 56%),
+      radial-gradient(720px 480px at 108% 8%, rgba(217,164,65,.38), transparent 52%),
+      radial-gradient(640px 440px at 72% 118%, rgba(200,85,61,.32), transparent 48%),
+      linear-gradient(165deg,#1a4634 0%,#0e2a1e 46%,#10261c 100%);
+    color:#fff;text-align:center;font-family:"Space Grotesk","Segoe UI",system-ui,sans-serif;
+  }
+  #boot .stage{position:relative;width:148px;height:148px}
+  #boot .ring,#boot .ring-in{
+    position:absolute;inset:0;border-radius:50%;
+    background:conic-gradient(from 24deg,#88cc00,#d9a441,#c8553d,#a9cf3e,#2e6a4b,#88cc00);
+    -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 8px),#000 calc(100% - 5.5px));
+    mask:radial-gradient(farthest-side,transparent calc(100% - 8px),#000 calc(100% - 5.5px));
+    animation:boot-spin 2.6s linear infinite;
+  }
+  #boot .ring-in{inset:16%;animation-duration:1.7s;animation-direction:reverse;
+    background:conic-gradient(from 200deg,#a9cf3e,transparent 28%,#d9a441 62%,#88cc00 88%,transparent);
+    -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 3px));
+    mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 3px));
+  }
+  #boot .orbit{position:absolute;inset:-8px;animation:boot-spin 3.4s linear infinite}
+  #boot .orbit i{position:absolute;left:50%;top:50%;width:12px;height:12px;margin:-6px;border-radius:50%;box-shadow:0 0 0 5px rgba(255,255,255,.12)}
+  #boot .orbit i:nth-child(1){background:#88cc00;transform:rotate(0deg) translateY(-82px)}
+  #boot .orbit i:nth-child(2){background:#d9a441;transform:rotate(120deg) translateY(-82px)}
+  #boot .orbit i:nth-child(3){background:#c8553d;transform:rotate(240deg) translateY(-82px)}
+  #boot svg{position:absolute;inset:30%;width:auto;height:auto;color:#88cc00;animation:boot-pulse 1.8s ease-in-out infinite}
+  #boot .kicker{margin:8px 0 0;font-family:"Noto Sans","Segoe UI",sans-serif;font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#88cc00}
+  #boot .msg{margin:0;max-width:18ch;font-size:clamp(1.35rem,2.4vw,1.85rem);font-weight:600;letter-spacing:-.03em;line-height:1.15}
+  #boot .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  @keyframes boot-spin{to{transform:rotate(360deg)}}
+  @keyframes boot-pulse{0%,100%{transform:scale(.9);opacity:.82}50%{transform:scale(1);opacity:1}}
+  @keyframes boot-fade{from{opacity:1}to{opacity:.62}}
+  @media (prefers-reduced-motion:reduce){
+    #boot .ring,#boot .ring-in,#boot .orbit,#boot svg{animation:none}
+    #boot{animation:boot-fade 1.3s ease-in-out infinite alternate}
+  }
+</style>
 </head>
 <body>
 <div id="root"></div>
+<div id="boot" role="status" aria-live="polite" aria-busy="true">
+  <div class="stage" aria-hidden="true">
+    <span class="ring"></span>
+    <span class="ring ring-in"></span>
+    <span class="orbit"><i></i><i></i><i></i></span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2.8l7.5 2.9v5.6c0 4.8-3.2 8-7.5 9.9-4.3-1.9-7.5-5.1-7.5-9.9V5.7z"></path>
+      <path d="M12 7.5v9M8.5 10.5L12 7.5l3.5 3"></path>
+    </svg>
+  </div>
+  <p class="kicker" aria-hidden="true">Maxim Nyansa</p>
+  <p class="msg" aria-hidden="true">Loading the bootcamp…</p>
+  <span class="sr">Loading the bootcamp…</span>
+</div>
 <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>

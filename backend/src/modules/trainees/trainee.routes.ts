@@ -1,10 +1,31 @@
 import { Router, type Request } from 'express';
-import { requirePermission } from '../auth/require-auth.js';
+import { ApiError } from '../../shared/errors/api-error.js';
+import { PUBLIC_GET_CACHE_CONTROL } from '../../shared/http/cache-control.js';
 import { validateDto } from '../../shared/validation/validate-dto.js';
+import { requirePermission } from '../auth/require-auth.js';
 import type { Actor } from '../curriculum/actor.js';
+import { imageSizeMessage } from '../gallery/media.rules.js';
+import { readMediaUpload } from '../gallery/upload.js';
+import type { StorageProvider } from '../storage/storage-provider.js';
+import { readMemoryUpload } from './profile-photo.js';
 import { TraineeCreateDto, TraineePatchDto } from './trainee.dto.js';
 import { readTraineeListQuery } from './list-query.js';
 import type { TraineeService } from './trainee.service.js';
+
+export function mountPublicTraineePhotos(router: Router, storage: StorageProvider): void {
+  router.get('/public/uploads/:key', (req, res, next) => {
+    const key = typeof req.params.key === 'string' ? req.params.key : '';
+    const image = readMemoryUpload(storage, key);
+    if (!image) {
+      next(new ApiError('not_found', 'That photo is not available.'));
+      return;
+    }
+    res.setHeader('Content-Type', image.mime);
+    res.setHeader('Cache-Control', PUBLIC_GET_CACHE_CONTROL);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.status(200).send(image.bytes);
+  });
+}
 
 export function mountPublicTrainees(router: Router, trainees: TraineeService): void {
   router.get('/public/trainees', (_req, res, next) => {
@@ -21,7 +42,19 @@ export function mountPublicTrainees(router: Router, trainees: TraineeService): v
   });
 }
 
-export function mountAdminTrainees(admin: Router, trainees: TraineeService): void {
+export function mountAdminTrainees(
+  admin: Router,
+  trainees: TraineeService,
+  maxBytes: number,
+): void {
+  admin.post('/trainees/photo', requirePermission('content.write'), (req, res, next) => {
+    readMediaUpload(req, maxBytes, imageSizeMessage(maxBytes))
+      .then((upload) => trainees.storePhoto(upload.bytes))
+      .then((row) => res.status(201).json(row))
+      .catch((error: unknown) => {
+        next(asPhotoError(error));
+      });
+  });
   admin.get('/trainees', (req, res, next) => {
     try {
       const query = readTraineeListQuery(req.query);
@@ -69,6 +102,12 @@ export function mountAdminTrainees(admin: Router, trainees: TraineeService): voi
       .then((row) => res.json(row))
       .catch(next);
   });
+}
+
+function asPhotoError(error: unknown): unknown {
+  if (!(error instanceof ApiError) || !error.fieldErrors?.file) return error;
+  const { file, ...rest } = error.fieldErrors;
+  return new ApiError(error.code, error.message, { ...rest, photoUrl: file });
 }
 
 function actorFrom(req: Request): Actor {

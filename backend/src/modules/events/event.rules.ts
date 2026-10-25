@@ -1,3 +1,4 @@
+import { idListMessage } from '../../shared/validation/id-list.js';
 import { isListing, isPublicationStatus } from '../curriculum/publication.js';
 import { clockMessage, dateMessage } from './event-time.js';
 import { isEventKind } from './event-types.js';
@@ -52,4 +53,16 @@ export function publicationMessage(value: unknown): string | undefined {
 export function listingMessage(value: unknown): string | undefined {
   if (typeof value !== 'string' || !isListing(value)) return 'Choose a listing.';
   return undefined;
+}
+
+export function lessonIdsMessage(value: unknown): string | undefined {
+  return idListMessage(value, 'Choose a class.', 'Choose at most 40 classes.');
+}
+
+export function projectIdsMessage(value: unknown): string | undefined {
+  return idListMessage(value, 'Choose a project.', 'Choose at most 40 projects.');
+}
+
+export function mediaIdsMessage(value: unknown): string | undefined {
+  return idListMessage(value, 'Choose a photo.', 'Choose at most 40 photos.');
 }

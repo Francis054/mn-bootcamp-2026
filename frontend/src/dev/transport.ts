@@ -1,12 +1,14 @@
 import { toPublicEvent, toPublicLesson, toPublicProject, toPublicTrainee } from '@/domain/publicView';
-import { ApiError, type ApiErrorCode, type BootcampEvent, type Lesson, type ListQuery, type MediaItem, type Page, type Permission, type Project, type Role, type SearchHit, type Trainee } from '@/domain/types';
+import { ApiError, type ApiErrorCode, type BootcampEvent, type Lesson, type ListQuery, type MediaItem, type Page, type Permission, type Project, type Role, type SearchHit, type Trainee, type WorkPhoto } from '@/domain/types';
 import { can } from '@/domain/permissions';
 import { isPubliclyListable } from '@/domain/publish';
 import { includesQuery, newId, paginate, scheduleFor, slugify } from '@/domain/format';
+import { displayPhotoUrl, profilePhotoFileProblem, readFileBytes, sniffedPhotoMime, type ProfilePhotoMime } from '@/domain/photo';
 import { collect, emailAddress, httpUrl, minLength, required } from '@/domain/validate';
 import { currentEnv } from '@/config/runtime';
 import type { ApiRequest } from '@/api/liveTransport';
-import { mediaSrc } from './fixtures';
+import { MODULES, mediaSrc } from './fixtures';
+import { readWorkPhotoDataUrl, workPhotoFieldErrors, workPhotoFileError } from '@/domain/workPhoto';
 import { clearSession, markSessionExpired, readActiveSession, setSession } from './session';
 import { getState, updateState } from './store';
 
@@ -127,9 +129,40 @@ export async function devTransport<T>(req: ApiRequest): Promise<T> {
   takeArmed();
   const path = req.path.split('?')[0] || '/';
   const method = req.method;
+  if (method === 'POST' && path === '/admin/trainees/photo') {
+    return (await storeTraineePhoto(req.body)) as T;
+  }
   const query = (req.query ?? {}) as ListQuery & Record<string, string>;
   const body = formFields(req.body);
   return (await route(method, path, query, body)) as T;
+}
+
+async function storeTraineePhoto(value: unknown): Promise<{ photoUrl: string; storageKey: string }> {
+  requireUser('content.write');
+  const file = photoFile(value);
+  if (!file) fail('validation', 'Check the highlighted fields.', 422, { photoUrl: 'Choose an image.' });
+  const sizeProblem = profilePhotoFileProblem(file);
+  if (sizeProblem) fail('validation', 'Check the highlighted fields.', 422, { photoUrl: sizeProblem });
+  const bytes = await readFileBytes(file);
+  const mime = sniffedPhotoMime(bytes);
+  if (!mime) fail('validation', 'Check the highlighted fields.', 422, { photoUrl: 'Use a JPEG, PNG, or WebP image.' });
+  return { photoUrl: dataUrl(bytes, mime), storageKey: 'adapter' };
+}
+
+function photoFile(value: unknown): File | null {
+  if (typeof FormData === 'undefined' || !(value instanceof FormData)) return null;
+  const item = value.get('file') ?? value.get('photo');
+  if (typeof File !== 'undefined' && item instanceof File && item.size > 0) return item;
+  return null;
+}
+
+function dataUrl(bytes: Uint8Array, mime: ProfilePhotoMime): string {
+  let binary = '';
+  const chunk = 0x8000;
+  for (let index = 0; index < bytes.length; index += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + chunk));
+  }
+  return `data:${mime};base64,${btoa(binary)}`;
 }
 
 function formFields(value: unknown): Record<string, unknown> {
@@ -137,6 +170,7 @@ function formFields(value: unknown): Record<string, unknown> {
     const fields: Record<string, unknown> = {};
     value.forEach((item, key) => {
       if (typeof item === 'string') fields[key] = item;
+      else if (item instanceof File && item.size > 0 && key === 'file') fields.file = item;
     });
     return fields;
   }
@@ -174,11 +208,22 @@ async function route(method: string, path: string, query: ListQuery & Record<str
   if (method === 'GET' && path === '/public/events') return getState().events.filter(isPubliclyListable).map(toPublicEvent);
   if (method === 'GET' && path.startsWith('/public/events/')) return publicOne(getState().events, path.split('/')[3] ?? '', toPublicEvent);
   if (method === 'GET' && path === '/public/media') return getState().media.filter(isPubliclyListable);
+  if (method === 'GET' && path === '/public/work-photos') return publicWorkPhotos(query);
   if (method === 'POST' && path === '/public/enquiries') return createEnquiry(body);
 
   if (path.startsWith('/admin/')) requireUser('content.read');
 
   if (method === 'GET' && path === '/admin/search') return search(String(query.q ?? ''));
+  if (method === 'GET' && path === '/admin/modules') {
+    requireUser('content.read');
+    return MODULES.map((module, index) => ({
+      ...module,
+      sortOrder: index + 1,
+      publicationStatus: 'published' as const,
+      listing: 'sample' as const,
+      updatedAt: '2026-10-01T00:00:00.000Z',
+    }));
+  }
   if (method === 'GET' && path === '/admin/classes') return listLessons(query);
   if (method === 'GET' && /^\/admin\/classes\/[^/]+$/.test(path)) return adminOne(getState().lessons, id, 'Class not found.');
   if (method === 'POST' && path === '/admin/classes') return saveNew('content.write', () => updateState((s) => ({ ...s, lessons: [lessonBody(body as Partial<Lesson>), ...s.lessons] })).lessons[0]);
@@ -213,6 +258,12 @@ async function route(method: string, path: string, query: ListQuery & Record<str
   if (method === 'POST' && /^\/admin\/media\/[^/]+\/withdraw-consent$/.test(path)) return withdrawMedia(id);
   if (method === 'PATCH' && path.startsWith('/admin/media/')) return patchMedia(id, body);
   if (method === 'DELETE' && path.startsWith('/admin/media/')) return remove('media.write', 'media', id);
+
+  if (method === 'GET' && path === '/admin/work-photos') return listWorkPhotos(query);
+  if (method === 'POST' && path === '/admin/work-photos') return addWorkPhoto(body);
+  if (method === 'POST' && /^\/admin\/work-photos\/[^/]+\/publish$/.test(path)) return publishWorkPhoto(id);
+  if (method === 'POST' && /^\/admin\/work-photos\/[^/]+\/unpublish$/.test(path)) return unpublishWorkPhoto(id);
+  if (method === 'DELETE' && /^\/admin\/work-photos\/[^/]+$/.test(path)) return removeWorkPhoto(id);
 
   if (method === 'GET' && path === '/admin/milestones') return { milestones: getState().milestones, publicationStatus: getState().milestonePublicationStatus };
   if (method === 'PUT' && path === '/admin/milestones') return saveNew('content.write', () => updateState((s) => ({ ...s, milestones: Array.isArray(body.milestones) ? body.milestones as typeof s.milestones : s.milestones })).milestones);
@@ -275,7 +326,7 @@ async function route(method: string, path: string, query: ListQuery & Record<str
     const confirm = String(body.confirm ?? '');
     assertFields(collect({
       current: required(String(body.current ?? ''), 'Enter your current password.'),
-      next: required(next, 'Choose a new password.') ?? minLength(next, 8, 'Use at least 8 characters.'),
+      next: required(next, 'Choose a new password.') ?? minLength(next, 12, 'Use at least 12 characters.'),
       confirm: next === confirm ? null : 'The two passwords do not match.',
     }));
     fail('pending', 'Password changes need the production authentication provider, which is not connected. The password was not stored.', 501);
@@ -477,6 +528,11 @@ function traineeBody(input: Record<string, unknown>, current?: Trainee): Trainee
     portfolio: linkValue(input.portfolio, current?.portfolio).error,
   }));
   const consentReceived = Boolean(input.consentReceived ?? current?.consentReceived);
+  const publicationStatus = (input.publicationStatus as Trainee['publicationStatus']) ?? current?.publicationStatus ?? 'draft';
+  if (publicationStatus === 'published' && !consentReceived) {
+    const consent = 'Consent is required before this profile can be published.';
+    assertFields({ publicationStatus: consent, consentReceived: consent });
+  }
   let listing = (input.listing as Trainee['listing']) ?? current?.listing ?? 'hidden';
   if (listing === 'public' && !consentReceived) listing = 'sample';
   return {
@@ -492,12 +548,31 @@ function traineeBody(input: Record<string, unknown>, current?: Trainee): Trainee
     quote: String(input.quote ?? current?.quote ?? ''),
     linkedin: linkValue(input.linkedin, current?.linkedin).stored,
     portfolio: linkValue(input.portfolio, current?.portfolio).stored,
+    photoUrl: storedPhoto(input.photoUrl, current?.photoUrl ?? null),
     consentReceived,
     listing,
-    publicationStatus: (input.publicationStatus as Trainee['publicationStatus']) ?? current?.publicationStatus ?? 'draft',
+    publicationStatus,
     statusLabel: String(input.statusLabel ?? current?.statusLabel ?? 'In training'),
+    lessonIds: idList(input.lessonIds, current?.lessonIds),
     internalNotes: String(input.internalNotes ?? current?.internalNotes ?? ''),
   };
+}
+
+function storedPhoto(value: unknown, current: string | null): string | null {
+  if (value === undefined) return current;
+  if (value === null) return null;
+  if (typeof value !== 'string') {
+    assertFields({ photoUrl: 'Use a JPEG, PNG, or WebP image.' });
+    return current;
+  }
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const stored = displayPhotoUrl(trimmed);
+  if (!stored) {
+    assertFields({ photoUrl: 'Use a JPEG, PNG, or WebP image.' });
+    return current;
+  }
+  return stored;
 }
 
 function patchTrainee(id: string, body: Record<string, unknown>) {
@@ -533,6 +608,8 @@ function projectBody(input: Record<string, unknown>, current?: Project): Project
     tools: String(input.tools ?? current?.tools ?? ''),
     steps: (input.steps as string[]) ?? current?.steps ?? [],
     team: (input.team as string[]) ?? current?.team ?? [],
+    traineeIds: idList(input.traineeIds, current?.traineeIds),
+    lessonIds: idList(input.lessonIds, current?.lessonIds),
     repositoryUrl: String(input.repositoryUrl ?? current?.repositoryUrl ?? ''),
     demoUrl: String(input.demoUrl ?? current?.demoUrl ?? ''),
     labOnlyConfirmed: Boolean(input.labOnlyConfirmed ?? current?.labOnlyConfirmed),
@@ -558,17 +635,22 @@ function eventBody(input: Record<string, unknown>, current?: BootcampEvent): Boo
   const summary = String(input.summary ?? current?.summary ?? '');
   const verified = Boolean(input.verified ?? current?.verified);
   const sourceUrl = String(input.sourceUrl ?? current?.sourceUrl ?? '');
+  const dateTbc = Boolean(input.dateTbc ?? current?.dateTbc);
+  const startTime = String(input.startTime ?? current?.startTime ?? '');
+  const endTime = String(input.endTime ?? current?.endTime ?? '');
   assertFields(collect({
     title: required(title, 'Give the event a name.'),
     place: required(place, 'Enter a venue, or “Venue to be confirmed”.'),
     summary: required(summary, 'Write a summary of at least 20 characters.') ?? minLength(summary, 20),
-    sourceUrl: verified ? httpUrl(sourceUrl, false) : httpUrl(sourceUrl),
+    sourceUrl: verified && !sourceUrl.trim() ? 'Enter a full link starting with https://' : httpsLink(sourceUrl, 'Enter a full link starting with https://'),
+    startTime: dateTbc && (startTime.trim() || endTime.trim()) ? 'Leave the times blank while the date is to be confirmed.' : null,
+    date: !dateTbc && !String(input.date ?? current?.date ?? '').trim() ? 'Pick a date.' : null,
   }));
   return {
     id: current?.id ?? newId('event'),
     title: title.trim(),
     date: String(input.date ?? current?.date ?? '2026-10-24'),
-    dateTbc: Boolean(input.dateTbc ?? current?.dateTbc),
+    dateTbc,
     whenLabel: String(input.whenLabel ?? current?.whenLabel ?? ''),
     place: place.trim(),
     kind: (input.kind as BootcampEvent['kind']) ?? current?.kind ?? 'Milestone',
@@ -581,8 +663,11 @@ function eventBody(input: Record<string, unknown>, current?: BootcampEvent): Boo
     image: String(input.image ?? current?.image ?? 'guests-seated'),
     showOnAnniversary: Boolean(input.showOnAnniversary ?? current?.showOnAnniversary),
     calendarDownload: Boolean(input.calendarDownload ?? current?.calendarDownload),
-    startTime: String(input.startTime ?? current?.startTime ?? ''),
-    endTime: String(input.endTime ?? current?.endTime ?? ''),
+    startTime: dateTbc ? '' : startTime,
+    endTime: dateTbc ? '' : endTime,
+    lessonIds: idList(input.lessonIds, current?.lessonIds),
+    projectIds: idList(input.projectIds, current?.projectIds),
+    mediaIds: idList(input.mediaIds, current?.mediaIds),
     publicationStatus: (input.publicationStatus as BootcampEvent['publicationStatus']) ?? current?.publicationStatus ?? 'draft',
     listing: (input.listing as BootcampEvent['listing']) ?? current?.listing ?? 'sample',
     internalNotes: String(input.internalNotes ?? current?.internalNotes ?? ''),
@@ -618,6 +703,17 @@ function addMedia(body: Record<string, unknown>): MediaItem {
   };
   updateState((s) => ({ ...s, media: [item, ...s.media] }));
   return item;
+}
+
+function idList(value: unknown, fallback: string[] | undefined): string[] {
+  if (Array.isArray(value) && value.every((item) => typeof item === 'string')) return value;
+  return fallback ?? [];
+}
+
+function httpsLink(value: string, message: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return /^https:\/\/\S+\.\S+/.test(trimmed) ? null : message;
 }
 
 function linkValue(value: unknown, fallback: string | null | undefined): { stored: string | null; error: string | null } {
@@ -691,7 +787,8 @@ function publishRecord(kind: string, id: string) {
   const current = rows.find((row) => row.id === id);
   if (!current) fail('not_found', 'Record not found.', 404);
   if (key === 'trainees' && !('consentReceived' in current && current.consentReceived)) {
-    fail('validation', 'Record consent before this profile can be published.', 422, { publicationStatus: 'Record consent before this profile can be published.' });
+    const consent = 'Consent is required before this profile can be published.';
+    fail('validation', consent, 422, { publicationStatus: consent, consentReceived: consent });
   }
   const next = { ...current, publicationStatus: 'published' as const };
   updateState((s) => ({ ...s, [key]: s[key].map((row) => (row.id === id ? next : row)) }));
@@ -743,6 +840,119 @@ function invite(body: Record<string, unknown>) {
   const email = String(body.email ?? '');
   assertFields(collect({ email: emailAddress(email) }));
   return { invited: false, delivered: false, message: 'No invitation was sent. User provisioning is pending a backend.' };
+}
+
+function publicWorkPhotos(query: ListQuery & Record<string, string>) {
+  return getState().workPhotos
+    .filter((photo) => photo.publicationStatus === 'published' && photo.listing !== 'hidden')
+    .filter((photo) => !query.traineeId || photo.traineeId === query.traineeId)
+    .filter((photo) => !query.projectId || photo.projectId === query.projectId)
+    .map(toPublicWorkPhoto);
+}
+
+function listWorkPhotos(query: ListQuery & Record<string, string>) {
+  requireAdministrator();
+  return getState().workPhotos.filter((photo) => {
+    if (query.traineeId && photo.traineeId !== query.traineeId) return false;
+    if (query.projectId && photo.projectId !== query.projectId) return false;
+    return true;
+  });
+}
+
+async function addWorkPhoto(body: Record<string, unknown>): Promise<WorkPhoto> {
+  const actor = requireAdministrator();
+  const traineeId = String(body.traineeId ?? '').trim();
+  const projectId = String(body.projectId ?? '').trim();
+  const alt = String(body.alt ?? '');
+  const caption = String(body.caption ?? '');
+  const file = body.file instanceof File ? body.file : undefined;
+  const problems = workPhotoFieldErrors({ traineeId, alt, caption, fileCount: file ? 1 : 0 });
+  const trainee = getState().trainees.find((item) => item.id === traineeId);
+  if (!problems.traineeId && !trainee) problems.traineeId = 'Choose a trainee.';
+  if (projectId) {
+    const project = getState().projects.find((item) => item.id === projectId);
+    const linked = project?.traineeIds ?? [];
+    if (!project) problems.projectId = 'Choose a project.';
+    else if (linked.length > 0 && !linked.includes(traineeId)) problems.projectId = 'Choose a project this trainee is on.';
+  }
+  if (file) {
+    const fileProblem = workPhotoFileError(file);
+    if (fileProblem) problems.file = fileProblem;
+  }
+  assertFields(problems);
+  if (!file) fail('validation', 'Check the highlighted fields.', 422, { file: 'Choose an image.' });
+  let stored: { src: string; width: number; height: number };
+  try {
+    stored = await readWorkPhotoDataUrl(file);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Use a JPEG, PNG, or WebP image.';
+    fail('validation', 'Check the highlighted fields.', 422, { file: message });
+  }
+  const item: WorkPhoto = {
+    id: newId('work'),
+    traineeId,
+    projectId: projectId || null,
+    src: stored.src,
+    width: stored.width,
+    height: stored.height,
+    alt: alt.trim(),
+    caption: caption.trim() || alt.trim(),
+    publicationStatus: 'draft',
+    listing: 'hidden',
+    storageProvider: 'memory',
+    uploadedBy: actor.id,
+    updatedAt: new Date().toISOString(),
+  };
+  updateState((s) => ({ ...s, workPhotos: [item, ...s.workPhotos] }));
+  return item;
+}
+
+function publishWorkPhoto(id: string): WorkPhoto {
+  requireAdministrator();
+  const current = getState().workPhotos.find((photo) => photo.id === id);
+  if (!current) fail('not_found', 'Image not found.', 404);
+  const next: WorkPhoto = {
+    ...current,
+    publicationStatus: 'published',
+    listing: current.listing === 'hidden' ? 'public' : current.listing,
+  };
+  updateState((s) => ({ ...s, workPhotos: s.workPhotos.map((photo) => (photo.id === id ? next : photo)) }));
+  return next;
+}
+
+function unpublishWorkPhoto(id: string): WorkPhoto {
+  requireAdministrator();
+  const current = getState().workPhotos.find((photo) => photo.id === id);
+  if (!current) fail('not_found', 'Image not found.', 404);
+  const next: WorkPhoto = { ...current, publicationStatus: 'draft' };
+  updateState((s) => ({ ...s, workPhotos: s.workPhotos.map((photo) => (photo.id === id ? next : photo)) }));
+  return next;
+}
+
+function removeWorkPhoto(id: string) {
+  requireAdministrator();
+  if (!getState().workPhotos.some((photo) => photo.id === id)) fail('not_found', 'Record not found.', 404);
+  updateState((s) => ({ ...s, workPhotos: s.workPhotos.filter((photo) => photo.id !== id) }));
+  return { deleted: true, id };
+}
+
+function toPublicWorkPhoto(photo: WorkPhoto) {
+  return {
+    id: photo.id,
+    traineeId: photo.traineeId,
+    projectId: photo.projectId,
+    src: photo.src,
+    width: photo.width,
+    height: photo.height,
+    alt: photo.alt,
+    caption: photo.caption,
+  };
+}
+
+function requireAdministrator() {
+  const user = requireUser('content.read');
+  if (user.role !== 'administrator') fail('forbidden', 'You do not have access to that.', 403);
+  return user;
 }
 
 function search(q: string): SearchHit[] {
