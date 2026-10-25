@@ -25,6 +25,7 @@ Open `.env` and set values there. Do not put those values in git, in a pull requ
 | `PORT`                     | `3000` is used when this is empty.                                                                                                                                                      |
 | `DATABASE_URL`             | A Postgres URL. Required. The app will not start without it.                                                                                                                            |
 | `DATABASE_SSL`             | `true` or `false`. Production defaults to `true`. A URL that already says `sslmode=require` also turns SSL on.                                                                          |
+| `DATABASE_SSL_CA`          | Optional PEM for Supabase's CA. Paste the certificate from Database settings, SSL Configuration. Real line breaks or `\n` both work. Leave blank when SSL is off. Not printed.          |
 | `FRONTEND_URL`             | The one public website origin, for example `http://127.0.0.1:5173` in development. Production refuses to start if it is missing. A path on the end is ignored. Only the origin is kept. |
 | `SESSION_SECRET`           | At least 32 characters. Required in production. The server uses it to hash session cookies. It is never printed. Sign-in answers with a plain error when it is missing.                 |
 | `SESSION_IDLE_TTL_MS`      | How long a session can sit unused. `1800000` (30 minutes) when empty.                                                                                                                   |
@@ -103,7 +104,7 @@ TypeORM is the library that talks to PostgreSQL. `synchronize` is off. The progr
 
 `src/database/migrations/1792800000000-Baseline.ts` is the first migration. It creates no tables. It marks the start of the history. `1792868400000-Auth.ts` adds `users`, `sessions`, `login_throttles`, and `audit_events`. `1792886400000-Curriculum.ts` adds `tracks`, `modules`, `phases`, and `lessons`, and it extends the audit table with the curriculum actions. New migrations are new files, and each class is registered in `src/database/data-source.ts`.
 
-`src/database/cli-data-source.ts` is what the migration commands load. They read the same environment as the server.
+`src/database/cli-data-source.ts` is what the migration commands load. They read the same environment as the server, including `DATABASE_SSL` and `DATABASE_SSL_CA`, and they open the database with the same TLS options.
 
 ```bash
 npm run migration:run     # apply new migrations
@@ -191,7 +192,7 @@ Roles are `viewer`, `editor`, and `administrator`. A route can ask for a minimum
 
 ## Where this will run
 
-The database is a free Supabase Postgres project in `eu-central-1`. The project ref is `psxzqwztgjkqnnncxddc`. This API does not use Supabase Auth or Supabase Storage. TypeORM connects with `DATABASE_URL` from the host, over TLS (`DATABASE_SSL=true`).
+The database is a free Supabase Postgres project in `eu-central-1`. The project ref is `psxzqwztgjkqnnncxddc`. This API does not use Supabase Auth or Supabase Storage. TypeORM connects with `DATABASE_URL` from the host, over TLS (`DATABASE_SSL=true`). Set `DATABASE_SSL_CA` to the PEM certificate from Supabase Database settings, SSL Configuration. That CA is not in Node's list, so the process cannot check the server certificate without it. Verification stays on. Do not set `NODE_TLS_REJECT_UNAUTHORIZED=0`. `npm run migration:run` uses those same TLS options.
 
 The API process is a free Render web service. Put `DATABASE_URL`, `SESSION_SECRET`, and `FRONTEND_URL` in Render's environment, not in git. Set `TRUST_PROXY=true` there, because Render is the proxy in front of the process. `FRONTEND_URL` is the one public origin.
 
