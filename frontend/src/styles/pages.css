@@ -158,6 +158,7 @@
 
 /* ---------- Trainee strip / cards ---------- */
 .t-strip{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(220px,1fr);gap:var(--grid-gap);overflow-x:auto;padding-bottom:var(--s-4);scroll-snap-type:x mandatory;scrollbar-width:thin}
+@media (min-width:1101px){.t-strip{grid-auto-columns:260px;justify-content:start}}
 .t-strip>*{scroll-snap-align:start}
 .tcard{display:flex;flex-direction:column;text-decoration:none;color:inherit;border-radius:var(--r-lg);background:#fff;border:1px solid var(--line);overflow:hidden;transition:transform var(--d-base) var(--ease-out),box-shadow var(--d-base)}
 .tcard:hover{transform:translateY(-4px);box-shadow:var(--shadow-3)}
