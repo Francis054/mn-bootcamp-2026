@@ -10,7 +10,6 @@ const MENU: Array<{ id: string; label: string; to?: string; items?: Array<{ id: 
     { id: 'overview', label: 'Overview', to: '/bootcamp', sub: 'What the 2026 programme covers', icon: 'shield' },
     { id: 'journey', label: 'Three-month journey', to: '/journey', sub: 'Oct – Dec 2026, phase by phase', icon: 'commit' },
     { id: 'classes', label: 'Class archive', to: '/classes', sub: 'Weekly lessons and labs', icon: 'book' },
-    { id: 'workstation', label: 'Learning workstation', to: '/workstation', sub: 'Simulated lab for a training network', icon: 'monitor' },
     { id: 'projects', label: 'Projects & labs', to: '/projects', sub: 'Practical work from the cohort', icon: 'terminal' },
   ] },
   { id: 'trainees', label: 'Trainees', to: '/trainees' },
@@ -110,7 +109,7 @@ export function SiteFooter() {
             <p>A community site for the free 2026 Cyber Security Bootcamp, run by the Maxim Nyansa Foundation — creating career perspectives for young people with information technology since 2016.</p>
           </div>
           <div><h3>Bootcamp</h3><ul>
-            <li><Link to="/bootcamp">Overview</Link></li><li><Link to="/journey">Journey</Link></li><li><Link to="/classes">Class archive</Link></li><li><Link to="/workstation">Learning workstation</Link></li><li><Link to="/projects">Projects & labs</Link></li><li><Link to="/trainees">Trainees</Link></li>
+            <li><Link to="/bootcamp">Overview</Link></li><li><Link to="/journey">Journey</Link></li><li><Link to="/classes">Class archive</Link></li><li><Link to="/projects">Projects & labs</Link></li><li><Link to="/trainees">Trainees</Link></li>
           </ul></div>
           <div><h3>Community</h3><ul>
             <li><Link to="/events">Events</Link></li><li><Link to="/gallery">Gallery</Link></li><li><Link to="/anniversary">10 Years of Impact</Link></li><li><Link to="/about">About the Foundation</Link></li>

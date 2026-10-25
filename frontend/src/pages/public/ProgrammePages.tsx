@@ -9,8 +9,6 @@ import { Netlines } from '@/components/Netlines';
 import { MODULES, PHASES } from '@/dev/fixtures';
 import { currentWeek, formatDate } from '@/domain/format';
 import { usePublicContent } from '@/hooks/useContent';
-import { isWorkstationLesson } from '@/workstation/lab';
-import { WorkstationEntry } from '@/workstation/WorkstationEntry';
 import { moduleOf, PageIntro, PublicGate, SampleMark, scheduleText, useTimelineProgress } from './helpers';
 
 export function BootcampPage() {
@@ -191,7 +189,6 @@ export function LessonPage() {
           <div className="flex wrap" style={{ gap: 10, marginTop: 8 }}><span className="tag">{module.name}</span><span className={`st st--${lesson.scheduleStatus}`}>{scheduleText(lesson.scheduleStatus)}</span><SampleMark listing={lesson.listing}>Sample lesson content</SampleMark></div>
           <h1>{lesson.title}</h1>
           <div className="meta-row"><span><Icon name="calendar" className="i--sm" />Week {lesson.week} · w/c {formatDate(lesson.date, { weekday: 'short', year: 'numeric' })}</span><span><Icon name="clock" className="i--sm" />{lesson.format}</span><span><Icon name="map-pin" className="i--sm" />{lesson.room || 'Tantra Hills, Accra'}</span></div>
-          {isWorkstationLesson(lesson) ? <WorkstationEntry lessonId={lesson.id} /> : null}
           <figure className="detail-media mask-reveal is-in"><Photo file={lesson.cover} alt="" width={1600} height={1066} sizes="100vw" priority /></figure>
         </div>
       </section>

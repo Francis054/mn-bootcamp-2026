@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Learning workstation · 2026 Cyber Bootcamp · Maxim Nyansa Foundation</title>
+<meta name="description" content="A simulated beginner lab: discover and secure a fictional training network. Nothing is sent to a real machine.">
+<meta name="theme-color" content="#0E2A1E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2388CC00'/%3E%3Cpath d='M16 6l8 3v6c0 5-3.4 8.4-8 10.4C11.4 23.4 8 20 8 15V9z' fill='none' stroke='%230E2A1E' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="workstation.css">
+</head>
+<body class="ws" data-page="workstation">
+<a class="skip-link" href="#ws-main">Skip to the workstation</a>
+<p class="sr-only" id="ws-live" role="status"></p>
+<svg xmlns="http://www.w3.org/2000/svg" hidden>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M5 5.5A2.5 2.5 0 0 1 7.5 3H19v16H7.5A2.5 2.5 0 0 0 5 21.5z"/><path d="M5 5.5A2.5 2.5 0 0 1 7.5 8H19"/></symbol>
+  <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M12 15h5"/></symbol>
+  <symbol id="i-network" viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.2"/><circle cx="18" cy="7" r="2.2"/><circle cx="18" cy="17" r="2.2"/><path d="M8.2 11.2 15.6 8M8.2 12.8l7.4 3.2"/></symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24"><path d="M4 8V5h3M16 5h3v3M20 16v3h-3M8 19H5v-3"/><circle cx="12" cy="12" r="3.2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 2.6v5.2c0 4.4-2.9 7.6-7 9.2-4.1-1.6-7-4.8-7-9.2V5.6z"/></symbol>
+  <symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="9" r="5"/><path d="M8.5 13.2 7 21l5-2.4L17 21l-1.5-7.8"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"/></symbol>
+  <symbol id="i-hat" viewBox="0 0 24 24"><path d="M4.5 13.5c1.6-3.6 3.8-5.5 7.5-5.5s5.9 1.9 7.5 5.5"/><path d="M3 14.2h18v1.6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9.2 8.4c.5-1.8 1.6-2.9 2.8-2.9s2.3 1.1 2.8 2.9"/></symbol>
+</svg>
+
+<header class="ws-top">
+  <div class="ws-brand">
+    <span class="ws-mark" aria-hidden="true"><svg class="i"><use href="#i-shield"/></svg></span>
+    <span class="ws-brand__text"><b>Cyber Bootcamp</b><small>Learning workstation</small></span>
+  </div>
+  <span class="ws-logo"><span class="logo-plate"><img src="../assets/logo/maxim-nyansa-foundation-logo.png" width="200" height="41" alt="Maxim Nyansa Foundation logo"></span></span>
+  <div class="ws-top__actions">
+    <span class="ws-sim">Simulated lab</span>
+  </div>
+  <div class="ws-top__title">
+    <h1>Discover and Secure a Training Network</h1>
+    <p>Fictional target 10.10.8.20. Commands stay in this browser. Beginner demo for the week 1 networks lesson.</p>
+  </div>
+</header>
+
+<main id="ws-main">
+  <div class="ws-modes">
+    <div class="tabs" role="tablist" aria-label="Workstation mode" id="ws-tabs">
+      <button class="tab" type="button" role="tab" id="tab-learn" data-mode="learn" aria-selected="true">Learn</button>
+      <button class="tab" type="button" role="tab" id="tab-practice" data-mode="practice" aria-selected="false">Practice</button>
+      <button class="tab" type="button" role="tab" id="tab-defend" data-mode="defend" aria-selected="false">Defend</button>
+      <button class="tab" type="button" role="tab" id="tab-assessment" data-mode="assessment" aria-selected="false">Assessment</button>
+      <span class="tab-ink" id="ws-ink"></span>
+    </div>
+    <p class="ws-score"><span id="ws-score-text">0 of 4 objectives</span><span class="meter" id="ws-meter"><i></i></span></p>
+  </div>
+
+  <div class="ws-stage">
+    <section class="ws-window ws-window--notes is-active" data-app="notes" aria-labelledby="ws-title-notes">
+      <div class="ws-window__bar">
+        <svg class="i i--sm" aria-hidden="true"><use href="#i-book"/></svg>
+        <h2 id="ws-title-notes">Lesson</h2>
+        <button type="button" class="ws-iconbtn" data-close="notes" aria-label="Close Lesson"><svg class="i i--sm" aria-hidden="true"><use href="#i-x"/></svg></button>
+      </div>
+      <div class="ws-body">
+        <figure class="ws-hero">
+          <img src="assets/hero-keyboard.webp" width="1200" height="1104" alt="A person in a dark hoodie types on a laptop in a dim room. Photograph by Muhmed Alaa, Unsplash Licence.">
+          <figcaption>A person in a hoodie at a laptop. Photograph by <a href="https://unsplash.com/photos/man-in-hoodie-typing-on-laptop-at-night-sDWFII7EBkU">Muhmed Alaa</a>, Unsplash Licence.</figcaption>
+        </figure>
+
+        <section class="ws-hats" aria-labelledby="ws-hats-title">
+          <h3 id="ws-hats-title">Hat colours, and red team versus blue team</h3>
+          <p class="ws-lead">Hat colours describe permission. Red team and blue team describe the two jobs in a planned exercise. People sometimes say “red hat” or “blue hat” for those jobs. The usual names are red team and blue team.</p>
+          <ul class="ws-hatgrid">
+            <li class="ws-hat ws-hat--black">
+              <div class="ws-hat__head">
+                <span class="ws-hat__mark" aria-hidden="true"><svg class="i"><use href="#i-hat"/></svg></span>
+                <div>
+                  <p class="ws-hat__kicker">No permission</p>
+                  <h4>Black hat</h4>
+                </div>
+              </div>
+              <p>Breaks into a system without permission, usually to steal, damage, or sell access. That is a crime. This lab never asks you to do it. The photograph above is a person at a laptop. It is not a portrait of this role.</p>
+            </li>
+            <li class="ws-hat ws-hat--white">
+              <div class="ws-hat__head">
+                <span class="ws-hat__mark" aria-hidden="true"><svg class="i"><use href="#i-shield"/></svg></span>
+                <div>
+                  <p class="ws-hat__kicker">Written permission</p>
+                  <h4>White hat</h4>
+                </div>
+              </div>
+              <p>Tests security with written permission and reports what they find so it can be fixed. This workstation is that kind of exercise: a fictional target, a fixed set of commands, and a fix you can read.</p>
+            </li>
+            <li class="ws-hat ws-hat--grey">
+              <div class="ws-hat__head">
+                <span class="ws-hat__mark" aria-hidden="true"><svg class="i"><use href="#i-scan"/></svg></span>
+                <div>
+                  <p class="ws-hat__kicker">Unclear permission</p>
+                  <h4>Grey hat</h4>
+                </div>
+              </div>
+              <p>Looks for a weakness without a clear invitation, then tells the owner. Even a helpful break-in can be illegal. Stay inside this lab. The only target in scope is 10.10.8.20.</p>
+            </li>
+            <li class="ws-hat ws-hat--red">
+              <div class="ws-hat__head">
+                <span class="ws-hat__mark" aria-hidden="true"><svg class="i"><use href="#i-terminal"/></svg></span>
+                <div>
+                  <p class="ws-hat__kicker">The attack practice</p>
+                  <h4>Red team</h4>
+                </div>
+              </div>
+              <p>A group that pretends to be an attacker, with permission, to see if the defences hold. In this demo the red-team step is small: find the service that should not be open.</p>
+            </li>
+            <li class="ws-hat ws-hat--blue">
+              <div class="ws-hat__head">
+                <span class="ws-hat__mark" aria-hidden="true"><svg class="i"><use href="#i-shield"/></svg></span>
+                <div>
+                  <p class="ws-hat__kicker">The defence</p>
+                  <h4>Blue team</h4>
+                </div>
+              </div>
+              <p>Watches, detects, and closes the gap. After you name the exposed service, Defend is the blue-team step: turn anonymous login off, or move the share to a safer method.</p>
+            </li>
+          </ul>
+        </section>
+
+        <h3>Where this work happens</h3>
+        <div class="ws-gallery">
+          <figure class="ws-shot">
+            <img src="assets/code-screen.webp" width="1100" height="825" alt="Close view of a computer monitor filled with programming code. Photograph by Patrick Martin, Unsplash Licence.">
+            <figcaption>Code on a monitor. <a href="https://unsplash.com/photos/a-close-up-of-a-computer-screen-with-code-on-it-UMlT0bviaek">Patrick Martin</a>, Unsplash Licence.</figcaption>
+          </figure>
+          <figure class="ws-shot">
+            <img src="assets/server-room.webp" width="1200" height="700" alt="Rows of server racks in the server room at The National Archives, United Kingdom. Photograph by The National Archives (UK), CC BY 3.0. Resized for this page.">
+            <figcaption>Server room, The National Archives (UK). <a href="https://commons.wikimedia.org/wiki/File:A_view_of_the_server_room_at_The_National_Archives.jpg">The National Archives</a>, CC BY 3.0.</figcaption>
+          </figure>
+          <figure class="ws-shot">
+            <img src="assets/screens-desk.webp" width="1000" height="667" alt="A person seated at a desk, working at a computer with several monitors. Photograph by Tima Miroshnichenko, Pexels Licence.">
+            <figcaption>Several monitors on one desk. <a href="https://www.pexels.com/photo/person-using-a-computer-5380594/">Tima Miroshnichenko</a>, Pexels Licence.</figcaption>
+          </figure>
+          <figure class="ws-shot">
+            <img src="assets/team-laptops.webp" width="1000" height="667" alt="Two people sitting side by side, each using a laptop. Photograph by Tima Miroshnichenko, Pexels Licence.">
+            <figcaption>Two people at laptops. <a href="https://www.pexels.com/photo/two-people-sitting-on-chairs-using-computers-5380586/">Tima Miroshnichenko</a>, Pexels Licence.</figcaption>
+          </figure>
+        </div>
+        <p class="ws-photo-note">The training server in this lesson is fictional. These photographs show real rooms, screens, and people at work. They are not pictures of the lab.</p>
+
+        <h3>Addresses, ports, and services</h3>
+        <p>Every device on this lab network has an IP address. That is the number other devices use to reach it. Your workstation is <strong>10.10.8.15</strong>. The training server is <strong>10.10.8.20</strong>. The <code>/24</code> means the first three numbers, 10.10.8, name the network, and the last number picks the device. Addresses that start with 10 are private. They are used inside a lab or an office. 10.10.8.20 is not a public internet address. It exists only in this story.</p>
+        <p>A port is a numbered door on that address. One address can have many doors. Port 22 is the usual door for SSH, a remote login. Port 80 is the usual door for a website. Port 21 is the usual door for FTP, an old way to move files.</p>
+        <p>A service is the program listening behind a door. An open port only tells you that some program answered. It does not tell you whether that program should be answering. SSH that demands a key is a normal locked door. A file service that lets anyone in with the name anonymous is an open cupboard.</p>
+        <div class="ws-tablewrap">
+          <table>
+            <caption>Doors you will meet on the training server</caption>
+            <thead><tr><th scope="col">Port</th><th scope="col">Usual service</th><th scope="col">What to notice</th></tr></thead>
+            <tbody>
+              <tr><td>21</td><td>FTP</td><td>Does it ask for a personal login?</td></tr>
+              <tr><td>22</td><td>SSH</td><td>A key request is a normal lock.</td></tr>
+              <tr><td>80</td><td>HTTP</td><td>The lab portal is meant to be readable.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Find which door on 10.10.8.20 is the open cupboard, name it in the lab brief, and then read the fix. You will not change a real server. The terminal only prints prepared answers, and the network model repeats the same facts in a picture.</p>
+        <p class="ws-credits">Photographers, source pages, and licences are listed in <a href="CREDITS.md">CREDITS.md</a>. Each picture was resized to WebP for this page.</p>
+        <div class="ws-actions" id="ws-notes-actions"></div>
+      </div>
+    </section>
+
+    <section class="ws-window ws-window--terminal" data-app="terminal" hidden aria-labelledby="ws-title-terminal">
+      <div class="ws-window__bar">
+        <svg class="i i--sm" aria-hidden="true"><use href="#i-terminal"/></svg>
+        <h2 id="ws-title-terminal">Terminal</h2>
+        <button type="button" class="ws-iconbtn" data-close="terminal" aria-label="Close Terminal"><svg class="i i--sm" aria-hidden="true"><use href="#i-x"/></svg></button>
+      </div>
+      <div class="ws-body">
+        <div class="ws-simbar">Simulated output. Prepared for this lesson, not a live machine.</div>
+        <div class="ws-term" id="ws-term" tabindex="0" aria-label="Simulated terminal output"></div>
+        <form class="ws-promptline" id="ws-form">
+          <div class="ws-chips">
+            <button class="ws-chip" type="button" data-command="ip addr"><span class="sr-only">Put </span>ip addr<span class="sr-only"> on the command line</span></button>
+            <button class="ws-chip" type="button" data-command="ping 10.10.8.20"><span class="sr-only">Put </span>ping 10.10.8.20<span class="sr-only"> on the command line</span></button>
+            <button class="ws-chip" type="button" data-command="nmap -sV 10.10.8.20"><span class="sr-only">Put </span>nmap -sV 10.10.8.20<span class="sr-only"> on the command line</span></button>
+            <button class="ws-chip" type="button" data-command="ftp 10.10.8.20"><span class="sr-only">Put </span>ftp 10.10.8.20<span class="sr-only"> on the command line</span></button>
+          </div>
+          <div class="ws-promptline__row">
+            <label class="ws-prompt" for="ws-command"><span class="sr-only">Command </span><span aria-hidden="true">trainee@ws-01:~$</span></label>
+            <input id="ws-command" class="ws-command" name="command" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-describedby="ws-command-hint">
+          </div>
+          <p id="ws-command-hint" class="ws-hint">Enter runs the simulated command. Up arrow recalls an earlier one. Type help for the list.</p>
+        </form>
+        <button class="ws-jump btn btn--ghost-light btn--xs" type="button" data-action="show-lab">Show the lab brief</button>
+      </div>
+    </section>
+
+    <section class="ws-window ws-window--map" data-app="map" aria-labelledby="ws-title-map">
+      <div class="ws-window__bar">
+        <svg class="i i--sm" aria-hidden="true"><use href="#i-network"/></svg>
+        <h2 id="ws-title-map">Network</h2>
+        <button type="button" class="ws-iconbtn" data-close="map" aria-label="Close Network"><svg class="i i--sm" aria-hidden="true"><use href="#i-x"/></svg></button>
+      </div>
+      <div class="ws-body">
+        <div class="ws-map" id="ws-map"></div>
+      </div>
+    </section>
+
+    <section class="ws-window ws-window--lab" data-app="lab" aria-labelledby="ws-title-lab">
+      <div class="ws-window__bar">
+        <svg class="i i--sm" aria-hidden="true"><use href="#i-scan"/></svg>
+        <h2 id="ws-title-lab">Lab brief</h2>
+        <button type="button" class="ws-iconbtn" data-close="lab" aria-label="Close Lab brief"><svg class="i i--sm" aria-hidden="true"><use href="#i-x"/></svg></button>
+      </div>
+      <div class="ws-body">
+        <h3>Target environment</h3>
+        <p>One service on the target is left open on purpose. The network model uses the same status as this list.</p>
+        <dl class="ws-facts">
+          <div><dt>Lab</dt><dd>Nyansa training LAN, fictional</dd></div>
+          <div><dt>Your workstation</dt><dd>ws-01 · 10.10.8.15</dd></div>
+          <div><dt>Training target</dt><dd>lab-server · 10.10.8.20</dd></div>
+          <div><dt>Network</dt><dd>10.10.8.0/24, a private range</dd></div>
+          <div><dt>Scope</dt><dd>Only 10.10.8.20</dd></div>
+        </dl>
+        <h3>Checks</h3>
+        <ul class="ws-tasks" id="ws-tasks"></ul>
+        <h3>Exposed service</h3>
+        <div id="ws-finding"></div>
+        <h3>Hints</h3>
+        <div id="ws-hints"></div>
+        <div class="ws-actions">
+          <button class="btn btn--ghost-light btn--sm" type="button" id="ws-hint-btn" data-action="hint">Show a hint</button>
+          <button class="ws-jump btn btn--ghost-light btn--xs" type="button" data-action="show-terminal">Show the terminal</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="ws-window ws-window--defend" data-app="defend" hidden aria-labelledby="ws-title-defend">
+      <div class="ws-window__bar">
+        <svg class="i i--sm" aria-hidden="true"><use href="#i-shield"/></svg>
+        <h2 id="ws-title-defend">Defend</h2>
+        <button type="button" class="ws-iconbtn" data-close="defend" aria-label="Close Defend"><svg class="i i--sm" aria-hidden="true"><use href="#i-x"/></svg></button>
+      </div>
+      <div class="ws-body" id="ws-defend"></div>
+    </section>
+
+    <section class="ws-window ws-window--progress" data-app="progress" aria-labelledby="ws-title-progress">
+      <div class="ws-window__bar">
+        <svg class="i i--sm" aria-hidden="true"><use href="#i-award"/></svg>
+        <h2 id="ws-title-progress">Progress</h2>
+        <button type="button" class="ws-iconbtn" data-close="progress" aria-label="Close Progress"><svg class="i i--sm" aria-hidden="true"><use href="#i-x"/></svg></button>
+      </div>
+      <div class="ws-body" id="ws-progress"></div>
+    </section>
+  </div>
+
+  <div class="ws-dock">
+    <button class="ws-backdrop" type="button" id="ws-backdrop" data-action="launcher-close" hidden aria-label="Close applications"></button>
+    <div role="menu" id="ws-launcher" class="ws-launcher" aria-label="Applications" hidden></div>
+    <div class="ws-taskbar" role="toolbar" aria-label="Workstation applications">
+      <button class="ws-launch" type="button" id="ws-launch" data-action="launcher" aria-haspopup="menu" aria-expanded="false" aria-controls="ws-launcher">
+        <svg class="i" aria-hidden="true"><use href="#i-grid"/></svg>
+        <span class="sr-only">Applications</span>
+      </button>
+      <button type="button" class="ws-dock__btn" data-dock="notes"><svg class="i i--sm" aria-hidden="true"><use href="#i-book"/></svg><span>Lesson</span></button>
+      <button type="button" class="ws-dock__btn" data-dock="terminal"><svg class="i i--sm" aria-hidden="true"><use href="#i-terminal"/></svg><span>Terminal</span></button>
+      <button type="button" class="ws-dock__btn" data-dock="map"><svg class="i i--sm" aria-hidden="true"><use href="#i-network"/></svg><span>Network</span></button>
+      <button type="button" class="ws-dock__btn" data-dock="lab"><svg class="i i--sm" aria-hidden="true"><use href="#i-scan"/></svg><span>Lab brief</span></button>
+      <button type="button" class="ws-dock__btn" data-dock="defend"><svg class="i i--sm" aria-hidden="true"><use href="#i-shield"/></svg><span>Defend</span></button>
+      <button type="button" class="ws-dock__btn" data-dock="progress"><svg class="i i--sm" aria-hidden="true"><use href="#i-award"/></svg><span>Progress</span></button>
+      <div class="ws-clock"><span class="sr-only">Local time </span><span id="ws-clock"></span></div>
+    </div>
+  </div>
+</main>
+
+<div class="ws-celebrate" id="ws-celebrate" hidden aria-hidden="true"></div>
+<noscript><p class="ws-note" style="margin:16px">This practice needs JavaScript in the browser. Nothing you type is sent anywhere.</p></noscript>
+<script src="workstation.js"></script>
+</body>
+</html>
