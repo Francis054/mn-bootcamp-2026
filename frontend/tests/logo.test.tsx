@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
@@ -23,18 +23,24 @@ describe('community hat logo', () => {
     }
   });
 
-  it('uses the compact icon beside the community wordmark', () => {
+  it('uses the compact icon beside the community wordmark', async () => {
     render(<MemoryRouter><Lockup /></MemoryRouter>);
     const link = screen.getByRole('link', { name: /cyber bootcamp/i });
     const icon = link.querySelector('img[src="/assets/logo/logo-icon.svg"]');
     expect(icon).not.toBeNull();
     expect(icon).toHaveAttribute('alt', '');
     expect(link).toHaveTextContent('Cyber Bootcamp');
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
   });
 
-  it('names the primary mark when it is the content', () => {
+  it('names the primary mark when it is the content', async () => {
     render(<HatMark label="Cyber Bootcamp" />);
     expect(screen.getByRole('img', { name: 'Cyber Bootcamp' })).toHaveAttribute('src', '/assets/logo/logo-mark.svg');
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
   });
 
   it('puts both hats in the loader and keeps the status text polite', () => {

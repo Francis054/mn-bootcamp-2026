@@ -185,6 +185,7 @@ body.admin{background:var(--paper);font-size:15px}
 .dropzone:focus-within{outline:3px solid var(--focus);outline-offset:2px}
 .media-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;align-items:start}
 .media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;padding:16px}
+.site-image-preview{display:block;width:100%;max-height:240px;background:var(--paper-2);border-radius:10px;object-position:center}
 .media-item{position:relative;border-radius:10px;overflow:hidden;background:var(--paper-2);border:2px solid transparent;cursor:pointer;padding:0;text-align:left;font:inherit}
 .media-item img{display:block;width:100%;aspect-ratio:1;object-fit:cover;transition:transform 400ms var(--ease-out,ease)}
 .media-item:hover img{transform:scale(1.04)}

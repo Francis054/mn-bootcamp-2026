@@ -1,20 +1,22 @@
 import { useEffect, useState, type CSSProperties, type ElementType, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { SiteImage } from '@/components/SiteImage';
 
 /** Compact community icon: black hat facing the ethical hat. Decorative beside the wordmark. */
 export function Mark({ className }: { className?: string }) {
-  return <img className={className} src="/assets/logo/logo-icon.svg" alt="" width={64} height={20} decoding="async" />;
+  return <SiteImage slot="community-logo-icon" className={className} alt="" priority />;
 }
 
 /** Primary pair, for seals and empty states. Pass a label when the image is not next to the name. */
 export function HatMark({ className = 'hat-seal', label = '' }: { className?: string; label?: string }) {
-  return <img className={className} src="/assets/logo/logo-mark.svg" alt={label} width={120} height={40} decoding="async" />;
+  return <SiteImage slot="community-logo" className={className} alt={label} />;
 }
 
+/** Parent-organisation plate. The community mark is Mark and HatMark, not this image. */
 export function OfficialLogo({ width }: { width?: number }) {
   return (
     <span className="logo-plate">
-      <img src="/assets/logo/maxim-nyansa-foundation-logo.png" width={200} height={41} alt="Maxim Nyansa Foundation logo" style={width ? { width } : undefined} />
+      <SiteImage slot="foundation-logo" priority style={width ? { width } : undefined} />
     </span>
   );
 }

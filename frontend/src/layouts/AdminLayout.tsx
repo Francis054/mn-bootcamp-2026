@@ -25,6 +25,7 @@ const GROUPS: Array<{ label: string; items: Array<{ id: string; label: string; i
     { id: 'content', label: 'Content editor', icon: 'file', to: '/admin/content', permission: 'content.read' },
     { id: 'timeline', label: 'Timeline', icon: 'commit', to: '/admin/timeline', permission: 'content.read' },
     { id: 'about', label: 'About & 10 Years', icon: 'award', to: '/admin/about', permission: 'content.read' },
+    { id: 'site-images', label: 'Site images', icon: 'image', to: '/admin/site-images', permission: 'content.read', administratorOnly: true },
   ] },
   { label: 'System', items: [
     { id: 'users', label: 'Users & roles', icon: 'users', to: '/admin/users', permission: 'users.read' },

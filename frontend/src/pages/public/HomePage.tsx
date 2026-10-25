@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Cover, HatMark, Photo, Reveal, SplitHeading } from '@/components/Brand';
 import { Icon } from '@/components/Icon';
 import { Netlines } from '@/components/Netlines';
+import { SiteImage } from '@/components/SiteImage';
 import { TenMark } from '@/components/TenMark';
 import { EmptyState } from '@/components/feedback';
 import { usePageMeta } from '@/components/SiteChrome';
@@ -11,9 +12,8 @@ import { usesMockApi } from '@/config/runtime';
 import { currentWeek, formatDate } from '@/domain/format';
 import { useAuth } from '@/auth/AuthProvider';
 import { usePublicContent } from '@/hooks/useContent';
+import { useSiteImage } from '@/hooks/useSiteImages';
 import { moduleOf, PublicGate, SampleMark, TraineeArt } from './helpers';
-
-const PEEK = ['electronics-lab', 'hack-coding-team', 'vr-demo-group', 'presenters-yellow-room'];
 
 export function HomePage() {
   const content = usePublicContent();
@@ -23,17 +23,27 @@ export function HomePage() {
   usePageMeta('Home');
   const week = currentWeek();
   const peek = useRef<HTMLDivElement>(null);
+  const peekPhotos = [
+    useSiteImage('home-class-peek-1'),
+    useSiteImage('home-class-peek-2'),
+    useSiteImage('home-class-peek-3'),
+    useSiteImage('home-class-peek-4'),
+  ];
   const featured = [
     ...lessons.filter((lesson) => lesson.scheduleStatus === 'now'),
     ...lessons.filter((lesson) => lesson.scheduleStatus === 'upcoming'),
   ].slice(0, 4);
   const featureProject = projects[0];
   const sideProjects = [projects[2], projects[5]].filter((item) => item !== undefined);
-  const movePeek = (file: string) => (event: MouseEvent) => {
+  const movePeek = (index: number) => (event: MouseEvent) => {
     const node = peek.current;
     const image = node?.querySelector('img');
-    if (!node || !image) return;
-    image.src = `/assets/img/${file}-800.webp`;
+    const chosen = peekPhotos[index % peekPhotos.length];
+    if (!node || !image || !chosen) return;
+    const src = hoverSrc(chosen.src);
+    image.dataset.fallback = hoverSrc(chosen.fallbackSrc);
+    delete image.dataset.fell;
+    if (image.getAttribute('src') !== src) image.src = src;
     node.classList.add('is-on');
     node.style.left = `${event.clientX}px`;
     node.style.top = `${event.clientY}px`;
@@ -70,9 +80,9 @@ export function HomePage() {
             </div>
             <div className="hero__media" aria-label="Photos from the Maxim Nyansa community">
               <Reveal as="span" reveal="scale" i={6} className="hm-frame" aria-hidden="true" />
-              <Reveal as="figure" mask parallax={0.04} i={0} className="hm-1"><Photo file="participant-portrait" alt="The Maxim Nyansa Foundation group in white 10-year shirts, posed in front of the anniversary banner" width={1600} height={756} sizes="(max-width:1100px) 100vw, 40vw" priority /></Reveal>
-              <Reveal as="figure" mask i={1} className="hm-2"><Photo file="hack-coding-team" alt="A team working together at a laptop" width={1600} height={1066} sizes="(max-width:1100px) 50vw, 20vw" priority /></Reveal>
-              <Reveal as="figure" mask i={2} className="hm-3"><Photo file="vr-headset-moment" alt="Trying out a VR headset at an event" width={1600} height={1066} sizes="(max-width:1100px) 45vw, 18vw" /></Reveal>
+              <Reveal as="figure" mask parallax={0.04} i={0} className="hm-1"><SiteImage slot="home-hero-main" sizes="(max-width:1100px) 100vw, 40vw" priority /></Reveal>
+              <Reveal as="figure" mask i={1} className="hm-2"><SiteImage slot="home-hero-side" sizes="(max-width:1100px) 50vw, 20vw" priority /></Reveal>
+              <Reveal as="figure" mask i={2} className="hm-3"><SiteImage slot="home-hero-accent" sizes="(max-width:1100px) 45vw, 18vw" /></Reveal>
               <Reveal className="status-card" i={7}>
                 <span className="label">Cohort status · live</span>
                 <b>Week {week} of the bootcamp</b>
@@ -133,7 +143,7 @@ export function HomePage() {
           <div className="rows">
             {featured.length ? null : <EmptyState icon="layers" title="No classes are published yet" text="This week’s lessons appear here after they are published." />}
             {featured.map((lesson, index) => (
-              <Link className="row-link" key={lesson.id} to={`/classes/${lesson.id}`} onMouseEnter={movePeek(PEEK[index % PEEK.length] ?? 'electronics-lab')} onMouseMove={movePeek(PEEK[index % PEEK.length] ?? 'electronics-lab')} onMouseLeave={() => peek.current?.classList.remove('is-on')}>
+              <Link className="row-link" key={lesson.id} to={`/classes/${lesson.id}`} onMouseEnter={movePeek(index)} onMouseMove={movePeek(index)} onMouseLeave={() => peek.current?.classList.remove('is-on')}>
                 <span className="wk">Week<b>{String(lesson.week).padStart(2, '0')}</b></span>
                 <div>{lesson.listing === 'public' ? null : <span className="ph" style={{ marginBottom: 10 }}>Week {lesson.week} — sample lesson</span>}<h3>{lesson.title}</h3></div>
                 <span className="row-mod tag">{moduleOf(lesson.moduleId).name}</span>
@@ -256,12 +266,23 @@ export function HomePage() {
           </Reveal>
         </div>
       </section>
-      <div className="row-peek" ref={peek}><img alt="" /></div>
+      <div className="row-peek" ref={peek} aria-hidden="true"><img alt="" width={800} height={600} src={hoverSrc(peekPhotos[0]?.src ?? '')} onError={(event) => {
+        const image = event.currentTarget;
+        const fallback = image.dataset.fallback;
+        if (!fallback || image.dataset.fell === '1') return;
+        image.dataset.fell = '1';
+        image.src = fallback;
+      }} /></div>
     </> : (
       <section className="section"><div className="container"><h1>The homepage is not published yet.</h1><p>Published homepage copy will appear here.</p>{auth.allowed('content.write') ? <p><Link to="/admin/content">Open the content editor to publish it.</Link></p> : null}</div></section>
     )}
     </PublicGate>
   );
+}
+
+/** The floating class preview is small, so a bundled pair uses the 800-wide file. */
+function hoverSrc(url: string): string {
+  return url.includes('-1600.webp') ? url.replace('-1600.webp', '-800.webp') : url;
 }
 
 function ProjectCard({ project, large = false }: { project: { id: string; title: string; type: string; cover: string; moduleId: string; listing?: string }; large?: boolean }) {

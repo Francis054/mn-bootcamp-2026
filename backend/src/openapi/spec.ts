@@ -3,6 +3,7 @@ import { contentPaths, contentSchemas } from './content-docs.js';
 import { curriculumPaths, curriculumSchemas } from './curriculum-docs.js';
 import { eventPaths, eventSchemas } from './event-docs.js';
 import { mediaPaths, mediaSchemas } from './media-docs.js';
+import { siteImagePaths, siteImageSchemas } from './site-image-docs.js';
 import { workPhotoPaths, workPhotoSchemas } from './work-photo-docs.js';
 import { projectPaths, projectSchemas } from './project-docs.js';
 import { traineePaths, traineeSchemas } from './trainee-docs.js';
@@ -13,7 +14,7 @@ export const openApiSpec = {
     title: 'Maxim Nyansa Bootcamp API',
     version: '0.9.0',
     description:
-      'Bootcamp API. Implemented routes: health, sign-in, sessions, password change and reset, invitations, the curriculum, trainee profiles, projects, events, the gallery, work photos, the content singletons, and the contact form. Public reads return published copies. Homepage, about, the timeline, and settings each keep a draft for editors. The announcement banner is part of the homepage. Foundation counters are stored with settings and are published with them. A public gallery photo also needs verified consent. Verifying consent does not publish the photo. Work photos are uploaded by an administrator and stay off the public site until that administrator publishes them. A scheduled event stays off the public routes until its Africa/Accra start, and that clock is UTC. A public trainee also needs profile consent. Project links are included only when every linked trainee has agreed to share them. A password reset response does not say whether the mailbox exists. There is no public registration.',
+      'Bootcamp API. Implemented routes: health, sign-in, sessions, password change and reset, invitations, the curriculum, trainee profiles, projects, events, the gallery, work photos, the content singletons, and the contact form. Public reads return published copies. Homepage, about, the timeline, and settings each keep a draft for editors. The announcement banner is part of the homepage. Foundation counters are stored with settings and are published with them. A public gallery photo also needs verified consent. Verifying consent does not publish the photo. Work photos are uploaded by an administrator and stay off the public site until that administrator publishes them. Site image slots are the community hat logo, the parent-organisation plate, and the built-in page photographs. Anyone can read them. Only an administrator can replace one or put the bundled file back. A scheduled event stays off the public routes until its Africa/Accra start, and that clock is UTC. A public trainee also needs profile consent. Project links are included only when every linked trainee has agreed to share them. A password reset response does not say whether the mailbox exists. There is no public registration.',
   },
   servers: [{ url: '/' }],
   paths: {
@@ -117,6 +118,7 @@ export const openApiSpec = {
     ...eventPaths,
     ...mediaPaths,
     ...workPhotoPaths,
+    ...siteImagePaths,
     ...contentPaths,
     ...accountPaths,
   },
@@ -211,6 +213,7 @@ export const openApiSpec = {
       ...eventSchemas,
       ...mediaSchemas,
       ...workPhotoSchemas,
+      ...siteImageSchemas,
       ...contentSchemas,
       ...accountSchemas,
     },

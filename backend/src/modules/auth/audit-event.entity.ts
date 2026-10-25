@@ -23,6 +23,7 @@ export const CURRICULUM_KINDS = [
   'event',
   'media',
   'work_photo',
+  'site_image',
   'homepage',
   'about',
   'milestone',

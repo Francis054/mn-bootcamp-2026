@@ -1,3 +1,5 @@
+import type { SiteImageAdmin } from '@/domain/siteImages';
+import { defaultSiteImageRecords } from '@/domain/siteImages';
 import type {
   AboutContent,
   BootcampEvent,
@@ -22,6 +24,7 @@ export interface ContentState {
   events: BootcampEvent[];
   media: MediaItem[];
   workPhotos: WorkPhoto[];
+  siteImages: SiteImageAdmin[];
   milestones: Milestone[];
   milestonePublicationStatus: PublicationStatus;
   about: AboutContent;
@@ -44,6 +47,7 @@ export function createInitialState(): ContentState {
     events: buildEvents(),
     media: buildMedia(),
     workPhotos: [],
+    siteImages: defaultSiteImageRecords(),
     milestones: buildMilestones(),
     milestonePublicationStatus: 'draft',
     about: structuredClone(ABOUT),

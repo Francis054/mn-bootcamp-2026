@@ -15,6 +15,7 @@ The API uses PostgreSQL through TypeORM. `synchronize` is off. Schema changes ar
 11. Catalogue links
 12. Work photos (trainee photos an administrator uploads)
 13. Trainee profile photo (`photo_url` and `photo_storage_key`)
+14. Site images (`site_images`: one row per built-in logo or page photograph)
 
 The migrations table is `schema_migrations`. Passwords are stored as Argon2id hashes. Session cookies are stored as hashes. The cookie value itself is not stored.
 

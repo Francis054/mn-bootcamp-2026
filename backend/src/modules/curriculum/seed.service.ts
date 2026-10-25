@@ -6,6 +6,8 @@ import type { MediaRepository } from '../gallery/media.repository.js';
 import { buildSampleMedia } from '../gallery/sample-media.js';
 import type { ProjectRepository } from '../projects/project.repository.js';
 import { buildSampleProjects } from '../projects/sample-projects.js';
+import { SITE_IMAGE_SLOTS, siteImageSeedRow } from '../site-images/catalogue.js';
+import type { SiteImageRepository } from '../site-images/site-image.repository.js';
 import type { TraineeRepository } from '../trainees/trainee.repository.js';
 import { buildSampleTrainees } from '../trainees/sample-trainees.js';
 import {
@@ -36,6 +38,7 @@ export class SeedService {
     private readonly events: EventRepository,
     private readonly media: MediaRepository,
     private readonly content: ContentRepository,
+    private readonly siteImages: SiteImageRepository,
   ) {}
 
   async run(): Promise<void> {
@@ -78,5 +81,6 @@ export class SeedService {
       if (await this.content.findById(document.id)) continue;
       await this.content.insert(document);
     }
+    await this.siteImages.insertMissing(SITE_IMAGE_SLOTS.map(siteImageSeedRow));
   }
 }

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { HatMark, Photo, Reveal } from '@/components/Brand';
+import { SiteImage } from '@/components/SiteImage';
 import { Crumbs, usePageMeta } from '@/components/SiteChrome';
 import { Chips, Tabs } from '@/components/controls';
 import { EmptyState, ErrorState } from '@/components/feedback';
@@ -24,7 +25,7 @@ export function BootcampPage() {
           <div><dt>Cost</dt><dd>Free</dd></div>
           <div><dt>Venue</dt><dd>Foundation premises</dd></div>
         </dl>
-        <figure className="detail-media mask-reveal is-in" style={{ marginTop: 64 }}><Photo file="electronics-lab" alt="Hands-on work at a Foundation build table" width={1600} height={1066} sizes="100vw" priority /></figure>
+        <figure className="detail-media mask-reveal is-in" style={{ marginTop: 64 }}><SiteImage slot="bootcamp-banner" sizes="100vw" priority /></figure>
       </PageIntro>
       <section className="section" aria-labelledby="mod-title">
         <div className="container">
