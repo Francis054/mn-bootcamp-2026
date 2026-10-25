@@ -13,6 +13,7 @@ import type {
   PublicationStatus,
   ScheduleStatus,
 } from './types';
+import { isDirectWorkPhotoSrc } from './workPhoto';
 
 export interface SafePublicMedia {
   id: string;
@@ -266,7 +267,7 @@ export function normalizeWorkPhotos(value: unknown): PublicWorkPhoto[] {
     const row = record(item);
     if (!row || typeof row.id !== 'string' || typeof row.alt !== 'string') return [];
     const src = text(row.src);
-    if (!src.startsWith('https://') && !src.startsWith('/') && !src.startsWith('memory:')) return [];
+    if (!isDirectWorkPhotoSrc(src) && !src.startsWith('memory:')) return [];
     const projectId = typeof row.projectId === 'string' && row.projectId ? row.projectId : null;
     return [{
       id: row.id,

@@ -1,13 +1,63 @@
 import type { PublicWorkPhoto } from './types';
 
+const DATA_IMAGE = /^data:image\/(jpeg|png|webp);base64,[a-z0-9+/=]+$/i;
+
+/** A picture the page may show: Cloudinary, a site file, or a development-adapter data URL. */
+export function isDirectWorkPhotoSrc(src: string): boolean {
+  return src.startsWith('https://') || src.startsWith('/') || DATA_IMAGE.test(src);
+}
+
 /** A displayable address. Local memory photos are read from the API. Other hosts are not used. */
 export function workPhotoAddress(photo: Pick<PublicWorkPhoto, 'id' | 'src'>, audience: 'admin' | 'public'): string {
-  if (photo.src.startsWith('https://') || photo.src.startsWith('/')) return photo.src;
+  if (isDirectWorkPhotoSrc(photo.src)) return photo.src;
   if (photo.src.startsWith('memory:')) {
     const root = audience === 'admin' ? '/api/v1/admin/work-photos' : '/api/v1/public/work-photos';
     return `${root}/${encodeURIComponent(photo.id)}/file`;
   }
   return '';
+}
+
+/** Reads the chosen file into a data URL for the development adapter. The live API uploads the file instead. */
+export function readWorkPhotoDataUrl(file: File): Promise<{ src: string; width: number; height: number }> {
+  const mime = workPhotoMime(file);
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('The photo could not be read.'));
+    reader.onload = () => {
+      const raw = typeof reader.result === 'string' ? reader.result : '';
+      const payload = raw.slice(raw.indexOf(',') + 1).replace(/\s/g, '');
+      if (!mime || !payload) {
+        reject(new Error('Use a JPEG, PNG, or WebP image.'));
+        return;
+      }
+      const src = `data:${mime};base64,${payload}`;
+      const image = new Image();
+      let settled = false;
+      const finish = (width: number, height: number) => {
+        if (settled) return;
+        settled = true;
+        resolve({
+          src,
+          width: width > 0 ? width : 1600,
+          height: height > 0 ? height : 1066,
+        });
+      };
+      image.onload = () => finish(image.naturalWidth, image.naturalHeight);
+      image.onerror = () => finish(0, 0);
+      image.src = src;
+      window.setTimeout(() => finish(image.naturalWidth, image.naturalHeight), 40);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function workPhotoMime(file: File): string | undefined {
+  const type = file.type.toLowerCase();
+  if (type === 'image/jpeg' || type === 'image/png' || type === 'image/webp') return type;
+  if (/\.jpe?g$/i.test(file.name)) return 'image/jpeg';
+  if (/\.png$/i.test(file.name)) return 'image/png';
+  if (/\.webp$/i.test(file.name)) return 'image/webp';
+  return undefined;
 }
 
 export function workPhotoFieldErrors(input: { traineeId: string; alt: string; caption: string; fileCount: number }): Record<string, string> {

@@ -47,6 +47,45 @@ describe('development authentication adapter', () => {
   });
 });
 
+describe('work photos in the development adapter', () => {
+  const png = new File(
+    [Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='), (char) => char.charCodeAt(0))],
+    'lab.png',
+    { type: 'image/png' },
+  );
+
+  it('stores the upload as a data URL, then publishes and removes it', async () => {
+    await api({ method: 'POST', path: '/auth/login', body: { email: 'administrator@example.test', password: 'length-ok', developmentAck: true } });
+    const body = new FormData();
+    body.set('traineeId', '1');
+    body.set('projectId', '1');
+    body.set('alt', 'Hands on a laptop during a labelled lab exercise.');
+    body.set('caption', 'Working through the lab');
+    body.set('file', png);
+    const saved = await api<{ id: string; src: string; publicationStatus: string }>({ method: 'POST', path: '/admin/work-photos', body });
+    expect(saved.src.startsWith('data:image/png;base64,')).toBe(true);
+    expect(saved.publicationStatus).toBe('draft');
+    expect(await api({ method: 'GET', path: '/public/work-photos', query: { traineeId: '1' } })).toEqual([]);
+
+    const published = await api<{ publicationStatus: string; listing: string }>({ method: 'POST', path: `/admin/work-photos/${saved.id}/publish` });
+    expect(published.publicationStatus).toBe('published');
+    expect(published.listing).toBe('public');
+    const visible = await api<Array<{ id: string; src: string }>>({ method: 'GET', path: '/public/work-photos', query: { traineeId: '1', projectId: '1' } });
+    expect(visible.map((photo) => photo.id)).toEqual([saved.id]);
+    expect(visible[0]?.src).toBe(saved.src);
+
+    await api({ method: 'POST', path: `/admin/work-photos/${saved.id}/unpublish` });
+    expect(await api({ method: 'GET', path: '/public/work-photos', query: { traineeId: '1' } })).toEqual([]);
+    await api({ method: 'DELETE', path: `/admin/work-photos/${saved.id}` });
+    expect(await api({ method: 'GET', path: '/admin/work-photos' })).toEqual([]);
+  });
+
+  it('keeps work photos away from an editor', async () => {
+    await api({ method: 'POST', path: '/auth/login', body: { email: 'editor@example.test', password: 'length-ok', developmentAck: true } });
+    await expect(api({ method: 'GET', path: '/admin/work-photos' })).rejects.toMatchObject({ status: 403 });
+  });
+});
+
 describe('public projections', () => {
   it('does not include trainee email on the public list', async () => {
     const trainees = await api<Array<Record<string, unknown>>>({ method: 'GET', path: '/public/trainees' });

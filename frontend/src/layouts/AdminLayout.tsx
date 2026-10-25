@@ -19,7 +19,7 @@ const GROUPS: Array<{ label: string; items: Array<{ id: string; label: string; i
     { id: 'projects', label: 'Projects', icon: 'terminal', to: '/admin/projects', permission: 'content.read' },
     { id: 'events', label: 'Events', icon: 'calendar', to: '/admin/events', permission: 'content.read' },
     { id: 'media', label: 'Media library', icon: 'image', to: '/admin/media', permission: 'content.read' },
-    { id: 'work-photos', label: 'Work photos', icon: 'image', to: '/admin/work-photos', permission: 'content.read', administratorOnly: true },
+    { id: 'work-photos', label: 'Work photos', icon: 'upload', to: '/admin/work-photos', permission: 'content.read', administratorOnly: true },
   ] },
   { label: 'Pages', items: [
     { id: 'content', label: 'Content editor', icon: 'file', to: '/admin/content', permission: 'content.read' },

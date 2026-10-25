@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { api } from '@/api/client';
 import { useAuth } from '@/auth/AuthProvider';
 import { ErrorSummary, Field, FormLegend } from '@/components/controls';
@@ -21,6 +21,7 @@ export function WorkPhotosPage() {
   const [projectId, setProjectId] = useState('');
   const [filterTrainee, setFilterTrainee] = useState('');
   const [pending, setPending] = useState(false);
+  const busy = useRef(false);
   const trainees = useAllPages<Trainee>('/admin/trainees');
   const projects = useAllPages<Project>('/admin/projects');
   const record = useAsync(`work-photos:${nonce}`, () => api<WorkPhoto[]>({ method: 'GET', path: '/admin/work-photos' }), isAdmin);
@@ -42,7 +43,8 @@ export function WorkPhotosPage() {
 
   const upload = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const data = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const data = new FormData(formElement);
     const alt = String(data.get('alt') ?? '');
     const caption = String(data.get('caption') ?? '');
     const files = [...data.getAll('file')].filter((item): item is File => item instanceof File && item.size > 0);
@@ -51,7 +53,8 @@ export function WorkPhotosPage() {
       const fileProblem = workPhotoFileError(file);
       if (fileProblem) problems.file = fileProblem;
     }
-    if (!form.block(problems)) return;
+    if (!form.block(problems) || busy.current) return;
+    busy.current = true;
     setPending(true);
     let saved = 0;
     try {
@@ -67,13 +70,14 @@ export function WorkPhotosPage() {
       }
       toast(saved === 1 ? 'Photo saved' : `${saved} photos saved`, 'They stay off the public site until you publish them.');
       form.setErrors({});
-      event.currentTarget.reset();
+      formElement.reset();
       setNonce((value) => value + 1);
     } catch (error) {
       if (saved > 0) setNonce((value) => value + 1);
       if (isApiError(error)) form.applyServer(error.fieldErrors);
       toast('Could not upload', isApiError(error) ? error.message : 'Request failed.', 'error');
     } finally {
+      busy.current = false;
       setPending(false);
     }
   };

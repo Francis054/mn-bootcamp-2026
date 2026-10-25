@@ -7,7 +7,7 @@ import { collect, emailAddress, httpUrl, minLength, required } from '@/domain/va
 import { currentEnv } from '@/config/runtime';
 import type { ApiRequest } from '@/api/liveTransport';
 import { MODULES, mediaSrc } from './fixtures';
-import { workPhotoFieldErrors } from '@/domain/workPhoto';
+import { readWorkPhotoDataUrl, workPhotoFieldErrors, workPhotoFileError } from '@/domain/workPhoto';
 import { clearSession, markSessionExpired, readActiveSession, setSession } from './session';
 import { getState, updateState } from './store';
 
@@ -138,6 +138,7 @@ function formFields(value: unknown): Record<string, unknown> {
     const fields: Record<string, unknown> = {};
     value.forEach((item, key) => {
       if (typeof item === 'string') fields[key] = item;
+      else if (item instanceof File && item.size > 0 && key === 'file') fields.file = item;
     });
     return fields;
   }
@@ -808,13 +809,14 @@ function listWorkPhotos(query: ListQuery & Record<string, string>) {
   });
 }
 
-function addWorkPhoto(body: Record<string, unknown>): WorkPhoto {
+async function addWorkPhoto(body: Record<string, unknown>): Promise<WorkPhoto> {
   const actor = requireAdministrator();
   const traineeId = String(body.traineeId ?? '').trim();
   const projectId = String(body.projectId ?? '').trim();
   const alt = String(body.alt ?? '');
   const caption = String(body.caption ?? '');
-  const problems = workPhotoFieldErrors({ traineeId, alt, caption, fileCount: 1 });
+  const file = body.file instanceof File ? body.file : undefined;
+  const problems = workPhotoFieldErrors({ traineeId, alt, caption, fileCount: file ? 1 : 0 });
   const trainee = getState().trainees.find((item) => item.id === traineeId);
   if (!problems.traineeId && !trainee) problems.traineeId = 'Choose a trainee.';
   if (projectId) {
@@ -823,14 +825,26 @@ function addWorkPhoto(body: Record<string, unknown>): WorkPhoto {
     if (!project) problems.projectId = 'Choose a project.';
     else if (linked.length > 0 && !linked.includes(traineeId)) problems.projectId = 'Choose a project this trainee is on.';
   }
+  if (file) {
+    const fileProblem = workPhotoFileError(file);
+    if (fileProblem) problems.file = fileProblem;
+  }
   assertFields(problems);
+  if (!file) fail('validation', 'Check the highlighted fields.', 422, { file: 'Choose an image.' });
+  let stored: { src: string; width: number; height: number };
+  try {
+    stored = await readWorkPhotoDataUrl(file);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Use a JPEG, PNG, or WebP image.';
+    fail('validation', 'Check the highlighted fields.', 422, { file: message });
+  }
   const item: WorkPhoto = {
     id: newId('work'),
     traineeId,
     projectId: projectId || null,
-    src: mediaSrc('hack-coding-team', 800),
-    width: 1600,
-    height: 1066,
+    src: stored.src,
+    width: stored.width,
+    height: stored.height,
     alt: alt.trim(),
     caption: caption.trim() || alt.trim(),
     publicationStatus: 'draft',
