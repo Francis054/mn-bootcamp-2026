@@ -70,7 +70,7 @@ export function HomePage() {
             </div>
             <div className="hero__media" aria-label="Photos from the Maxim Nyansa community">
               <Reveal as="span" reveal="scale" i={6} className="hm-frame" aria-hidden="true" />
-              <Reveal as="figure" mask parallax={0.04} i={0} className="hm-1"><Photo file="participant-portrait" alt="A participant at a Maxim Nyansa community event" width={1066} height={1600} sizes="(max-width:1100px) 60vw, 34vw" priority /></Reveal>
+              <Reveal as="figure" mask parallax={0.04} i={0} className="hm-1"><Photo file="participant-portrait" alt="Members of the Maxim Nyansa Foundation in white 10-year shirts, standing together in front of the anniversary banner" width={1066} height={1600} sizes="(max-width:1100px) 60vw, 34vw" priority /></Reveal>
               <Reveal as="figure" mask i={1} className="hm-2"><Photo file="hack-coding-team" alt="A team working together at a laptop" width={1600} height={1066} sizes="(max-width:1100px) 50vw, 20vw" priority /></Reveal>
               <Reveal as="figure" mask i={2} className="hm-3"><Photo file="vr-headset-moment" alt="Trying out a VR headset at an event" width={1600} height={1066} sizes="(max-width:1100px) 45vw, 18vw" /></Reveal>
               <Reveal className="status-card" i={7}>
