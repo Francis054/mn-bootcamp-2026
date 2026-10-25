@@ -1,14 +1,11 @@
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { type Express } from 'express';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import helmet from 'helmet';
 import type { AppEnv } from '../../config/env.js';
-import {
-  PUBLIC_GET_RATE_LIMIT_MAX,
-  cacheControlHeaders,
-  isPublicGetPath,
-} from '../http/cache-control.js';
+import { cacheControlHeaders } from '../http/cache-control.js';
+import { isWriteMethod, readRateLimitMax } from '../http/rate-limit.js';
 import { ApiError } from '../errors/api-error.js';
 
 const JSON_BODY_LIMIT = '1mb';
@@ -16,8 +13,9 @@ const JSON_BODY_LIMIT = '1mb';
 /**
  * Helmet, a single allowed browser origin, rate limits, and a 1 MB JSON cap.
  * Health checks skip the rate limits so a probe cannot lock the API out of its
- * own liveness route. Public page reads have a higher ceiling than sign-in and
- * writes, so a classroom refresh cannot use up the stricter budget.
+ * own liveness route. Page reads and the session check use a generous per-visitor
+ * ceiling. Sign-in, password reset, and writes keep the stricter one.
+ * `req.ip` is the visitor only when the app trusts the proxy hop in front of it.
  */
 export function applySecurity(app: Express, env: AppEnv): void {
   app.disable('x-powered-by');
@@ -55,23 +53,31 @@ export function applySecurity(app: Express, env: AppEnv): void {
     windowMs: env.rateLimitWindowMs,
     standardHeaders: true,
     legacyHeaders: false,
+    // The visitor address is `req.ip`. Production trusts one proxy hop so that is the visitor, not Render.
+    // These switches only silence library warnings. They do not change the address.
     validate: { trustProxy: false, xForwardedForHeader: false },
+    keyGenerator: (req: express.Request) => ipKeyGenerator(req.ip && req.ip.length > 0 ? req.ip : 'unknown'),
     handler: (_req: express.Request, _res: express.Response, next: express.NextFunction) => {
       next(new ApiError('rate_limited', 'Too many requests. Try again later.'));
     },
   };
+  const writeMax = env.rateLimitMax;
   app.use(
     rateLimit({
       ...sharedLimit,
-      limit: env.rateLimitMax,
-      skip: (req) => req.path === '/api/v1/health' || isPublicGetPath(req.method, req.path),
+      // `max` is the older name. Setting both keeps a copy that only reads `max` from falling back to 5.
+      limit: writeMax,
+      max: writeMax,
+      skip: (req) => req.path === '/api/v1/health' || !isWriteMethod(req.method),
     }),
   );
+  const readMax = readRateLimitMax(env.rateLimitMax);
   app.use(
     rateLimit({
       ...sharedLimit,
-      limit: Math.max(env.rateLimitMax, PUBLIC_GET_RATE_LIMIT_MAX),
-      skip: (req) => !isPublicGetPath(req.method, req.path),
+      limit: readMax,
+      max: readMax,
+      skip: (req) => req.path === '/api/v1/health' || isWriteMethod(req.method),
     }),
   );
   app.use(cacheControlHeaders());

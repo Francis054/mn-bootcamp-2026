@@ -6,6 +6,9 @@ import { buildApiUrl } from './liveTransport';
  */
 export const PUBLIC_CACHE_FRESH_MS = 8 * 60 * 1000;
 
+/** One short pause before a public read is tried again after HTTP 429. */
+export const PUBLIC_RATE_LIMIT_RETRY_MS = 1200;
+
 const STORAGE_PREFIX = 'mn-public-cache:';
 const CHANNEL_NAME = 'mn-public-cache';
 const WRITES = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
@@ -16,12 +19,15 @@ interface CacheEntry {
 }
 
 const memory = new Map<string, CacheEntry>();
+const misses = new Map<string, number>();
 const inflight = new Map<string, Promise<unknown>>();
+const once = new Map<string, Promise<unknown>>();
 const listeners = new Set<() => void>();
 
 let revision = 0;
 let clearCount = 0;
 let generation = 0;
+let rateLimitRetryMs = PUBLIC_RATE_LIMIT_RETRY_MS;
 let channel: BroadcastChannel | null = null;
 
 function cacheChannel(): BroadcastChannel | null {
@@ -81,6 +87,7 @@ function writeEntry(url: string, data: unknown, storedAt = Date.now()): void {
   }
   const entry = { storedAt, data: copy };
   memory.set(url, entry);
+  misses.delete(url);
   try {
     sessionStorage.setItem(storageKey(url), JSON.stringify(entry));
   } catch {
@@ -131,7 +138,27 @@ export function writePublicCache(url: string, data: unknown, storedAt = Date.now
 
 export function isPublicCacheFresh(url: string, now = Date.now()): boolean {
   const entry = readEntry(url);
-  return entry !== null && isFreshStored(entry.storedAt, now);
+  if (entry) return isFreshStored(entry.storedAt, now);
+  const missedAt = misses.get(url);
+  return missedAt !== undefined && isFreshStored(missedAt, now);
+}
+
+/**
+ * A not-found or failed public read is remembered in memory only.
+ * It is not stored as page data, and a full refresh tries again.
+ */
+export function rememberPublicMiss(url: string, storedAt = Date.now()): void {
+  misses.set(url, storedAt);
+}
+
+/** Share one in-flight batch across remounts, including React's development double render. */
+export function oncePerKey<T>(key: string, create: () => Promise<T>): Promise<T> {
+  const existing = once.get(key);
+  if (existing) return existing as Promise<T>;
+  // Start immediately so a caller can still settle the request in this turn.
+  const pending = create();
+  once.set(key, pending);
+  return pending;
 }
 
 export function getPublicCacheVersion(): number {
@@ -152,7 +179,9 @@ export function clearPublicCache(options?: { announce?: boolean }): void {
   generation += 1;
   clearCount += 1;
   inflight.clear();
+  once.clear();
   memory.clear();
+  misses.clear();
   removeStoredCopies();
   if (options?.announce !== false) {
     try {
@@ -164,18 +193,52 @@ export function clearPublicCache(options?: { announce?: boolean }): void {
   notify();
 }
 
+export function setPublicRateLimitRetryMsForTests(ms: number): void {
+  rateLimitRetryMs = ms;
+}
+
 export function resetPublicCacheForTests(): void {
+  rateLimitRetryMs = PUBLIC_RATE_LIMIT_RETRY_MS;
   clearPublicCache({ announce: false });
+}
+
+function isTooManyRequests(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && 'status' in error && error.status === 429;
+}
+
+function wait(ms: number): Promise<void> {
+  if (ms <= 0) return Promise.resolve();
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+async function fetchAllowingOneRateLimitRetry<T>(fetcher: () => Promise<T>): Promise<T> {
+  try {
+    return await fetcher();
+  } catch (error) {
+    if (!isTooManyRequests(error)) throw error;
+    await wait(rateLimitRetryMs);
+    return fetcher();
+  }
 }
 
 function startFetch<T>(url: string, fetcher: () => Promise<T>): Promise<T> {
   const existing = inflight.get(url);
   if (existing) return existing as Promise<T>;
   const ticket = generation;
-  const pending = fetcher()
+  const pending = fetchAllowingOneRateLimitRetry(fetcher)
     .then((data) => {
       if (ticket === generation) writeEntry(url, data);
       return data;
+    })
+    .catch((error: unknown) => {
+      if (ticket === generation && isTooManyRequests(error)) {
+        const saved = memory.get(url) ?? readStorage(url);
+        if (saved) writeEntry(url, saved.data, Date.now());
+        else rememberPublicMiss(url);
+      }
+      throw error;
     })
     .finally(() => {
       if (inflight.get(url) === pending) inflight.delete(url);
@@ -186,7 +249,8 @@ function startFetch<T>(url: string, fetcher: () => Promise<T>): Promise<T> {
 
 /**
  * Fresh copies return without a request. Stale copies return immediately and refresh behind the scenes.
- * A missing copy waits for the network. Failures and 404s are not stored.
+ * A missing copy waits for the network. A 429 is tried once more; a saved copy stays on screen.
+ * Failures and 404s are not stored as page data.
  */
 export async function readThroughPublicCache<T>(url: string, fetcher: () => Promise<T>): Promise<T> {
   const cached = readEntry(url);

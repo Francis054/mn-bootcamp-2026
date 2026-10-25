@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { api } from '@/api/client';
-import { getPublicCacheClearCount, getPublicCacheVersion, isPublicCacheFresh, publicRequestUrl, readPublicCache, subscribePublicCache } from '@/api/publicCache';
+import { getPublicCacheClearCount, getPublicCacheVersion, isPublicCacheFresh, oncePerKey, publicRequestUrl, readPublicCache, rememberPublicMiss, subscribePublicCache } from '@/api/publicCache';
 import { usesMockApi } from '@/config/runtime';
 import { isPubliclyListable } from '@/domain/publish';
 import { normalizeAbout, normalizeEvents, normalizeHomepage, normalizeLessons, normalizeMedia, normalizeMilestones, normalizeProjects, normalizeStats, normalizeTrainees, type SafePublicMedia } from '@/domain/publicContract';
@@ -79,19 +79,43 @@ function readCachedPublicSite(): PublicSnapshot | null {
   };
 }
 
-async function loadPublicPath(path: string): Promise<void> {
-  try {
-    await api({ method: 'GET', path });
-  } catch (error) {
-    if (OPTIONAL_PUBLIC_PATHS.has(path) && isApiError(error) && error.status === 404) return;
-    throw error;
-  }
-}
+let lastFailure: string | null = null;
 
 function failureMessage(error: unknown): string {
   if (isApiError(error)) return error.message;
   if (error instanceof Error && error.message) return error.message;
   return 'The published site could not be loaded.';
+}
+
+async function loadPublicPath(path: string): Promise<void> {
+  const url = publicRequestUrl(path);
+  try {
+    await api({ method: 'GET', path });
+  } catch (error) {
+    rememberPublicMiss(url);
+    if (OPTIONAL_PUBLIC_PATHS.has(path) && isApiError(error) && error.status === 404) return;
+    throw error;
+  }
+}
+
+function loadWave(clears: number): Promise<PromiseSettledResult<void>[]> {
+  const stale = PUBLIC_SITE_PATHS.filter((path) => !isPublicCacheFresh(publicRequestUrl(path)));
+  const key = `${clears}:${stale.join('|')}`;
+  return oncePerKey(key, async () => {
+    if (stale.length === 0) return [] as PromiseSettledResult<void>[];
+    const results = await Promise.allSettled(stale.map((path) => loadPublicPath(path)));
+    if (readCachedPublicSite() !== null) {
+      lastFailure = null;
+    } else {
+      const rejected = results.find((result) => result.status === 'rejected');
+      lastFailure = failureMessage(rejected && rejected.status === 'rejected' ? rejected.reason : null);
+    }
+    return results;
+  });
+}
+
+export function resetPublicLoadForTests(): void {
+  lastFailure = null;
 }
 
 /** Mock mode keeps the labelled fixture projection. Live mode shows a saved copy, then refreshes it in place. */
@@ -111,26 +135,22 @@ export function usePublicContent(): PublicSite {
     let cancel = false;
     const stale = PUBLIC_SITE_PATHS.filter((path) => !isPublicCacheFresh(publicRequestUrl(path)));
     if (stale.length === 0) {
+      const hasCache = readCachedPublicSite() !== null;
       setBooting(false);
-      setShowCached(readCachedPublicSite() !== null);
-      setFailure(null);
+      setShowCached(hasCache);
+      setFailure(hasCache ? null : lastFailure);
       return;
     }
     if (readCachedPublicSite() === null) {
       setShowCached(false);
       setBooting(true);
     }
-    void Promise.allSettled(stale.map((path) => loadPublicPath(path))).then((results) => {
+    void loadWave(clears).then(() => {
       if (cancel) return;
+      const hasCache = readCachedPublicSite() !== null;
       setBooting(false);
-      if (readCachedPublicSite() !== null) {
-        setShowCached(true);
-        setFailure(null);
-        return;
-      }
-      const rejected = results.find((result) => result.status === 'rejected');
-      setShowCached(false);
-      setFailure(failureMessage(rejected && rejected.status === 'rejected' ? rejected.reason : null));
+      setShowCached(hasCache);
+      setFailure(hasCache ? null : lastFailure);
     });
     return () => {
       cancel = true;

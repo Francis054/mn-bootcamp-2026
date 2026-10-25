@@ -3,6 +3,7 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { createApp } from '../../src/app.js';
 import { PRIVATE_CACHE_CONTROL, PUBLIC_GET_CACHE_CONTROL } from '../../src/shared/http/cache-control.js';
+import { PUBLIC_READ_RATE_LIMIT_MAX, readRateLimitMax } from '../../src/shared/http/rate-limit.js';
 import { HealthService } from '../../src/modules/health/health.service.js';
 import { testEnv } from '../support/app-env.js';
 import { captureLogger } from '../support/logger.js';
@@ -11,6 +12,7 @@ import { readError, readRecord } from '../support/read-json.js';
 function appWith(options?: {
   rateLimitMax?: number;
   nodeEnv?: 'development' | 'test' | 'production';
+  trustProxy?: boolean;
   health?: HealthService;
   lines?: () => string[];
   authRouter?: Router;
@@ -24,6 +26,7 @@ function appWith(options?: {
     env: testEnv({
       rateLimitMax: options?.rateLimitMax ?? 10_000,
       ...(options?.nodeEnv ? { nodeEnv: options.nodeEnv } : {}),
+      ...(options?.trustProxy ? { trustProxy: true } : {}),
     }),
     logger: captured.logger,
     health,
@@ -124,15 +127,44 @@ describe('HTTP pipeline', () => {
     expect(rejected.headers['access-control-allow-origin']).toBeUndefined();
   });
 
-  it('rate limits repeated calls and still lets health checks through', async () => {
+  it('rate limits repeated writes and still lets health checks through', async () => {
     const { app } = appWith({ rateLimitMax: 2 });
-    await request(app).get('/api/v1/missing').expect(404);
-    await request(app).get('/api/v1/missing').expect(404);
-    const limited = await request(app).get('/api/v1/missing').expect(429);
+    await request(app).post('/api/v1/missing').expect(404);
+    await request(app).post('/api/v1/missing').expect(404);
+    const limited = await request(app).post('/api/v1/missing').expect(429);
     expect(limited.body).toEqual({
       error: { code: 'rate_limited', message: 'Too many requests. Try again later.' },
     });
     await request(app).get('/api/v1/health').expect(200);
+    await request(app).get('/api/v1/missing').expect(404);
+  });
+
+  it('gives page reads and the session check their own generous ceiling', async () => {
+    expect(PUBLIC_READ_RATE_LIMIT_MAX).toBe(600);
+    expect(readRateLimitMax(300)).toBe(600);
+    expect(readRateLimitMax(10_000)).toBe(10_000);
+    const auth = Router();
+    auth.get('/session', (_req, res) => {
+      res.json({ authenticated: false });
+    });
+    const curriculum = Router();
+    curriculum.get('/public/home', (_req, res) => {
+      res.json({ headline: 'Hello' });
+    });
+    const { app } = appWith({ rateLimitMax: 2, authRouter: auth, curriculumRouter: curriculum });
+    for (let count = 0; count < 8; count += 1) {
+      await request(app).get('/api/v1/public/home').expect(200);
+      await request(app).get('/api/v1/auth/session').expect(200);
+    }
+  });
+
+  it('counts each visitor separately when one proxy hop is trusted', async () => {
+    const { app } = appWith({ rateLimitMax: 1, trustProxy: true });
+    await request(app).post('/api/v1/missing').set('X-Forwarded-For', '203.0.113.5').expect(404);
+    const firstVisitor = await request(app).post('/api/v1/missing').set('X-Forwarded-For', '203.0.113.5').expect(429);
+    expect(readError(firstVisitor.body).code).toBe('rate_limited');
+    await request(app).post('/api/v1/missing').set('X-Forwarded-For', '203.0.113.9').expect(404);
+    await request(app).get('/api/v1/health').set('X-Forwarded-For', '203.0.113.5').expect(200);
   });
 
   it('logs the path and status without the query string', async () => {
@@ -288,5 +320,14 @@ describe('HTTP pipeline', () => {
     await request(enquiries.app).post('/api/v1/public/enquiries').send({}).expect(201);
     await request(enquiries.app).post('/api/v1/public/enquiries').send({}).expect(201);
     await request(enquiries.app).post('/api/v1/public/enquiries').send({}).expect(429);
+
+    const resetRouter = Router();
+    resetRouter.post('/password-reset/request', (_req, res) => {
+      res.status(202).json({ sent: true });
+    });
+    const reset = appWith({ rateLimitMax: 2, authRouter: resetRouter });
+    await request(reset.app).post('/api/v1/auth/password-reset/request').send({}).expect(202);
+    await request(reset.app).post('/api/v1/auth/password-reset/request').send({}).expect(202);
+    await request(reset.app).post('/api/v1/auth/password-reset/request').send({}).expect(429);
   });
 });
