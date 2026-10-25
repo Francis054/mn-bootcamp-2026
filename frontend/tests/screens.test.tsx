@@ -49,6 +49,21 @@ describe('public routes', () => {
     expect(screen.getAllByRole('link', { name: /foundations and professional orientation|tcp\/ip networking/i }).length).toBeGreaterThan(0);
   });
 
+  it('keeps about copy in separate columns and headings', async () => {
+    renderAt('/about');
+    expect(await screen.findByRole('heading', { name: /maximal wisdom/i })).toBeInTheDocument();
+    expect(screen.getByText(/to create career perspectives for young people/i)).toBeInTheDocument();
+    expect(screen.getByText(/investing in young africans/i)).toBeInTheDocument();
+    expect(screen.getByText('Mission').parentElement).toHaveClass('split__a');
+    expect(screen.getByText('Vision').parentElement).toHaveClass('split__b');
+    expect(screen.getByRole('heading', { name: /eight values, one way of working/i }).closest('.sec-head__title')).toBeTruthy();
+    expect(screen.getByText('From maximnyansa.com').closest('.sec-head__aside')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /not bootcamp statistics/i }).closest('.sec-head__title')).toBeTruthy();
+    expect(screen.getByText(/permission to display tbc/i).closest('.sec-head__aside')).toBeTruthy();
+    expect(screen.getByText('Empowerment').closest('.values')).toBeTruthy();
+    expect(screen.getByText(/the 2026 cybersecurity bootcamp begins on 5 oct/i)).toBeInTheDocument();
+  });
+
   it('shows the daily timetable for the current week', async () => {
     renderAt('/schedule');
     expect(await screen.findByRole('heading', { name: /twelve weeks/i })).toBeInTheDocument();
