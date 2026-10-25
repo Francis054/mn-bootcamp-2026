@@ -60,7 +60,11 @@ function reportStartupFailure(error: unknown): void {
     typeof error === 'object' && error !== null && 'code' in error ? error.code : undefined,
   );
   const suffix = code === undefined ? '' : ` ${code}`;
-  process.stderr.write(`The API could not start (${errorName(error)}${suffix}).\n`);
+  const hint =
+    code === 'SELF_SIGNED_CERT_IN_CHAIN'
+      ? ' Set DATABASE_SSL_CA to the certificate from Supabase Database settings, SSL Configuration. Do not set DATABASE_SSL=false.'
+      : '';
+  process.stderr.write(`The API could not start (${errorName(error)}${suffix}).${hint}\n`);
 }
 
 void main().catch((error: unknown) => {

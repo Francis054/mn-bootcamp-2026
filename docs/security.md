@@ -42,4 +42,4 @@ Resend is used only when both `RESEND_API_KEY` and `EMAIL_FROM` are set. In prod
 
 ## Logs
 
-The logger redacts cookies, authorization headers, `DATABASE_URL`, `SESSION_SECRET`, `ADMIN_BOOTSTRAP_PASSWORD`, and password fields. Do not add those values to a log line, a health response, or an error message.
+The logger redacts cookies, authorization headers, `DATABASE_URL`, `DATABASE_SSL_CA`, `SESSION_SECRET`, `ADMIN_BOOTSTRAP_PASSWORD`, and password fields. Do not add those values to a log line, a health response, or an error message.

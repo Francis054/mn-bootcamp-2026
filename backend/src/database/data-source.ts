@@ -15,6 +15,7 @@ import { MediaEntity } from '../modules/gallery/media.entity.js';
 import { ProjectEntity } from '../modules/projects/project.entity.js';
 import { TraineeEntity } from '../modules/trainees/trainee.entity.js';
 import { UserEntity } from '../modules/users/user.entity.js';
+import { connectionUrlForDriver, sslConfigForDriver } from './ssl.js';
 import { Accounts1793404800000 } from './migrations/1793404800000-Accounts.js';
 import { Auth1792868400000 } from './migrations/1792868400000-Auth.js';
 import { Baseline1792800000000 } from './migrations/1792800000000-Baseline.js';
@@ -30,11 +31,11 @@ import { Trainees1792972800000 } from './migrations/1792972800000-Trainees.js';
  * any other change. Add each new migration class to this list.
  */
 export function createDataSource(
-  env: Pick<AppEnv, 'databaseUrl' | 'databaseSsl' | 'nodeEnv'>,
+  env: Pick<AppEnv, 'databaseUrl' | 'databaseSsl' | 'databaseSslCa' | 'nodeEnv'>,
 ): DataSource {
   return new DataSource({
     type: 'postgres',
-    url: env.databaseUrl,
+    url: connectionUrlForDriver(env.databaseUrl),
     synchronize: false,
     logging: env.nodeEnv === 'development' ? ['error'] : false,
     entities: [
@@ -66,6 +67,6 @@ export function createDataSource(
       Accounts1793404800000,
     ],
     migrationsTableName: 'schema_migrations',
-    ssl: env.databaseSsl ? { rejectUnauthorized: true } : false,
+    ssl: sslConfigForDriver(env.databaseSsl, env.databaseSslCa),
   });
 }

@@ -84,11 +84,29 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
      What: encrypt the database connection and check the certificate.
      Example: true
      The app turns true into Node TLS with rejectUnauthorized turned on.
-     It uses Node's built-in certificate list. There is no variable for a
-     Supabase CA file. Also keep sslmode=require on DATABASE_URL, which is
-     what Supabase asks for so the driver will not fall back to plaintext.
-     If the service crashes with a certificate error, stop. Do not set this
-     to false to hide the error.
+     That check stays on. Do not set this to false to hide a certificate
+     error. Do not set NODE_TLS_REJECT_UNAUTHORIZED=0.
+     Keep sslmode=require on DATABASE_URL. Supabase adds it so a driver
+     will not fall back to plaintext. Leave it on the URL. The app takes
+     it off only when opening the connection, because the driver would
+     otherwise ignore DATABASE_SSL_CA.
+
+   DATABASE_SSL_CA
+     What: the Supabase CA certificate, as PEM text, so Node can trust the
+       database server. That CA is not in Node's built-in list. Without
+       this, production exits with SELF_SIGNED_CERT_IN_CHAIN.
+     Where to get it:
+       1. Open the Supabase project mn-bootcamp-2026.
+       2. Go to Project Settings, then Database.
+       3. Under SSL Configuration, click Download certificate.
+       4. Open the downloaded file in a text editor. It is text. It starts
+          with -----BEGIN CERTIFICATE----- and ends with
+          -----END CERTIFICATE-----.
+     Paste the whole file into this variable, including those two lines.
+     Render keeps the line breaks. If they disappear, put the two characters
+     \n where each line break was. The app accepts either form. It does not
+     print the certificate.
+     Leave this blank for a database on your own computer.
 
    FRONTEND_URL
      What: the one website address, scheme and host, no path on the end.
@@ -207,16 +225,25 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
    (https://render.com/docs/deploys, checked 24 October 2026).
    a. If your Free service still shows a Pre-Deploy Command box, set it to:
         npm run migration:run
-      and deploy again. Then skip the rest of this step.
+      and deploy again. The command uses the environment from step 3,
+      including DATABASE_SSL and DATABASE_SSL_CA. Then skip the rest of
+      this step.
    b. If there is no such box, open a terminal on your computer in the backend
-      folder, after npm install. Do not write the production URL into a file
-      you might commit. In that terminal only, set DATABASE_URL to the same
-      session-pooler string, DATABASE_SSL to true, NODE_ENV to production,
-      FRONTEND_URL to the site origin, and SESSION_SECRET to the same secret
-      you put in Render. Then run:
+      folder, after npm install. Do not write the production URL or the
+      certificate into a file in this repo. In that terminal only, set:
+        DATABASE_URL to the same session-pooler string
+        DATABASE_SSL to true
+        DATABASE_SSL_CA to the same certificate you pasted in Render.
+          From the downloaded file, outside this repo:
+          export DATABASE_SSL_CA="$(cat /path/to/the-downloaded-cert)"
+        NODE_ENV to production
+        FRONTEND_URL to the site origin
+        SESSION_SECRET to the same secret you put in Render
+      Then run:
         npm run migration:run
       Close the terminal when it finishes so the URL is not left on screen.
-      The command prints migration results. It does not print the URL.
+      The command prints migration results. It does not print the URL or
+      the certificate.
 
 6. Create the website as a Static Site on the same Render account.
    a. Repository Francis054/mn-bootcamp-2026, branch main.
