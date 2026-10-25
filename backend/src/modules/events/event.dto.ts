@@ -1,13 +1,18 @@
+import { Transform } from 'class-transformer';
 import { IsOptional, ValidateBy } from 'class-validator';
+import { trimIdList } from '../../shared/validation/id-list.js';
 import { eventBodyProblem } from './event-types.js';
 import {
   booleanMessage,
   clockMessage,
   dateMessage,
   kindMessage,
+  lessonIdsMessage,
   listingMessage,
+  mediaIdsMessage,
   placeMessage,
   plainTextMessage,
+  projectIdsMessage,
   publicationMessage,
   sourceUrlProblem,
   summaryMessage,
@@ -108,6 +113,21 @@ export class EventCreateDto {
   @IsOptional()
   @rule('internalNotes', (value) => plainTextMessage(value, 5000), 'Use at most 5000 characters.')
   internalNotes?: string;
+
+  @IsOptional()
+  @Transform(trimIdList)
+  @rule('lessonIds', lessonIdsMessage, 'Choose a class.')
+  lessonIds?: string[];
+
+  @IsOptional()
+  @Transform(trimIdList)
+  @rule('projectIds', projectIdsMessage, 'Choose a project.')
+  projectIds?: string[];
+
+  @IsOptional()
+  @Transform(trimIdList)
+  @rule('mediaIds', mediaIdsMessage, 'Choose a photo.')
+  mediaIds?: string[];
 }
 
 /** Body for `PATCH /admin/events/:id`. Omitted fields stay as they are. */
@@ -191,4 +211,19 @@ export class EventPatchDto {
   @IsOptional()
   @rule('internalNotes', (value) => plainTextMessage(value, 5000), 'Use at most 5000 characters.')
   internalNotes?: string;
+
+  @IsOptional()
+  @Transform(trimIdList)
+  @rule('lessonIds', lessonIdsMessage, 'Choose a class.')
+  lessonIds?: string[];
+
+  @IsOptional()
+  @Transform(trimIdList)
+  @rule('projectIds', projectIdsMessage, 'Choose a project.')
+  projectIds?: string[];
+
+  @IsOptional()
+  @Transform(trimIdList)
+  @rule('mediaIds', mediaIdsMessage, 'Choose a photo.')
+  mediaIds?: string[];
 }

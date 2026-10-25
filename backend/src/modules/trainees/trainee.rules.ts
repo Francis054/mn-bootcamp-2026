@@ -1,3 +1,4 @@
+import { idListMessage } from '../../shared/validation/id-list.js';
 import { isListing, isPublicationStatus } from '../curriculum/publication.js';
 import { isTraineeTrack } from './tracks.js';
 
@@ -96,6 +97,10 @@ export function publicationMessage(value: unknown): string | undefined {
 export function listingMessage(value: unknown): string | undefined {
   if (typeof value !== 'string' || !isListing(value)) return 'Choose a listing.';
   return undefined;
+}
+
+export function lessonIdsMessage(value: unknown): string | undefined {
+  return idListMessage(value, 'Choose a class.', 'Choose at most 40 classes.');
 }
 
 export function normalizeEmail(email: string): string {

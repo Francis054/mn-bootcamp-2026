@@ -30,6 +30,7 @@ export interface TraineeRecord {
   publicationStatus: PublicationStatus;
   statusLabel: string;
   internalNotes: string;
+  lessonIds: string[];
   updatedAt: string;
 }
 

@@ -18,6 +18,7 @@ export interface ProjectRecord {
   steps: string[];
   team: string[];
   traineeIds: string[];
+  lessonIds: string[];
   repositoryUrl: string;
   demoUrl: string;
   labOnlyConfirmed: boolean;

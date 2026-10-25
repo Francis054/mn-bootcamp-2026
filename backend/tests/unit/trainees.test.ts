@@ -39,6 +39,7 @@ const profile: TraineeRecord = {
   publicationStatus: 'published',
   statusLabel: 'In training',
   internalNotes: 'Development fixture. Do not replace with a real person without written consent.',
+  lessonIds: [],
   updatedAt: '2026-10-24T00:00:00.000Z',
 };
 

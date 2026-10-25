@@ -1,3 +1,4 @@
+import { groupedIds, replaceIds } from '../../shared/persistence/id-links.js';
 import { BaseRepository } from '../../shared/persistence/base-repository.js';
 import type { ProjectEntity } from './project.entity.js';
 
@@ -46,6 +47,25 @@ export class ProjectRepository extends BaseRepository<ProjectEntity> {
         );
       }
     });
+  }
+
+  lessonIdsByProject(projectIds: readonly string[]): Promise<Map<string, string[]>> {
+    return groupedIds(
+      (sql, params) => this.repository.manager.query(sql, params),
+      'project_lessons',
+      projectIds,
+    );
+  }
+
+  replaceLessons(projectId: string, lessonIds: readonly string[]): Promise<void> {
+    return this.repository.manager.transaction((manager) =>
+      replaceIds(
+        (sql, params) => manager.query(sql, params),
+        'project_lessons',
+        projectId,
+        lessonIds,
+      ),
+    );
   }
 
   insert(project: Omit<ProjectEntity, 'createdAt' | 'updatedAt'>): Promise<ProjectEntity> {

@@ -17,6 +17,7 @@ import { TraineeEntity } from '../modules/trainees/trainee.entity.js';
 import { UserEntity } from '../modules/users/user.entity.js';
 import { connectionUrlForDriver, sslConfigForDriver } from './ssl.js';
 import { Accounts1793404800000 } from './migrations/1793404800000-Accounts.js';
+import { CatalogueLinks1793664000000 } from './migrations/1793664000000-CatalogueLinks.js';
 import { RolesAndOptionalLinks1793577600000 } from './migrations/1793577600000-RolesAndOptionalLinks.js';
 import { Auth1792868400000 } from './migrations/1792868400000-Auth.js';
 import { Baseline1792800000000 } from './migrations/1792800000000-Baseline.js';
@@ -67,6 +68,7 @@ export function createDataSource(
       Content1793318400000,
       Accounts1793404800000,
       RolesAndOptionalLinks1793577600000,
+      CatalogueLinks1793664000000,
     ],
     migrationsTableName: 'schema_migrations',
     ssl: sslConfigForDriver(env.databaseSsl, env.databaseSslCa),
