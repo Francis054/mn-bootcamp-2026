@@ -30,9 +30,9 @@ export function ClassListPage() {
   const list = useList<Lesson>('/admin/classes', { q, page, pageSize: 8, sort: 'week', dir: 'asc', filters: { moduleId, scheduleStatus: status } }, nonce);
   usePageMeta('Classes');
   return (
-    <ListShell title="Classes" text="Weekly lessons for the 2026 cohort. Titles and order are samples." newTo="/admin/classes/new" count={list.data?.total} loading={list.loading} error={list.error?.message} onRetry={() => setNonce((value) => value + 1)}>
+    <ListShell title="Classes" text="Lesson notes for the 2026 cohort. These rows are samples. The daily timetable is the schedule." extra={<Link className="btn btn--ghost btn--sm" to="/admin/classes/timetable">Timetable</Link>} newTo="/admin/classes/new" count={list.data?.total} loading={list.loading} error={list.error?.message} onRetry={() => setNonce((value) => value + 1)}>
       <Filters q={q} onQ={setQ} label="Search classes">
-        <select className="select" aria-label="Module" value={moduleId} onChange={(event) => { setModuleId(event.target.value); setPage(1); }}><option value="">All modules</option>{modules.map((module) => <option key={module.id} value={module.id}>{module.name}</option>)}</select>
+        <select className="select" aria-label="Archive tag" value={moduleId} onChange={(event) => { setModuleId(event.target.value); setPage(1); }}><option value="">All archive tags</option>{modules.map((module) => <option key={module.id} value={module.id}>{module.name}</option>)}</select>
         <select className="select" aria-label="Status" value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }}><option value="">Any status</option><option value="done">Completed</option><option value="now">This week</option><option value="upcoming">Upcoming</option></select>
       </Filters>
       <BulkBar path="/admin/classes/bulk" ids={selected} onDone={() => { setSelected([]); setNonce((value) => value + 1); }} />
@@ -105,11 +105,11 @@ export function EventListPage() {
   );
 }
 
-function ListShell({ title, text, newTo, count, loading, error, onRetry, children }: { title: string; text: string; newTo: string; count?: number; loading: boolean; error?: string; onRetry: () => void; children: ReactNode }) {
+function ListShell({ title, text, newTo, count, loading, error, onRetry, extra, children }: { title: string; text: string; newTo: string; count?: number; loading: boolean; error?: string; onRetry: () => void; extra?: ReactNode; children: ReactNode }) {
   const auth = useAuth();
   return (
     <>
-      <div className="a-head"><div><h1>{title}</h1><p>{text}</p></div><div className="a-head__actions">{auth.allowed('content.write') ? <Link className="btn btn--dark btn--sm" to={newTo}><Icon name="plus" className="i--sm" />New</Link> : <span className="badge">Read only</span>}</div></div>
+      <div className="a-head"><div><h1>{title}</h1><p>{text}</p></div><div className="a-head__actions">{extra}{auth.allowed('content.write') ? <Link className="btn btn--dark btn--sm" to={newTo}><Icon name="plus" className="i--sm" />New</Link> : <span className="badge">Read only</span>}</div></div>
       <section className="panel">
         {loading ? <LoadingRows /> : null}
         {error ? <ErrorState title="Could not load this list" text={error} onRetry={onRetry} /> : children}

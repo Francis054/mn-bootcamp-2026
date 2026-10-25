@@ -70,7 +70,7 @@ export function normalizeHomepage(value: unknown): HomepageContent | null {
   const row = record(value);
   if (!row || typeof row.headline !== 'string') return null;
   return {
-    eyebrow: text(row.eyebrow, 'Cyber Security Bootcamp 2026'),
+    eyebrow: text(row.eyebrow, 'Cybersecurity Bootcamp 2026'),
     headline: row.headline,
     lead: text(row.lead),
     ctaLabel: text(row.ctaLabel, 'Explore the bootcamp'),

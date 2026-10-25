@@ -11,6 +11,7 @@ import { MODULES, mediaSrc } from './fixtures';
 import { readWorkPhotoDataUrl, workPhotoFieldErrors, workPhotoFileError } from '@/domain/workPhoto';
 import { clearSession, markSessionExpired, readActiveSession, setSession } from './session';
 import { getState, updateState } from './store';
+import { isAdminTimetablePath, isPublicTimetablePath, NOT_HANDLED, resetTimetableStore, timetableRoute } from './timetable-store';
 
 const failures = new Map<string, { count: number; lockedUntil: number }>();
 const resetTickets = new Map<string, { userId: string; expiresAt: number }>();
@@ -24,6 +25,7 @@ export function resetDevTransport(): void {
   failures.clear();
   resetTickets.clear();
   armed = null;
+  resetTimetableStore();
 }
 
 function takeArmed(): void {
@@ -210,8 +212,17 @@ async function route(method: string, path: string, query: ListQuery & Record<str
   if (method === 'GET' && path === '/public/media') return getState().media.filter(isPubliclyListable);
   if (method === 'GET' && path === '/public/work-photos') return publicWorkPhotos(query);
   if (method === 'POST' && path === '/public/enquiries') return createEnquiry(body);
+  if (isPublicTimetablePath(path)) {
+    const timetable = await timetableRoute(method, path, query, body);
+    if (timetable !== NOT_HANDLED) return timetable;
+  }
 
   if (path.startsWith('/admin/')) requireUser('content.read');
+  if (isAdminTimetablePath(path)) {
+    if (method !== 'GET') requireUser('content.write');
+    const timetable = await timetableRoute(method, path, query, body);
+    if (timetable !== NOT_HANDLED) return timetable;
+  }
 
   if (method === 'GET' && path === '/admin/search') return search(String(query.q ?? ''));
   if (method === 'GET' && path === '/admin/modules') {

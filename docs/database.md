@@ -15,6 +15,7 @@ The API uses PostgreSQL through TypeORM. `synchronize` is off. Schema changes ar
 11. Catalogue links
 12. Work photos (trainee photos an administrator uploads)
 13. Trainee profile photo (`photo_url` and `photo_storage_key`)
+14. Timetable (`programmes`, `curriculum_blocks`, `curriculum_weeks`, `week_deliverables`, `trainers`, `week_trainers`, `class_sessions`, `session_trainers`)
 
 The migrations table is `schema_migrations`. Passwords are stored as Argon2id hashes. Session cookies are stored as hashes. The cookie value itself is not stored.
 
@@ -73,6 +74,6 @@ A database on your own computer does not need `DATABASE_SSL_CA`. Leave it blank 
 
 Run `npm run migration:run` once, before the first real request, and again only when a new migration is added. The command reads `DATABASE_URL`, `DATABASE_SSL`, and `DATABASE_SSL_CA` from the environment and connects the same way the server does. It does not print the URL or the certificate.
 
-Do not run `npm run seed` on the hosted database.
+Do not run `npm run seed` on the hosted database. After migration 14, load the real timetable with `npm run timetable:import` from `backend/`. That command reads `data/seed/bootcamp-timetable-and-outline.xlsx` and can be run again. It does not insert sample lessons. See `docs/timetable.md`.
 
 Do not run `migration:revert` on the hosted database as a casual rollback. A reverted migration can drop columns. Roll back the Render deploy first, and read `docs/deployment.md` before touching the schema.

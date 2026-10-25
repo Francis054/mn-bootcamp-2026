@@ -160,7 +160,8 @@ npm run build
 | `npm run format`       | Rewrite files with Prettier.                  |
 | `npm test`             | Unit tests and the Postgres integration test. |
 | `npm run admin:create` | Create the first administrator. See below.    |
-| `npm run seed`         | Insert the labelled sample curriculum.        |
+| `npm run seed`         | Insert the labelled sample curriculum, then import the timetable. |
+| `npm run timetable:import` | Load the workbook in `data/seed/`. Safe to run again. Does not insert sample lessons. |
 
 ## Signing in
 

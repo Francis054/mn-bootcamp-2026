@@ -551,3 +551,36 @@ a.tl__card:hover{box-shadow:var(--shadow-2);transform:translateX(4px)}
 .case-photo__frame{aspect-ratio:3/2;overflow:hidden;border-radius:var(--r-lg);background:var(--paper-2)}
 .case-photo__frame img{width:100%;height:100%;object-fit:cover}
 .case-photo figcaption{font-size:13px;color:var(--ink-3);padding-top:10px}
+
+.week-switch{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;scroll-snap-type:x proximity}
+.week-switch__btn{flex:0 0 148px;scroll-snap-align:start;text-align:left;border:1px solid var(--line);background:var(--paper);border-radius:var(--r-md);padding:12px 14px;cursor:pointer}
+.week-switch__btn b{display:block;font-family:var(--font-mono);font-size:12px;letter-spacing:.08em}
+.week-switch__btn span{display:block;margin-top:6px;font-size:13px;line-height:1.3;color:var(--ink-2)}
+.week-switch__btn.is-on{background:var(--forest-800);color:#fff;border-color:var(--forest-800)}
+.week-switch__btn.is-on span{color:rgba(233,240,234,.78)}
+.week-switch__btn.is-current:not(.is-on){border-color:var(--mn-lime)}
+.week-sheet{margin-top:28px;border-top:2px solid var(--ink);padding-top:24px}
+.week-sheet__head{display:grid;grid-template-columns:1.4fr .8fr;gap:24px}
+.week-sheet__themes p{margin:0 0 8px;color:var(--ink-2)}
+.week-sheet__grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin-top:28px}
+.week-sheet__grid h3{font-size:18px;margin-bottom:8px}
+.week-sheet__grid ul{margin:0;padding-left:18px;color:var(--ink-2)}
+.week-sheet__grid li+li{margin-top:6px}
+.week-sheet__note{margin-top:18px}
+.day-board{display:grid;gap:16px;margin-top:28px}
+.day-card{border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 20px;background:var(--paper)}
+.day-card.is-today{box-shadow:inset 0 0 0 2px var(--mn-lime)}
+.day-card header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
+.day-card h3{font-size:22px}
+.day-card ol{list-style:none;margin:0;padding:0}
+.sess{display:grid;grid-template-columns:150px 1fr;gap:16px;padding:12px 0;border-top:1px solid var(--line)}
+.sess time{font-family:var(--font-mono);font-size:13px;color:var(--ink-3)}
+.sess__meta{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
+.sess__topic,.sess__who,.sess__note{margin:6px 0 0;white-space:pre-wrap}
+.sess__topic{color:var(--ink-2)}
+.sess__who{font-size:14px}
+.sess__note{font-size:13px;color:var(--ink-3)}
+@media (max-width:900px){
+  .week-sheet__head,.week-sheet__grid{grid-template-columns:1fr}
+  .sess{grid-template-columns:1fr;gap:4px}
+}

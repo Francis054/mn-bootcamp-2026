@@ -151,42 +151,50 @@ export const SAMPLE_MODULES: SampleModule[] = [
 export const SAMPLE_PHASES: SamplePhase[] = [
   {
     id: 1,
-    name: 'Foundations',
-    months: 'October',
+    name: 'Foundations & Secure Systems',
+    months: '5 Oct – 30 Oct',
     summary:
-      'How networks work, how they are defended, and the ethics and law of security testing.',
+      'Professional foundation, then cybersecurity foundations: the CIA triad, risk, threats, vulnerabilities and controls.',
     moduleIds: ['network', 'ethical'],
     publicationStatus: 'published',
     listing: 'sample',
   },
   {
     id: 2,
-    name: 'Find & analyse',
-    months: 'November',
-    summary: 'Finding weaknesses before attackers do, and reading the evidence they leave behind.',
+    name: 'Applications, Data & Cryptography',
+    months: '2 Nov – 27 Nov',
+    summary: 'Professional practice, then applications, databases and cryptography.',
     moduleIds: ['vuln', 'forensics'],
     publicationStatus: 'published',
     listing: 'sample',
   },
   {
     id: 3,
-    name: 'Respond & protect',
-    months: 'December',
-    summary: 'Handling incidents calmly and helping people around you stay safe online.',
+    name: 'Identity, Cloud, Threats & Capstone',
+    months: '30 Nov – 25 Dec',
+    summary:
+      'Career readiness, then identity, cloud, authorised vulnerability assessment, AI and the capstone.',
     moduleIds: ['incident', 'awareness'],
     publicationStatus: 'published',
     listing: 'sample',
   },
 ];
 
-const TITLES: Record<string, [string, string]> = {
-  network: ['How networks really move data', 'Firewalls, segmentation and VPNs'],
-  ethical: ['The ethical hacker’s mindset and the law', 'Reconnaissance in a safe lab'],
-  vuln: ['Scanning and prioritising vulnerabilities', 'Writing a vulnerability report'],
-  forensics: ['Evidence handling basics', 'Reading the story in a disk image'],
-  awareness: ['Spotting social engineering', 'Designing an awareness session'],
-  incident: ['The incident response lifecycle', 'Tabletop exercise: a simulated breach'],
-};
+/** Week headings from the 2026 timetable workbook. The lab text below is still a placeholder. */
+const WEEK_TITLES = [
+  'Foundations and professional orientation',
+  'TCP/IP networking',
+  'Computer systems and secure workstations',
+  'Security management, risk and governance',
+  'Application security and secure development',
+  'Database security',
+  'Cryptography and secure communications',
+  'Identity and access management',
+  'Cloud computing and cloud security',
+  'Authorised vulnerability assessment',
+  'AI and cybersecurity automations',
+  'Incident response, exam revision and capstone',
+];
 
 const OBJECTIVES: Record<string, string[]> = {
   network: [
@@ -270,16 +278,11 @@ const COVERS = [
 ];
 
 export function buildSampleLessons(): SampleLesson[] {
-  const seen: Record<string, number> = {};
   return ORDER.map((moduleId, index) => {
-    const slot = seen[moduleId] ?? 0;
-    seen[moduleId] = slot + 1;
-    const pair = TITLES[moduleId];
-    const title = pair?.[slot % 2] ?? 'Sample lesson';
     const week = index + 1;
+    const title = WEEK_TITLES[index] ?? 'Sample lesson';
     const classDate = weekStart(week);
     const schedule = scheduleFor(classDate, SAMPLE_CLOCK);
-    const moduleName = SAMPLE_MODULES.find((module) => module.id === moduleId)?.name ?? moduleId;
     return {
       id: String(week),
       week,
@@ -292,7 +295,7 @@ export function buildSampleLessons(): SampleLesson[] {
       publicationStatus: schedule === 'upcoming' ? 'scheduled' : 'published',
       listing: 'sample',
       room: 'ICT lab — to be confirmed',
-      summary: `Week ${week} of the bootcamp focuses on ${moduleName.toLowerCase()}: ${title.charAt(0).toLowerCase()}${title.slice(1)}.`,
+      summary: `Sample lesson notes for week ${week} (${title}). The daily timetable is the schedule. Objectives and the lab below are still placeholders.`,
       objectives: OBJECTIVES[moduleId] ?? [],
       lab: '# Sample lab steps\n1. Start the isolated lab VM\n2. Follow the trainer walkthrough\n3. Record findings in your notebook',
       codeSample: CODE[moduleId] ?? '',
