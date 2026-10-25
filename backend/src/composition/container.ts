@@ -56,6 +56,8 @@ import { UserEntity } from '../modules/users/user.entity.js';
 import { UserRepository } from '../modules/users/user.repository.js';
 import { UserService } from '../modules/users/user.service.js';
 import { HealthService } from '../modules/health/health.service.js';
+import { TimetableRepository } from '../modules/timetable/timetable.repository.js';
+import { TimetableService } from '../modules/timetable/timetable.service.js';
 import { createLogger, type AppLogger } from '../shared/logging/logger.js';
 import type { Router } from 'express';
 import type { DataSource } from 'typeorm';
@@ -92,6 +94,7 @@ export class AppContainer {
     mail: EmailProvider,
     accounts: AccountService,
     enquiries: EnquiryService,
+    timetable: TimetableService,
   ) {
     this.health = new HealthService(dataSource, logger);
     this.users = users;
@@ -113,6 +116,7 @@ export class AppContainer {
       enquiries,
       workPhotos,
       storage,
+      timetable,
     );
   }
 
@@ -241,6 +245,7 @@ export class AppContainer {
       storage,
       env.uploadMaxBytes,
     );
+    const timetable = new TimetableService(new TimetableRepository(dataSource), audit);
     return new AppContainer(
       env,
       logger,
@@ -260,6 +265,7 @@ export class AppContainer {
       mail,
       accounts,
       enquiries,
+      timetable,
     );
   }
 

@@ -48,7 +48,7 @@ export function OverviewPage() {
         </div>
       </div>
       <div className="a-stats">
-        <div className="a-stat a-stat--dark"><div className="a-stat__top">Cohort progress<span className="a-stat__ic"><Icon name="flag" className="i--sm" /></span></div><b>Week {week}</b><small>of 12 (plan TBC)</small><div className="mini-bar"><span style={{ width: `${(week / 12) * 100}%` }} /></div></div>
+        <div className="a-stat a-stat--dark"><div className="a-stat__top">Cohort progress<span className="a-stat__ic"><Icon name="flag" className="i--sm" /></span></div><b>Week {week}</b><small>of 12 · 5 Oct – 25 Dec 2026</small><div className="mini-bar"><span style={{ width: `${(week / 12) * 100}%` }} /></div></div>
         <div className="a-stat"><div className="a-stat__top">Classes past week 1<span className="a-stat__ic"><Icon name="book" className="i--sm" /></span></div><b>{published}</b><small>Sample count</small></div>
         <div className="a-stat"><div className="a-stat__top">Trainee profiles<span className="a-stat__ic"><Icon name="users" className="i--sm" /></span></div><b>{trainees.length}</b><small>All labelled samples</small></div>
         <div className="a-stat"><div className="a-stat__top">Items needing review<span className="a-stat__ic"><Icon name="alert" className="i--sm" /></span></div><b>{review}</b><small>TBC events and consent records</small></div>
@@ -61,6 +61,7 @@ export function OverviewPage() {
         <section className="panel span-4">
           <div className="panel__head"><h2>Quick actions</h2></div>
           <div className="panel__body quick">
+            <Link to="/admin/classes/timetable"><Icon name="calendar" />Open the timetable</Link>
             <Link to="/admin/classes/new"><Icon name="plus" />Add a class</Link>
             <Link to="/admin/media"><Icon name="upload" />Media library</Link>
             <Link to="/admin/events/new"><Icon name="calendar" />Create event</Link>
@@ -84,7 +85,7 @@ export function OverviewPage() {
           <ul className="activity">
             <li><span className="a-ic"><Icon name="image" className="i--sm" /></span><div><b>Photo consent records</b><br /><span className="muted">The owner confirmed consent for the included photos. Individual release metadata is still a placeholder.</span></div><Link className="btn btn--ghost btn--xs" to="/admin/media">Review</Link></li>
             <li><span className="a-ic"><Icon name="calendar" className="i--sm" /></span><div><b>Hackathon details</b><br /><span className="muted">Date, venue and whether bootcamp trainees took part are to be confirmed.</span></div><Link className="btn btn--ghost btn--xs" to="/admin/events/hackathon">Edit</Link></li>
-            <li><span className="a-ic"><Icon name="book" className="i--sm" /></span><div><b>Curriculum length and order</b><br /><span className="muted">Published sources mention 12–16, 14 and 18 weeks.</span></div><Link className="btn btn--ghost btn--xs" to="/admin/timeline">Open</Link></li>
+            <li><span className="a-ic"><Icon name="book" className="i--sm" /></span><div><b>12-week timetable</b><br /><span className="muted">The workbook sets 12 weeks, from 5 October to 25 December 2026. Lesson notes are still samples.</span></div><Link className="btn btn--ghost btn--xs" to="/admin/classes/timetable">Open</Link></li>
             <li><span className="a-ic"><Icon name="award" className="i--sm" /></span><div><b>Foundation figures</b><br /><span className="muted">Permission to display the impact counters is still TBC.</span></div><Link className="btn btn--ghost btn--xs" to="/admin/about">Open</Link></li>
           </ul>
         </section>

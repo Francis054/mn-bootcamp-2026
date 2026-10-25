@@ -28,6 +28,9 @@ describe('public routes', () => {
     expect(screen.getByText('Does the bootcamp cost anything?')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /see the plan week by week/i })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /what the cohort studies/i })).not.toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /twelve weeks on the timetable/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /foundations & secure systems/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /see the timetable/i })).toBeInTheDocument();
   });
 
   it('renders the home story and verified facts', async () => {
@@ -43,7 +46,15 @@ describe('public routes', () => {
     expect(await screen.findByRole('heading', { name: /every lesson/i })).toBeInTheDocument();
     await user.click(screen.getByRole('tab', { name: 'Network' }));
     expect(screen.getByText(/of 12 classes/)).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: /how networks|firewalls/i }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: /foundations and professional orientation|tcp\/ip networking/i }).length).toBeGreaterThan(0);
+  });
+
+  it('shows the daily timetable for the current week', async () => {
+    renderAt('/schedule');
+    expect(await screen.findByRole('heading', { name: /twelve weeks/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /computer systems and secure workstations/i })).toBeInTheDocument();
+    expect(screen.getAllByText(/Morning devotion/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/25 Dec 2026/).length).toBeGreaterThan(0);
   });
 
   it('shows a not-found state for an unknown lesson', async () => {
