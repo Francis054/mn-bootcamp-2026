@@ -5,12 +5,6 @@ export const PUBLIC_GET_CACHE_CONTROL = 'public, max-age=60, stale-while-revalid
 
 export const PRIVATE_CACHE_CONTROL = 'no-store';
 
-/**
- * Public page reads share an address at a bootcamp. This ceiling is separate from
- * sign-in and writes so a classroom refresh cannot lock those out.
- */
-export const PUBLIC_GET_RATE_LIMIT_MAX = 5_000;
-
 export function isPublicGetPath(method: string, path: string): boolean {
   return method === 'GET' && (path === '/api/v1/public' || path.startsWith('/api/v1/public/'));
 }

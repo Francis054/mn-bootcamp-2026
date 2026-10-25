@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react';
+import { StrictMode } from 'react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { api } from '@/api/client';
 import {
@@ -7,6 +8,7 @@ import {
   isPublicCacheFresh,
   publicRequestUrl,
   readPublicCache,
+  setPublicRateLimitRetryMsForTests,
   settlePublicCache,
   writePublicCache,
 } from '@/api/publicCache';
@@ -128,6 +130,113 @@ describe('public page cache', () => {
     expect(readPublicCache<{ headline: string }>(publicRequestUrl('/public/home'))?.data.headline).toBe('Still here');
     clearPublicCache();
     expect(sessionStorage.length).toBe(0);
+  });
+
+  it('does not ask again when opening another page inside eight minutes', async () => {
+    setEnvForTests(LIVE);
+    let calls = 0;
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      calls += 1;
+      const path = String(input);
+      if (path.includes('/public/home')) return json({ headline: 'Hello' });
+      if (path.includes('/public/about')) return json({ error: { code: 'not_found', message: 'Content not found.' } }, 404);
+      return json([]);
+    }));
+    const first = render(<Probe />);
+    expect(await screen.findByRole('heading', { name: 'Hello' })).toBeInTheDocument();
+    const afterFirst = calls;
+    expect(afterFirst).toBe(9);
+    first.unmount();
+    render(<Probe />);
+    expect(await screen.findByRole('heading', { name: 'Hello' })).toBeInTheDocument();
+    expect(calls).toBe(afterFirst);
+  });
+
+  it('shares one batch when the page is mounted twice', async () => {
+    setEnvForTests(LIVE);
+    let calls = 0;
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      calls += 1;
+      const path = String(input);
+      if (path.includes('/public/home')) return json({ headline: 'Hello' });
+      if (path.includes('/public/about')) return json({ error: { code: 'not_found', message: 'Content not found.' } }, 404);
+      return json([]);
+    }));
+    render(<StrictMode><Probe /></StrictMode>);
+    expect(await screen.findByRole('heading', { name: 'Hello' })).toBeInTheDocument();
+    expect(calls).toBe(9);
+  });
+
+  it('retries a public read once after too many requests', async () => {
+    setEnvForTests(LIVE);
+    setPublicRateLimitRetryMsForTests(0);
+    let calls = 0;
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      calls += 1;
+      if (calls === 1) return json({ error: { code: 'rate_limited', message: 'Too many requests. Try again later.' } }, 429);
+      return json({ headline: 'Back' });
+    }));
+    await expect(api<{ headline: string }>({ method: 'GET', path: '/public/home' })).resolves.toEqual({ headline: 'Back' });
+    expect(calls).toBe(2);
+  });
+
+  it('shows the page after one retry when nothing was saved yet', async () => {
+    setEnvForTests(LIVE);
+    setPublicRateLimitRetryMsForTests(0);
+    const seen = new Map<string, number>();
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const path = String(input);
+      const count = (seen.get(path) ?? 0) + 1;
+      seen.set(path, count);
+      if (path.includes('/public/home') && count === 1) {
+        return json({ error: { code: 'rate_limited', message: 'Too many requests. Try again later.' } }, 429);
+      }
+      if (path.includes('/public/home')) return json({ headline: 'Back online' });
+      if (path.includes('/public/about')) return json({ error: { code: 'not_found', message: 'Content not found.' } }, 404);
+      return json([]);
+    }));
+    render(<Probe />);
+    expect(await screen.findByRole('heading', { name: 'Back online' })).toBeInTheDocument();
+    expect(screen.queryByText(/too many requests/i)).not.toBeInTheDocument();
+  });
+
+  it('keeps the saved page when the server still says too many requests', async () => {
+    setEnvForTests(LIVE);
+    setPublicRateLimitRetryMsForTests(0);
+    const url = publicRequestUrl('/public/home');
+    writePublicCache(url, { headline: 'Saved headline' }, Date.now() - PUBLIC_CACHE_FRESH_MS - 1);
+    let homeCalls = 0;
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const path = String(input);
+      if (path.includes('/public/home')) {
+        homeCalls += 1;
+        return json({ error: { code: 'rate_limited', message: 'Too many requests. Try again later.' } }, 429);
+      }
+      if (path.includes('/public/about')) return json({ error: { code: 'not_found', message: 'Content not found.' } }, 404);
+      return json([]);
+    }));
+    render(<Probe />);
+    expect(screen.getByRole('heading', { name: 'Saved headline' })).toBeInTheDocument();
+    await waitFor(() => expect(homeCalls).toBe(2));
+    await settlePublicCache(url);
+    expect(screen.getByRole('heading', { name: 'Saved headline' })).toBeInTheDocument();
+    expect(screen.queryByText(/too many requests/i)).not.toBeInTheDocument();
+  });
+
+  it('tries twice and then shows the rate-limit message when nothing is saved', async () => {
+    setEnvForTests(LIVE);
+    setPublicRateLimitRetryMsForTests(0);
+    const seen = new Map<string, number>();
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const path = String(input);
+      seen.set(path, (seen.get(path) ?? 0) + 1);
+      return json({ error: { code: 'rate_limited', message: 'Too many requests. Try again later.' } }, 429);
+    }));
+    render(<Probe />);
+    expect(await screen.findByText('Too many requests. Try again later.')).toBeInTheDocument();
+    const homeCalls = [...seen.entries()].filter(([path]) => path.includes('/public/home')).reduce((sum, [, count]) => sum + count, 0);
+    expect(homeCalls).toBe(2);
+    expect([...seen.values()].reduce((sum, count) => sum + count, 0)).toBe(18);
   });
 
   it('shows an error only when there is nothing saved to fall back on', async () => {
