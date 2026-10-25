@@ -1,5 +1,6 @@
 import { cloneElement, isValidElement, useEffect, useRef, useState, type FormEvent, type ReactElement, type ReactNode, type Ref } from 'react';
 import { usesMockApi } from '@/config/runtime';
+import { Loader } from './Loader';
 import { Icon, type IconName } from './Icon';
 
 export function Tabs({ label, value, onChange, tabs }: { label: string; value: string; onChange: (id: string) => void; tabs: Array<{ id: string; label: string }> }) {
@@ -95,13 +96,38 @@ export function jumpToField(event: { preventDefault: () => void }, id: string) {
   node?.focus();
 }
 
+export function BusyButton({
+  pending,
+  children,
+  busyLabel,
+  className = 'btn btn--sm',
+  type = 'button',
+  disabled,
+  onClick,
+}: {
+  pending: boolean;
+  children: ReactNode;
+  busyLabel: string;
+  className?: string;
+  type?: 'button' | 'submit';
+  disabled?: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <button className={`${className}${pending ? ' is-loading' : ''}`} type={type} disabled={disabled ?? pending} aria-busy={pending || undefined} onClick={onClick}>
+      {pending ? <Loader variant="inline" label={busyLabel} /> : null}
+      {children}
+    </button>
+  );
+}
+
 export function SaveBar({ dirty, pending, onCancel, label = 'Save', extra }: { dirty: boolean; pending: boolean; onCancel?: string; label?: string; extra?: ReactNode }) {
   return (
     <div className={`savebar${dirty ? ' is-dirty' : ''}`}>
       <span className="status">{dirty ? 'Unsaved changes' : usesMockApi() ? 'Held in the development adapter · not sent to a server' : 'Saved through the API'}</span>
       {onCancel ? <a className="btn btn--ghost btn--sm" href={onCancel}>Cancel</a> : null}
       {extra}
-      <button className={`btn btn--dark btn--sm${pending ? ' is-loading' : ''}`} type="submit" disabled={pending}>{label}</button>
+      <BusyButton pending={pending} type="submit" className="btn btn--dark btn--sm" busyLabel="Saving">{label}</BusyButton>
     </div>
   );
 }
@@ -110,8 +136,8 @@ export function PublishActions({ status, pending, onPublish, onUnpublish }: { st
   return (
     <>
       <span className="badge">{status === 'published' ? 'Published' : 'Draft'}</span>
-      <button className="btn btn--sm" type="button" disabled={pending} onClick={onPublish}>Publish</button>
-      <button className="btn btn--ghost btn--sm" type="button" disabled={pending || status !== 'published'} onClick={onUnpublish}>Unpublish</button>
+      <BusyButton pending={pending} className="btn btn--sm" busyLabel="Publishing" onClick={onPublish}>Publish</BusyButton>
+      <BusyButton pending={pending} className="btn btn--ghost btn--sm" busyLabel="Updating" disabled={pending || status !== 'published'} onClick={onUnpublish}>Unpublish</BusyButton>
     </>
   );
 }

@@ -10,6 +10,7 @@ import './styles/components.css';
 import './styles/pages.css';
 import './styles/admin.css';
 import './styles/app.css';
+import './styles/loader.css';
 
 document.documentElement.classList.add('js');
 
