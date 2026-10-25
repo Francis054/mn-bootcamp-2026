@@ -11,6 +11,7 @@ import type { BootcampEvent, Lesson, Project, PublicationStatus, Trainee } from 
 import { isApiError } from '@/domain/types';
 import { classFieldErrors, eventFieldErrors, projectFieldErrors, traineeFieldErrors, withConsentField, withPhaseOnWeek } from '@/domain/adminFields';
 import { useAsync } from '@/hooks/useAsync';
+import { ProfilePhotoField, useProfilePhoto } from './ProfilePhotoField';
 import { selectedIds, useAllPages, useMediaOptions, useModules, withCurrent } from './options';
 
 function useEditorRecord<T extends { id: string }>(path: string, id: string | undefined) {
@@ -19,7 +20,7 @@ function useEditorRecord<T extends { id: string }>(path: string, id: string | un
 }
 
 const CLASS_LABELS = { title: 'Title', moduleId: 'Module', week: 'Week', date: 'Date', summary: 'Summary' };
-const TRAINEE_LABELS = { displayName: 'Display name', email: 'Email', track: 'Track', focus: 'Focus', linkedin: 'LinkedIn', portfolio: 'Portfolio', consentReceived: 'Consent', publicationStatus: 'Workflow' };
+const TRAINEE_LABELS = { displayName: 'Display name', email: 'Email', track: 'Track', focus: 'Focus', linkedin: 'LinkedIn', portfolio: 'Portfolio', photoUrl: 'Profile photo', consentReceived: 'Consent', publicationStatus: 'Workflow' };
 const PROJECT_LABELS = { title: 'Title', type: 'Type', moduleId: 'Module', abstract: 'Abstract', repositoryUrl: 'Repository URL', demoUrl: 'Demo URL', traineeIds: 'Trainees', lessonIds: 'Classes' };
 const EVENT_LABELS = { title: 'Title', date: 'Date', place: 'Place', summary: 'Summary', startTime: 'Start time', endTime: 'End time', sourceUrl: 'Source URL', lessonIds: 'Classes', projectIds: 'Projects', mediaIds: 'Photos' };
 
@@ -161,9 +162,11 @@ function TraineeForm({ initial }: { initial: Trainee | null }) {
   const classes = useAllPages<Lesson>('/admin/classes');
   const [pending, setPending] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const [displayName, setDisplayName] = useState(initial?.displayName ?? '');
   const formRef = useRef<HTMLFormElement>(null);
   const modeRef = useRef<'save' | 'publish'>('save');
   const writable = auth.allowed('content.write');
+  const photo = useProfilePhoto(initial?.photoUrl ?? null);
   useEffect(() => bindBeforeUnload(dirty), [dirty]);
   const read = (form: HTMLFormElement) => {
     const data = Object.fromEntries(new FormData(form));
@@ -181,7 +184,9 @@ function TraineeForm({ initial }: { initial: Trainee | null }) {
   const save = async (form: HTMLFormElement, publish: boolean) => {
     modeRef.current = publish ? 'publish' : 'save';
     const values = read(form);
-    if (!admin.block(traineeFieldErrors(values, modeRef.current))) return;
+    const problems = traineeFieldErrors(values, modeRef.current);
+    if (photo.problem) problems.photoUrl = photo.problem;
+    if (!admin.block(problems)) return;
     const data = Object.fromEntries(new FormData(form));
     let listing = String(data.listing ?? 'sample');
     if (publish && listing === 'hidden') listing = 'public';
@@ -204,11 +209,18 @@ function TraineeForm({ initial }: { initial: Trainee | null }) {
     };
     setPending(true);
     try {
+      const prepared = await photo.prepare(async (file) => {
+        const payload = new FormData();
+        payload.set('file', file);
+        return api<{ photoUrl: string; storageKey: string }>({ method: 'POST', path: '/admin/trainees/photo', body: payload });
+      });
       const saved = initial
-        ? await api<Trainee>({ method: 'PATCH', path: `/admin/trainees/${initial.id}`, body })
-        : await api<Trainee>({ method: 'POST', path: '/admin/trainees', body });
+        ? await api<Trainee>({ method: 'PATCH', path: `/admin/trainees/${initial.id}`, body: { ...body, ...prepared } })
+        : await api<Trainee>({ method: 'POST', path: '/admin/trainees', body: { ...body, ...prepared } });
       if (publish) await api({ method: 'POST', path: `/admin/trainees/${saved.id}/publish` });
       toast(publish ? 'Profile published' : 'Profile saved', publish ? 'The public trainees page can show this profile.' : 'LinkedIn and portfolio can stay empty.');
+      photo.finish(saved.photoUrl ?? null);
+      setDisplayName(saved.displayName);
       setDirty(false);
       admin.setErrors({});
       navigate(`/admin/trainees/${saved.id}`);
@@ -218,11 +230,20 @@ function TraineeForm({ initial }: { initial: Trainee | null }) {
     } finally { setPending(false); }
   };
   return (
-    <form ref={formRef} onSubmit={(event) => { event.preventDefault(); void save(event.currentTarget, false); }} onChange={(event) => { setDirty(true); const id = eventTargetId(event.target); if (!id || !formRef.current) return; const problems = traineeFieldErrors(read(formRef.current), modeRef.current); admin.clearFixed(id, problems[id]); if (id === 'consentReceived') admin.clearFixed('publicationStatus', problems.publicationStatus); }} noValidate>
+    <form ref={formRef} onSubmit={(event) => { event.preventDefault(); void save(event.currentTarget, false); }} onChange={(event) => { setDirty(true); const id = eventTargetId(event.target); if (id === 'displayName' && event.target instanceof HTMLInputElement) setDisplayName(event.target.value); if (!id || !formRef.current) return; const problems = traineeFieldErrors(read(formRef.current), modeRef.current); admin.clearFixed(id, problems[id]); if (id === 'consentReceived') admin.clearFixed('publicationStatus', problems.publicationStatus); }} noValidate>
       <div className="a-head"><div><h1>{initial ? initial.displayName : 'New trainee'}</h1><p>Do not enter a real person’s name. Samples only until consent exists.</p></div>{initial ? <Link className="btn btn--ghost btn--sm" to={isApiPublic(initial) ? `/trainees/${initial.id}` : `/admin/trainees/${initial.id}`}>Preview</Link> : null}</div>
       <FormLegend />
       <ErrorSummary errors={admin.errors} labels={TRAINEE_LABELS} summaryRef={admin.summaryRef} />
       <div className="form-grid">
+        <ProfilePhotoField
+          preview={photo.preview}
+          displayName={displayName}
+          error={admin.errors.photoUrl ?? photo.problem}
+          disabled={!writable}
+          inputRef={photo.inputRef}
+          onFile={(file) => { setDirty(true); void photo.onFile(file).then(() => admin.clearFixed('photoUrl', undefined)); }}
+          onRemove={() => { setDirty(true); photo.remove(); admin.clearFixed('photoUrl', undefined); }}
+        />
         <Field id="displayName" label="Display name" required error={admin.errors.displayName}><input className="input" id="displayName" name="displayName" defaultValue={initial?.displayName ?? ''} disabled={!writable} /></Field>
         <Field id="email" label="Email" required error={admin.errors.email} hint="Private. Stripped from the public profile."><input className="input" id="email" name="email" type="email" defaultValue={initial?.email ?? ''} disabled={!writable} /></Field>
         <Field id="track" label="Track" required error={admin.errors.track}><select className="select" id="track" name="track" defaultValue={initial?.track ?? 'Blue team'} disabled={!writable}><option>Blue team</option><option>Red team</option><option>GRC & Awareness</option></select></Field>

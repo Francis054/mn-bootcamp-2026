@@ -16,10 +16,12 @@ import { postgresCode, postgresConstraint } from '../../shared/persistence/postg
 import { hueFromEmail, initialsFrom } from '../users/profile.js';
 import type { TraineeListQuery, TraineeSort } from './list-query.js';
 import { toPublicTrainee, type PublicTrainee, type TraineeRecord } from './records.js';
+import { storeProfilePhoto } from './profile-photo.js';
 import type { TraineeCreateDto, TraineePatchDto } from './trainee.dto.js';
 import type { TraineeEntity } from './trainee.entity.js';
 import type { TraineeRepository } from './trainee.repository.js';
-import { normalizeEmail } from './trainee.rules.js';
+import { normalizeEmail, photoPairMessage } from './trainee.rules.js';
+import type { StorageProvider } from '../storage/storage-provider.js';
 import { isTraineeTrack } from './tracks.js';
 import { CONSENT_REQUIRED, consentWrite, isPublicTrainee } from './visibility.js';
 
@@ -30,6 +32,8 @@ export class TraineeService {
     private readonly lessons: { findById(id: string): Promise<{ id: string } | null> },
     private readonly projects: { countByTrainee(traineeId: string): Promise<number> },
     private readonly audit: AuditRepository,
+    private readonly storage: StorageProvider,
+    private readonly maxBytes: number,
     private readonly now: () => Date = () => new Date(),
   ) {}
 
@@ -98,6 +102,7 @@ export class TraineeService {
       requestedStatus,
     });
     if (decision === 'refused') throw consentRefusal();
+    const photo = this.photoForCreate(dto);
     const saved = await this.insert({
       id: randomUUID(),
       displayName,
@@ -111,6 +116,8 @@ export class TraineeService {
       quote: dto.quote ?? '',
       linkedin: storedLink(dto.linkedin),
       portfolio: storedLink(dto.portfolio),
+      photoUrl: photo.photoUrl,
+      photoStorageKey: photo.photoStorageKey,
       consentReceived,
       consentReceivedAt: consentReceived ? this.now() : null,
       consentRecordedBy: consentReceived ? actor.userId : null,
@@ -194,11 +201,17 @@ export class TraineeService {
       current.linksShareConsentWithdrawnAt = this.now();
     }
     current.linksShareConsent = nextLinks;
+    const dropKey = this.planPhoto(current, patch);
     const saved = await this.save(current);
     if (patch.lessonIds !== undefined) await this.trainees.replaceLessons(saved.id, lessonIds);
     const verb: CurriculumVerb = decision.withdrawing && wasPublished ? 'unpublished' : 'updated';
     await this.writeAudit(actor, verb, saved.id);
+    if (dropKey) await this.removeStored(dropKey);
     return this.present(saved);
+  }
+
+  storePhoto(bytes: Buffer): Promise<{ photoUrl: string; storageKey: string }> {
+    return storeProfilePhoto(bytes, this.storage, this.maxBytes);
   }
 
   async publish(id: string, actor: Actor): Promise<TraineeRecord> {
@@ -230,8 +243,10 @@ export class TraineeService {
         'That trainee is still listed on a project. Remove them there first.',
       );
     }
+    const dropKey = current.photoStorageKey;
     await this.trainees.remove(current);
     await this.writeAudit(actor, 'deleted', id);
+    if (dropKey) await this.removeStored(dropKey);
     return { deleted: true, id };
   }
 
@@ -306,6 +321,8 @@ export class TraineeService {
       quote: row.quote,
       linkedin: row.linkedin,
       portfolio: row.portfolio,
+      photoUrl: row.photoUrl,
+      photoStorageKey: row.photoStorageKey,
       consentReceived: row.consentReceived,
       consentReceivedAt: stamp(row.consentReceivedAt),
       consentRecordedBy: row.consentRecordedBy,
@@ -332,6 +349,53 @@ export class TraineeService {
       subjectType: 'trainee',
       subjectId: id,
     });
+  }
+
+  private photoForCreate(dto: TraineeCreateDto): {
+    photoUrl: string | null;
+    photoStorageKey: string | null;
+  } {
+    const photoUrl = dto.photoUrl ?? null;
+    if (!photoUrl) return { photoUrl: null, photoStorageKey: null };
+    const photoStorageKey = dto.photoStorageKey?.trim() ?? '';
+    const problem = photoPairMessage(photoUrl, photoStorageKey);
+    if (problem) {
+      throw new ApiError('validation', 'Check the highlighted fields.', { photoUrl: problem });
+    }
+    return { photoUrl, photoStorageKey };
+  }
+
+  /** Apply a photo change and return the previous key that should be deleted after the save. */
+  private planPhoto(current: TraineeEntity, patch: TraineePatchDto): string | null {
+    if (patch.photoUrl === undefined) return null;
+    if (patch.photoUrl === null) {
+      const previous = current.photoStorageKey;
+      current.photoUrl = null;
+      current.photoStorageKey = null;
+      return previous;
+    }
+    const key = patch.photoStorageKey?.trim() ?? '';
+    const problem = photoPairMessage(patch.photoUrl, key);
+    if (problem) {
+      throw new ApiError('validation', 'Check the highlighted fields.', { photoUrl: problem });
+    }
+    const previous = current.photoStorageKey;
+    if (patch.photoUrl === current.photoUrl && key === (previous ?? '')) return null;
+    current.photoUrl = patch.photoUrl;
+    current.photoStorageKey = key;
+    return previous && previous !== key ? previous : null;
+  }
+
+  private async removeStored(key: string): Promise<void> {
+    try {
+      await this.storage.delete(key);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+      if (message === 'Image storage is not configured.') {
+        throw new ApiError('server', 'Image storage is not configured.');
+      }
+      throw new ApiError('server', 'The previous photo could not be removed.');
+    }
   }
 }
 

@@ -160,6 +160,8 @@
 .tcard__art::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,transparent 0 14px,rgba(255,255,255,.35) 14px 15px)}
 .tcard__art .avatar{width:44%;height:auto;aspect-ratio:1;font-size:clamp(28px,3vw,42px);box-shadow:0 0 0 8px rgba(255,255,255,.5)}
 .tcard__art .ph{position:absolute;top:12px;left:12px}
+.tcard__art .trainee-photo,.profile-art .trainee-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+.tcard__art:has(.trainee-photo)::before,.profile-art:has(.trainee-photo)::before{content:none}
 .tcard__body{padding:var(--s-5)}
 .tcard__body h3{font-size:19px;letter-spacing:-.02em}
 .tcard__body p{font-size:14px;color:var(--ink-3);margin-top:4px}

@@ -107,6 +107,7 @@ export class AppContainer {
       sessions,
       accounts,
       enquiries,
+      storage,
     );
   }
 
@@ -192,12 +193,15 @@ export class AppContainer {
       audit,
       accraToday,
     );
+    const storage = createStorage(env);
     const traineeService = new TraineeService(
       traineeRepository,
       moduleRepository,
       lessonRepository,
       projectRepository,
       audit,
+      storage,
+      env.uploadMaxBytes,
     );
     const projectService = new ProjectService(
       projectRepository,
@@ -217,7 +221,6 @@ export class AppContainer {
       () => new Date(),
     );
     const contentService = new ContentService(contentRepository, audit);
-    const storage = createStorage(env);
     const mediaService = new MediaService(
       mediaRepository,
       audit,

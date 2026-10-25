@@ -12,6 +12,8 @@ import {
   lessonIdsMessage,
   listingMessage,
   optionalHttpUrlMessage,
+  photoStorageKeyMessage,
+  photoUrlMessage,
   plainTextMessage,
   publicationMessage,
   skillsMessage,
@@ -86,6 +88,16 @@ export class TraineeCreateDto {
   @Transform(blankLink)
   @rule('portfolio', optionalHttpUrlMessage, 'Enter a full link starting with https://')
   portfolio?: string | null;
+
+  @IsOptional()
+  @Transform(blankLink)
+  @rule('photoUrl', photoUrlMessage, 'Use a JPEG, PNG, or WebP image.')
+  photoUrl?: string | null;
+
+  @IsOptional()
+  @Transform(blankLink)
+  @rule('photoStorageKey', photoStorageKeyMessage, 'Use a JPEG, PNG, or WebP image.')
+  photoStorageKey?: string | null;
 
   @IsOptional()
   @Transform(trimIdList)
@@ -169,6 +181,16 @@ export class TraineePatchDto {
   @Transform(blankLink)
   @rule('portfolio', optionalHttpUrlMessage, 'Enter a full link starting with https://')
   portfolio?: string | null;
+
+  @IsOptional()
+  @Transform(blankLink)
+  @rule('photoUrl', photoUrlMessage, 'Use a JPEG, PNG, or WebP image.')
+  photoUrl?: string | null;
+
+  @IsOptional()
+  @Transform(blankLink)
+  @rule('photoStorageKey', photoStorageKeyMessage, 'Use a JPEG, PNG, or WebP image.')
+  photoStorageKey?: string | null;
 
   @IsOptional()
   @Transform(trimIdList)

@@ -71,6 +71,7 @@ export interface Trainee {
   quote: string;
   linkedin: string | null;
   portfolio: string | null;
+  photoUrl: string | null;
   consentReceived: boolean;
   listing: Listing;
   publicationStatus: PublicationStatus;

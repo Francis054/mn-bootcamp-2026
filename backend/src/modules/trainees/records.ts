@@ -18,6 +18,9 @@ export interface TraineeRecord {
   quote: string;
   linkedin: string | null;
   portfolio: string | null;
+  photoUrl: string | null;
+  /** Absent from the public profile. Used only to delete the stored object. */
+  photoStorageKey: string | null;
   consentReceived: boolean;
   consentReceivedAt: string | null;
   consentRecordedBy: string | null;
@@ -45,6 +48,7 @@ export interface PublicTrainee {
   skills: string[];
   bio: string;
   quote: string;
+  photoUrl: string | null;
   listing: Listing;
   publicationStatus: PublicationStatus;
   statusLabel: string;
@@ -61,6 +65,7 @@ export function toPublicTrainee(row: TraineeRecord): PublicTrainee {
     skills: row.skills,
     bio: row.bio,
     quote: row.quote,
+    photoUrl: row.photoUrl,
     listing: row.listing,
     publicationStatus: row.publicationStatus,
     statusLabel: row.statusLabel,

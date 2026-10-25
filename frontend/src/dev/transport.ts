@@ -3,6 +3,7 @@ import { ApiError, type ApiErrorCode, type BootcampEvent, type Lesson, type List
 import { can } from '@/domain/permissions';
 import { isPubliclyListable } from '@/domain/publish';
 import { includesQuery, newId, paginate, scheduleFor, slugify } from '@/domain/format';
+import { displayPhotoUrl, profilePhotoFileProblem, readFileBytes, sniffedPhotoMime, type ProfilePhotoMime } from '@/domain/photo';
 import { collect, emailAddress, httpUrl, minLength, required } from '@/domain/validate';
 import { currentEnv } from '@/config/runtime';
 import type { ApiRequest } from '@/api/liveTransport';
@@ -127,9 +128,40 @@ export async function devTransport<T>(req: ApiRequest): Promise<T> {
   takeArmed();
   const path = req.path.split('?')[0] || '/';
   const method = req.method;
+  if (method === 'POST' && path === '/admin/trainees/photo') {
+    return (await storeTraineePhoto(req.body)) as T;
+  }
   const query = (req.query ?? {}) as ListQuery & Record<string, string>;
   const body = formFields(req.body);
   return (await route(method, path, query, body)) as T;
+}
+
+async function storeTraineePhoto(value: unknown): Promise<{ photoUrl: string; storageKey: string }> {
+  requireUser('content.write');
+  const file = photoFile(value);
+  if (!file) fail('validation', 'Check the highlighted fields.', 422, { photoUrl: 'Choose an image.' });
+  const sizeProblem = profilePhotoFileProblem(file);
+  if (sizeProblem) fail('validation', 'Check the highlighted fields.', 422, { photoUrl: sizeProblem });
+  const bytes = await readFileBytes(file);
+  const mime = sniffedPhotoMime(bytes);
+  if (!mime) fail('validation', 'Check the highlighted fields.', 422, { photoUrl: 'Use a JPEG, PNG, or WebP image.' });
+  return { photoUrl: dataUrl(bytes, mime), storageKey: 'adapter' };
+}
+
+function photoFile(value: unknown): File | null {
+  if (typeof FormData === 'undefined' || !(value instanceof FormData)) return null;
+  const item = value.get('file') ?? value.get('photo');
+  if (typeof File !== 'undefined' && item instanceof File && item.size > 0) return item;
+  return null;
+}
+
+function dataUrl(bytes: Uint8Array, mime: ProfilePhotoMime): string {
+  let binary = '';
+  const chunk = 0x8000;
+  for (let index = 0; index < bytes.length; index += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + chunk));
+  }
+  return `data:${mime};base64,${btoa(binary)}`;
 }
 
 function formFields(value: unknown): Record<string, unknown> {
@@ -507,6 +539,7 @@ function traineeBody(input: Record<string, unknown>, current?: Trainee): Trainee
     quote: String(input.quote ?? current?.quote ?? ''),
     linkedin: linkValue(input.linkedin, current?.linkedin).stored,
     portfolio: linkValue(input.portfolio, current?.portfolio).stored,
+    photoUrl: storedPhoto(input.photoUrl, current?.photoUrl ?? null),
     consentReceived,
     listing,
     publicationStatus,
@@ -514,6 +547,23 @@ function traineeBody(input: Record<string, unknown>, current?: Trainee): Trainee
     lessonIds: idList(input.lessonIds, current?.lessonIds),
     internalNotes: String(input.internalNotes ?? current?.internalNotes ?? ''),
   };
+}
+
+function storedPhoto(value: unknown, current: string | null): string | null {
+  if (value === undefined) return current;
+  if (value === null) return null;
+  if (typeof value !== 'string') {
+    assertFields({ photoUrl: 'Use a JPEG, PNG, or WebP image.' });
+    return current;
+  }
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const stored = displayPhotoUrl(trimmed);
+  if (!stored) {
+    assertFields({ photoUrl: 'Use a JPEG, PNG, or WebP image.' });
+    return current;
+  }
+  return stored;
 }
 
 function patchTrainee(id: string, body: Record<string, unknown>) {
