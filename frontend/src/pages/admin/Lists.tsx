@@ -5,6 +5,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { Icon } from '@/components/Icon';
 import { EmptyState, ErrorState, LoadingRows, StatusBadge, useConfirm, useToast } from '@/components/feedback';
 import { usePageMeta } from '@/components/SiteChrome';
+import { usesMockApi } from '@/config/runtime';
 import { MODULES, moduleName } from '@/dev/fixtures';
 import { formatDate } from '@/domain/format';
 import { isApiPublic } from '@/domain/publish';
@@ -110,7 +111,7 @@ function ListShell({ title, text, newTo, count, loading, error, onRetry, childre
       <section className="panel">
         {loading ? <LoadingRows /> : null}
         {error ? <ErrorState title="Could not load this list" text={error} onRetry={onRetry} /> : children}
-        <div className="panel__foot"><span>{count ?? 0} records in the development adapter</span></div>
+        <div className="panel__foot"><span>{count ?? 0} {usesMockApi() ? 'records in the development adapter' : 'records'}</span></div>
       </section>
     </>
   );
@@ -130,11 +131,11 @@ function RowActions({ preview, edit, removePath, onDone }: { preview: string; ed
   const confirm = useConfirm();
   const toast = useToast();
   const remove = async () => {
-    const ok = await confirm({ title: 'Delete this record?', text: 'It will disappear from the development adapter. A backend would have to delete it again.', danger: true });
+    const ok = await confirm({ title: 'Delete this record?', text: usesMockApi() ? 'It will disappear from the development adapter.' : 'It will be deleted from the API and disappear from the public site if it was published.', danger: true });
     if (!ok) return;
     try {
       await api({ method: 'DELETE', path: removePath });
-      toast('Deleted', 'Removed from the development adapter.');
+      toast('Deleted', usesMockApi() ? 'Removed from the development adapter.' : 'Removed from the API.');
       onDone();
     } catch (error) {
       toast('Could not delete', isApiError(error) ? error.message : 'Request failed.', 'error');
@@ -150,12 +151,12 @@ function BulkBar({ path, ids, onDone }: { path: string; ids: string[]; onDone: (
   if (!ids.length || !auth.allowed('content.write')) return null;
   const run = async (action: 'publish' | 'delete') => {
     if (action === 'delete') {
-      const ok = await confirm({ title: 'Delete selected records?', text: 'This removes them from the development adapter only. Nothing is sent to a server.', ok: 'Delete', danger: true });
+      const ok = await confirm({ title: 'Delete selected records?', text: usesMockApi() ? 'This removes them from the development adapter only.' : 'This deletes them from the API.', ok: 'Delete', danger: true });
       if (!ok) return;
     }
     try {
       await api({ method: 'POST', path, body: { ids, action } });
-      toast(action === 'publish' ? 'Marked published' : 'Deleted', 'Updated in the development adapter.');
+      toast(action === 'publish' ? 'Marked published' : 'Deleted', usesMockApi() ? 'Updated in the development adapter.' : 'Updated in the API.');
       onDone();
     } catch (error) {
       toast('Could not update', isApiError(error) ? error.message : 'Request failed.', 'error');

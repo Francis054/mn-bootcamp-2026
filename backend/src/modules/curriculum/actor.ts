@@ -1,5 +1,9 @@
+import type { Role } from '../users/role.js';
+
 export interface Actor {
   userId: string | null;
+  /** Present on media routes so an administrator can consent and publish together. */
+  role?: Role | null;
   ip: string | null;
   requestId: string | null;
 }

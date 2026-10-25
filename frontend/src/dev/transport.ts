@@ -39,6 +39,22 @@ function assertFields(fieldErrors: Record<string, string>): void {
   if (Object.keys(fieldErrors).length) fail('validation', 'Check the highlighted fields.', 422, fieldErrors);
 }
 
+function requireAny(permissions: readonly Permission[]) {
+  const session = readActiveSession();
+  if (!session) {
+    fail('unauthenticated', 'Sign in to continue. Production authentication is not connected.', 401);
+  }
+  const record = getState().users.find((user) => user.id === session.user.id);
+  if (!record) {
+    clearSession();
+    fail('unauthenticated', 'This development session is no longer valid.', 401);
+  }
+  if (!permissions.some((permission) => can(record.role, permission))) {
+    fail('forbidden', 'Your role cannot perform this action. The development adapter refused it.', 403);
+  }
+  return record;
+}
+
 function requireUser(permission: Permission) {
   const session = readActiveSession();
   if (!session) {
@@ -112,8 +128,19 @@ export async function devTransport<T>(req: ApiRequest): Promise<T> {
   const path = req.path.split('?')[0] || '/';
   const method = req.method;
   const query = (req.query ?? {}) as ListQuery & Record<string, string>;
-  const body = (req.body ?? {}) as Record<string, unknown>;
+  const body = formFields(req.body);
   return (await route(method, path, query, body)) as T;
+}
+
+function formFields(value: unknown): Record<string, unknown> {
+  if (typeof FormData !== 'undefined' && value instanceof FormData) {
+    const fields: Record<string, unknown> = {};
+    value.forEach((item, key) => {
+      if (typeof item === 'string') fields[key] = item;
+    });
+    return fields;
+  }
+  return (value ?? {}) as Record<string, unknown>;
 }
 
 async function route(method: string, path: string, query: ListQuery & Record<string, string>, body: Record<string, unknown>): Promise<unknown> {
@@ -153,41 +180,54 @@ async function route(method: string, path: string, query: ListQuery & Record<str
 
   if (method === 'GET' && path === '/admin/search') return search(String(query.q ?? ''));
   if (method === 'GET' && path === '/admin/classes') return listLessons(query);
+  if (method === 'GET' && /^\/admin\/classes\/[^/]+$/.test(path)) return adminOne(getState().lessons, id, 'Class not found.');
   if (method === 'POST' && path === '/admin/classes') return saveNew('content.write', () => updateState((s) => ({ ...s, lessons: [lessonBody(body as Partial<Lesson>), ...s.lessons] })).lessons[0]);
   if (method === 'PATCH' && path.startsWith('/admin/classes/') && !path.endsWith('/bulk')) return patchLesson(id, body);
   if (method === 'DELETE' && path.startsWith('/admin/classes/')) return remove('content.write', 'lessons', id);
   if (method === 'POST' && path === '/admin/classes/bulk') return bulk('lessons', body);
 
   if (method === 'GET' && path === '/admin/trainees') return listTrainees(query);
+  if (method === 'GET' && /^\/admin\/trainees\/[^/]+$/.test(path)) return adminOne(getState().trainees, id, 'Trainee not found.');
   if (method === 'POST' && path === '/admin/trainees') return saveNew('content.write', () => updateState((s) => ({ ...s, trainees: [traineeBody(body), ...s.trainees] })).trainees[0]);
   if (method === 'PATCH' && path.startsWith('/admin/trainees/')) return patchTrainee(id, body);
   if (method === 'DELETE' && path.startsWith('/admin/trainees/')) return remove('content.write', 'trainees', id);
   if (method === 'POST' && path === '/admin/trainees/bulk') return bulk('trainees', body);
 
   if (method === 'GET' && path === '/admin/projects') return listProjects(query);
+  if (method === 'GET' && /^\/admin\/projects\/[^/]+$/.test(path)) return adminOne(getState().projects, id, 'Project not found.');
   if (method === 'POST' && path === '/admin/projects') return saveNew('content.write', () => updateState((s) => ({ ...s, projects: [projectBody(body), ...s.projects] })).projects[0]);
   if (method === 'PATCH' && path.startsWith('/admin/projects/')) return patchProject(id, body);
   if (method === 'DELETE' && path.startsWith('/admin/projects/')) return remove('content.write', 'projects', id);
   if (method === 'POST' && path === '/admin/projects/bulk') return bulk('projects', body);
 
   if (method === 'GET' && path === '/admin/events') return listEvents(query);
+  if (method === 'GET' && /^\/admin\/events\/[^/]+$/.test(path)) return adminOne(getState().events, id, 'Event not found.');
   if (method === 'POST' && path === '/admin/events') return saveNew('content.write', () => updateState((s) => ({ ...s, events: [eventBody(body), ...s.events] })).events[0]);
   if (method === 'PATCH' && path.startsWith('/admin/events/')) return patchEvent(id, body);
   if (method === 'DELETE' && path.startsWith('/admin/events/')) return remove('content.write', 'events', id);
   if (method === 'POST' && path === '/admin/events/bulk') return bulk('events', body);
 
   if (method === 'GET' && path === '/admin/media') return getState().media;
-  if (method === 'POST' && path === '/admin/media') return saveNew('media.write', () => addMedia(body));
+  if (method === 'POST' && path === '/admin/media') return addMedia(body);
+  if (method === 'POST' && /^\/admin\/media\/[^/]+\/publish$/.test(path)) return publishMedia(id, body);
+  if (method === 'POST' && /^\/admin\/media\/[^/]+\/withdraw-consent$/.test(path)) return withdrawMedia(id);
   if (method === 'PATCH' && path.startsWith('/admin/media/')) return patchMedia(id, body);
   if (method === 'DELETE' && path.startsWith('/admin/media/')) return remove('media.write', 'media', id);
 
-  if (method === 'GET' && path === '/admin/milestones') return getState().milestones;
+  if (method === 'GET' && path === '/admin/milestones') return { milestones: getState().milestones, publicationStatus: getState().milestonePublicationStatus };
   if (method === 'PUT' && path === '/admin/milestones') return saveNew('content.write', () => updateState((s) => ({ ...s, milestones: Array.isArray(body.milestones) ? body.milestones as typeof s.milestones : s.milestones })).milestones);
 
   if (method === 'GET' && path === '/admin/about') return getState().about;
   if (method === 'PUT' && path === '/admin/about') return saveNew('content.write', () => updateState((s) => ({ ...s, about: { ...s.about, ...(body as unknown as typeof s.about) } })).about);
   if (method === 'GET' && path === '/admin/home') return getState().homepage;
-  if (method === 'PUT' && path === '/admin/home') return saveNew('content.write', () => updateState((s) => ({ ...s, homepage: { ...s.homepage, ...(body as unknown as typeof s.homepage) } })).homepage);
+  if (method === 'PUT' && path === '/admin/home') return saveNew('content.write', () => updateState((s) => ({ ...s, homepage: { ...s.homepage, ...(body as unknown as typeof s.homepage), publicationStatus: s.homepage.publicationStatus ?? 'draft' } })).homepage);
+  if (method === 'POST' && path === '/admin/home/publish') return saveNew('content.write', () => updateState((s) => ({ ...s, homepage: { ...s.homepage, publicationStatus: 'published' } })).homepage);
+  if (method === 'POST' && path === '/admin/home/unpublish') return saveNew('content.write', () => updateState((s) => ({ ...s, homepage: { ...s.homepage, publicationStatus: 'draft' } })).homepage);
+  if (method === 'POST' && path === '/admin/about/publish') return saveNew('content.write', () => updateState((s) => ({ ...s, about: { ...s.about, publicationStatus: 'published' } })).about);
+  if (method === 'POST' && path === '/admin/about/unpublish') return saveNew('content.write', () => updateState((s) => ({ ...s, about: { ...s.about, publicationStatus: 'draft' } })).about);
+  if (method === 'POST' && path === '/admin/milestones/publish') return saveNew('content.write', () => { updateState((s) => ({ ...s, milestonePublicationStatus: 'published' })); return getState().milestones; });
+  if (method === 'POST' && path === '/admin/milestones/unpublish') return saveNew('content.write', () => { updateState((s) => ({ ...s, milestonePublicationStatus: 'draft' })); return getState().milestones; });
+  if (method === 'POST' && /^\/admin\/(classes|projects|events|trainees)\/[^/]+\/publish$/.test(path)) return publishRecord(path.split('/')[2] ?? '', id);
 
   if (method === 'GET' && path === '/admin/settings') {
     requireUser('settings.manage');
@@ -201,7 +241,15 @@ async function route(method: string, path: string, query: ListQuery & Record<str
       siteName: required(siteName, 'Enter a site name.'),
       contactEmail: emailAddress(contactEmail),
     }));
-    return updateState((s) => ({ ...s, settings: { ...s.settings, ...(body as unknown as typeof s.settings), contactEmail: contactEmail.trim(), siteName: siteName.trim() } })).settings;
+    return updateState((s) => ({ ...s, settings: { ...s.settings, ...(body as unknown as typeof s.settings), contactEmail: contactEmail.trim(), siteName: siteName.trim(), publicationStatus: s.settings.publicationStatus ?? 'draft' } })).settings;
+  }
+  if (method === 'POST' && path === '/admin/settings/publish') {
+    requireUser('settings.manage');
+    return updateState((s) => ({ ...s, settings: { ...s.settings, publicationStatus: 'published' } })).settings;
+  }
+  if (method === 'POST' && path === '/admin/settings/unpublish') {
+    requireUser('settings.manage');
+    return updateState((s) => ({ ...s, settings: { ...s.settings, publicationStatus: 'draft' } })).settings;
   }
 
   if (method === 'GET' && path === '/admin/users') {
@@ -210,6 +258,12 @@ async function route(method: string, path: string, query: ListQuery & Record<str
   }
   if (method === 'PATCH' && path.startsWith('/admin/users/')) return patchUser(id, body);
   if (method === 'POST' && path === '/admin/users/invite') return invite(body);
+  if (method === 'GET' && path === '/admin/enquiries') {
+    requireUser('users.manage');
+    return getState().enquiries;
+  }
+  if (method === 'PATCH' && /^\/admin\/enquiries\/[^/]+$/.test(path)) return patchEnquiry(id, body);
+  if (method === 'DELETE' && /^\/admin\/enquiries\/[^/]+$/.test(path)) return deleteEnquiry(id);
 
   if (method === 'GET' && path === '/admin/account') {
     const user = requireUser('account.manage');
@@ -301,6 +355,30 @@ function completeReset(body: Record<string, unknown>) {
   };
 }
 
+function adminOne<T extends { id: string }>(rows: T[], itemId: string, message: string): T {
+  const item = rows.find((row) => row.id === itemId);
+  if (!item) fail('not_found', message, 404);
+  return item;
+}
+
+function patchEnquiry(id: string, body: Record<string, unknown>) {
+  requireUser('users.manage');
+  const current = getState().enquiries.find((row) => row.id === id);
+  if (!current) fail('not_found', 'Enquiry not found.', 404);
+  const handled = body.handled === true;
+  const next = { ...current, handled };
+  updateState((s) => ({ ...s, enquiries: s.enquiries.map((row) => (row.id === id ? next : row)) }));
+  return next;
+}
+
+function deleteEnquiry(id: string) {
+  requireUser('users.manage');
+  const current = getState().enquiries.find((row) => row.id === id);
+  if (!current) fail('not_found', 'Enquiry not found.', 404);
+  updateState((s) => ({ ...s, enquiries: s.enquiries.filter((row) => row.id !== id) }));
+  return { deleted: true, id };
+}
+
 function publicOne<T extends { id: string; listing: 'hidden' | 'sample' | 'public'; publicationStatus: Lesson['publicationStatus'] }, R>(rows: T[], itemId: string, map: (item: T) => R): R {
   const item = rows.find((row) => row.id === itemId);
   if (!item || !isPubliclyListable(item)) fail('not_found', 'That page is not available.', 404);
@@ -324,6 +402,8 @@ function createEnquiry(body: Record<string, unknown>) {
     topic: String(body.topic ?? 'The 2026 bootcamp'),
     message: message.trim(),
     createdAt: new Date().toISOString(),
+    handled: false,
+    notified: false,
     delivered: false as const,
   };
   updateState((s) => ({ ...s, enquiries: [record, ...s.enquiries] }));
@@ -393,8 +473,8 @@ function traineeBody(input: Record<string, unknown>, current?: Trainee): Trainee
   assertFields(collect({
     displayName: required(displayName, 'Enter a display name.'),
     email: emailAddress(email),
-    linkedin: httpUrl(String(input.linkedin ?? current?.linkedin ?? '')),
-    portfolio: httpUrl(String(input.portfolio ?? current?.portfolio ?? '')),
+    linkedin: linkValue(input.linkedin, current?.linkedin).error,
+    portfolio: linkValue(input.portfolio, current?.portfolio).error,
   }));
   const consentReceived = Boolean(input.consentReceived ?? current?.consentReceived);
   let listing = (input.listing as Trainee['listing']) ?? current?.listing ?? 'hidden';
@@ -410,8 +490,8 @@ function traineeBody(input: Record<string, unknown>, current?: Trainee): Trainee
     skills: (input.skills as string[]) ?? current?.skills ?? [],
     bio: String(input.bio ?? current?.bio ?? ''),
     quote: String(input.quote ?? current?.quote ?? ''),
-    linkedin: String(input.linkedin ?? current?.linkedin ?? ''),
-    portfolio: String(input.portfolio ?? current?.portfolio ?? ''),
+    linkedin: linkValue(input.linkedin, current?.linkedin).stored,
+    portfolio: linkValue(input.portfolio, current?.portfolio).stored,
     consentReceived,
     listing,
     publicationStatus: (input.publicationStatus as Trainee['publicationStatus']) ?? current?.publicationStatus ?? 'draft',
@@ -458,7 +538,7 @@ function projectBody(input: Record<string, unknown>, current?: Project): Project
     labOnlyConfirmed: Boolean(input.labOnlyConfirmed ?? current?.labOnlyConfirmed),
     shareAgreed: Boolean(input.shareAgreed ?? current?.shareAgreed),
     publicationStatus,
-    listing: publicationStatus === 'published' ? 'sample' : ((input.listing as Project['listing']) ?? current?.listing ?? 'hidden'),
+    listing: (input.listing as Project['listing']) ?? current?.listing ?? (publicationStatus === 'published' ? 'sample' : 'hidden'),
     internalNotes: String(input.internalNotes ?? current?.internalNotes ?? ''),
   };
 }
@@ -519,6 +599,7 @@ function patchEvent(id: string, body: Record<string, unknown>) {
 }
 
 function addMedia(body: Record<string, unknown>): MediaItem {
+  const actor = requireAny(['media.upload']);
   const alt = String(body.alt ?? '').trim();
   assertFields(collect({ alt: required(alt, 'Describe the image without naming anyone.') }));
   const item: MediaItem = {
@@ -533,9 +614,17 @@ function addMedia(body: Record<string, unknown>): MediaItem {
     consent: 'pending',
     publicationStatus: 'draft',
     listing: 'hidden',
+    uploadedBy: actor.id,
   };
   updateState((s) => ({ ...s, media: [item, ...s.media] }));
   return item;
+}
+
+function linkValue(value: unknown, fallback: string | null | undefined): { stored: string | null; error: string | null } {
+  const raw = value === undefined ? (fallback ?? '') : value === null ? '' : String(value);
+  const trimmed = raw.trim();
+  if (!trimmed) return { stored: null, error: null };
+  return { stored: trimmed, error: httpUrl(trimmed, false) };
 }
 
 function patchMedia(id: string, body: Record<string, unknown>) {
@@ -544,18 +633,68 @@ function patchMedia(id: string, body: Record<string, unknown>) {
   if (!current) fail('not_found', 'Image not found.', 404);
   const alt = String(body.alt ?? current.alt).trim();
   assertFields(collect({ alt: required(alt, 'Describe the image without naming anyone.') }));
-  const consent = body.consent === 'verified' || body.consentConfirmed === true ? 'verified' : 'pending';
+  if (body.consent === 'verified' && body.publicationStatus === 'published' && current.consent !== 'verified') {
+    fail('validation', 'Verifying consent does not publish the photo.', 422, { publicationStatus: 'Verifying consent does not publish the photo.' });
+  }
+  const consent = body.consent === 'verified' ? 'verified' : body.consent === 'pending' ? 'pending' : current.consent;
+  const publicationStatus = (body.publicationStatus as MediaItem['publicationStatus']) ?? current.publicationStatus;
+  if (publicationStatus === 'published' && consent !== 'verified') {
+    fail('validation', 'Verify consent before this photo can be published.', 422, { publicationStatus: 'Verify consent before this photo can be published.' });
+  }
   const next: MediaItem = {
     ...current,
     alt,
     caption: String(body.caption ?? alt),
     album: (body.album as MediaItem['album']) ?? current.album,
     consent,
-    listing: consent === 'verified' ? 'sample' : current.listing,
-    publicationStatus: consent === 'verified' ? 'published' : current.publicationStatus,
+    listing: (body.listing as MediaItem['listing']) ?? current.listing,
+    publicationStatus,
     src: String(body.src ?? current.src),
   };
   updateState((s) => ({ ...s, media: s.media.map((item) => (item.id === id ? next : item)) }));
+  return next;
+}
+
+function publishMedia(id: string, body: Record<string, unknown>) {
+  const actor = requireUser('media.write');
+  const current = getState().media.find((item) => item.id === id);
+  if (!current) fail('not_found', 'Image not found.', 404);
+  if (body.confirmConsent === true && actor.role !== 'administrator') {
+    fail('forbidden', 'An administrator confirms consent and publishes in one step.', 403);
+  }
+  if (current.consent === 'withdrawn') {
+    fail('validation', 'Consent was withdrawn. This photo cannot be published.', 422, { consent: 'Consent was withdrawn. This photo cannot be published.' });
+  }
+  const next: MediaItem = { ...current };
+  if (body.confirmConsent === true) next.consent = 'verified';
+  if (next.consent !== 'verified') fail('validation', 'Verify consent before this photo can be published.', 422);
+  if (typeof body.listing === 'string') next.listing = body.listing as MediaItem['listing'];
+  next.publicationStatus = 'published';
+  updateState((s) => ({ ...s, media: s.media.map((item) => (item.id === id ? next : item)) }));
+  return next;
+}
+
+function withdrawMedia(id: string) {
+  requireUser('media.write');
+  const current = getState().media.find((item) => item.id === id);
+  if (!current) fail('not_found', 'Image not found.', 404);
+  const next: MediaItem = { ...current, consent: 'withdrawn', publicationStatus: 'draft', listing: 'hidden', src: '' };
+  updateState((s) => ({ ...s, media: s.media.map((item) => (item.id === id ? next : item)) }));
+  return next;
+}
+
+function publishRecord(kind: string, id: string) {
+  requireUser('content.write');
+  const key = kind === 'projects' ? 'projects' : kind === 'events' ? 'events' : kind === 'trainees' ? 'trainees' : kind === 'classes' ? 'lessons' : '';
+  if (!key) fail('not_found', 'Record not found.', 404);
+  const rows = getState()[key];
+  const current = rows.find((row) => row.id === id);
+  if (!current) fail('not_found', 'Record not found.', 404);
+  if (key === 'trainees' && !('consentReceived' in current && current.consentReceived)) {
+    fail('validation', 'Record consent before this profile can be published.', 422, { publicationStatus: 'Record consent before this profile can be published.' });
+  }
+  const next = { ...current, publicationStatus: 'published' as const };
+  updateState((s) => ({ ...s, [key]: s[key].map((row) => (row.id === id ? next : row)) }));
   return next;
 }
 
@@ -586,7 +725,7 @@ function bulk(key: 'lessons' | 'trainees' | 'projects' | 'events', body: Record<
 function patchUser(id: string, body: Record<string, unknown>) {
   const actor = requireUser('users.manage');
   const role = String(body.role ?? '') as Role;
-  if (!['viewer', 'editor', 'administrator'].includes(role)) fail('validation', 'Choose a valid role.', 422, { role: 'Choose viewer, editor or administrator.' });
+  if (!['trainee', 'trainer', 'viewer', 'editor', 'administrator'].includes(role)) fail('validation', 'Choose a valid role.', 422, { role: 'Choose viewer, editor, trainer, trainee, or administrator.' });
   if (actor.id === id && role !== 'administrator') {
     fail('validation', 'You cannot remove your own administrator access from this session.', 422, { role: 'Ask another administrator to change your role.' });
   }

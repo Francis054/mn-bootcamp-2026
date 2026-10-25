@@ -69,13 +69,24 @@ export function ErrorSummary({ errors }: { errors: Record<string, string> }) {
   );
 }
 
-export function SaveBar({ dirty, pending, onCancel, label = 'Save' }: { dirty: boolean; pending: boolean; onCancel?: string; label?: string }) {
+export function SaveBar({ dirty, pending, onCancel, label = 'Save', extra }: { dirty: boolean; pending: boolean; onCancel?: string; label?: string; extra?: ReactNode }) {
   return (
     <div className={`savebar${dirty ? ' is-dirty' : ''}`}>
       <span className="status">{dirty ? 'Unsaved changes' : usesMockApi() ? 'Held in the development adapter · not sent to a server' : 'Saved through the API'}</span>
       {onCancel ? <a className="btn btn--ghost btn--sm" href={onCancel}>Cancel</a> : null}
+      {extra}
       <button className={`btn btn--dark btn--sm${pending ? ' is-loading' : ''}`} type="submit" disabled={pending}>{label}</button>
     </div>
+  );
+}
+
+export function PublishActions({ status, pending, onPublish, onUnpublish }: { status?: string; pending: boolean; onPublish: () => void; onUnpublish: () => void }) {
+  return (
+    <>
+      <span className="badge">{status === 'published' ? 'Published' : 'Draft'}</span>
+      <button className="btn btn--sm" type="button" disabled={pending} onClick={onPublish}>Publish</button>
+      <button className="btn btn--ghost btn--sm" type="button" disabled={pending || status !== 'published'} onClick={onUnpublish}>Unpublish</button>
+    </>
   );
 }
 

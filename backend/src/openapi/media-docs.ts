@@ -53,7 +53,7 @@ export const mediaPaths = {
       operationId: 'createMedia',
       summary: 'Add photo metadata or upload an image',
       description:
-        'Requires media.write. An editor and an administrator both have that permission. A JSON body stores metadata only and starts pending, draft, and hidden. A multipart body stores one JPEG, PNG, or WebP. The bytes are sniffed. The file name is not trusted and is not kept. The size cap is UPLOAD_MAX_BYTES, 5 MB unless the host sets another value. Verifying consent is a later edit. This request does not publish.',
+        'Requires media.upload. A trainee, a trainer, an editor, and an administrator can upload. A JSON body stores metadata only and starts pending, draft, and hidden. A multipart body stores one JPEG, PNG, or WebP. The bytes are sniffed. The file name is not trusted and is not kept. The size cap is UPLOAD_MAX_BYTES, 5 MB unless the host sets another value. Verifying consent is a later edit. This request does not publish.',
       responses: {
         '201': { description: 'Created.', content: { 'application/json': { schema: mediaRef } } },
         '401': { description: 'Sign in.', content: errorRef },
@@ -85,7 +85,7 @@ export const mediaPaths = {
       operationId: 'publishMedia',
       summary: 'Publish a photo that already has verified consent',
       description:
-        'Requires media.write. Does not change the listing. Refused while consent is pending or withdrawn.',
+        'Requires media.write. An empty body does not change the listing and is refused while consent is pending or withdrawn. An administrator may send { confirmConsent: true } to verify consent and publish together, and may send listing. Another role that sends confirmConsent is refused.',
     },
   },
   '/api/v1/admin/media/{id}/unpublish': {

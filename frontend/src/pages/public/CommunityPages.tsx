@@ -14,19 +14,19 @@ import { APP_TODAY, parseUtcDate } from '@/domain/format';
 import { isApiError } from '@/domain/types';
 import { collect, emailAddress, minLength, required } from '@/domain/validate';
 import { usePublicContent } from '@/hooks/useContent';
-import { downloadCalendar, EventRow, moduleOf, PageIntro } from './helpers';
+import { downloadCalendar, EventRow, moduleOf, PageIntro, PublicGate, SampleMark } from './helpers';
 
 export function TraineesPage() {
-  const { trainees } = usePublicContent();
+  const { trainees, loading, error } = usePublicContent();
   const [focus, setFocus] = useState('all');
   const [query, setQuery] = useState('');
   const rows = trainees.filter((trainee) => {
-    const text = `${trainee.displayName} ${trainee.skills.join(' ')} ${trainee.track}`.toLowerCase();
+    const text = `${trainee.displayName} ${(trainee.skills ?? []).join(' ')} ${trainee.track}`.toLowerCase();
     return (focus === 'all' || trainee.focus === focus) && text.includes(query.trim().toLowerCase());
   });
   return (
     <>
-      <PageIntro title="Trainees" crumbs={[{ label: 'Home', to: '/' }, { label: 'Trainees' }]} eyebrow="The 2026 cohort" headline={'Twelve sample\nprofiles.'} aside={<p className="lead">Names, photos and links appear only after each person gives consent. Every card here is a labelled placeholder.</p>} />
+      <PageIntro title="Trainees" crumbs={[{ label: 'Home', to: '/' }, { label: 'Trainees' }]} eyebrow="The 2026 cohort" headline={usesMockApi() ? 'Twelve sample\nprofiles.' : trainees.length ? 'The people\nin this cohort.' : 'Profiles after\nconsent.'} aside={<p className="lead">{usesMockApi() ? 'Names, photos and links appear only after each person gives consent. Every card here is a labelled placeholder.' : 'Names, photos and links appear only after each person gives consent and the profile is published.'}</p>} />
       <section className="section" style={{ paddingTop: 'var(--s-7)' }}>
         <div className="container">
           <div className="toolbar">
@@ -34,16 +34,18 @@ export function TraineesPage() {
             <Tabs label="Filter by focus" value={focus} onChange={setFocus} tabs={[{ id: 'all', label: 'All focuses' }, ...MODULES.map((module) => ({ id: module.id, label: module.short }))]} />
             <span className="result-count" aria-live="polite">{rows.length} profiles</span>
           </div>
-          {rows.length ? (
-            <div className="t-grid">
-              {rows.map((trainee) => (
-                <Link className="tcard" to={`/trainees/${trainee.id}`} key={trainee.id}>
-                  <div className="tcard__art" style={{ ['--h' as string]: trainee.hue }}><span className="ph">Placeholder</span><Avatar initials={trainee.initials} hue={trainee.hue} /></div>
-                  <div className="tcard__body"><h3>{trainee.displayName}</h3><p>{trainee.track} · {moduleOf(trainee.focus).short}</p><div className="tcard__tags">{trainee.skills.slice(0, 2).map((skill) => <span className="tag" key={skill}>{skill}</span>)}</div></div>
-                </Link>
-              ))}
-            </div>
-          ) : <EmptyState icon="users" title="No profiles match" text="Try another focus or clear the search." action={<button className="btn btn--ghost btn--sm" type="button" onClick={() => { setFocus('all'); setQuery(''); }}>Reset</button>} />}
+          <PublicGate loading={loading} error={error}>
+            {!loading && !error && trainees.length === 0 ? <EmptyState icon="users" title="No public profiles yet" text="A profile is listed after the person consents and an administrator publishes it." /> : rows.length ? (
+              <div className="t-grid">
+                {rows.map((trainee) => (
+                  <Link className="tcard" to={`/trainees/${trainee.id}`} key={trainee.id}>
+                    <div className="tcard__art" style={{ ['--h' as string]: trainee.hue }}><span className="ph">Placeholder</span><Avatar initials={trainee.initials} hue={trainee.hue} /></div>
+                    <div className="tcard__body"><h3>{trainee.displayName}</h3><p>{trainee.track} · {moduleOf(trainee.focus).short}</p><div className="tcard__tags">{(trainee.skills ?? []).slice(0, 2).map((skill) => <span className="tag" key={skill}>{skill}</span>)}</div></div>
+                  </Link>
+                ))}
+              </div>
+            ) : <EmptyState icon="users" title="No profiles match" text="Try another focus or clear the search." action={<button className="btn btn--ghost btn--sm" type="button" onClick={() => { setFocus('all'); setQuery(''); }}>Reset</button>} />}
+          </PublicGate>
         </div>
       </section>
     </>
@@ -52,12 +54,13 @@ export function TraineesPage() {
 
 export function TraineePage() {
   const { id = '' } = useParams();
-  const { trainees, projects, loading } = usePublicContent();
+  const { trainees, projects, loading, error } = usePublicContent();
   const trainee = trainees.find((item) => item.id === id);
   const [tab, setTab] = useState('about');
   const toast = useToast();
   usePageMeta(trainee?.displayName ?? 'Trainee');
   if (loading) return <section className="section"><div className="container"><p>Loading the published site…</p></div></section>;
+  if (error) return <section className="section"><div className="container"><ErrorState title="This profile could not be loaded" text={error} onRetry={() => window.location.reload()} /></div></section>;
   if (!trainee) return <section className="section"><div className="container"><ErrorState title="This profile is not public" text="Profiles stay hidden until they are a published record or a labelled sample. Private contact details are never sent to this page." /></div></section>;
   const related = projects.filter((project) => project.moduleId === trainee.focus).slice(0, 2);
   return (
@@ -68,7 +71,7 @@ export function TraineePage() {
           <div className="profile-head__grid" style={{ marginTop: 32 }}>
             <div className="profile-art mask-reveal is-in" style={{ ['--h' as string]: trainee.hue }}><span className="ph">Placeholder portrait</span><Avatar initials={trainee.initials} hue={trainee.hue} size="lg" /></div>
             <div>
-              <div className="flex wrap" style={{ gap: 10 }}><span className="badge badge--lime">{trainee.statusLabel}</span><span className="ph">Sample profile — placeholder</span></div>
+              <div className="flex wrap" style={{ gap: 10 }}><span className="badge badge--lime">{trainee.statusLabel}</span><SampleMark listing={trainee.listing}>Sample profile — placeholder</SampleMark></div>
               <h1 style={{ marginTop: 16 }}>{trainee.displayName}</h1>
               <p className="lead">{trainee.track} · focus on {moduleOf(trainee.focus).name}</p>
             </div>
@@ -82,8 +85,8 @@ export function TraineePage() {
       <section className="section">
         <div className="container split">
           <div className="split__a">
-            <dl className="kv"><div><dt>Track</dt><dd>{trainee.track}</dd></div><div><dt>Focus</dt><dd>{moduleOf(trainee.focus).name}</dd></div><div><dt>Consent</dt><dd>Not received · sample only</dd></div></dl>
-            <div style={{ marginTop: 24 }}><span className="label">Skills in progress</span><div className="flex wrap" style={{ gap: 8, marginTop: 12 }}>{trainee.skills.map((skill) => <span className="tag" key={skill}>{skill}</span>)}</div></div>
+            <dl className="kv"><div><dt>Track</dt><dd>{trainee.track}</dd></div><div><dt>Focus</dt><dd>{moduleOf(trainee.focus).name}</dd></div><div><dt>Consent</dt><dd>{trainee.listing === 'public' ? 'Published profile' : 'Not received · sample only'}</dd></div></dl>
+            <div style={{ marginTop: 24 }}><span className="label">Skills in progress</span><div className="flex wrap" style={{ gap: 8, marginTop: 12 }}>{(trainee.skills ?? []).map((skill) => <span className="tag" key={skill}>{skill}</span>)}</div></div>
           </div>
           <div className="split__b">
             <Tabs label="Profile sections" value={tab} onChange={setTab} tabs={[{ id: 'about', label: 'About' }, { id: 'progress', label: 'Progress' }, { id: 'work', label: 'Work' }]} />
@@ -98,13 +101,13 @@ export function TraineePage() {
 }
 
 export function ProjectsPage() {
-  const { projects } = usePublicContent();
+  const { projects, loading, error } = usePublicContent();
   const [type, setType] = useState('');
   const types = ['Lab', 'CTF', 'Case study', 'Community project', 'Capstone'];
   const rows = projects.filter((project) => !type || project.type === type);
   return (
     <>
-      <PageIntro dark title="Projects & labs" crumbs={[{ label: 'Home', to: '/' }, { label: 'Bootcamp' }, { label: 'Projects & labs' }]} eyebrow="Projects & labs" headline={'Built in the lab.\nReady for the field.'} aside={<><p className="lead">Every bootcamp includes a real-life project. These samples show how finished work will be presented.</p><span className="ph" style={{ marginTop: 16 }}>All projects are samples</span></>}>
+      <PageIntro dark title="Projects & labs" crumbs={[{ label: 'Home', to: '/' }, { label: 'Bootcamp' }, { label: 'Projects & labs' }]} eyebrow="Projects & labs" headline={'Built in the lab.\nReady for the field.'} aside={<><p className="lead">Every bootcamp includes a real-life project. Finished work appears here after it is published.</p>{projects.some((project) => project.listing !== 'public') ? <span className="ph" style={{ marginTop: 16 }}>Sample projects are labelled</span> : null}</>}>
         <Netlines />
       </PageIntro>
       <section className="section">
@@ -113,16 +116,18 @@ export function ProjectsPage() {
             <Tabs label="Filter by type" value={type} onChange={setType} tabs={[{ id: '', label: 'All' }, ...types.map((item) => ({ id: item, label: item === 'Community project' ? 'Community' : item === 'Case study' ? 'Case studies' : item === 'Lab' ? 'Labs' : item }))]} />
             <span className="result-count" aria-live="polite">{rows.length} projects</span>
           </div>
-          {rows.length ? (
+          <PublicGate loading={loading} error={error}>
+          {!loading && !error && projects.length === 0 ? <EmptyState icon="layers" title="No projects are published yet" text="A project appears here after it is published and its listing is not hidden." /> : rows.length ? (
             <div className="lesson-grid">
               {rows.map((project) => (
                 <Link className="card" to={`/projects/${project.id}`} key={project.id}>
                   <div className="card__media"><Photo file={project.image} alt="" width={800} height={533} sizes="33vw" /></div>
-                  <div className="card__body"><div className="card__meta"><span className="tag">{project.type}</span><span className="ph">Sample</span></div><h3 className="card__title">{project.title}</h3><p className="muted" style={{ marginTop: 8 }}>{moduleOf(project.moduleId).name}</p></div>
+                  <div className="card__body"><div className="card__meta"><span className="tag">{project.type}</span><SampleMark listing={project.listing}>Sample</SampleMark></div><h3 className="card__title">{project.title}</h3><p className="muted" style={{ marginTop: 8 }}>{moduleOf(project.moduleId).name}</p></div>
                 </Link>
               ))}
             </div>
           ) : <EmptyState icon="layers" title="Nothing here yet" text="Projects of this type will appear as the cohort completes them." />}
+          </PublicGate>
         </div>
       </section>
       <section className="section section--paper">
@@ -137,22 +142,23 @@ export function ProjectsPage() {
 
 export function ProjectPage() {
   const { id = '' } = useParams();
-  const { projects, loading } = usePublicContent();
+  const { projects, loading, error } = usePublicContent();
   const project = projects.find((item) => item.id === id);
   usePageMeta(project?.title ?? 'Project');
   if (loading) return <section className="section"><div className="container"><p>Loading the published site…</p></div></section>;
-  if (!project) return <section className="section"><div className="container"><ErrorState title="This project is not available" text="Drafts and internal notes stay in the admin adapter. This page only receives the public sample." /></div></section>;
+  if (error) return <section className="section"><div className="container"><ErrorState title="This project could not be loaded" text={error} onRetry={() => window.location.reload()} /></div></section>;
+  if (!project) return <section className="section"><div className="container"><ErrorState title="This project is not available" text="Drafts and hidden listings stay off this page. Publish the project with a public or sample listing to show it." /></div></section>;
   return (
     <section className="section">
       <div className="container">
         <ol className="crumbs"><li><Link to="/">Home</Link></li><li><Link to="/projects">Projects</Link></li><li aria-current="page">{project.title}</li></ol>
-        <div className="flex wrap" style={{ gap: 10, marginTop: 24 }}><span className="tag">{project.type}</span><span className="ph">Sample project</span><span className="tag">{moduleOf(project.moduleId).name}</span></div>
+        <div className="flex wrap" style={{ gap: 10, marginTop: 24 }}><span className="tag">{project.type}</span><SampleMark listing={project.listing}>Sample project</SampleMark><span className="tag">{moduleOf(project.moduleId).name}</span></div>
         <h1 style={{ marginTop: 16 }}>{project.title}</h1>
         <p className="lead">{project.abstract}</p>
         <figure className="detail-media" style={{ marginTop: 32 }}><Photo file={project.image} alt="" width={1600} height={1066} sizes="100vw" /></figure>
         <div className="split" style={{ marginTop: 48 }}>
-          <div><h2>Approach</h2><ol className="steps">{project.steps.map((step) => <li key={step}><h4>{step}</h4><p className="muted">Placeholder step. Real write-ups will be added when a team agrees to share the work.</p></li>)}</ol></div>
-          <aside><div className="callout"><h3>Tools</h3><p>{project.tools}</p><p className="muted" style={{ marginTop: 12 }}>Repository and demo links stay private until a share agreement is recorded. They are not on this page.</p><p style={{ marginTop: 12 }}>Sample team: {project.team.join(', ')}</p></div></aside>
+          <div><h2>Approach</h2>{(project.steps ?? []).length ? <ol className="steps">{(project.steps ?? []).map((step) => <li key={step}><h4>{step}</h4><p className="muted">Placeholder step. Real write-ups will be added when a team agrees to share the work.</p></li>)}</ol> : <p className="muted">The approach will be added when the team shares the write-up.</p>}</div>
+          <aside><div className="callout"><h3>Tools</h3><p>{project.tools || 'Tools will be listed with the write-up.'}</p><p className="muted" style={{ marginTop: 12 }}>Repository and demo links stay private until a share agreement is recorded. They are not on this page.</p><p style={{ marginTop: 12 }}>{(project.team ?? []).length ? `Team: ${(project.team ?? []).join(', ')}` : 'No team names are published yet.'}</p></div></aside>
         </div>
       </div>
     </section>
@@ -160,7 +166,7 @@ export function ProjectPage() {
 }
 
 export function EventsPage() {
-  const { events } = usePublicContent();
+  const { events, loading, error } = usePublicContent();
   const [filter, setFilter] = useState('all');
   const rows = events.filter((event) => {
     const past = !event.dateTbc && parseUtcDate(event.date) < APP_TODAY;
@@ -178,7 +184,9 @@ export function EventsPage() {
             <Chips label="Filter events" value={filter} onChange={setFilter} options={[{ id: 'all', label: 'All' }, { id: 'upcoming', label: 'Upcoming' }, { id: 'past', label: 'Past' }, { id: 'Anniversary', label: 'Anniversary' }, { id: 'Milestone', label: 'Milestones' }]} />
             <span className="result-count" aria-live="polite">{rows.length} events</span>
           </div>
-          {rows.length ? <div className="ev-list">{rows.map((event, index) => <EventRow event={event} index={index} key={event.id} />)}</div> : <EmptyState icon="calendar" title="No events in this view" />}
+          <PublicGate loading={loading} error={error}>
+            {!loading && !error && events.length === 0 ? <EmptyState icon="calendar" title="No events are published yet" text="An event appears here after it is published and its listing is not hidden." /> : rows.length ? <div className="ev-list">{rows.map((event, index) => <EventRow event={event} index={index} key={event.id} />)}</div> : <EmptyState icon="calendar" title="No events in this view" text="Try another filter. Upcoming, past, anniversary, and milestone views use the published list." />}
+          </PublicGate>
         </div>
       </section>
     </>
@@ -187,11 +195,12 @@ export function EventsPage() {
 
 export function EventPage() {
   const { id = '' } = useParams();
-  const { events, loading } = usePublicContent();
+  const { events, loading, error } = usePublicContent();
   const event = events.find((item) => item.id === id);
   usePageMeta(event?.title ?? 'Event');
   if (loading) return <section className="section"><div className="container"><p>Loading the published site…</p></div></section>;
-  if (!event) return <section className="section"><div className="container"><ErrorState title="This event is not available" text="It may still be a hidden draft." /></div></section>;
+  if (error) return <section className="section"><div className="container"><ErrorState title="This event could not be loaded" text={error} onRetry={() => window.location.reload()} /></div></section>;
+  if (!event) return <section className="section"><div className="container"><ErrorState title="This event is not available" text="It may still be a hidden draft, or the link may be wrong." /></div></section>;
   const canCalendar = event.calendarDownload && !event.dateTbc;
   return (
     <section className="section">
@@ -208,9 +217,10 @@ export function EventPage() {
         <div className="meta-row"><span><Icon name="clock" className="i--sm" />{event.whenLabel}</span><span><Icon name="map-pin" className="i--sm" />{event.place}</span></div>
         <figure className="detail-media" style={{ marginTop: 28 }}><Photo file={event.image} alt="" width={1600} height={1066} sizes="100vw" /></figure>
         <div className="prose-wrap" style={{ marginTop: 40 }}>
-          {event.body.kind === 'callout' ? <div className={`callout${event.body.tone === 'warn' ? '' : event.body.tone === 'lime' ? ' callout--dark' : ''}`}><h2>{event.body.title}</h2><p>{event.body.text}</p></div> : null}
-          {event.body.kind === 'steps' ? <><h2>{event.body.title}</h2><ol className="steps">{event.body.steps.map((step) => <li key={step}><h4>{step}</h4></li>)}</ol>{event.body.note ? <p className="muted">{event.body.note}</p> : null}</> : null}
-          {event.body.kind === 'placeholder' ? <p>{event.body.text}</p> : null}
+          {event.body?.kind === 'callout' ? <div className={`callout${event.body.tone === 'warn' ? '' : event.body.tone === 'lime' ? ' callout--dark' : ''}`}><h2>{event.body.title}</h2><p>{event.body.text}</p></div> : null}
+          {event.body?.kind === 'steps' ? <><h2>{event.body.title}</h2><ol className="steps">{(event.body.steps ?? []).map((step) => <li key={step}><h4>{step}</h4></li>)}</ol>{event.body.note ? <p className="muted">{event.body.note}</p> : null}</> : null}
+          {event.body?.kind === 'placeholder' ? <p>{event.body.text}</p> : null}
+          {!event.body ? <p className="muted">More detail will be added when this event is updated.</p> : null}
           <p className="muted" style={{ marginTop: 24 }}>Source: {event.sourceUrl ? <a href={event.sourceUrl} target="_blank" rel="noopener">{event.source}</a> : event.source}</p>
           {canCalendar ? <button className="btn btn--dark btn--sm" type="button" onClick={() => downloadCalendar(event)}><Icon name="download" className="i--sm" />Add to calendar</button> : <p className="tbc">Calendar download stays off until the date is confirmed.</p>}
         </div>
@@ -220,11 +230,11 @@ export function EventPage() {
 }
 
 export function GalleryPage() {
-  const { media } = usePublicContent();
+  const { media, loading, error } = usePublicContent();
   const [album, setAlbum] = useState('');
   const open = useLightbox();
   const rows = media.filter((item) => !album || item.album === album);
-  const items = useMemo(() => rows.map((item) => ({ src: item.src.startsWith('http') || item.src.startsWith('/') ? item.src : `/assets/img/${item.file}-1600.webp`, alt: item.alt, caption: item.caption, category: ALBUM_LABEL[item.album as keyof typeof ALBUM_LABEL] ?? item.album, width: item.width, height: item.height })), [rows]);
+  const items = useMemo(() => rows.map((item) => ({ src: item.src.startsWith('http') || item.src.startsWith('/') ? item.src : `/assets/img/${item.file || 'electronics-lab'}-1600.webp`, alt: item.alt, caption: item.caption, category: ALBUM_LABEL[item.album as keyof typeof ALBUM_LABEL] ?? item.album, width: item.width, height: item.height })), [rows]);
   return (
     <>
       <PageIntro title="Gallery" crumbs={[{ label: 'Home', to: '/' }, { label: 'Gallery' }]} eyebrow="Gallery" headline={'Moments worth\nremembering.'} aside={<><p className="lead">Open a photo, then use the arrow keys to browse and Escape to close.</p><p className="muted" style={{ marginTop: 12 }}>People are not named. The Foundation has confirmed consent for the included photographs.</p></>} />
@@ -234,16 +244,18 @@ export function GalleryPage() {
             <Tabs label="Filter photos" value={album} onChange={setAlbum} tabs={[{ id: '', label: 'All' }, { id: 'anniversary', label: '10th anniversary' }, { id: 'hackathon', label: 'Hackathon (TBC)' }, { id: 'community', label: 'Community' }]} />
             <span className="result-count" aria-live="polite">{rows.length} photos</span>
           </div>
-          {rows.length ? (
+          <PublicGate loading={loading} error={error}>
+          {!loading && !error && media.length === 0 ? <EmptyState icon="image" title="No photos are published yet" text="A photo appears here after consent is verified and an administrator publishes it." /> : rows.length ? (
             <div className="masonry">
               {rows.map((item, index) => (
                 <button className="m-item" type="button" key={item.id} aria-label={`Open photo: ${item.caption}`} onClick={() => open(items, index)}>
-                  {item.src.startsWith('http') || item.src.startsWith('/') ? <img src={item.src} alt={item.alt} width={item.width} height={item.height} /> : <Photo file={item.file} alt={item.alt} width={item.width} height={item.height} sizes="(max-width:560px) 50vw, 33vw" />}
+                  {(item.src ?? '').startsWith('http') || (item.src ?? '').startsWith('/') ? <img src={item.src} alt={item.alt} width={item.width} height={item.height} /> : <Photo file={item.file || 'electronics-lab'} alt={item.alt} width={item.width} height={item.height} sizes="(max-width:560px) 50vw, 33vw" />}
                   <figcaption>{item.caption}<br /><span style={{ opacity: 0.7 }}>{ALBUM_LABEL[item.album as keyof typeof ALBUM_LABEL] ?? item.album}{item.consent === 'pending' ? ' · consent record pending' : ''}</span></figcaption>
                 </button>
               ))}
             </div>
-          ) : <EmptyState icon="image" title="No photos in this album" />}
+          ) : <EmptyState icon="image" title="No photos in this album" text="Try another album, or publish photos into this one." />}
+          </PublicGate>
         </div>
       </section>
     </>
@@ -269,7 +281,7 @@ export function AboutPage() {
       <section className="section section--paper">
         <div className="container">
           <div className="sec-head"><div className="sec-head__title"><span className="eyebrow">Our values</span><h2 className="h2">Eight values, one way of working.</h2></div><span className="verified">From maximnyansa.com</span></div>
-          <div className="values">{about.values.map((value, index) => <div key={value}><span>{String(index + 1).padStart(2, '0')}</span>{value}</div>)}</div>
+          <div className="values">{(about.values ?? []).length ? (about.values ?? []).map((value, index) => <div key={value}><span>{String(index + 1).padStart(2, '0')}</span>{value}</div>) : <p className="muted">Values will appear when the about page is published with them.</p>}</div>
         </div>
       </section>
       <section className="section">
@@ -301,7 +313,7 @@ export function AboutPage() {
 }
 
 export function AnniversaryPage() {
-  const { events, media } = usePublicContent();
+  const { events, media, loading, error } = usePublicContent();
   const photos = media.filter((item) => item.album === 'anniversary').slice(0, 4);
   const featured = events.filter((event) => event.showOnAnniversary);
   usePageMeta('10 Years of Impact');
@@ -338,7 +350,11 @@ export function AnniversaryPage() {
       <section className="section section--dark">
         <div className="container">
           <h2 className="h2">October 2026</h2>
-          <div className="ev-list" style={{ marginTop: 28 }}>{featured.map((event, index) => <EventRow event={event} index={index} key={event.id} />)}</div>
+          <div className="ev-list" style={{ marginTop: 28 }}>
+            <PublicGate loading={loading} error={error}>
+              {featured.length ? featured.map((event, index) => <EventRow event={event} index={index} key={event.id} />) : <p>No anniversary events are published yet. The story above still stands.</p>}
+            </PublicGate>
+          </div>
         </div>
       </section>
       <section className="section">

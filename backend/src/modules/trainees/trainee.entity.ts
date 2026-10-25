@@ -33,11 +33,11 @@ export class TraineeEntity {
   @Column({ type: 'text' })
   quote!: string;
 
-  @Column({ type: 'varchar', length: 500 })
-  linkedin!: string;
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  linkedin!: string | null;
 
-  @Column({ type: 'varchar', length: 500 })
-  portfolio!: string;
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  portfolio!: string | null;
 
   @Column({ name: 'consent_received', type: 'boolean' })
   consentReceived!: boolean;

@@ -152,7 +152,7 @@ export function LightboxProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function EmptyState({ icon = 'search', title, text, action }: { icon?: 'search' | 'users' | 'layers' | 'calendar' | 'image'; title: string; text?: string; action?: ReactNode }) {
+export function EmptyState({ icon = 'search', title, text, action }: { icon?: 'search' | 'users' | 'layers' | 'calendar' | 'image' | 'mail'; title: string; text?: string; action?: ReactNode }) {
   return (
     <div className="empty">
       <div className="empty__art"><Icon name={icon} className="i--lg" /></div>

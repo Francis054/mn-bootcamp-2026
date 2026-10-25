@@ -43,6 +43,21 @@ export function requireRole(minimum: Role): RequestHandler {
   };
 }
 
+export function requireAnyPermission(permissions: readonly Permission[]): RequestHandler {
+  return (req, _res, next) => {
+    const user = req.user;
+    if (!user) {
+      next(new ApiError('unauthenticated', 'Sign in to continue.'));
+      return;
+    }
+    if (!permissions.some((permission) => can(user.role, permission))) {
+      next(new ApiError('forbidden', 'You do not have access to that.'));
+      return;
+    }
+    next();
+  };
+}
+
 export function requirePermission(permission: Permission): RequestHandler {
   return (req, _res, next) => {
     const user = req.user;

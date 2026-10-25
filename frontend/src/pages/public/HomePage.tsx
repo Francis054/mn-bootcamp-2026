@@ -9,8 +9,9 @@ import { usePageMeta } from '@/components/SiteChrome';
 import { MODULES, PHASES } from '@/dev/fixtures';
 import { usesMockApi } from '@/config/runtime';
 import { currentWeek, formatDate } from '@/domain/format';
+import { useAuth } from '@/auth/AuthProvider';
 import { usePublicContent } from '@/hooks/useContent';
-import { moduleOf } from './helpers';
+import { moduleOf, SampleMark } from './helpers';
 
 const PEEK = ['electronics-lab', 'hack-coding-team', 'vr-demo-group', 'presenters-yellow-room'];
 
@@ -18,12 +19,13 @@ export function HomePage() {
   const content = usePublicContent();
   const { lessons, projects, trainees, events, media } = content;
   const homepage = content.homepage;
+  const auth = useAuth();
   usePageMeta('Home');
   const week = currentWeek();
   const peek = useRef<HTMLDivElement>(null);
   if (content.loading) return <section className="section"><div className="container"><p>Loading the published site…</p></div></section>;
   if (content.error) return <section className="section"><div className="container"><h1>The published site could not be loaded</h1><p>{content.error}</p></div></section>;
-  if (!homepage) return <section className="section"><div className="container"><h1>The homepage is not published yet.</h1><p>Published homepage copy will appear here.</p></div></section>;
+  if (!homepage) return <section className="section"><div className="container"><h1>The homepage is not published yet.</h1><p>Published homepage copy will appear here.</p>{auth.allowed('content.write') ? <p><Link to="/admin/content">Open the content editor to publish it.</Link></p> : null}</div></section>;
   const featured = [
     ...lessons.filter((lesson) => lesson.scheduleStatus === 'now'),
     ...lessons.filter((lesson) => lesson.scheduleStatus === 'upcoming'),
@@ -128,13 +130,14 @@ export function HomePage() {
         <div className="container">
           <div className="sec-head">
             <div className="sec-head__title"><Reveal><span className="eyebrow">Featured classes</span></Reveal><Reveal><h2 id="classes-title" className="h2">This week and what’s next.</h2></Reveal></div>
-            <Reveal className="sec-head__aside"><span className="ph">Sample lessons — placeholders</span><Link className="link" to="/classes">Open the class archive <Icon name="arrow-right" className="i--sm" /></Link></Reveal>
+            <Reveal className="sec-head__aside">{featured.some((lesson) => lesson.listing !== 'public') ? <span className="ph">Sample lessons — placeholders</span> : null}<Link className="link" to="/classes">Open the class archive <Icon name="arrow-right" className="i--sm" /></Link></Reveal>
           </div>
           <div className="rows">
+            {featured.length ? null : <EmptyState icon="layers" title="No classes are published yet" text="This week’s lessons appear here after they are published." />}
             {featured.map((lesson, index) => (
               <Link className="row-link" key={lesson.id} to={`/classes/${lesson.id}`} onMouseEnter={movePeek(PEEK[index % PEEK.length] ?? 'electronics-lab')} onMouseMove={movePeek(PEEK[index % PEEK.length] ?? 'electronics-lab')} onMouseLeave={() => peek.current?.classList.remove('is-on')}>
                 <span className="wk">Week<b>{String(lesson.week).padStart(2, '0')}</b></span>
-                <div><span className="ph" style={{ marginBottom: 10 }}>Week {lesson.week} — sample lesson</span><h3>{lesson.title}</h3></div>
+                <div>{lesson.listing === 'public' ? null : <span className="ph" style={{ marginBottom: 10 }}>Week {lesson.week} — sample lesson</span>}<h3>{lesson.title}</h3></div>
                 <span className="row-mod tag">{moduleOf(lesson.moduleId).name}</span>
                 <span className={`row-status st st--${lesson.scheduleStatus}`}>{lesson.scheduleStatus === 'done' ? 'Completed' : lesson.scheduleStatus === 'now' ? 'This week' : `w/c ${formatDate(lesson.date)}`}</span>
                 <span className="go"><Icon name="arrow-right" /></span>
@@ -150,7 +153,7 @@ export function HomePage() {
             <Reveal className="sec-head__aside"><p className="muted">Every module ends in a practical lab. Project pages will fill in as the cohort completes them.</p><Link className="link" to="/projects">All projects <Icon name="arrow-right" className="i--sm" /></Link></Reveal>
           </div>
           <div className="proj-feature">
-            {featureProject ? <div className="pf-main"><ProjectCard project={featureProject} large /></div> : null}
+            {featureProject ? <div className="pf-main"><ProjectCard project={featureProject} large /></div> : <EmptyState icon="layers" title="No projects are published yet" text="Labs and case studies appear here after they are published." />}
             <div className="pf-side">{sideProjects.map((project) => <div key={project.id}><ProjectCard project={project} /></div>)}</div>
           </div>
         </div>
@@ -162,6 +165,7 @@ export function HomePage() {
             <Reveal className="sec-head__aside"><p className="muted">Real names and photos will appear only after each trainee gives consent. Until then, every profile is a sample.</p><Link className="link" to="/trainees">Trainee directory <Icon name="arrow-right" className="i--sm" /></Link></Reveal>
           </div>
           <div className="t-strip">
+            {trainees.length ? null : <EmptyState icon="users" title="No public profiles yet" text="Trainee cards appear after consent is recorded and the profile is published." />}
             {trainees.slice(0, 6).map((trainee) => (
               <Link className="tcard" to={`/trainees/${trainee.id}`} key={trainee.id}>
                 <div className="tcard__art" style={{ ['--h' as string]: trainee.hue }}><span className="ph">Placeholder</span><Avatar initials={trainee.initials} hue={trainee.hue} /></div>
@@ -178,6 +182,7 @@ export function HomePage() {
             <Reveal className="sec-head__aside"><p className="muted">The bootcamp opened in the same week the Foundation celebrated ten years.</p><Link className="btn btn--ghost-light btn--sm" to="/events">All events</Link></Reveal>
           </div>
           <div className="ev-list">
+            {events.length ? null : <EmptyState icon="calendar" title="No events are published yet" text="Milestones appear here after they are published." />}
             {events.slice(0, 4).map((event, index) => {
               const day = event.dateTbc ? 'TBC' : String(new Date(`${event.date}T00:00:00Z`).getUTCDate()).padStart(2, '0');
               return (
@@ -216,7 +221,7 @@ export function HomePage() {
               </Link>
             )) : media.length ? media.slice(0, 5).map((item, index) => (
               <Link className={`m-item gt-${index + 1}`} to="/gallery" key={item.id} aria-label={item.alt || 'Open the gallery'}>
-                {item.src.startsWith('http') || item.src.startsWith('/')
+                {(item.src ?? '').startsWith('http') || (item.src ?? '').startsWith('/')
                   ? <img src={item.src} alt={item.alt} width={item.width || 1600} height={item.height || 1066} />
                   : <Photo file={item.file} alt={item.alt} width={item.width || 1600} height={item.height || 1066} sizes="(max-width:760px) 50vw, 30vw" />}
               </Link>
@@ -258,15 +263,15 @@ export function HomePage() {
   );
 }
 
-function ProjectCard({ project, large = false }: { project: { id: string; title: string; type: string; cover: string; moduleId: string }; large?: boolean }) {
+function ProjectCard({ project, large = false }: { project: { id: string; title: string; type: string; cover: string; moduleId: string; listing?: string }; large?: boolean }) {
   const module = moduleOf(project.moduleId);
   return (
     <Link className="card" to={`/projects/${project.id}`}>
       <div className="card__media"><Cover kind={project.cover} label={module.name} /></div>
       <div className="card__body">
-        <div className="card__meta"><span className="tag">{project.type}</span><span className="ph">Sample project</span></div>
+        <div className="card__meta"><span className="tag">{project.type}</span><SampleMark listing={project.listing}>Sample project</SampleMark></div>
         <h3 className="card__title" style={large ? { fontSize: 28 } : undefined}>{project.title}</h3>
-        {large ? <p className="muted" style={{ marginTop: 10 }}>A placeholder case study showing how finished trainee work will be presented: the problem, the approach and what was learned.</p> : null}
+        {large && project.listing !== 'public' ? <p className="muted" style={{ marginTop: 10 }}>A placeholder case study showing how finished trainee work will be presented: the problem, the approach and what was learned.</p> : null}
       </div>
     </Link>
   );
