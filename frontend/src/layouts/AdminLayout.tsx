@@ -4,7 +4,7 @@ import { api } from '@/api/client';
 import { searchAdmin } from '@/api/search';
 import { useAuth } from '@/auth/AuthProvider';
 import { usesMockApi } from '@/config/runtime';
-import { OfficialLogo } from '@/components/Brand';
+import { CommunityIconLinks, OfficialLogo } from '@/components/Brand';
 import { ShellMark } from '@/components/SiteChrome';
 import { Icon, type IconName } from '@/components/Icon';
 import { useToast } from '@/components/feedback';
@@ -26,6 +26,7 @@ const GROUPS: Array<{ label: string; items: Array<{ id: string; label: string; i
     { id: 'content', label: 'Content editor', icon: 'file', to: '/admin/content', permission: 'content.read' },
     { id: 'timeline', label: 'Timeline', icon: 'commit', to: '/admin/timeline', permission: 'content.read' },
     { id: 'about', label: 'About & 10 Years', icon: 'award', to: '/admin/about', permission: 'content.read' },
+    { id: 'site-images', label: 'Site images', icon: 'image', to: '/admin/site-images', permission: 'content.read', administratorOnly: true },
   ] },
   { label: 'System', items: [
     { id: 'users', label: 'Users & roles', icon: 'users', to: '/admin/users', permission: 'users.read' },
@@ -80,6 +81,7 @@ export function AdminLayout() {
   const mock = usesMockApi();
   return (
     <>
+      <CommunityIconLinks />
       <a className="skip-link" href="#main">Skip to content</a>
       {mock ? <div className="dev-banner"><strong>Development adapter.</strong> Sample data only. The live API is off for this session.</div> : null}
       <div className={`admin-shell${collapsed ? ' is-collapsed' : ''}${drawer ? ' drawer-open' : ''}`}>

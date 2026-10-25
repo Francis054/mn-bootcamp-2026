@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { Photo, Reveal } from '@/components/Brand';
+import { HatMark, Photo, Reveal } from '@/components/Brand';
+import { SiteImage } from '@/components/SiteImage';
 import { Crumbs, usePageMeta } from '@/components/SiteChrome';
 import { Chips, Tabs } from '@/components/controls';
 import { EmptyState, ErrorState } from '@/components/feedback';
@@ -27,7 +28,7 @@ export function BootcampPage() {
   const blocks = timetable.data?.blocks ?? [];
   return (
     <>
-      <PageIntro dark backdrop={<Netlines />} headlineClassName="is-wide" title="Bootcamp overview" crumbs={[{ label: 'Home', to: '/' }, { label: 'Bootcamp' }, { label: 'Overview' }]} eyebrow="Cyber Security Bootcamp 2026" headline={'Six disciplines.\nOne cohort.\nZero cost.'} aside={<><Reveal><p className="lead">A practical, in-person programme at the Maxim Nyansa Foundation in Accra, built around the skills security teams hire for. Training runs from 5 October to {formatDate(ends, { year: 'numeric' })}.</p></Reveal><Reveal><div className="flex wrap" style={{ marginTop: 24 }}><Link className="btn" to="/journey">Follow the journey <span className="arrow"><Icon name="arrow-right" className="i--sm" /></span></Link><Link className="btn btn--ghost-light" to="/schedule">See the timetable <span className="arrow"><Icon name="arrow-right" className="i--sm" /></span></Link><a className="btn btn--ghost-light" href="https://maximnyansaapplications.com/" target="_blank" rel="noopener">Applications site <Icon name="external" className="i--sm" /></a></div></Reveal></>}>
+      <PageIntro dark backdrop={<Netlines />} headlineClassName="is-wide" title="Bootcamp overview" crumbs={[{ label: 'Home', to: '/' }, { label: 'Bootcamp' }, { label: 'Overview' }]} eyebrow="Cyber Security Bootcamp 2026" headline={'Six disciplines.\nOne cohort.\nZero cost.'} aside={<><Reveal><HatMark className="hat-seal hat-seal--hero" /></Reveal><Reveal><p className="lead">A practical, in-person programme at the Maxim Nyansa Foundation in Accra, built around the skills security teams hire for. Training runs from 5 October to {formatDate(ends, { year: 'numeric' })}.</p></Reveal><Reveal><div className="flex wrap" style={{ marginTop: 24 }}><Link className="btn" to="/journey">Follow the journey <span className="arrow"><Icon name="arrow-right" className="i--sm" /></span></Link><Link className="btn btn--ghost-light" to="/schedule">See the timetable <span className="arrow"><Icon name="arrow-right" className="i--sm" /></span></Link><a className="btn btn--ghost-light" href="https://maximnyansaapplications.com/" target="_blank" rel="noopener">Applications site <Icon name="external" className="i--sm" /></a></div></Reveal></>}>
         <dl className="facts" style={{ marginTop: 64 }}>
           <div><dt>Training starts</dt><dd>5 Oct 2026</dd></div>
           <div><dt>Training ends</dt><dd>{formatDate(ends, { year: 'numeric' })}</dd></div>
@@ -35,12 +36,12 @@ export function BootcampPage() {
           <div><dt>Cost</dt><dd>Free</dd></div>
           <div><dt>Venue</dt><dd>Foundation premises</dd></div>
         </dl>
-        <figure className="detail-media mask-reveal is-in" style={{ marginTop: 64 }}><Photo file="electronics-lab" alt="Hands-on work at a Foundation build table" width={1600} height={1066} sizes="100vw" priority /></figure>
+        <figure className="detail-media mask-reveal is-in" style={{ marginTop: 64 }}><SiteImage slot="bootcamp-banner" sizes="100vw" priority /></figure>
       </PageIntro>
       <section className="section" aria-labelledby="mod-title">
         <div className="container">
           <div className="sec-head">
-            <div className="sec-head__title"><Reveal><span className="eyebrow">Curriculum</span></Reveal><Reveal><h2 id="mod-title" className="h2">What the cohort learns.</h2></Reveal></div>
+            <div className="sec-head__title"><Reveal><span className="eyebrow"><HatMark />Curriculum</span></Reveal><Reveal><h2 id="mod-title" className="h2">What the cohort learns.</h2></Reveal></div>
             <Reveal className="sec-head__aside"><p className="muted">The six areas below are confirmed by the Foundation. Their order and weekly split are still to be confirmed.</p><span className="verified">Topics verified</span></Reveal>
           </div>
           <div className="modules">

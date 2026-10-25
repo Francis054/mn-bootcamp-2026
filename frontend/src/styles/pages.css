@@ -528,6 +528,9 @@ a.tl__card:hover{box-shadow:var(--shadow-2);transform:translateX(4px)}
 .contact-form-card .error-summary:focus{outline:3px solid var(--focus);outline-offset:2px}
 .contact-done{text-align:center;padding:40px 12px}
 .contact-done:focus{outline:none}
+.hat-seal--hero{width:148px;margin-bottom:16px}
+.hat-seal--block{width:120px;margin:0 0 20px}
+.page-hero--dark .hat-seal{filter:drop-shadow(0 8px 16px rgba(0,0,0,.25))}
 .contact-done .empty__art{width:88px;height:88px;margin:0 auto 20px;border-radius:24px;background:var(--lime-100);display:grid;place-items:center;color:var(--forest-600)}
 .contact-done .empty__art .i{width:32px;height:32px}
 .docs-main .table-wrap{overflow-x:auto;position:relative}

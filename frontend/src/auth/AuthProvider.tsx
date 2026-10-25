@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { Navigate, useLocation } from 'react-router-dom';
 import { useSyncExternalStore } from 'react';
 import { api } from '@/api/client';
+import { useBootCovering } from '@/components/bootHold';
 import { Loader } from '@/components/Loader';
 import { usesMockApi } from '@/config/runtime';
 import type { Permission, Role, SessionUser } from '@/domain/types';
@@ -79,7 +80,8 @@ export function useAuth() {
 export function RequireAccess({ permission, children }: { permission: Permission; children: ReactNode }) {
   const auth = useAuth();
   const location = useLocation();
-  if (!auth.ready) return <Loader variant="page" message="Loading the bootcamp…" label="Checking your session" />;
+  const covering = useBootCovering();
+  if (!auth.ready) return covering ? null : <Loader variant="page" message="Loading the bootcamp…" label="Checking your session" />;
   if (!auth.signedIn && auth.expired) return <Navigate to="/admin/session-expired" replace />;
   if (!auth.signedIn) {
     const next = encodeURIComponent(`${location.pathname}${location.search}`);

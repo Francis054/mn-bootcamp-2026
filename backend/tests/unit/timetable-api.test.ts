@@ -88,6 +88,7 @@ function appFor(role: 'editor' | 'viewer' | null) {
       {} as never,
       {} as never,
       {} as never,
+      {} as never,
       timetable,
     ),
   );

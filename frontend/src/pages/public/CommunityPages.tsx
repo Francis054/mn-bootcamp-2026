@@ -1,7 +1,8 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '@/api/client';
-import { CountUp, OfficialLogo, Photo, SplitHeading } from '@/components/Brand';
+import { CountUp, HatMark, OfficialLogo, Photo, SplitHeading } from '@/components/Brand';
+import { SiteImage } from '@/components/SiteImage';
 import { Chips, ErrorSummary, Field, Tabs } from '@/components/controls';
 import { EmptyState, ErrorState, useLightbox, useToast } from '@/components/feedback';
 import { Loader } from '@/components/Loader';
@@ -257,8 +258,8 @@ export function AboutPage() {
       <section className="section"><div className="container"><h1>The about page is not published yet.</h1></div></section>
     ) : (
     <>
-      <PageIntro title="About" crumbs={[{ label: 'Home', to: '/' }, { label: 'About' }]} eyebrow="About the Foundation" headline={'Maximal wisdom,\nshared widely.'} aside={<><OfficialLogo width={180} /><p className="lead">Established in Ghana in 2016 to create career perspectives for young Africans through information technology.</p></>} />
-      <section className="section" style={{ paddingTop: 0 }}><div className="container"><figure className="detail-media"><Photo file="anniversary-group-outdoor" alt="An outdoor group photo at a Foundation event" width={1600} height={1067} sizes="100vw" /></figure></div></section>
+      <PageIntro title="About" crumbs={[{ label: 'Home', to: '/' }, { label: 'About' }]} eyebrow="About the Foundation" headline={'Maximal wisdom,\nshared widely.'} aside={<><HatMark className="hat-seal hat-seal--block" label="Cyber Bootcamp" /><OfficialLogo width={180} /><p className="lead">Established in Ghana in 2016 to create career perspectives for young Africans through information technology.</p></>} />
+      <section className="section" style={{ paddingTop: 0 }}><div className="container"><figure className="detail-media"><SiteImage slot="about-banner" sizes="100vw" /></figure></div></section>
       <section className="section">
         <div className="container split split--even">
           <div><span className="eyebrow">Mission</span><p className="statement" style={{ marginTop: 20, fontSize: 'clamp(1.6rem,3vw,2.4rem)' }}>“{about.mission}”</p></div>
@@ -448,6 +449,6 @@ function ContactCard({ icon, label, text, href, note }: { icon: IconName; label:
 export function NotFoundPage() {
   usePageMeta('Page not found');
   return (
-    <section className="section"><div className="container"><ErrorState title="That page is not on this site" text="Use the menu to get back to the bootcamp, or open the class archive." /></div></section>
+    <section className="section"><div className="container"><HatMark className="hat-seal hat-seal--block" label="Cyber Bootcamp" /><ErrorState title="That page is not on this site" text="Use the menu to get back to the bootcamp, or open the class archive." /></div></section>
   );
 }

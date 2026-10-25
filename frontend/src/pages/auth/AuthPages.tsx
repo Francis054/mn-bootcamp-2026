@@ -2,6 +2,8 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '@/api/client';
 import { OfficialLogo } from '@/components/Brand';
+import { CommunityBadge } from '@/components/CommunityBadge';
+import { SiteImage } from '@/components/SiteImage';
 import { ErrorSummary, Field } from '@/components/controls';
 import { Loader } from '@/components/Loader';
 import { Icon } from '@/components/Icon';
@@ -78,7 +80,8 @@ export function LoginPage() {
         </form>
       </section>
       <aside className="login__art" aria-hidden="true">
-        <img src="/assets/img/electronics-lab-1600.webp" width={1600} height={1067} alt="" />
+        <SiteImage slot="sign-in-panel" priority alt="" />
+        <CommunityBadge className="login__mark" priority />
         <span className="a-sub" style={{ color: 'var(--mn-lime)' }}>Maxim Nyansa Foundation · Cybersecurity Bootcamp 2026</span>
         <h2 style={{ marginTop: 16 }}>Publish the journey, <em>week by week.</em></h2>
       </aside>

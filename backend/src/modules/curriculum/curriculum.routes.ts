@@ -25,6 +25,8 @@ import { mountAdminEvents, mountPublicEvents } from '../events/event.routes.js';
 import type { EventService } from '../events/event.service.js';
 import { mountAdminMedia, mountPublicMedia } from '../gallery/media.routes.js';
 import type { MediaService } from '../gallery/media.service.js';
+import { mountAdminSiteImages, mountPublicSiteImages } from '../site-images/site-image.routes.js';
+import type { SiteImageService } from '../site-images/site-image.service.js';
 import { mountAdminWorkPhotos, mountPublicWorkPhotos } from '../work-photos/work-photo.routes.js';
 import type { WorkPhotoService } from '../work-photos/work-photo.service.js';
 import { mountAdminProjects, mountPublicProjects } from '../projects/project.routes.js';
@@ -52,6 +54,7 @@ export function curriculumRouter(
   accounts: AccountService,
   enquiries: EnquiryService,
   workPhotos: WorkPhotoService,
+  siteImages: SiteImageService,
   storage: StorageProvider,
   timetable: TimetableService,
 ): Router {
@@ -118,6 +121,7 @@ export function curriculumRouter(
   mountPublicEvents(router, events);
   mountPublicMedia(router, media);
   mountPublicWorkPhotos(router, workPhotos);
+  mountPublicSiteImages(router, siteImages);
   mountPublicContent(router, content);
   mountPublicEnquiries(router, enquiries);
   mountPublicTimetable(router, timetable);
@@ -133,6 +137,7 @@ export function curriculumRouter(
   mountAdminEvents(admin, events);
   mountAdminMedia(admin, media, maxBytes);
   mountAdminWorkPhotos(admin, workPhotos, maxBytes);
+  mountAdminSiteImages(admin, siteImages, maxBytes);
   mountAdminContent(admin, content);
   mountAccountAdmin(admin, accounts, enquiries);
   mountAdminTimetable(admin, timetable);

@@ -49,6 +49,7 @@ const ADMIN = [
   '/admin/events',
   '/admin/media',
   '/admin/work-photos',
+  '/admin/site-images',
   '/admin/content',
   '/admin/timeline',
   '/admin/about',

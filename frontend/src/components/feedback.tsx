@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Loader } from './Loader';
 import { Icon } from './Icon';
+import { CommunityBadge } from './CommunityBadge';
 
 type ToastKind = 'success' | 'error' | 'info';
 interface ToastItem { id: number; title: string; message?: string; kind: ToastKind }
@@ -156,7 +157,10 @@ export function LightboxProvider({ children }: { children: ReactNode }) {
 export function EmptyState({ icon = 'search', title, text, action }: { icon?: 'search' | 'users' | 'layers' | 'calendar' | 'image' | 'mail'; title: string; text?: string; action?: ReactNode }) {
   return (
     <div className="empty">
-      <div className="empty__art"><Icon name={icon} className="i--lg" /></div>
+      <div className="empty__art">
+        <CommunityBadge className="empty__mark" />
+        <span className="empty__badge"><Icon name={icon} /></span>
+      </div>
       <h3>{title}</h3>
       {text ? <p className="muted">{text}</p> : null}
       {action}
