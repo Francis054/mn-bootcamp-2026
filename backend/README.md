@@ -38,7 +38,7 @@ Open `.env` and set values there. Do not put those values in git, in a pull requ
 | `LOG_LEVEL`                | `info` when empty. Use `silent` only in tests.                                                                                                                                          |
 | `TRUST_PROXY`              | `true` in production, because the API sits behind the same-origin proxy. One proxy hop is trusted, which is what the rate limiter uses for the client address.                          |
 | `RATE_LIMIT_WINDOW_MS`     | `60000` when empty.                                                                                                                                                                     |
-| `RATE_LIMIT_MAX`           | `300` requests per window per address when empty. Health checks are not counted.                                                                                                        |
+| `RATE_LIMIT_MAX`           | `300` sign-in, admin, and write requests per window per address when empty. Public page reads have a separate higher limit. Health checks are not counted.                              |
 
 Then create the migration history and start the API:
 
@@ -73,7 +73,7 @@ Read this once with `GET /api/v1/health` in mind. The same path is used for ever
 
 5. **The request is logged when the response finishes** (`shared/middleware/request-logger.ts`). The line has the method, the path, the status, and how long it took. The query string is left out, so a token in the URL is not stored. The body is left out, so a password is not stored.
 
-6. **Security checks run** (`shared/middleware/security.ts`). Helmet sets safe browser headers. CORS allows one origin, the `FRONTEND_URL`, and allows cookies to be sent with it. Any other browser origin is rejected. There is no `*` origin. A general rate limit slows a client that sends too many requests. JSON bodies larger than 1 MB are rejected. `cookie-parser` reads cookies. Sign-in is what sets the session cookie, and only on `/api/v1/auth/login`.
+6. **Security checks run** (`shared/middleware/security.ts`). Helmet sets safe browser headers. CORS allows one origin, the `FRONTEND_URL`, and allows cookies to be sent with it. Any other browser origin is rejected. There is no `*` origin. Sign-in and writes are rate limited more tightly than public page reads. JSON bodies larger than 1 MB are rejected. `cookie-parser` reads cookies. Sign-in is what sets the session cookie, and only on `/api/v1/auth/login`. Successful public reads send a short `Cache-Control` header. Admin and sign-in responses send `Cache-Control: no-store`.
 
 7. **The route runs** (`modules/health`). The router calls `HealthService`. The service asks the database `SELECT 1`. It returns `up` or `down`. The controller picks `200` or `503`.
 

@@ -4,6 +4,8 @@ The React app in `frontend/` calls the bootcamp API at the **same origin** under
 
 The session is the HttpOnly cookie `mn_session` (path `/api/v1`). JavaScript never reads it and never writes a token to `localStorage` or `sessionStorage`. Unsafe methods (`POST`, `PUT`, `PATCH`, `DELETE`) copy the readable `mn_csrf` cookie into the `X-CSRF-Token` header when that cookie is present. `GET` does not send the header. Login and the public enquiry form have no session yet, so they do not send a CSRF header. Every `fetch` uses `credentials: 'include'`.
 
+Published public pages (`GET /api/v1/public/…`, including detail pages) are copied into `sessionStorage` for eight minutes. A refresh shows that copy at once. If it is older than eight minutes, the page stays up and the new copy replaces it when the API answers. A slow or failed API keeps the saved copy. Errors and 404s are not saved. Admin, sign-in, and any write are not saved. Publishing, unpublishing, or editing in the admin clears the saved public pages in that browser.
+
 A `401` on an admin call clears the in-memory user and sends the visitor to `/admin/login`. A `401` on login or password reset stays on the form. `GET /auth/session` returns `{ authenticated: false }` for an anonymous visitor and does not count as an expired session.
 
 Set `VITE_USE_MOCK_API=true` to use the in-browser fixture store instead. Leave it unset for the live API, including production builds. Vitest sets the flag so the screen tests still see fixture copy.
