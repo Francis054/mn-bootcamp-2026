@@ -56,7 +56,6 @@ export function ProjectPage() {
   const [active, setActive] = useSectionHighlight(SECTION_IDS, Boolean(project) && !loading && !error);
   useEffect(() => {
     setActive(SECTION_IDS[0] ?? '');
-    document.documentElement.scrollTop = 0;
   }, [id, setActive]);
 
   return (

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '@/api/client';
 import { searchAdmin } from '@/api/search';
 import { useAuth } from '@/auth/AuthProvider';
 import { usesMockApi } from '@/config/runtime';
 import { CommunityIconLinks, OfficialLogo } from '@/components/Brand';
+import { APP_NAVIGATED } from '@/components/ScrollToTop';
 import { ShellMark } from '@/components/SiteChrome';
 import { Icon, type IconName } from '@/components/Icon';
 import { useToast } from '@/components/feedback';
@@ -40,6 +41,7 @@ const GROUPS: Array<{ label: string; items: Array<{ id: string; label: string; i
 export function AdminLayout() {
   const auth = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('mn-sb') === '1');
   const [drawer, setDrawer] = useState(false);
@@ -51,6 +53,12 @@ export function AdminLayout() {
   useEffect(() => {
     document.body.classList.add('admin');
     return () => document.body.classList.remove('admin');
+  }, []);
+  useEffect(() => { setDrawer(false); }, [location.pathname, location.search, location.hash]);
+  useEffect(() => {
+    const close = () => setDrawer(false);
+    window.addEventListener(APP_NAVIGATED, close);
+    return () => window.removeEventListener(APP_NAVIGATED, close);
   }, []);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -157,7 +165,7 @@ export function AdminLayout() {
               </div>
             </div>
           </header>
-          <main id="main" className="admin-main"><Outlet /></main>
+          <main id="main" className="admin-main" tabIndex={-1}><Outlet /></main>
         </div>
       </div>
     </>

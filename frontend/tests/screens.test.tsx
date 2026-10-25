@@ -40,6 +40,16 @@ describe('public routes', () => {
     expect(screen.getByText('Free')).toBeInTheDocument();
   });
 
+  it('does not point visitors at the admin panel', async () => {
+    renderAt('/');
+    expect(await screen.findByRole('heading', { name: /secure the future/i })).toBeInTheDocument();
+    const hrefs = [...document.querySelectorAll('a')].map((anchor) => anchor.getAttribute('href') ?? '');
+    expect(hrefs.filter((href) => href === '/admin' || href.startsWith('/admin/'))).toEqual([]);
+    expect(screen.queryByRole('link', { name: /^admin$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /admin portal|staff login/i })).not.toBeInTheDocument();
+    expect(document.getElementById('mobile-menu')?.textContent ?? '').not.toMatch(/admin portal|staff login/i);
+  });
+
   it('filters the class archive', async () => {
     const user = userEvent.setup();
     renderAt('/classes');
