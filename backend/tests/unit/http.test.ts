@@ -2,6 +2,7 @@ import { Router } from 'express';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { createApp } from '../../src/app.js';
+import { PRIVATE_CACHE_CONTROL, PUBLIC_GET_CACHE_CONTROL } from '../../src/shared/http/cache-control.js';
 import { HealthService } from '../../src/modules/health/health.service.js';
 import { testEnv } from '../support/app-env.js';
 import { captureLogger } from '../support/logger.js';
@@ -12,6 +13,8 @@ function appWith(options?: {
   nodeEnv?: 'development' | 'test' | 'production';
   health?: HealthService;
   lines?: () => string[];
+  authRouter?: Router;
+  curriculumRouter?: Router;
 }) {
   const captured = captureLogger();
   const health =
@@ -24,8 +27,8 @@ function appWith(options?: {
     }),
     logger: captured.logger,
     health,
-    authRouter: Router(),
-    curriculumRouter: Router(),
+    authRouter: options?.authRouter ?? Router(),
+    curriculumRouter: options?.curriculumRouter ?? Router(),
   });
   return { app, lines: options?.lines ?? captured.lines };
 }
@@ -191,5 +194,99 @@ describe('HTTP pipeline', () => {
     });
     expect(app.locals.cookiePolicy.csrf.path).toBe('/');
     expect(app.locals.cookiePolicy.session).not.toHaveProperty('domain');
+  });
+
+  it('caches successful public reads briefly and still answers 304', async () => {
+    const curriculum = Router();
+    curriculum.get('/public/home', (_req, res) => {
+      res.json({ headline: 'Hello' });
+    });
+    curriculum.get('/public/classes/:id', (req, res) => {
+      res.json({ id: req.params.id, title: 'Packets' });
+    });
+    const { app } = appWith({ curriculumRouter: curriculum });
+    const first = await request(app).get('/api/v1/public/home').expect(200);
+    expect(first.headers['cache-control']).toBe(PUBLIC_GET_CACHE_CONTROL);
+    expect(first.headers.etag).toEqual(expect.any(String));
+    const cached = await request(app)
+      .get('/api/v1/public/home')
+      .set('If-None-Match', String(first.headers.etag))
+      .expect(304);
+    expect(cached.headers.etag).toBe(first.headers.etag);
+    expect(cached.headers['cache-control']).toBe(PUBLIC_GET_CACHE_CONTROL);
+
+    const detail = await request(app).get('/api/v1/public/classes/week-1').expect(200);
+    expect(detail.headers['cache-control']).toBe(PUBLIC_GET_CACHE_CONTROL);
+    const missing = await request(app).get('/api/v1/public/missing').expect(404);
+    expect(missing.headers['cache-control']).toBe(PRIVATE_CACHE_CONTROL);
+  });
+
+  it('refuses to store admin, sign-in, and public writes', async () => {
+    const auth = Router();
+    auth.get('/session', (_req, res) => {
+      res.json({ authenticated: false });
+    });
+    const curriculum = Router();
+    curriculum.get('/admin/home', (_req, res) => {
+      res.json({ headline: 'Draft' });
+    });
+    curriculum.post('/admin/home/publish', (_req, res) => {
+      res.json({ headline: 'Draft' });
+    });
+    curriculum.post('/public/enquiries', (_req, res) => {
+      res.status(201).json({ delivered: true });
+    });
+    const { app } = appWith({ authRouter: auth, curriculumRouter: curriculum });
+    const session = await request(app).get('/api/v1/auth/session').expect(200);
+    expect(session.headers['cache-control']).toBe(PRIVATE_CACHE_CONTROL);
+    const draft = await request(app).get('/api/v1/admin/home').expect(200);
+    expect(draft.headers['cache-control']).toBe(PRIVATE_CACHE_CONTROL);
+    const published = await request(app).post('/api/v1/admin/home/publish').expect(200);
+    expect(published.headers['cache-control']).toBe(PRIVATE_CACHE_CONTROL);
+    const enquiry = await request(app).post('/api/v1/public/enquiries').send({}).expect(201);
+    expect(enquiry.headers['cache-control']).toBe(PRIVATE_CACHE_CONTROL);
+  });
+
+  it('does not let public reads use up the sign-in and write limit', async () => {
+    const auth = Router();
+    auth.post('/login', (_req, res) => {
+      res.status(401).json({ error: { code: 'unauthenticated', message: 'Sign in to continue.' } });
+    });
+    const curriculum = Router();
+    curriculum.get('/public/home', (_req, res) => {
+      res.json({ headline: 'Hello' });
+    });
+    curriculum.post('/admin/home/publish', (_req, res) => {
+      res.json({ ok: true });
+    });
+    curriculum.post('/public/enquiries', (_req, res) => {
+      res.status(201).json({ delivered: true });
+    });
+    const { app } = appWith({
+      rateLimitMax: 2,
+      authRouter: auth,
+      curriculumRouter: curriculum,
+    });
+    await request(app).get('/api/v1/public/home').expect(200);
+    await request(app).get('/api/v1/public/home').expect(200);
+    await request(app).get('/api/v1/public/home').expect(200);
+    await request(app).post('/api/v1/auth/login').send({}).expect(401);
+    await request(app).post('/api/v1/auth/login').send({}).expect(401);
+    const locked = await request(app).post('/api/v1/auth/login').send({}).expect(429);
+    expect(readError(locked.body).code).toBe('rate_limited');
+
+    const adminApp = appWith({ rateLimitMax: 2, curriculumRouter: curriculum });
+    await request(adminApp.app).post('/api/v1/admin/home/publish').expect(200);
+    await request(adminApp.app).post('/api/v1/admin/home/publish').expect(200);
+    await request(adminApp.app).post('/api/v1/admin/home/publish').expect(429);
+
+    const enquiryRouter = Router();
+    enquiryRouter.post('/public/enquiries', (_req, res) => {
+      res.status(201).json({ delivered: true });
+    });
+    const enquiries = appWith({ rateLimitMax: 2, curriculumRouter: enquiryRouter });
+    await request(enquiries.app).post('/api/v1/public/enquiries').send({}).expect(201);
+    await request(enquiries.app).post('/api/v1/public/enquiries').send({}).expect(201);
+    await request(enquiries.app).post('/api/v1/public/enquiries').send({}).expect(429);
   });
 });

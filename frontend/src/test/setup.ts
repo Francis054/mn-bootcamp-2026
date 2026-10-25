@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterEach } from 'vitest';
+import { resetPublicCacheForTests } from '@/api/publicCache';
 import { setEnvForTests } from '@/config/runtime';
 import { clearSession } from '@/dev/session';
 import { resetState } from '@/dev/store';
@@ -25,5 +26,6 @@ afterEach(() => {
   resetState();
   resetDevTransport();
   clearSession();
+  resetPublicCacheForTests();
   setEnvForTests(null);
 });

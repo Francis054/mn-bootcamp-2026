@@ -22,10 +22,10 @@ Cookies:
 ## Requests
 
 - JSON bodies are capped at 1 MB. Uploads default to 5 MB and cannot be set above 10 MB (`UPLOAD_MAX_BYTES`).
-- A general rate limit defaults to 300 requests per 60 seconds per address. `GET /api/v1/health` is not counted.
+- Sign-in, admin, and other writes stay on a limit of 300 requests per 60 seconds per address. Public page reads (`GET /api/v1/public/…`) use a separate limit of 5000 in that same window, so a room of people refreshing the site does not lock sign-in. `GET /api/v1/health` is not counted.
 - Sign-in failures lock a mailbox after 5 failures for 60 seconds, and an address after 30 failures. The error does not say whether the mailbox exists.
 - Unsafe methods that present `mn_session` must send `X-CSRF-Token` equal to `mn_csrf`. A mismatch is 403.
-- The website does not store a token in `localStorage` or `sessionStorage`. The sidebar key `mn-sb` is a layout preference only.
+- The website does not store a session token in `localStorage` or `sessionStorage`. The sidebar key `mn-sb` is a layout preference only. A copy of published public pages is kept in `sessionStorage` for eight minutes so a refresh can show the last page while the API wakes up. Sign-in, admin, and failed responses are not stored.
 - A `401` on an admin call returns the visitor to `/admin/login`. Login and password reset stay on the form. `GET /auth/session` returns `{ authenticated: false }` for an anonymous visitor and does not count as an expired session.
 
 ## Passwords and accounts
