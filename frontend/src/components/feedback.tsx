@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Loader } from './Loader';
 import { Icon } from './Icon';
-import { SiteImage } from './SiteImage';
+import { CommunityBadge } from './CommunityBadge';
 
 type ToastKind = 'success' | 'error' | 'info';
 interface ToastItem { id: number; title: string; message?: string; kind: ToastKind }
@@ -158,7 +158,7 @@ export function EmptyState({ icon = 'search', title, text, action }: { icon?: 's
   return (
     <div className="empty">
       <div className="empty__art">
-        <SiteImage slot="community-logo" className="empty__mark" alt="" />
+        <CommunityBadge className="empty__mark" />
         <span className="empty__badge"><Icon name={icon} /></span>
       </div>
       <h3>{title}</h3>

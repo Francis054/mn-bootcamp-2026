@@ -4,7 +4,7 @@ import { api } from '@/api/client';
 import { searchAdmin } from '@/api/search';
 import { useAuth } from '@/auth/AuthProvider';
 import { usesMockApi } from '@/config/runtime';
-import { OfficialLogo } from '@/components/Brand';
+import { CommunityIconLinks, OfficialLogo } from '@/components/Brand';
 import { ShellMark } from '@/components/SiteChrome';
 import { Icon, type IconName } from '@/components/Icon';
 import { useToast } from '@/components/feedback';
@@ -80,6 +80,7 @@ export function AdminLayout() {
   const mock = usesMockApi();
   return (
     <>
+      <CommunityIconLinks />
       <a className="skip-link" href="#main">Skip to content</a>
       {mock ? <div className="dev-banner"><strong>Development adapter.</strong> Sample data only. The live API is off for this session.</div> : null}
       <div className={`admin-shell${collapsed ? ' is-collapsed' : ''}${drawer ? ' drawer-open' : ''}`}>

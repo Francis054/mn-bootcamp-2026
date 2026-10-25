@@ -18,6 +18,8 @@ export interface SiteImageSlot {
   width: number;
   height: number;
   fit: SiteImageFit;
+  /** Banner on the community badge. Empty for photographs. */
+  tagline: string;
 }
 
 function photo(
@@ -39,52 +41,34 @@ function photo(
     width,
     height,
     fit,
+    tagline: '',
   };
 }
 
 export const SITE_IMAGE_SLOTS: readonly SiteImageSlot[] = [
   {
     key: 'community-logo',
-    label: 'Community logo (black hat vs ethical hat)',
+    label: 'Community logo',
     description:
-      'The black hat facing the ethical hat. Used as the seal on the homepage, the bootcamp page, empty states, the not-found page, and the about page.',
-    url: '/assets/logo/logo-mark.svg',
+      'The approved community badge (black hat and ethical hat). Header, footer, sign-in panel, admin sidebar, empty states, the loading screen, and the favicon. While this slot is the original artwork, the foundation logo and the badge tagline are drawn on top. A replacement image is shown on its own.',
+    url: '/assets/logo/community-badge.webp',
     alt: 'Cyber Bootcamp community logo',
-    width: 120,
-    height: 40,
+    width: 1024,
+    height: 1024,
     fit: 'contain',
-  },
-  {
-    key: 'community-logo-icon',
-    label: 'Community logo, compact icon (black hat vs ethical hat)',
-    description:
-      'The compact hat icon beside the Cyber Bootcamp name in the public header, the footer, the sign-in brand, and the admin sidebar.',
-    url: '/assets/logo/logo-icon.svg',
-    alt: 'Cyber Bootcamp icon',
-    width: 64,
-    height: 20,
-    fit: 'contain',
-  },
-  {
-    key: 'community-wordmark',
-    label: 'Community wordmark on dark (black hat vs ethical hat)',
-    description: 'The hat pair with the Cyber Bootcamp name, on the dark sign-in panel.',
-    url: '/assets/logo/logo-wordmark-on-dark.svg',
-    alt: 'Cyber Bootcamp community logo with wordmark',
-    width: 320,
-    height: 64,
-    fit: 'contain',
+    tagline: 'STRONGER TOGETHER',
   },
   {
     key: 'foundation-logo',
-    label: 'Parent organisation logo (Maxim Nyansa Foundation)',
+    label: 'Maxim Nyansa Foundation logo',
     description:
-      'The Maxim Nyansa Foundation plate beside the community logo in the header and footer, on the sign-in form, in the admin sidebar, and on the about page. This is the parent organisation, not the community logo.',
+      'The parent-organisation wordmark. It is drawn inside the community badge, in the header and footer plate, on the sign-in form, in the admin sidebar, on the about page, and in the loader footer. It is not the community logo. A larger PNG or WebP stays sharper. SVG files are not accepted.',
     url: '/assets/logo/maxim-nyansa-foundation-logo.png',
     alt: 'Maxim Nyansa Foundation logo',
     width: 200,
     height: 41,
     fit: 'contain',
+    tagline: '',
   },
   photo(
     'home-hero-main',
@@ -198,6 +182,8 @@ export interface SiteImageSeedRow {
   defaultAlt: string;
   defaultWidth: number;
   defaultHeight: number;
+  tagline: string;
+  defaultTagline: string;
   storageProvider: 'static';
   storageKey: '';
 }
@@ -217,6 +203,8 @@ export function siteImageSeedRow(slot: SiteImageSlot): SiteImageSeedRow {
     defaultAlt: slot.alt,
     defaultWidth: slot.width,
     defaultHeight: slot.height,
+    tagline: slot.tagline,
+    defaultTagline: slot.tagline,
     storageProvider: 'static',
     storageKey: '',
   };

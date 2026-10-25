@@ -1,5 +1,9 @@
 import { ValidateBy } from 'class-validator';
-import { siteImageAltMessage, siteImageKeyMessage } from './site-image.rules.js';
+import {
+  siteImageAltMessage,
+  siteImageKeyMessage,
+  siteImageTaglineMessage,
+} from './site-image.rules.js';
 
 function rule(name: string, problem: (value: unknown) => string | undefined, fallback: string) {
   return ValidateBy({
@@ -21,4 +25,7 @@ export class SiteImageCreateDto {
 export class SiteImageAltDto {
   @rule('alt', siteImageAltMessage, 'Use plain text.')
   alt!: string;
+
+  @rule('tagline', siteImageTaglineMessage, 'Use plain text.')
+  tagline?: string;
 }

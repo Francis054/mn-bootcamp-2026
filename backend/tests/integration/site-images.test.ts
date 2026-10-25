@@ -63,11 +63,12 @@ describe('site images', () => {
     expect(JSON.stringify(rows)).not.toContain('storageKey');
     expect(JSON.stringify(rows)).not.toContain('updatedBy');
     const logo = readRecord(rows.find((item) => readRecord(item).key === 'community-logo'));
-    expect(logo.url).toBe('/assets/logo/logo-mark.svg');
-    expect(logo.label).toBe('Community logo (black hat vs ethical hat)');
+    expect(logo.url).toBe('/assets/logo/community-badge.webp');
+    expect(logo.label).toBe('Community logo');
+    expect(logo.tagline).toBe('STRONGER TOGETHER');
     const plate = readRecord(rows.find((item) => readRecord(item).key === 'foundation-logo'));
     expect(plate.url).toBe('/assets/logo/maxim-nyansa-foundation-logo.png');
-    expect(plate.label).toBe('Parent organisation logo (Maxim Nyansa Foundation)');
+    expect(plate.label).toBe('Maxim Nyansa Foundation logo');
 
     await request(app).get('/api/v1/public/site-images/community-logo').expect(200);
     await request(app).get('/api/v1/public/site-images/not-a-slot').expect(404);

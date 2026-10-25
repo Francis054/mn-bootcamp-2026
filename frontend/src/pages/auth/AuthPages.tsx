@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '@/api/client';
 import { OfficialLogo } from '@/components/Brand';
+import { CommunityBadge } from '@/components/CommunityBadge';
 import { SiteImage } from '@/components/SiteImage';
 import { ErrorSummary, Field } from '@/components/controls';
 import { Loader } from '@/components/Loader';
@@ -80,7 +81,7 @@ export function LoginPage() {
       </section>
       <aside className="login__art" aria-hidden="true">
         <SiteImage slot="sign-in-panel" priority alt="" />
-        <SiteImage slot="community-wordmark" className="login__mark" alt="" priority />
+        <CommunityBadge className="login__mark" priority />
         <span className="a-sub" style={{ color: 'var(--mn-lime)' }}>Maxim Nyansa Foundation · Cyber Security Bootcamp 2026</span>
         <h2 style={{ marginTop: 16 }}>Publish the journey, <em>week by week.</em></h2>
       </aside>

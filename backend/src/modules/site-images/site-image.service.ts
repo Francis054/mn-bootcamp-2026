@@ -17,7 +17,7 @@ import { publicImageUrl } from './image-url.js';
 import type { PublicSiteImage, SiteImageRecord } from './records.js';
 import type { SiteImageEntity } from './site-image.entity.js';
 import type { SiteImageRepository } from './site-image.repository.js';
-import { siteImageAltMessage } from './site-image.rules.js';
+import { siteImageAltMessage, siteImageTaglineMessage } from './site-image.rules.js';
 
 const CHOOSE_IMAGE = 'Use a JPEG, PNG, or WebP image.';
 const NOT_FOUND = 'Image slot not found.';
@@ -74,13 +74,22 @@ export class SiteImageService {
     return this.toAdmin(saved);
   }
 
-  async updateAlt(key: string, alt: string, actor: Actor): Promise<SiteImageRecord> {
-    const problem = siteImageAltMessage(alt);
-    if (problem) {
-      throw new ApiError('validation', 'Check the highlighted fields.', { alt: problem });
+  async updateAlt(
+    key: string,
+    input: { alt: string; tagline?: string },
+    actor: Actor,
+  ): Promise<SiteImageRecord> {
+    const problem = siteImageAltMessage(input.alt);
+    const taglineProblem = siteImageTaglineMessage(input.tagline);
+    const fields: Record<string, string> = {};
+    if (problem) fields.alt = problem;
+    if (taglineProblem) fields.tagline = taglineProblem;
+    if (Object.keys(fields).length > 0) {
+      throw new ApiError('validation', 'Check the highlighted fields.', fields);
     }
     const row = await this.require(key);
-    row.alt = alt.trim();
+    row.alt = input.alt.trim();
+    if (input.tagline !== undefined) row.tagline = input.tagline.trim();
     row.updatedBy = actor.userId;
     const saved = await this.images.save(row);
     await this.writeAudit(actor, 'updated', saved.key);
@@ -153,6 +162,7 @@ export class SiteImageService {
     row.alt = row.defaultAlt;
     row.width = row.defaultWidth;
     row.height = row.defaultHeight;
+    row.tagline = row.defaultTagline;
     row.storageProvider = 'static';
     row.storageKey = '';
     row.updatedBy = actor.userId;
@@ -185,6 +195,7 @@ export class SiteImageService {
       width: row.width,
       height: row.height,
       fit: row.fit === 'contain' ? 'contain' : 'cover',
+      tagline: row.tagline.trim(),
       updatedAt: isoTimestamp(row.updatedAt),
     };
   }
@@ -227,6 +238,7 @@ function slotFor(key: string): SiteImageSlot {
       width: 1,
       height: 1,
       fit: 'cover',
+      tagline: '',
     };
   }
   return slot;
@@ -238,7 +250,8 @@ function isDefault(row: SiteImageEntity): boolean {
     row.url === row.defaultUrl &&
     row.alt === row.defaultAlt &&
     row.width === row.defaultWidth &&
-    row.height === row.defaultHeight
+    row.height === row.defaultHeight &&
+    row.tagline === row.defaultTagline
   );
 }
 
