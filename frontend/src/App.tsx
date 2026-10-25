@@ -44,6 +44,7 @@ const BootcampPage = lazy(() => import('@/pages/public/ProgrammePages').then((m)
 const ClassesPage = lazy(() => import('@/pages/public/ProgrammePages').then((m) => ({ default: m.ClassesPage })));
 const JourneyPage = lazy(() => import('@/pages/public/ProgrammePages').then((m) => ({ default: m.JourneyPage })));
 const LessonPage = lazy(() => import('@/pages/public/ProgrammePages').then((m) => ({ default: m.LessonPage })));
+const WorkstationPage = lazy(() => import('@/pages/public/WorkstationPage').then((m) => ({ default: m.WorkstationPage })));
 
 function Waiting({ children }: { children: ReactNode }) {
   return (
@@ -56,6 +57,7 @@ function Waiting({ children }: { children: ReactNode }) {
 export function App() {
   return (
     <Routes>
+      <Route path="/workstation" element={<Waiting><WorkstationPage /></Waiting>} />
       <Route element={<PublicLayout />}>
         <Route index element={<Waiting><HomePage /></Waiting>} handle={{ page: 'home', tone: 'dark', title: 'Home' }} />
         <Route path="bootcamp" element={<Waiting><BootcampPage /></Waiting>} handle={{ page: 'overview', tone: 'dark', title: 'Bootcamp' }} />

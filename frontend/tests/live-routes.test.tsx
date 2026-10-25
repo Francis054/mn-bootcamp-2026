@@ -20,6 +20,7 @@ const PUBLIC = [
   '/journey',
   '/classes',
   '/classes/missing-lesson',
+  '/workstation',
   '/projects',
   '/projects/missing-project',
   '/trainees',
