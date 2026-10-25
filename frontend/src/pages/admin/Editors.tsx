@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '@/api/client';
 import { useAuth } from '@/auth/AuthProvider';
 import { useAdminForm } from '@/components/adminForm';
-import { ErrorSummary, Field, FormLegend, SaveBar, bindBeforeUnload } from '@/components/controls';
+import { BusyButton, ErrorSummary, Field, FormLegend, SaveBar, bindBeforeUnload } from '@/components/controls';
 import { ErrorState, LoadingRows, useConfirm, useToast } from '@/components/feedback';
 import { usePageMeta } from '@/components/SiteChrome';
 import { isApiPublic } from '@/domain/publish';
@@ -137,7 +137,7 @@ function ClassForm({ initial }: { initial: Lesson | null }) {
           {initial && writable ? <button className="btn btn--ghost btn--sm" type="button" onClick={() => void remove()}>Delete class</button> : null}
         </aside>
       </div>
-      {writable ? <SaveBar dirty={dirty} pending={pending} onCancel="/admin/classes" label="Save class" extra={<button className="btn btn--sm" type="button" disabled={pending} onClick={() => { if (formRef.current) void submit(formRef.current, true); }}>Publish</button>} /> : <p className="muted">Viewers can read this form. Saving is refused for this role.</p>}
+      {writable ? <SaveBar dirty={dirty} pending={pending} onCancel="/admin/classes" label="Save class" extra={<BusyButton pending={pending} busyLabel="Publishing" onClick={() => { if (formRef.current) void submit(formRef.current, true); }}>Publish</BusyButton>} /> : <p className="muted">Viewers can read this form. Saving is refused for this role.</p>}
     </form>
   );
 }
@@ -239,7 +239,7 @@ function TraineeForm({ initial }: { initial: Trainee | null }) {
         <Field id="consentReceived" label="Consent" required={false} error={admin.errors.consentReceived} hint="Required before this profile can be published." className="span-2"><input type="checkbox" id="consentReceived" name="consentReceived" defaultChecked={initial?.consentReceived ?? false} disabled={!writable} /></Field>
         <Field id="internalNotes" label="Internal notes" required={false} className="span-2"><textarea className="textarea" id="internalNotes" name="internalNotes" defaultValue={initial?.internalNotes ?? ''} disabled={!writable} /></Field>
       </div>
-      {writable ? <SaveBar dirty={dirty} pending={pending} onCancel="/admin/trainees" label="Save profile" extra={<button className="btn btn--sm" type="button" disabled={pending} onClick={() => { if (formRef.current) void save(formRef.current, true); }}>Publish</button>} /> : null}
+      {writable ? <SaveBar dirty={dirty} pending={pending} onCancel="/admin/trainees" label="Save profile" extra={<BusyButton pending={pending} busyLabel="Publishing" onClick={() => { if (formRef.current) void save(formRef.current, true); }}>Publish</BusyButton>} /> : null}
     </form>
   );
 }
@@ -340,7 +340,7 @@ function ProjectForm({ initial }: { initial: Project | null }) {
         <Field id="shareAgreed" label="Share links" required={false}><input type="checkbox" id="shareAgreed" name="shareAgreed" defaultChecked={initial?.shareAgreed ?? false} disabled={!writable} /></Field>
         <Field id="internalNotes" label="Internal notes" required={false} className="span-2"><textarea className="textarea" id="internalNotes" name="internalNotes" defaultValue={initial?.internalNotes ?? ''} disabled={!writable} /></Field>
       </div>
-      {writable ? <SaveBar dirty={dirty} pending={pending} onCancel="/admin/projects" label="Save project" extra={<button className="btn btn--sm" type="button" disabled={pending} onClick={() => { if (formRef.current) void save(formRef.current, true); }}>Publish</button>} /> : null}
+      {writable ? <SaveBar dirty={dirty} pending={pending} onCancel="/admin/projects" label="Save project" extra={<BusyButton pending={pending} busyLabel="Publishing" onClick={() => { if (formRef.current) void save(formRef.current, true); }}>Publish</BusyButton>} /> : null}
     </form>
   );
 }
@@ -463,7 +463,7 @@ function EventForm({ initial }: { initial: BootcampEvent | null }) {
         <Field id="showOnAnniversary" label="Anniversary page" required={false}><input type="checkbox" id="showOnAnniversary" name="showOnAnniversary" defaultChecked={initial?.showOnAnniversary ?? false} disabled={!writable} /></Field>
         <Field id="calendarDownload" label="Calendar download" required={false}><input type="checkbox" id="calendarDownload" name="calendarDownload" defaultChecked={initial?.calendarDownload ?? false} disabled={!writable} /></Field>
       </div>
-      {writable ? <SaveBar dirty={dirty} pending={pending} onCancel="/admin/events" label="Save event" extra={<button className="btn btn--sm" type="button" disabled={pending} onClick={() => { if (formRef.current) void save(formRef.current, true); }}>Publish</button>} /> : null}
+      {writable ? <SaveBar dirty={dirty} pending={pending} onCancel="/admin/events" label="Save event" extra={<BusyButton pending={pending} busyLabel="Publishing" onClick={() => { if (formRef.current) void save(formRef.current, true); }}>Publish</BusyButton>} /> : null}
     </form>
   );
 }

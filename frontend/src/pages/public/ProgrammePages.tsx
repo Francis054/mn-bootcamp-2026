@@ -64,6 +64,7 @@ export function JourneyPage() {
   const visible = lessons.filter((lesson) => phase === 'all' || String(lesson.phase) === phase);
   const milestoneWeek: Record<string, number> = { start: 1, reception: 1, durbar: 1, midpoint: 7, hackathon: 1 };
   return (
+    <PublicGate loading={loading} error={error}>
     <>
       <PageIntro title="Journey" crumbs={[{ label: 'Home', to: '/' }, { label: 'Bootcamp' }, { label: 'Journey' }]} eyebrow="Timeline · Oct–Dec 2026" headline={'Twelve weeks,\none milestone\nat a time.'} aside={<><Reveal><p className="lead">Start and end dates are confirmed. The weekly plan is an indicative structure to show how the journey will be published.</p></Reveal><Reveal><div className="flex wrap" style={{ marginTop: 16 }}><span className="verified">Dates verified</span><span className="tbc">Weekly plan TBC</span></div></Reveal></>}>
         <div className="cohort-bar" style={{ marginTop: 56, color: 'var(--ink)' }}><span className="label">5 Oct</span><div className="meter" style={{ ['--p' as string]: week / 12, background: 'var(--line)' }}><i /></div><span className="label">Dec 2026</span><span className="badge badge--lime">Week {week} · in progress</span></div>
@@ -83,7 +84,6 @@ export function JourneyPage() {
             </div>
           </aside>
           <div className="jt__main">
-            <PublicGate loading={loading} error={error}>
             {visible.length ? <ol className="tl" data-tl>
               <li className="tl__progress" aria-hidden="true" />
               {PHASES.filter((item) => phase === 'all' || String(item.id) === phase).map((item) => (
@@ -114,11 +114,11 @@ export function JourneyPage() {
                 <li className="tl__item tl__item--milestone" key={event.id}><span className="tl__dot" /><Link className="tl__card" to={`/events/${event.id}`}><span className="tl__date">{event.whenLabel}</span><h3>{event.title}</h3><p>{event.summary}</p><span className="tbc">Details to be confirmed</span></Link></li>
               ))}
             </ol> : <EmptyState icon="calendar" title="No classes are published yet" text="The weekly plan appears here after a lesson is published. Start and end dates above are already confirmed." />}
-            </PublicGate>
           </div>
         </div>
       </section>
     </>
+    </PublicGate>
   );
 }
 
@@ -133,6 +133,7 @@ export function ClassesPage() {
     return [...rows].sort((a, b) => (sort === 'desc' ? b.week - a.week : a.week - b.week));
   }, [lessons, moduleId, sort, status]);
   return (
+    <PublicGate loading={loading} error={error}>
     <>
       <PageIntro title="Class archive" crumbs={[{ label: 'Home', to: '/' }, { label: 'Bootcamp' }, { label: 'Classes' }]} eyebrow="Class archive" headline={'Every lesson,\nin one place.'} aside={<><p className="lead">Notes, labs and resources are published after each class.</p>{lessons.some((lesson) => lesson.listing !== 'public') ? <span className="ph" style={{ marginTop: 16 }}>Sample lessons are labelled</span> : null}</>} />
       <section className="section" style={{ paddingTop: 'var(--s-7)' }}>
@@ -145,7 +146,6 @@ export function ClassesPage() {
             </label>
             <span className="result-count" aria-live="polite">{filtered.length} of {lessons.length} classes</span>
           </div>
-          <PublicGate loading={loading} error={error}>
           {!loading && !error && lessons.length === 0 ? <EmptyState icon="layers" title="No classes are published yet" text="Lessons appear here after they are saved and published. A hidden listing stays off this page." /> : filtered.length ? (
             <div className="lesson-grid">
               {filtered.map((lesson) => (
@@ -161,10 +161,10 @@ export function ClassesPage() {
               ))}
             </div>
           ) : <EmptyState title="No classes match" text="Try another module or status." action={<button className="btn btn--ghost btn--sm" type="button" onClick={() => { setModuleId('all'); setStatus('all'); }}>Reset filters</button>} />}
-          </PublicGate>
         </div>
       </section>
     </>
+    </PublicGate>
   );
 }
 
@@ -176,13 +176,12 @@ export function LessonPage() {
   const previous = index > 0 ? lessons[index - 1] : undefined;
   const next = index >= 0 ? lessons[index + 1] : undefined;
   usePageMeta(lesson?.title ?? 'Lesson');
-  if (loading) return <section className="section"><div className="container"><p>Loading the published site…</p></div></section>;
-  if (error) return <section className="section"><div className="container"><ErrorState title="This lesson could not be loaded" text={error} onRetry={() => window.location.reload()} /></div></section>;
-  if (!lesson) {
-    return <section className="section"><div className="container"><ErrorState title="This lesson is not available" text="It may be a draft, hidden, or the link may be wrong. Public pages only show published or labelled sample lessons." /></div></section>;
-  }
-  const module = moduleOf(lesson.moduleId);
+  const module = lesson ? moduleOf(lesson.moduleId) : null;
   return (
+    <PublicGate loading={loading} error={error} errorTitle="This lesson could not be loaded">
+    {!lesson || !module ? (
+      <section className="section"><div className="container"><ErrorState title="This lesson is not available" text="It may be a draft, hidden, or the link may be wrong. Public pages only show published or labelled sample lessons." /></div></section>
+    ) : (
     <>
       <section className="detail-hero">
         <div className="container">
@@ -225,5 +224,7 @@ export function LessonPage() {
         </div>
       </section>
     </>
+    )}
+    </PublicGate>
   );
 }

@@ -11,7 +11,7 @@ import { usesMockApi } from '@/config/runtime';
 import { currentWeek, formatDate } from '@/domain/format';
 import { useAuth } from '@/auth/AuthProvider';
 import { usePublicContent } from '@/hooks/useContent';
-import { moduleOf, SampleMark } from './helpers';
+import { moduleOf, PublicGate, SampleMark } from './helpers';
 
 const PEEK = ['electronics-lab', 'hack-coding-team', 'vr-demo-group', 'presenters-yellow-room'];
 
@@ -23,9 +23,6 @@ export function HomePage() {
   usePageMeta('Home');
   const week = currentWeek();
   const peek = useRef<HTMLDivElement>(null);
-  if (content.loading) return <section className="section"><div className="container"><p>Loading the published site…</p></div></section>;
-  if (content.error) return <section className="section"><div className="container"><h1>The published site could not be loaded</h1><p>{content.error}</p></div></section>;
-  if (!homepage) return <section className="section"><div className="container"><h1>The homepage is not published yet.</h1><p>Published homepage copy will appear here.</p>{auth.allowed('content.write') ? <p><Link to="/admin/content">Open the content editor to publish it.</Link></p> : null}</div></section>;
   const featured = [
     ...lessons.filter((lesson) => lesson.scheduleStatus === 'now'),
     ...lessons.filter((lesson) => lesson.scheduleStatus === 'upcoming'),
@@ -42,7 +39,8 @@ export function HomePage() {
     node.style.top = `${event.clientY}px`;
   };
   return (
-    <>
+    <PublicGate loading={content.loading} error={content.error} errorTitle="The published site could not be loaded">
+    {homepage ? <>
       {homepage.showAnnouncement ? <div className="dev-banner"><strong>Announcement.</strong> {homepage.announcement}</div> : null}
       <section className="hero" aria-labelledby="hero-title">
         <Netlines />
@@ -259,7 +257,10 @@ export function HomePage() {
         </div>
       </section>
       <div className="row-peek" ref={peek}><img alt="" /></div>
-    </>
+    </> : (
+      <section className="section"><div className="container"><h1>The homepage is not published yet.</h1><p>Published homepage copy will appear here.</p>{auth.allowed('content.write') ? <p><Link to="/admin/content">Open the content editor to publish it.</Link></p> : null}</div></section>
+    )}
+    </PublicGate>
   );
 }
 
