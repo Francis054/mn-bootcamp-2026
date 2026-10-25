@@ -195,6 +195,7 @@ export class AppContainer {
     const traineeService = new TraineeService(
       traineeRepository,
       moduleRepository,
+      lessonRepository,
       projectRepository,
       audit,
     );
@@ -202,18 +203,23 @@ export class AppContainer {
       projectRepository,
       moduleRepository,
       traineeRepository,
+      lessonRepository,
       audit,
       liveRepositoryVisibility(),
     );
+    const mediaRepository = new MediaRepository(dataSource.getRepository(MediaEntity));
     const eventService = new EventService(
       new EventRepository(dataSource.getRepository(EventEntity)),
+      lessonRepository,
+      projectRepository,
+      mediaRepository,
       audit,
       () => new Date(),
     );
     const contentService = new ContentService(contentRepository, audit);
     const storage = createStorage(env);
     const mediaService = new MediaService(
-      new MediaRepository(dataSource.getRepository(MediaEntity)),
+      mediaRepository,
       audit,
       storage,
       env.uploadMaxBytes,

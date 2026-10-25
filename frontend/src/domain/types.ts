@@ -76,9 +76,10 @@ export interface Trainee {
   publicationStatus: PublicationStatus;
   statusLabel: string;
   internalNotes: string;
+  lessonIds?: string[];
 }
 
-export type PublicTrainee = Omit<Trainee, 'email' | 'internalNotes' | 'linkedin' | 'portfolio' | 'consentReceived'>;
+export type PublicTrainee = Omit<Trainee, 'email' | 'internalNotes' | 'linkedin' | 'portfolio' | 'consentReceived' | 'lessonIds'>;
 
 export interface Project {
   id: string;
@@ -92,6 +93,8 @@ export interface Project {
   tools: string;
   steps: string[];
   team: string[];
+  traineeIds?: string[];
+  lessonIds?: string[];
   repositoryUrl: string;
   demoUrl: string;
   labOnlyConfirmed: boolean;
@@ -101,7 +104,7 @@ export interface Project {
   internalNotes: string;
 }
 
-export type PublicProject = Omit<Project, 'internalNotes' | 'repositoryUrl' | 'demoUrl' | 'shareAgreed' | 'labOnlyConfirmed'>;
+export type PublicProject = Omit<Project, 'internalNotes' | 'repositoryUrl' | 'demoUrl' | 'shareAgreed' | 'labOnlyConfirmed' | 'traineeIds' | 'lessonIds'>;
 
 export type EventBody =
   | { kind: 'callout'; tone: 'lime' | 'warn' | 'plain'; title: string; text: string }
@@ -130,9 +133,12 @@ export interface BootcampEvent {
   publicationStatus: PublicationStatus;
   listing: Listing;
   internalNotes: string;
+  lessonIds?: string[];
+  projectIds?: string[];
+  mediaIds?: string[];
 }
 
-export type PublicEvent = Omit<BootcampEvent, 'internalNotes'>;
+export type PublicEvent = Omit<BootcampEvent, 'internalNotes' | 'lessonIds' | 'projectIds' | 'mediaIds'>;
 
 export interface MediaItem {
   id: string;

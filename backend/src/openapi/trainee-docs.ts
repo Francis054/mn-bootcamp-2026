@@ -124,6 +124,7 @@ export const traineeSchemas = {
       email: { type: 'string' },
       track: { type: 'string', enum: ['Blue team', 'Red team', 'GRC & Awareness'] },
       focus: { type: 'string' },
+      lessonIds: { type: 'array', items: { type: 'string' } },
       skills: { type: 'array', items: { type: 'string' } },
       bio: { type: 'string' },
       quote: { type: 'string' },

@@ -11,9 +11,11 @@ import {
   stepsMessage,
   teamMessage,
   titleMessage,
+  lessonIdsMessage,
   traineeIdsMessage,
   typeMessage,
 } from './project.rules.js';
+import { trimIdList } from '../../shared/validation/id-list.js';
 
 function rule(name: string, problem: (value: unknown) => string | undefined, fallback: string) {
   return ValidateBy({
@@ -75,9 +77,14 @@ export class ProjectCreateDto {
   team?: string[];
 
   @IsOptional()
-  @Transform(lines)
+  @Transform(trimIdList)
   @rule('traineeIds', traineeIdsMessage, 'Choose a trainee.')
   traineeIds?: string[];
+
+  @IsOptional()
+  @Transform(trimIdList)
+  @rule('lessonIds', lessonIdsMessage, 'Choose a class.')
+  lessonIds?: string[];
 
   @IsOptional()
   @rule('repositoryUrl', projectUrlProblem, 'Enter a full link starting with https://.')
@@ -153,9 +160,14 @@ export class ProjectPatchDto {
   team?: string[];
 
   @IsOptional()
-  @Transform(lines)
+  @Transform(trimIdList)
   @rule('traineeIds', traineeIdsMessage, 'Choose a trainee.')
   traineeIds?: string[];
+
+  @IsOptional()
+  @Transform(trimIdList)
+  @rule('lessonIds', lessonIdsMessage, 'Choose a class.')
+  lessonIds?: string[];
 
   @IsOptional()
   @rule('repositoryUrl', projectUrlProblem, 'Enter a full link starting with https://.')

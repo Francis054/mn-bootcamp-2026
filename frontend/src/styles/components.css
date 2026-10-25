@@ -114,7 +114,11 @@ p{margin:0}
 .input:hover,.select:hover,.textarea:hover{border-color:#BFC6B8}
 .input:focus,.select:focus,.textarea:focus{outline:none;border-color:var(--forest-600);box-shadow:var(--ring)}
 .field.has-error .input,.field.has-error .select,.field.has-error .textarea{border-color:var(--danger);background:#FFF8F6}
-.field.has-error .input:focus{box-shadow:0 0 0 3px rgba(194,65,45,.25)}
+.field.has-error .input:focus,.field.has-error .select:focus,.field.has-error .textarea:focus{box-shadow:0 0 0 3px rgba(194,65,45,.25)}
+.req{color:var(--danger);font-weight:700}
+.opt{color:var(--text-muted);font-weight:400;font-size:.85em}
+.form-legend{margin:0 0 16px;color:var(--ink-3);font-size:14px}
+.form-grid>.form-legend,.form-grid>.error-summary{grid-column:1 / -1}
 .field.is-valid .input{border-color:var(--success)}
 .input[disabled]{background:var(--paper);color:var(--text-muted);cursor:not-allowed}
 .input-icon{position:relative}

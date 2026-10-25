@@ -1,5 +1,6 @@
 import { Transform } from 'class-transformer';
 import { IsOptional, ValidateBy } from 'class-validator';
+import { trimIdList } from '../../shared/validation/id-list.js';
 import {
   consentMessage,
   displayNameMessage,
@@ -8,6 +9,7 @@ import {
   focusMessage,
   hueMessage,
   initialsMessage,
+  lessonIdsMessage,
   listingMessage,
   optionalHttpUrlMessage,
   plainTextMessage,
@@ -86,6 +88,11 @@ export class TraineeCreateDto {
   portfolio?: string | null;
 
   @IsOptional()
+  @Transform(trimIdList)
+  @rule('lessonIds', lessonIdsMessage, 'Choose a class.')
+  lessonIds?: string[];
+
+  @IsOptional()
   @rule('consentReceived', consentMessage, 'Choose whether consent was received.')
   consentReceived?: boolean;
 
@@ -162,6 +169,11 @@ export class TraineePatchDto {
   @Transform(blankLink)
   @rule('portfolio', optionalHttpUrlMessage, 'Enter a full link starting with https://')
   portfolio?: string | null;
+
+  @IsOptional()
+  @Transform(trimIdList)
+  @rule('lessonIds', lessonIdsMessage, 'Choose a class.')
+  lessonIds?: string[];
 
   @IsOptional()
   @rule('consentReceived', consentMessage, 'Choose whether consent was received.')

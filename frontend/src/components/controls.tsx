@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { cloneElement, isValidElement, useEffect, useRef, useState, type FormEvent, type ReactElement, type ReactNode, type Ref } from 'react';
 import { usesMockApi } from '@/config/runtime';
 import { Icon, type IconName } from './Icon';
 
@@ -47,26 +47,52 @@ export function Chips({ label, value, onChange, options }: { label: string; valu
   );
 }
 
-export function Field({ id, label, error, hint, children, className = '' }: { id: string; label: string; error?: string; hint?: string; children: ReactNode; className?: string }) {
+export function Field({ id, label, error, hint, children, className = '', required }: { id: string; label: string; error?: string; hint?: string; children: ReactNode; className?: string; required?: boolean }) {
+  const control = required === undefined || !isValidElement(children)
+    ? children
+    : cloneElement(children as ReactElement<{ 'aria-required'?: boolean; 'aria-invalid'?: boolean; 'aria-describedby'?: string }>, {
+      'aria-required': required ? true : undefined,
+      'aria-invalid': error ? true : undefined,
+      'aria-describedby': error ? `${id}-err` : undefined,
+    });
   return (
     <div className={`field${className ? ` ${className}` : ''}${error ? ' has-error' : ''}`}>
-      <label htmlFor={id}>{label}</label>
-      {children}
+      <label htmlFor={id}>
+        {label}
+        {required === true ? <><span className="req" aria-hidden="true"> *</span><span className="sr-only"> required</span></> : null}
+        {required === false ? <span className="opt"> (optional)</span> : null}
+      </label>
+      {control}
       {hint ? <span className="hint">{hint}</span> : null}
       <div className="error-msg" id={`${id}-err`}>{error ? <><Icon name="alert" className="i--sm" />{error}</> : null}</div>
     </div>
   );
 }
 
-export function ErrorSummary({ errors }: { errors: Record<string, string> }) {
+export function FormLegend() {
+  return <p className="form-legend"><span className="req" aria-hidden="true">*</span> Required</p>;
+}
+
+export function ErrorSummary({ errors, labels, summaryRef }: { errors: Record<string, string>; labels?: Record<string, string>; summaryRef?: Ref<HTMLDivElement> }) {
   const entries = Object.entries(errors);
   if (!entries.length) return <div className="error-summary" role="alert" />;
+  const count = entries.length;
+  const heading = labels
+    ? `Please fill in ${count} required ${count === 1 ? 'field' : 'fields'}`
+    : `${count} ${count > 1 ? 'fields need' : 'field needs'} attention`;
   return (
-    <div className="error-summary is-on" role="alert" tabIndex={-1}>
-      <h2><Icon name="alert" className="i--sm" /> {entries.length} {entries.length > 1 ? 'fields need' : 'field needs'} attention</h2>
-      <ul>{entries.map(([id, message]) => <li key={id}><a href={`#${id}`}>{message}</a></li>)}</ul>
+    <div className="error-summary is-on" role="alert" tabIndex={-1} ref={summaryRef}>
+      <h2><Icon name="alert" className="i--sm" /> {heading}</h2>
+      <ul>{entries.map(([id, message]) => <li key={id}><a href={`#${id}`} onClick={(event) => jumpToField(event, id)}>{labels?.[id] ?? message}</a></li>)}</ul>
     </div>
   );
+}
+
+export function jumpToField(event: { preventDefault: () => void }, id: string) {
+  event.preventDefault();
+  const node = document.getElementById(id);
+  node?.scrollIntoView?.({ block: 'center' });
+  node?.focus();
 }
 
 export function SaveBar({ dirty, pending, onCancel, label = 'Save', extra }: { dirty: boolean; pending: boolean; onCancel?: string; label?: string; extra?: ReactNode }) {

@@ -120,6 +120,7 @@ export const projectSchemas = {
       steps: { type: 'array', items: { type: 'string' } },
       team: { type: 'array', items: { type: 'string' } },
       traineeIds: { type: 'array', items: { type: 'string' } },
+      lessonIds: { type: 'array', items: { type: 'string' } },
       repositoryUrl: { type: 'string' },
       demoUrl: { type: 'string' },
       labOnlyConfirmed: { type: 'boolean' },

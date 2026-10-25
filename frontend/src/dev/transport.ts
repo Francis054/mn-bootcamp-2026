@@ -6,7 +6,7 @@ import { includesQuery, newId, paginate, scheduleFor, slugify } from '@/domain/f
 import { collect, emailAddress, httpUrl, minLength, required } from '@/domain/validate';
 import { currentEnv } from '@/config/runtime';
 import type { ApiRequest } from '@/api/liveTransport';
-import { mediaSrc } from './fixtures';
+import { MODULES, mediaSrc } from './fixtures';
 import { clearSession, markSessionExpired, readActiveSession, setSession } from './session';
 import { getState, updateState } from './store';
 
@@ -179,6 +179,16 @@ async function route(method: string, path: string, query: ListQuery & Record<str
   if (path.startsWith('/admin/')) requireUser('content.read');
 
   if (method === 'GET' && path === '/admin/search') return search(String(query.q ?? ''));
+  if (method === 'GET' && path === '/admin/modules') {
+    requireUser('content.read');
+    return MODULES.map((module, index) => ({
+      ...module,
+      sortOrder: index + 1,
+      publicationStatus: 'published' as const,
+      listing: 'sample' as const,
+      updatedAt: '2026-10-01T00:00:00.000Z',
+    }));
+  }
   if (method === 'GET' && path === '/admin/classes') return listLessons(query);
   if (method === 'GET' && /^\/admin\/classes\/[^/]+$/.test(path)) return adminOne(getState().lessons, id, 'Class not found.');
   if (method === 'POST' && path === '/admin/classes') return saveNew('content.write', () => updateState((s) => ({ ...s, lessons: [lessonBody(body as Partial<Lesson>), ...s.lessons] })).lessons[0]);
@@ -275,7 +285,7 @@ async function route(method: string, path: string, query: ListQuery & Record<str
     const confirm = String(body.confirm ?? '');
     assertFields(collect({
       current: required(String(body.current ?? ''), 'Enter your current password.'),
-      next: required(next, 'Choose a new password.') ?? minLength(next, 8, 'Use at least 8 characters.'),
+      next: required(next, 'Choose a new password.') ?? minLength(next, 12, 'Use at least 12 characters.'),
       confirm: next === confirm ? null : 'The two passwords do not match.',
     }));
     fail('pending', 'Password changes need the production authentication provider, which is not connected. The password was not stored.', 501);
@@ -477,6 +487,11 @@ function traineeBody(input: Record<string, unknown>, current?: Trainee): Trainee
     portfolio: linkValue(input.portfolio, current?.portfolio).error,
   }));
   const consentReceived = Boolean(input.consentReceived ?? current?.consentReceived);
+  const publicationStatus = (input.publicationStatus as Trainee['publicationStatus']) ?? current?.publicationStatus ?? 'draft';
+  if (publicationStatus === 'published' && !consentReceived) {
+    const consent = 'Consent is required before this profile can be published.';
+    assertFields({ publicationStatus: consent, consentReceived: consent });
+  }
   let listing = (input.listing as Trainee['listing']) ?? current?.listing ?? 'hidden';
   if (listing === 'public' && !consentReceived) listing = 'sample';
   return {
@@ -494,8 +509,9 @@ function traineeBody(input: Record<string, unknown>, current?: Trainee): Trainee
     portfolio: linkValue(input.portfolio, current?.portfolio).stored,
     consentReceived,
     listing,
-    publicationStatus: (input.publicationStatus as Trainee['publicationStatus']) ?? current?.publicationStatus ?? 'draft',
+    publicationStatus,
     statusLabel: String(input.statusLabel ?? current?.statusLabel ?? 'In training'),
+    lessonIds: idList(input.lessonIds, current?.lessonIds),
     internalNotes: String(input.internalNotes ?? current?.internalNotes ?? ''),
   };
 }
@@ -533,6 +549,8 @@ function projectBody(input: Record<string, unknown>, current?: Project): Project
     tools: String(input.tools ?? current?.tools ?? ''),
     steps: (input.steps as string[]) ?? current?.steps ?? [],
     team: (input.team as string[]) ?? current?.team ?? [],
+    traineeIds: idList(input.traineeIds, current?.traineeIds),
+    lessonIds: idList(input.lessonIds, current?.lessonIds),
     repositoryUrl: String(input.repositoryUrl ?? current?.repositoryUrl ?? ''),
     demoUrl: String(input.demoUrl ?? current?.demoUrl ?? ''),
     labOnlyConfirmed: Boolean(input.labOnlyConfirmed ?? current?.labOnlyConfirmed),
@@ -558,17 +576,22 @@ function eventBody(input: Record<string, unknown>, current?: BootcampEvent): Boo
   const summary = String(input.summary ?? current?.summary ?? '');
   const verified = Boolean(input.verified ?? current?.verified);
   const sourceUrl = String(input.sourceUrl ?? current?.sourceUrl ?? '');
+  const dateTbc = Boolean(input.dateTbc ?? current?.dateTbc);
+  const startTime = String(input.startTime ?? current?.startTime ?? '');
+  const endTime = String(input.endTime ?? current?.endTime ?? '');
   assertFields(collect({
     title: required(title, 'Give the event a name.'),
     place: required(place, 'Enter a venue, or “Venue to be confirmed”.'),
     summary: required(summary, 'Write a summary of at least 20 characters.') ?? minLength(summary, 20),
-    sourceUrl: verified ? httpUrl(sourceUrl, false) : httpUrl(sourceUrl),
+    sourceUrl: verified && !sourceUrl.trim() ? 'Enter a full link starting with https://' : httpsLink(sourceUrl, 'Enter a full link starting with https://'),
+    startTime: dateTbc && (startTime.trim() || endTime.trim()) ? 'Leave the times blank while the date is to be confirmed.' : null,
+    date: !dateTbc && !String(input.date ?? current?.date ?? '').trim() ? 'Pick a date.' : null,
   }));
   return {
     id: current?.id ?? newId('event'),
     title: title.trim(),
     date: String(input.date ?? current?.date ?? '2026-10-24'),
-    dateTbc: Boolean(input.dateTbc ?? current?.dateTbc),
+    dateTbc,
     whenLabel: String(input.whenLabel ?? current?.whenLabel ?? ''),
     place: place.trim(),
     kind: (input.kind as BootcampEvent['kind']) ?? current?.kind ?? 'Milestone',
@@ -581,8 +604,11 @@ function eventBody(input: Record<string, unknown>, current?: BootcampEvent): Boo
     image: String(input.image ?? current?.image ?? 'guests-seated'),
     showOnAnniversary: Boolean(input.showOnAnniversary ?? current?.showOnAnniversary),
     calendarDownload: Boolean(input.calendarDownload ?? current?.calendarDownload),
-    startTime: String(input.startTime ?? current?.startTime ?? ''),
-    endTime: String(input.endTime ?? current?.endTime ?? ''),
+    startTime: dateTbc ? '' : startTime,
+    endTime: dateTbc ? '' : endTime,
+    lessonIds: idList(input.lessonIds, current?.lessonIds),
+    projectIds: idList(input.projectIds, current?.projectIds),
+    mediaIds: idList(input.mediaIds, current?.mediaIds),
     publicationStatus: (input.publicationStatus as BootcampEvent['publicationStatus']) ?? current?.publicationStatus ?? 'draft',
     listing: (input.listing as BootcampEvent['listing']) ?? current?.listing ?? 'sample',
     internalNotes: String(input.internalNotes ?? current?.internalNotes ?? ''),
@@ -618,6 +644,17 @@ function addMedia(body: Record<string, unknown>): MediaItem {
   };
   updateState((s) => ({ ...s, media: [item, ...s.media] }));
   return item;
+}
+
+function idList(value: unknown, fallback: string[] | undefined): string[] {
+  if (Array.isArray(value) && value.every((item) => typeof item === 'string')) return value;
+  return fallback ?? [];
+}
+
+function httpsLink(value: string, message: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return /^https:\/\/\S+\.\S+/.test(trimmed) ? null : message;
 }
 
 function linkValue(value: unknown, fallback: string | null | undefined): { stored: string | null; error: string | null } {
@@ -691,7 +728,8 @@ function publishRecord(kind: string, id: string) {
   const current = rows.find((row) => row.id === id);
   if (!current) fail('not_found', 'Record not found.', 404);
   if (key === 'trainees' && !('consentReceived' in current && current.consentReceived)) {
-    fail('validation', 'Record consent before this profile can be published.', 422, { publicationStatus: 'Record consent before this profile can be published.' });
+    const consent = 'Consent is required before this profile can be published.';
+    fail('validation', consent, 422, { publicationStatus: consent, consentReceived: consent });
   }
   const next = { ...current, publicationStatus: 'published' as const };
   updateState((s) => ({ ...s, [key]: s[key].map((row) => (row.id === id ? next : row)) }));

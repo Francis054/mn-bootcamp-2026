@@ -27,11 +27,17 @@ export interface EventRecord {
   publicationStatus: PublicationStatus;
   listing: Listing;
   internalNotes: string;
+  lessonIds: string[];
+  projectIds: string[];
+  mediaIds: string[];
   updatedAt: string;
 }
 
-/** The website's public event. Internal notes stay on the admin response. */
-export type PublicEvent = Omit<EventRecord, 'internalNotes' | 'updatedAt'>;
+/** The website's public event. Internal notes and admin links stay off it. */
+export type PublicEvent = Omit<
+  EventRecord,
+  'internalNotes' | 'updatedAt' | 'lessonIds' | 'projectIds' | 'mediaIds'
+>;
 
 export function toPublicEvent(row: EventRecord): PublicEvent {
   return {

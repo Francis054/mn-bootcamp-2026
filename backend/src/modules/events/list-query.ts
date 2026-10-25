@@ -1,4 +1,5 @@
 import { ApiError } from '../../shared/errors/api-error.js';
+import { filterEntries, readPositive, readString } from '../../shared/validation/query-fields.js';
 import { isEventKind } from './event-types.js';
 
 const SORTS = ['title', 'date', 'place', 'kind', 'publicationStatus', 'updatedAt'] as const;
@@ -37,19 +38,15 @@ export function readEventListQuery(query: Record<string, unknown>): EventListQue
   if (dirRaw !== 'asc' && dirRaw !== 'desc') fieldErrors.dir = 'Choose asc or desc.';
 
   const filters: EventListQuery['filters'] = {};
-  for (const [key, value] of Object.entries(query)) {
-    if (!key.startsWith('filters.')) continue;
-    const name = key.slice('filters.'.length);
-    const text = readString(value);
-    if (!text) continue;
+  for (const { key, name, value } of filterEntries(query)) {
     if (name === 'kind') {
-      if (!isEventKind(text)) fieldErrors[key] = 'Choose a kind.';
-      else filters.kind = text;
+      if (!isEventKind(value)) fieldErrors[key] = 'Choose a kind.';
+      else filters.kind = value;
       continue;
     }
     if (name === 'verification') {
-      if ((VERIFICATION as readonly string[]).includes(text)) {
-        filters.verification = text as EventVerification;
+      if ((VERIFICATION as readonly string[]).includes(value)) {
+        filters.verification = value as EventVerification;
       } else fieldErrors[key] = 'Choose verified, tbc, or sample.';
       continue;
     }
@@ -68,31 +65,5 @@ export function readEventListQuery(query: Record<string, unknown>): EventListQue
     filters,
   };
   if (sort) parsed.sort = sort;
-  return parsed;
-}
-
-function readString(value: unknown): string | undefined {
-  if (typeof value !== 'string') return undefined;
-  const trimmed = value.trim();
-  return trimmed === '' ? undefined : trimmed;
-}
-
-function readPositive(
-  value: unknown,
-  fallback: number,
-  name: string,
-  fieldErrors: Record<string, string>,
-): number {
-  if (value === undefined || value === '') return fallback;
-  const raw = typeof value === 'string' ? value : '';
-  if (!/^[0-9]+$/.test(raw)) {
-    fieldErrors[name] = 'Use a whole number.';
-    return fallback;
-  }
-  const parsed = Number(raw);
-  if (parsed < 1) {
-    fieldErrors[name] = 'Use a whole number of at least 1.';
-    return fallback;
-  }
   return parsed;
 }

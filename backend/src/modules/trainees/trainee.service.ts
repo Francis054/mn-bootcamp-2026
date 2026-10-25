@@ -12,7 +12,7 @@ import {
 } from '../curriculum/publication.js';
 import type { ModuleRepository } from '../curriculum/repositories.js';
 import { ApiError } from '../../shared/errors/api-error.js';
-import { postgresCode } from '../../shared/persistence/postgres-error.js';
+import { postgresCode, postgresConstraint } from '../../shared/persistence/postgres-error.js';
 import { hueFromEmail, initialsFrom } from '../users/profile.js';
 import type { TraineeListQuery, TraineeSort } from './list-query.js';
 import { toPublicTrainee, type PublicTrainee, type TraineeRecord } from './records.js';
@@ -27,6 +27,7 @@ export class TraineeService {
   constructor(
     private readonly trainees: TraineeRepository,
     private readonly modules: ModuleRepository,
+    private readonly lessons: { findById(id: string): Promise<{ id: string } | null> },
     private readonly projects: { countByTrainee(traineeId: string): Promise<number> },
     private readonly audit: AuditRepository,
     private readonly now: () => Date = () => new Date(),
@@ -50,7 +51,9 @@ export class TraineeService {
   }
 
   async listAdmin(query: TraineeListQuery): Promise<Page<TraineeRecord>> {
-    let rows = (await this.trainees.findAll()).map((row) => this.toRecord(row));
+    const stored = await this.trainees.findAll();
+    const links = await this.trainees.lessonIdsByTrainee(stored.map((row) => row.id));
+    let rows = stored.map((row) => this.toRecord(row, links.get(row.id) ?? []));
     const needle = query.q.toLowerCase();
     if (needle) {
       rows = rows.filter((trainee) => haystack(trainee).includes(needle));
@@ -70,7 +73,7 @@ export class TraineeService {
   }
 
   async getAdmin(id: string): Promise<TraineeRecord> {
-    return this.toRecord(await this.requireTrainee(id, 'Trainee not found.'));
+    return this.present(await this.requireTrainee(id, 'Trainee not found.'));
   }
 
   async create(dto: TraineeCreateDto, actor: Actor): Promise<TraineeRecord> {
@@ -84,6 +87,8 @@ export class TraineeService {
       });
     }
     await this.assertFocus(focus);
+    const lessonIds = unique(dto.lessonIds ?? []);
+    await this.assertLessons(lessonIds);
     await this.assertEmailFree(email);
     const consentReceived = dto.consentReceived ?? false;
     const requestedStatus = statusOr(dto.publicationStatus, 'draft');
@@ -119,8 +124,9 @@ export class TraineeService {
       statusLabel: dto.statusLabel?.trim() || 'In training',
       internalNotes: dto.internalNotes ?? '',
     });
+    await this.trainees.replaceLessons(saved.id, lessonIds);
     await this.writeAudit(actor, 'created', saved.id);
-    return this.toRecord(saved);
+    return this.present(saved);
   }
 
   async update(id: string, patch: TraineePatchDto, actor: Actor): Promise<TraineeRecord> {
@@ -135,6 +141,11 @@ export class TraineeService {
       });
     }
     await this.assertFocus(focus);
+    const lessonIds =
+      patch.lessonIds !== undefined
+        ? unique(patch.lessonIds)
+        : ((await this.trainees.lessonIdsByTrainee([id])).get(id) ?? []);
+    await this.assertLessons(lessonIds);
     if (email !== current.email) await this.assertEmailFree(email);
     const requestedConsent = patch.consentReceived ?? current.consentReceived;
     const decision = consentWrite({
@@ -184,9 +195,10 @@ export class TraineeService {
     }
     current.linksShareConsent = nextLinks;
     const saved = await this.save(current);
+    if (patch.lessonIds !== undefined) await this.trainees.replaceLessons(saved.id, lessonIds);
     const verb: CurriculumVerb = decision.withdrawing && wasPublished ? 'unpublished' : 'updated';
     await this.writeAudit(actor, verb, saved.id);
-    return this.toRecord(saved);
+    return this.present(saved);
   }
 
   async publish(id: string, actor: Actor): Promise<TraineeRecord> {
@@ -197,7 +209,7 @@ export class TraineeService {
       await this.save(current);
       await this.writeAudit(actor, 'published', current.id);
     }
-    return this.toRecord(current);
+    return this.present(current);
   }
 
   async unpublish(id: string, actor: Actor): Promise<TraineeRecord> {
@@ -207,7 +219,7 @@ export class TraineeService {
       await this.save(current);
       await this.writeAudit(actor, 'unpublished', current.id);
     }
-    return this.toRecord(current);
+    return this.present(current);
   }
 
   async remove(id: string, actor: Actor): Promise<{ deleted: true; id: string }> {
@@ -221,6 +233,21 @@ export class TraineeService {
     await this.trainees.remove(current);
     await this.writeAudit(actor, 'deleted', id);
     return { deleted: true, id };
+  }
+
+  private async present(row: TraineeEntity): Promise<TraineeRecord> {
+    const lessonIds = (await this.trainees.lessonIdsByTrainee([row.id])).get(row.id) ?? [];
+    return this.toRecord(row, lessonIds);
+  }
+
+  private async assertLessons(lessonIds: readonly string[]): Promise<void> {
+    for (const lessonId of lessonIds) {
+      if (!(await this.lessons.findById(lessonId))) {
+        throw new ApiError('validation', 'Check the highlighted fields.', {
+          lessonIds: 'Choose a class.',
+        });
+      }
+    }
   }
 
   private async assertFocus(focus: string): Promise<void> {
@@ -265,7 +292,7 @@ export class TraineeService {
     return row;
   }
 
-  private toRecord(row: TraineeEntity): TraineeRecord {
+  private toRecord(row: TraineeEntity, lessonIds: string[] = []): TraineeRecord {
     return {
       id: row.id,
       displayName: row.displayName,
@@ -291,6 +318,7 @@ export class TraineeService {
       publicationStatus: row.publicationStatus,
       statusLabel: row.statusLabel,
       internalNotes: row.internalNotes,
+      lessonIds,
       updatedAt: isoTimestamp(row.updatedAt),
     };
   }
@@ -331,6 +359,10 @@ function listingOr(value: string | undefined, fallback: Listing): Listing {
   return fallback;
 }
 
+function unique(ids: readonly string[]): string[] {
+  return [...new Set(ids)];
+}
+
 function stamp(value: Date | null): string | null {
   if (!value) return null;
   return isoTimestamp(value);
@@ -349,6 +381,12 @@ function mappedWrite(error: unknown): unknown {
     });
   }
   if (postgresCode(error) === '23503') {
+    const constraint = postgresConstraint(error) ?? '';
+    if (constraint.includes('lesson')) {
+      return new ApiError('validation', 'Check the highlighted fields.', {
+        lessonIds: 'Choose a class.',
+      });
+    }
     return new ApiError('validation', 'Check the highlighted fields.', {
       focus: 'Choose a module.',
     });
