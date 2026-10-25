@@ -29,8 +29,8 @@ export interface SampleTrainee {
   skills: string[];
   bio: string;
   quote: string;
-  linkedin: string;
-  portfolio: string;
+  linkedin: string | null;
+  portfolio: string | null;
   consentReceived: boolean;
   consentReceivedAt: null;
   consentRecordedBy: null;
@@ -63,8 +63,8 @@ export function buildSampleTrainees(): SampleTrainee[] {
       skills: [...skills],
       bio: 'Placeholder: why they joined the bootcamp, what they want to do next and what they are proudest of so far. No biography is shown until the trainee writes and approves it.',
       quote: 'Sample quote — the trainee’s own words go here.',
-      linkedin: '',
-      portfolio: '',
+      linkedin: null,
+      portfolio: null,
       consentReceived: false,
       consentReceivedAt: null,
       consentRecordedBy: null,

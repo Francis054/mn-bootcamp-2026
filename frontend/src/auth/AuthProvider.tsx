@@ -8,6 +8,7 @@ import { can } from '@/domain/permissions';
 import { clearSession, expireIfNeeded, getSessionSnapshot, rememberSignedIn, subscribeSession } from '@/dev/session';
 
 interface AuthValue {
+  ready: boolean;
   signedIn: boolean;
   expired: boolean;
   role: Role | null;
@@ -15,11 +16,12 @@ interface AuthValue {
   initials: string;
   hue: number;
   email: string;
+  userId: string;
   allowed: (permission: Permission) => boolean;
 }
 
 const AuthContext = createContext<AuthValue>({
-  signedIn: false, expired: false, role: null, displayName: '', initials: '', hue: 140, email: '', allowed: () => false,
+  ready: true, signedIn: false, expired: false, role: null, displayName: '', initials: '', hue: 140, email: '', userId: '', allowed: () => false,
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -32,6 +34,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (usesMockApi()) return;
     let cancel = false;
+    const slow = window.setTimeout(() => {
+      if (!cancel) setReady(true);
+    }, 15_000);
     void api<{ authenticated: boolean; user?: SessionUser; expiresAt?: string }>({ method: 'GET', path: '/auth/session' })
       .then((result) => {
         if (cancel) return;
@@ -42,13 +47,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!cancel) clearSession();
       })
       .finally(() => {
+        window.clearTimeout(slow);
         if (!cancel) setReady(true);
       });
-    return () => { cancel = true; };
+    return () => {
+      cancel = true;
+      window.clearTimeout(slow);
+    };
   }, []);
-  if (!ready) return null;
   const user = snapshot.session?.user;
   const value: AuthValue = {
+    ready,
     signedIn: Boolean(user),
     expired: snapshot.expired,
     role: user?.role ?? null,
@@ -56,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initials: user?.initials ?? '',
     hue: user?.hue ?? 140,
     email: user?.email ?? '',
+    userId: user?.id ?? '',
     allowed: (permission) => (user ? can(user.role, permission) : false),
   };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -68,6 +78,9 @@ export function useAuth() {
 export function RequireAccess({ permission, children }: { permission: Permission; children: ReactNode }) {
   const auth = useAuth();
   const location = useLocation();
+  if (!auth.ready) {
+    return <main id="main"><section className="section"><div className="container"><h1>Checking your session…</h1><p>The public site stays available while this finishes.</p></div></section></main>;
+  }
   if (!auth.signedIn && auth.expired) return <Navigate to="/admin/session-expired" replace />;
   if (!auth.signedIn) {
     const next = encodeURIComponent(`${location.pathname}${location.search}`);

@@ -21,6 +21,7 @@ export interface MediaRecord {
   publicationStatus: PublicationStatus;
   listing: Listing;
   storageProvider: StorageLabel;
+  uploadedBy: string | null;
   updatedAt: string;
 }
 

@@ -5,11 +5,14 @@ import type { Permission, Role } from './types';
  *  A future backend must enforce them independently.
  */
 export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
+  trainee: ['content.read', 'media.upload', 'account.manage'],
+  trainer: ['content.read', 'media.upload', 'account.manage'],
   viewer: ['content.read', 'account.manage'],
-  editor: ['content.read', 'content.write', 'media.write', 'account.manage'],
+  editor: ['content.read', 'content.write', 'media.upload', 'media.write', 'account.manage'],
   administrator: [
     'content.read',
     'content.write',
+    'media.upload',
     'media.write',
     'users.read',
     'users.manage',
@@ -31,7 +34,11 @@ export function canAny(role: Role, permissions: readonly Permission[]): boolean 
 }
 
 export const ROLE_LABEL: Record<Role, string> = {
+  trainee: 'Trainee',
+  trainer: 'Trainer',
   viewer: 'Viewer',
   editor: 'Editor',
   administrator: 'Administrator',
 };
+
+export const ROLE_CHOICE = 'Choose viewer, editor, trainer, trainee, or administrator.';

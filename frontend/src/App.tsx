@@ -6,6 +6,7 @@ import {
   AboutEditorPage,
   AccountPage,
   ContentEditorPage,
+  EnquiriesPage,
   MediaPage,
   SettingsPage,
   StatesPage,
@@ -67,6 +68,7 @@ export function App() {
         <Route path="account" element={<AccountPage />} />
         <Route path="states" element={<StatesPage />} />
         <Route path="users" element={<RequireAccess permission="users.read"><UsersPage /></RequireAccess>} />
+        <Route path="enquiries" element={<RequireAccess permission="users.manage"><EnquiriesPage /></RequireAccess>} />
         <Route path="settings" element={<RequireAccess permission="settings.manage"><SettingsPage /></RequireAccess>} />
       </Route>
     </Routes>

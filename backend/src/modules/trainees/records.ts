@@ -16,8 +16,8 @@ export interface TraineeRecord {
   skills: string[];
   bio: string;
   quote: string;
-  linkedin: string;
-  portfolio: string;
+  linkedin: string | null;
+  portfolio: string | null;
   consentReceived: boolean;
   consentReceivedAt: string | null;
   consentRecordedBy: string | null;

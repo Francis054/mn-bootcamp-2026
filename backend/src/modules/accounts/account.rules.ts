@@ -85,7 +85,8 @@ export function inviteProblems(email: string, role: string): Record<string, stri
   const emailIssue = emailProblem(email);
   if (emailIssue) problems.email = emailIssue;
   if (role.length === 0) problems.role = 'Choose a role.';
-  else if (!isRole(role)) problems.role = 'Choose viewer, editor or administrator.';
+  else if (!isRole(role))
+    problems.role = 'Choose viewer, editor, trainer, trainee, or administrator.';
   return problems;
 }
 

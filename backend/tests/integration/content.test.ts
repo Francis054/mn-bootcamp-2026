@@ -205,7 +205,9 @@ describe('content singletons', () => {
       .get('/api/v1/admin/milestones')
       .set('Cookie', editor.cookie)
       .expect(200);
-    const rows = asList(current.body);
+    const loaded = readRecord(current.body);
+    expect(loaded.publicationStatus).toBe('draft');
+    const rows = asList(loaded.milestones);
     const reversed = rows.slice().reverse();
     const saved = await request(app)
       .put('/api/v1/admin/milestones')

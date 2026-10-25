@@ -48,7 +48,7 @@ describe('account rules', () => {
   it('requires a role on an invitation', () => {
     expect(inviteProblems('ada@example.test', '')).toEqual({ role: 'Choose a role.' });
     expect(inviteProblems('ada@example.test', 'owner').role).toBe(
-      'Choose viewer, editor or administrator.',
+      'Choose viewer, editor, trainer, trainee, or administrator.',
     );
     expect(inviteProblems('ada@example.test', 'editor')).toEqual({});
   });

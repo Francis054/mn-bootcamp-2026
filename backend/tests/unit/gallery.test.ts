@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { testEnv } from '../support/app-env.js';
 import { readImage } from '../../src/modules/gallery/image-bytes.js';
 import { imageSizeMessage } from '../../src/modules/gallery/media.rules.js';
-import { isPublicMedia } from '../../src/modules/gallery/media.service.js';
+import type { MediaEntity } from '../../src/modules/gallery/media.entity.js';
+import { MediaService, isPublicMedia } from '../../src/modules/gallery/media.service.js';
+import { ApiError } from '../../src/shared/errors/api-error.js';
 import { buildSampleMedia } from '../../src/modules/gallery/sample-media.js';
 import { CloudinaryStorage, sign } from '../../src/modules/storage/cloudinary-storage.js';
 import { createStorage } from '../../src/modules/storage/create-storage.js';
@@ -132,6 +134,91 @@ describe('image storage', () => {
     );
   });
 });
+
+describe('media publish', () => {
+  it('lets an administrator verify consent and publish in one step', async () => {
+    const { service, row } = mediaFixture();
+    const published = await service.publish(
+      row.id,
+      { confirmConsent: true, listing: 'public' },
+      { userId: 'admin-1', role: 'administrator', ip: null, requestId: null },
+    );
+    expect(published.consent).toBe('verified');
+    expect(published.publicationStatus).toBe('published');
+    expect(published.listing).toBe('public');
+    expect(published.consentRecordedBy).toBe('admin-1');
+    expect(isPublicMedia(row)).toBe(true);
+  });
+
+  it('refuses one-step consent for an editor and leaves a bare publish hidden', async () => {
+    const { service, row } = mediaFixture();
+    await expect(
+      service.publish(
+        row.id,
+        { confirmConsent: true },
+        { userId: 'editor-1', role: 'editor', ip: null, requestId: null },
+      ),
+    ).rejects.toMatchObject({
+      code: 'forbidden',
+      message: 'An administrator confirms consent and publishes in one step.',
+    });
+    expect(row.consent).toBe('pending');
+    await expect(
+      service.publish(
+        row.id,
+        {},
+        { userId: 'editor-1', role: 'editor', ip: null, requestId: null },
+      ),
+    ).rejects.toBeInstanceOf(ApiError);
+    row.consent = 'verified';
+    const published = await service.publish(
+      row.id,
+      {},
+      { userId: 'editor-1', role: 'editor', ip: null, requestId: null },
+    );
+    expect(published.publicationStatus).toBe('published');
+    expect(published.listing).toBe('hidden');
+    expect(isPublicMedia(row)).toBe(false);
+  });
+});
+
+function mediaFixture(): { service: MediaService; row: MediaEntity } {
+  const row = {
+    id: 'photo-1',
+    file: 'upload',
+    src: 'https://cdn.example.test/a.jpg',
+    width: 10,
+    height: 10,
+    caption: 'A labelled bench.',
+    alt: 'A labelled drawing of a work bench.',
+    album: 'community',
+    consent: 'pending',
+    consentVerifiedAt: null,
+    consentRecordedBy: null,
+    consentWithdrawnAt: null,
+    publicationStatus: 'draft',
+    listing: 'hidden',
+    storageProvider: 'memory',
+    storageKey: 'key',
+    uploadedBy: null,
+    createdAt: new Date('2026-01-01T00:00:00.000Z'),
+    updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+  } as MediaEntity;
+  const service = new MediaService(
+    {
+      findById: () => Promise.resolve(row),
+      save: (next: MediaEntity) => {
+        Object.assign(row, next);
+        return Promise.resolve(row);
+      },
+    } as never,
+    { record: () => Promise.resolve(undefined) } as never,
+    { name: 'memory' } as never,
+    5_000_000,
+    () => new Date('2026-02-01T00:00:00.000Z'),
+  );
+  return { service, row };
+}
 
 function minimalJpeg(width: number, height: number): Buffer {
   const bytes = Buffer.alloc(15);

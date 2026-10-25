@@ -27,9 +27,10 @@ Home hero photos are `figure.hm-1`, `figure.hm-2` and `figure.hm-3`, and the lim
 
 Defined once in `src/domain/permissions.ts`.
 
+- Trainee and trainer: `content.read`, `media.upload`, `account.manage`
 - Viewer: `content.read`, `account.manage`
-- Editor: those, plus `content.write` and `media.write`
-- Administrator: those, plus `users.read`, `users.manage`, `settings.manage`
+- Editor: viewer, plus `content.write`, `media.upload`, and `media.write`
+- Administrator: editor, plus `users.read`, `users.manage`, `settings.manage`
 
 Fixture accounts: `viewer@example.test`, `editor@example.test`, `administrator@example.test`. Display names are Sample Viewer, Sample Editor and Sample Administrator. They are not people.
 

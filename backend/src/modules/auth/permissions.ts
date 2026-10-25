@@ -7,6 +7,7 @@ import type { Role } from '../users/role.js';
 export const PERMISSIONS = [
   'content.read',
   'content.write',
+  'media.upload',
   'media.write',
   'users.read',
   'users.manage',
@@ -17,11 +18,14 @@ export const PERMISSIONS = [
 export type Permission = (typeof PERMISSIONS)[number];
 
 export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
+  trainee: ['content.read', 'media.upload', 'account.manage'],
+  trainer: ['content.read', 'media.upload', 'account.manage'],
   viewer: ['content.read', 'account.manage'],
-  editor: ['content.read', 'content.write', 'media.write', 'account.manage'],
+  editor: ['content.read', 'content.write', 'media.upload', 'media.write', 'account.manage'],
   administrator: [
     'content.read',
     'content.write',
+    'media.upload',
     'media.write',
     'users.read',
     'users.manage',

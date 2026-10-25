@@ -27,6 +27,7 @@ const GROUPS: Array<{ label: string; items: Array<{ id: string; label: string; i
   ] },
   { label: 'System', items: [
     { id: 'users', label: 'Users & roles', icon: 'users', to: '/admin/users', permission: 'users.read' },
+    { id: 'enquiries', label: 'Enquiries', icon: 'mail', to: '/admin/enquiries', permission: 'users.manage' },
     { id: 'settings', label: 'Settings', icon: 'settings', to: '/admin/settings', permission: 'settings.manage' },
     { id: 'account', label: 'Account', icon: 'user', to: '/admin/account', permission: 'account.manage' },
     { id: 'states', label: 'UI states', icon: 'layers', to: '/admin/states', permission: 'content.read' },

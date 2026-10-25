@@ -104,8 +104,8 @@ export class TraineeService {
       skills: dto.skills ?? [],
       bio: dto.bio ?? '',
       quote: dto.quote ?? '',
-      linkedin: dto.linkedin?.trim() ?? '',
-      portfolio: dto.portfolio?.trim() ?? '',
+      linkedin: storedLink(dto.linkedin),
+      portfolio: storedLink(dto.portfolio),
       consentReceived,
       consentReceivedAt: consentReceived ? this.now() : null,
       consentRecordedBy: consentReceived ? actor.userId : null,
@@ -158,8 +158,8 @@ export class TraineeService {
     if (patch.skills !== undefined) current.skills = patch.skills;
     if (patch.bio !== undefined) current.bio = patch.bio;
     if (patch.quote !== undefined) current.quote = patch.quote;
-    if (patch.linkedin !== undefined) current.linkedin = patch.linkedin.trim();
-    if (patch.portfolio !== undefined) current.portfolio = patch.portfolio.trim();
+    if (patch.linkedin !== undefined) current.linkedin = storedLink(patch.linkedin);
+    if (patch.portfolio !== undefined) current.portfolio = storedLink(patch.portfolio);
     if (patch.statusLabel !== undefined) {
       current.statusLabel = patch.statusLabel.trim() || 'In training';
     }
@@ -305,6 +305,12 @@ export class TraineeService {
       subjectId: id,
     });
   }
+}
+
+function storedLink(value: string | null | undefined): string | null {
+  if (value == null) return null;
+  const trimmed = value.trim();
+  return trimmed.length === 0 ? null : trimmed;
 }
 
 function haystack(trainee: TraineeRecord): string {

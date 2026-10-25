@@ -12,7 +12,7 @@ import {
 import { ApiError } from '../../shared/errors/api-error.js';
 import type { StorageProvider } from '../storage/storage-provider.js';
 import { readImage } from './image-bytes.js';
-import type { MediaCreateDto, MediaPatchDto } from './media.dto.js';
+import type { MediaCreateDto, MediaPatchDto, MediaPublishDto } from './media.dto.js';
 import type { MediaConsent, MediaEntity } from './media.entity.js';
 import type { MediaRepository } from './media.repository.js';
 import {
@@ -27,6 +27,8 @@ import { toPublicMedia, type MediaRecord, type PublicMedia } from './records.js'
 
 const VERIFY_FIRST = 'Verify consent before this photo can be published.';
 const VERIFY_SEPARATE = 'Verifying consent does not publish the photo.';
+const ADMIN_ONE_STEP = 'An administrator confirms consent and publishes in one step.';
+const CONSENT_WITHDRAWN = 'Consent was withdrawn. This photo cannot be published.';
 const DELIVERY_FAILED =
   'Delivery removal failed. The photo is already off the public site. Try again.';
 const CHOOSE_IMAGE = 'Use a JPEG, PNG, or WebP image.';
@@ -78,6 +80,7 @@ export class MediaService {
       listing: 'hidden',
       storageProvider: 'static',
       storageKey: '',
+      uploadedBy: actor.userId,
     });
     await this.writeAudit(actor, 'created', saved.id);
     return this.toRecord(saved);
@@ -128,6 +131,7 @@ export class MediaService {
       listing: 'hidden',
       storageProvider: this.storage.name,
       storageKey: stored.key,
+      uploadedBy: actor.userId,
     });
     await this.writeAudit(actor, 'created', saved.id);
     return this.toRecord(saved);
@@ -175,13 +179,39 @@ export class MediaService {
     return this.toRecord(saved);
   }
 
-  async publish(id: string, actor: Actor): Promise<MediaRecord> {
+  async publish(id: string, body: MediaPublishDto, actor: Actor): Promise<MediaRecord> {
     const current = await this.requireMedia(id, 'Image not found.');
+    if (body.confirmConsent === true && actor.role !== 'administrator') {
+      throw new ApiError('forbidden', ADMIN_ONE_STEP);
+    }
+    if (current.consent === 'withdrawn') {
+      throw new ApiError('validation', CONSENT_WITHDRAWN, { consent: CONSENT_WITHDRAWN });
+    }
+    let changed = false;
+    if (body.confirmConsent === true && current.consent !== 'verified') {
+      current.consent = 'verified';
+      current.consentVerifiedAt = this.now();
+      current.consentRecordedBy = actor.userId;
+      current.consentWithdrawnAt = null;
+      changed = true;
+    }
     if (current.consent !== 'verified') throw new ApiError('validation', VERIFY_FIRST);
+    if (body.listing !== undefined) {
+      const listing = listingOr(body.listing, current.listing);
+      if (listing !== current.listing) {
+        current.listing = listing;
+        changed = true;
+      }
+    }
+    let verb: CurriculumVerb = 'updated';
     if (current.publicationStatus !== 'published') {
       current.publicationStatus = 'published';
+      verb = 'published';
+      changed = true;
+    }
+    if (changed) {
       await this.media.save(current);
-      await this.writeAudit(actor, 'published', current.id);
+      await this.writeAudit(actor, verb, current.id);
     }
     return this.toRecord(current);
   }
@@ -253,6 +283,7 @@ export class MediaService {
       publicationStatus: row.publicationStatus,
       listing: row.listing,
       storageProvider: row.storageProvider,
+      uploadedBy: row.uploadedBy,
       updatedAt: isoTimestamp(row.updatedAt),
     };
   }

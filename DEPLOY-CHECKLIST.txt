@@ -260,6 +260,12 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
       2. Source /*          Destination /index.html
          Action: Rewrite
       YOUR-API is the hostname of the web service from step 2, not the static site.
+      Render does not read a redirects file from this repository. These two
+      rules live in the dashboard. Checked 25 October 2026: the live site
+      https://mn-bootcamp-2026-1.onrender.com returned the app HTML (HTTP 200,
+      with id="root") for /bootcamp, /classes, /about, /contact, /admin and
+      /admin/login. If you recreate the static site, add both rules again
+      before you test a deep link. The first rule must stay above the second.
       The first rule must be above the second. Rewrite, not Redirect.
    g. Deploy. Copy the static site's https://....onrender.com address.
 
@@ -422,40 +428,34 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
     files and /api/v1. This repository does not do that yet. It would be a
     code change. Two public origins will not keep this sign-in working.
 
-18. Edit content after launch. Sign in at /admin/login.
-    a. Classes, trainees, projects, and events: open the item, set Workflow
-       to Published, and save. A hidden listing stays off the public site.
-       A trainee cannot be published until consent is recorded. Project links
-       are public only when every linked trainee has agreed to share them.
-       The hackathon stays "to be confirmed" when the event says so.
-    b. Homepage (/admin/content), about (/admin/about), and the timeline
-       (/admin/timeline): Save stores a draft. The screens do not have a
-       Publish button. The public page stays empty until you publish.
-       While you are signed in on the site, the browser console can send:
-         const csrf = document.cookie.split('; ').find((row) => row.startsWith('mn_csrf=')).split('=')[1];
-         await fetch('/api/v1/admin/home/publish', { method: 'POST', credentials: 'include', headers: { 'X-CSRF-Token': csrf } });
-       Use /api/v1/admin/about/publish for the about page.
-       Use /api/v1/admin/milestones/publish for the timeline.
-       Each of those returns the published copy. Then reload the public page.
+18. Edit content after launch. Sign in at /admin/login. You do not need the
+    browser console.
+    a. If the public homepage says it is not published yet, open /admin/content.
+       The first visit creates a draft when the database was never seeded.
+       Replace any sample wording, Save, then Publish. Reload the public home
+       page. About (/admin/about) and the timeline (/admin/timeline) use the
+       same Save, then Publish. Unpublish hides that page again.
+    b. Classes, trainees, projects, and events: open the item, set Listing to
+       Public (Publish does this when the listing is Hidden), and press Publish.
+       Save alone keeps a draft. A hidden listing stays off the public site.
+       A trainee cannot be published until the consent box is ticked. LinkedIn
+       and portfolio may be left blank. Project title needs 6 characters and
+       the abstract needs 30. An event summary needs 20. A verified event needs
+       an https source URL. The hackathon stays "to be confirmed" when the
+       event says so.
     c. Photos: /admin/media, Add to library, with a file and alt text that does
-       not name people. The photo is not public yet. Consent and publish are
-       separate. Verifying consent does not publish. The screen can withdraw
-       consent or remove a photo. It does not yet have Verify or Publish buttons.
-       While signed in, with the photo id from the library request:
-         await fetch('/api/v1/admin/media/THE_ID', { method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf }, body: JSON.stringify({ consent: 'verified' }) });
-         await fetch('/api/v1/admin/media/THE_ID/publish', { method: 'POST', credentials: 'include', headers: { 'X-CSRF-Token': csrf } });
-       The public gallery also hides a photo whose listing is hidden.
-    d. Foundation counters: the Settings screen does not edit them. They stay
-       hidden on the public site until an administrator saves them and publishes
-       settings. Only use numbers the Foundation has already confirmed.
-       While signed in, load the current settings, add foundationStats, save,
-       then publish. Each counter is an id (lowercase letters, digits, hyphens),
-       a label, a whole number from zero, and a suffix that may be empty:
-         { "id": "years", "label": "Years", "value": 10, "suffix": "" }
-       PUT /api/v1/admin/settings with the full settings body, including that
-       list. Then POST /api/v1/admin/settings/publish the same way as the homepage.
-       Until that publish, GET /api/v1/public/foundation-stats is an empty list
-       and the site hides the counters.
+       not name people. Trainees and trainers can upload. The photo stays
+       hidden. Select it in the review pane. Tick "Consent confirmed for
+       everyone pictured". An administrator presses "Confirm consent and
+       publish". That verifies consent, publishes, and sets the listing to
+       public in one step. An editor presses Publish, which records consent
+       and then publishes. A withdrawn photo cannot be published. Remove still
+       deletes it. A PATCH that tries to verify consent and publish together
+       is still refused.
+    d. Foundation counters: /admin/settings. Edit the labels, whole-number
+       values, and short suffixes. Only use numbers the Foundation has already
+       confirmed. Save, then Publish. Until that publish, the public site hides
+       the counters.
 
 19. Roll back.
     a. In Render, open the service that broke and use Rollback. On a free web
