@@ -159,10 +159,26 @@ export function normalizeTrainees(value: unknown): PublicTrainee[] {
   });
 }
 
+/** A public https link with no embedded password. Anything else stays off the page. */
+export function publicHttpsUrl(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > 500) return undefined;
+  try {
+    const url = new URL(trimmed);
+    if (url.protocol !== 'https:' || url.username || url.password) return undefined;
+    return trimmed;
+  } catch {
+    return undefined;
+  }
+}
+
 export function normalizeProjects(value: unknown): PublicProject[] {
   return asList(value).flatMap((item) => {
     const row = record(item);
     if (!row || typeof row.id !== 'string' || typeof row.title !== 'string') return [];
+    const repositoryUrl = publicHttpsUrl(row.repositoryUrl);
+    const demoUrl = publicHttpsUrl(row.demoUrl);
     return [{
       id: row.id,
       title: row.title,
@@ -177,6 +193,8 @@ export function normalizeProjects(value: unknown): PublicProject[] {
       team: lines(row.team),
       publicationStatus: status(row.publicationStatus),
       listing: listing(row.listing),
+      ...(repositoryUrl ? { repositoryUrl } : {}),
+      ...(demoUrl ? { demoUrl } : {}),
     }];
   });
 }
