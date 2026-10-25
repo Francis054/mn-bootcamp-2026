@@ -37,7 +37,7 @@
   </div>
   <div class="ws-top__title">
     <h1>Discover and Secure a Training Network</h1>
-    <p>Fictional target 10.10.8.20. Commands stay in this browser. Beginner demo for the week 1 networks lesson.</p>
+    <p>Learn each step, answer the checks, then the simulated task unlocks. Fictional target 10.10.8.20.</p>
   </div>
 </header>
 
@@ -50,7 +50,7 @@
       <button class="tab" type="button" role="tab" id="tab-assessment" data-mode="assessment" aria-selected="false">Assessment</button>
       <span class="tab-ink" id="ws-ink"></span>
     </div>
-    <p class="ws-score"><span id="ws-score-text">0 of 4 objectives</span><span class="meter" id="ws-meter"><i></i></span></p>
+    <p class="ws-score"><span id="ws-score-text">0 / 500 XP</span><span class="meter" id="ws-meter"><i></i></span></p>
   </div>
 
   <div class="ws-stage">
@@ -65,6 +65,8 @@
           <img src="assets/hero-keyboard.webp" width="1200" height="1104" alt="A person in a dark hoodie types on a laptop in a dim room. Photograph by Muhmed Alaa, Unsplash Licence.">
           <figcaption>A person in a hoodie at a laptop. Photograph by <a href="https://unsplash.com/photos/man-in-hoodie-typing-on-laptop-at-night-sDWFII7EBkU">Muhmed Alaa</a>, Unsplash Licence.</figcaption>
         </figure>
+
+        <section id="ws-path" class="ws-path" aria-labelledby="ws-path-title"></section>
 
         <section class="ws-hats" aria-labelledby="ws-hats-title">
           <h3 id="ws-hats-title">Hat colours, and red team versus blue team</h3>
@@ -185,7 +187,7 @@
             <label class="ws-prompt" for="ws-command"><span class="sr-only">Command </span><span aria-hidden="true">trainee@ws-01:~$</span></label>
             <input id="ws-command" class="ws-command" name="command" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-describedby="ws-command-hint">
           </div>
-          <p id="ws-command-hint" class="ws-hint">Enter runs the simulated command. Up arrow recalls an earlier one. Type help for the list.</p>
+          <p id="ws-command-hint" class="ws-hint">Enter runs a simulated command. A dimmed chip is locked until that lesson’s checks are correct.</p>
         </form>
         <button class="ws-jump btn btn--ghost-light btn--xs" type="button" data-action="show-lab">Show the lab brief</button>
       </div>
@@ -210,7 +212,7 @@
       </div>
       <div class="ws-body">
         <h3>Target environment</h3>
-        <p>One service on the target is left open on purpose. The network model uses the same status as this list.</p>
+        <p>Work through the lesson first. Each terminal task stays locked until its checks are correct. The flag is in the simulated output.</p>
         <dl class="ws-facts">
           <div><dt>Lab</dt><dd>Nyansa training LAN, fictional</dd></div>
           <div><dt>Your workstation</dt><dd>ws-01 · 10.10.8.15</dd></div>
@@ -220,12 +222,13 @@
         </dl>
         <h3>Checks</h3>
         <ul class="ws-tasks" id="ws-tasks"></ul>
-        <h3>Exposed service</h3>
+        <h3>Lesson flag</h3>
         <div id="ws-finding"></div>
         <h3>Hints</h3>
         <div id="ws-hints"></div>
         <div class="ws-actions">
           <button class="btn btn--ghost-light btn--sm" type="button" id="ws-hint-btn" data-action="hint">Show a hint</button>
+          <button class="btn btn--ghost-light btn--sm" type="button" id="ws-guide-btn" data-action="walkthrough" aria-pressed="false">Guide me</button>
           <button class="ws-jump btn btn--ghost-light btn--xs" type="button" data-action="show-terminal">Show the terminal</button>
         </div>
       </div>
