@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { APP_NAVIGATED } from '@/components/ScrollToTop';
 import { Lockup, Mark } from './Brand';
 import { usesMockApi } from '@/config/runtime';
 import { Icon, type IconName } from './Icon';
@@ -26,7 +27,26 @@ export function SiteHeader({ page, tone }: { page: string; tone: 'light' | 'dark
   const [open, setOpen] = useState(false);
   const [menu, setMenu] = useState(false);
   const location = useLocation();
-  useEffect(() => { setMenu(false); document.body.classList.remove('menu-open'); }, [location.pathname]);
+  useEffect(() => {
+    setMenu(false);
+    setOpen(false);
+    document.body.classList.remove('menu-open');
+    document.body.style.overflow = '';
+  }, [location.pathname, location.search, location.hash, location.key]);
+  useEffect(() => {
+    const close = () => {
+      setMenu(false);
+      setOpen(false);
+      document.body.classList.remove('menu-open');
+      document.body.style.overflow = '';
+    };
+    window.addEventListener(APP_NAVIGATED, close);
+    return () => {
+      window.removeEventListener(APP_NAVIGATED, close);
+      document.body.classList.remove('menu-open');
+      document.body.style.overflow = '';
+    };
+  }, []);
   useEffect(() => {
     let last = window.scrollY;
     const onScroll = () => {
@@ -129,7 +149,6 @@ export function SiteFooter() {
         <div className="footer-big" aria-hidden="true">Secure the future.</div>
         <div className="footer-bottom">
           <span>© 2026 Maxim Nyansa Foundation{usesMockApi() ? ' · Development build — sample data, not a live site' : ''}</span>
-          <span><Link to="/admin/login">Admin</Link></span>
         </div>
       </div>
     </footer>

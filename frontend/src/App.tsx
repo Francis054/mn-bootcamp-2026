@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router-dom';
 import { RequireAccess } from '@/auth/AuthProvider';
 import { BootScreen } from '@/components/BootScreen';
 import { AfterBoot, RouteFallback } from '@/components/Loader';
+import { RobotsMeta, ScrollToTop } from '@/components/ScrollToTop';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { PublicLayout } from '@/layouts/PublicLayout';
 
@@ -61,6 +62,8 @@ function Waiting({ children }: { children: ReactNode }) {
 export function App() {
   return (
     <>
+    <RobotsMeta />
+    <ScrollToTop />
     <BootScreen />
     <Routes>
       <Route element={<PublicLayout />}>

@@ -25,7 +25,7 @@ export function PublicLayout() {
       <CommunityIconLinks />
       <a className="skip-link" href="#main">Skip to content</a>
       <SiteHeader page={handle.page ?? ''} tone={handle.tone ?? 'light'} />
-      <main id="main"><Outlet /></main>
+      <main id="main" tabIndex={-1}><Outlet /></main>
       <SiteFooter />
       <ProtoFlag />
       <PageTransition />

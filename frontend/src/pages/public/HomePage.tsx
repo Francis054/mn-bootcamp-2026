@@ -10,7 +10,6 @@ import { usePageMeta } from '@/components/SiteChrome';
 import { usesMockApi } from '@/config/runtime';
 import { currentWeek, formatDate, parseUtcDate } from '@/domain/format';
 import { outlineLines, weeksOf } from '@/domain/timetable';
-import { useAuth } from '@/auth/AuthProvider';
 import { usePublicContent } from '@/hooks/useContent';
 import { useSiteImage } from '@/hooks/useSiteImages';
 import { useTimetable } from '@/hooks/useTimetable';
@@ -21,7 +20,6 @@ export function HomePage() {
   const timetable = useTimetable();
   const { projects, trainees, events, media } = content;
   const homepage = content.homepage;
-  const auth = useAuth();
   usePageMeta('Home');
   const week = timetable.data?.currentWeek ?? currentWeek();
   const outlineWeeks = weeksOf(timetable.data);
@@ -285,7 +283,7 @@ export function HomePage() {
         image.src = fallback;
       }} /></div>
     </> : (
-      <section className="section"><div className="container"><h1>The homepage is not published yet.</h1><p>Published homepage copy will appear here.</p>{auth.allowed('content.write') ? <p><Link to="/admin/content">Open the content editor to publish it.</Link></p> : null}</div></section>
+      <section className="section"><div className="container"><h1>The homepage is not published yet.</h1><p>Published homepage copy will appear here.</p></div></section>
     )}
     </PublicGate>
   );
