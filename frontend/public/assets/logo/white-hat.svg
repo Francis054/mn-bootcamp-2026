@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Cyber Bootcamp community logo</title>
+  <desc id="desc">A person dressed in white and wearing a white hat. The white-hat mark of the 2026 Cybersecurity Bootcamp.</desc>
+  <defs>
+    <clipPath id="inner">
+      <circle cx="64" cy="64" r="55.5"/>
+    </clipPath>
+  </defs>
+  <circle cx="64" cy="64" r="64" fill="#88CC00"/>
+  <circle cx="64" cy="64" r="56" fill="#0E2A1E"/>
+  <g clip-path="url(#inner)">
+    <path fill="#F7F8F2" d="M18 126c8-34 22-48 40-52 2 8 6 12 6 12s4-4 6-12c18 4 32 18 40 52H18z"/>
+    <rect x="56" y="84" width="16" height="16" rx="5" fill="#E7CDB8"/>
+    <ellipse cx="64" cy="74" rx="16" ry="18" fill="#F6E4D4"/>
+    <path fill="#FFFFFF" d="M50 96l14 16 14-16h-5l-9 9-9-9h-5z"/>
+    <ellipse cx="64" cy="56" rx="36" ry="10" fill="#FFFFFF"/>
+    <path fill="#FFFFFF" d="M42 56c2-20 10-34 22-36 12 2 20 16 22 36H42z"/>
+    <path d="M54 30c3 10 7 12 10 12s7-2 10-12" fill="none" stroke="#E4EADF" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M46 50c5 6 13 8 18 8s13-2 18-8" fill="none" stroke="#88CC00" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="57" cy="72" r="2.3" fill="#173028"/>
+    <circle cx="71" cy="72" r="2.3" fill="#173028"/>
+    <path d="M56 80c2.4 4 5.6 5.4 8 5.4s5.6-1.4 8-5.4" fill="none" stroke="#6A4634" stroke-width="1.8" stroke-linecap="round"/>
+  </g>
+</svg>

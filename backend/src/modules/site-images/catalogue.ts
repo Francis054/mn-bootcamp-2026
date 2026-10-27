@@ -18,7 +18,7 @@ export interface SiteImageSlot {
   width: number;
   height: number;
   fit: SiteImageFit;
-  /** Banner on the community badge. Empty for photographs. */
+  /** Caption under the original community mark. Empty for photographs. */
   tagline: string;
 }
 
@@ -50,7 +50,7 @@ export const SITE_IMAGE_SLOTS: readonly SiteImageSlot[] = [
     key: 'community-logo',
     label: 'Community logo',
     description:
-      'The approved community badge (black hat and ethical hat). Header, footer, sign-in panel, admin sidebar, empty states, the loading screen, and the favicon. While this slot is the original artwork, the foundation logo and the badge tagline are drawn on top. A replacement image is shown on its own.',
+      'White-hat community mark: a person dressed in white, wearing a white hat. Header, footer, sign-in panel, admin sidebar, seals, empty states, and the favicon. The original is a crisp SVG. An uploaded image replaces it. The tagline sits under the larger seals.',
     url: '/assets/logo/community-badge.webp',
     alt: 'Cyber Bootcamp community logo',
     width: 1024,
@@ -62,7 +62,7 @@ export const SITE_IMAGE_SLOTS: readonly SiteImageSlot[] = [
     key: 'foundation-logo',
     label: 'Maxim Nyansa Foundation logo',
     description:
-      'The parent-organisation wordmark. It is drawn inside the community badge, in the header and footer plate, on the sign-in form, in the admin sidebar, on the about page, and in the loader footer. It is not the community logo. A larger PNG or WebP stays sharper. SVG files are not accepted.',
+      'Parent-organisation wordmark. Header and footer plate, sign-in form, admin sidebar, about page, and the loader footer. It is not the community logo. A larger PNG or WebP stays sharper. SVG files are not accepted.',
     url: '/assets/logo/maxim-nyansa-foundation-logo.png',
     alt: 'Maxim Nyansa Foundation logo',
     width: 200,

@@ -40,7 +40,7 @@ export function SiteImagesPage() {
         <div>
           <h1>Site images</h1>
           <p>
-            Replace the community badge or the Maxim Nyansa Foundation logo and the public site updates without a redeploy. On the original badge, the foundation logo and the tagline are drawn on top, so a new foundation file also updates the plate inside the badge. Uploading a community logo replaces that whole badge. Gallery photos, trainee portraits, and project pictures stay on their own
+            Replace the community logo or the Maxim Nyansa Foundation logo and the public site updates without a redeploy. The original community logo is a drawn white-hat figure, and its tagline sits under the larger seals. Uploading a community logo replaces that figure. The foundation wordmark stays a separate plate. Gallery photos, trainee portraits, and project pictures stay on their own
             pages.
           </p>
         </div>
@@ -173,7 +173,7 @@ function SiteImageCard({ row, onSaved }: { row: SiteImageAdmin; onSaved: () => v
           )}
           <ErrorSummary errors={form.errors} labels={{ [altId]: 'Alt text', [fileId]: 'Replacement image', [taglineId]: 'Badge tagline' }} summaryRef={form.summaryRef} />
           {row.key === 'community-logo' ? (
-            <Field id={taglineId} label="Badge tagline" error={form.errors[taglineId]} hint="Shown on the banner of the original badge. Hidden after you upload a replacement image. Leave it blank to hide the banner. Default: STRONGER TOGETHER.">
+            <Field id={taglineId} label="Badge tagline" error={form.errors[taglineId]} hint="Shown under the original mark on the larger seals. Hidden after you upload a replacement image. Leave it blank to hide it. Default: STRONGER TOGETHER.">
               <input
                 className="input"
                 id={taglineId}
@@ -227,7 +227,7 @@ function SiteImageCard({ row, onSaved }: { row: SiteImageAdmin; onSaved: () => v
 
 function fileHint(key: string): string {
   if (key === 'community-logo') {
-    return 'JPEG, PNG, or WebP. A square picture works best. Uploading a file replaces the whole badge, including the foundation plate and the tagline. SVG files are not accepted.';
+    return 'JPEG, PNG, or WebP. A square picture works best. Uploading a file replaces the white-hat mark and hides the tagline. SVG files are not accepted.';
   }
   if (key === 'foundation-logo') {
     return 'JPEG, PNG, or WebP. The bundled file is 200 pixels wide, so a larger PNG or WebP stays sharper in the small plate. SVG files are not accepted. Leave this empty to change only the alt text.';
