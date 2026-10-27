@@ -10,8 +10,8 @@ body.admin{background:var(--paper);font-size:15px}
 .admin-sidebar{position:sticky;top:0;height:100vh;background:var(--forest-800);color:#E9F0EA;display:flex;flex-direction:column;overflow:hidden;z-index:60}
 .sb-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:18px 16px 18px 20px;border-bottom:1px solid var(--line-dark);min-height:72px;flex-shrink:0}
 .sb-brand{display:flex;align-items:center;gap:12px;color:#fff;text-decoration:none;min-width:0}
-.sb-brand .wordmark__mark{width:36px;height:36px;border-radius:10px;background:var(--mn-lime);color:var(--forest-900);display:grid;place-items:center;flex:none}
-.sb-brand .wordmark__mark svg{width:20px;height:20px}
+.sb-brand .wordmark__mark{width:44px;height:44px;border-radius:50%;background:transparent;color:var(--forest-900);display:grid;place-items:center;flex:none;overflow:hidden}
+.sb-brand .wordmark__mark svg,.sb-brand .wordmark__mark img{width:44px;height:44px}
 .sb-brand b{display:block;font-family:var(--font-display);font-size:16px;line-height:1.1;white-space:nowrap}
 .sb-brand small{display:block;font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;color:rgba(233,240,234,.6);text-transform:uppercase;white-space:nowrap}
 .admin-sidebar .icon-btn{color:rgba(233,240,234,.7)}
@@ -151,6 +151,7 @@ body.admin{background:var(--paper);font-size:15px}
 .form-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}
 .form-side{position:sticky;top:96px;display:flex;flex-direction:column;gap:20px}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.check-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px}
 .form-grid .full{grid-column:1 / -1}
 .form-stack{display:flex;flex-direction:column;gap:24px}
 .counter{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-3);text-align:right}
@@ -185,6 +186,9 @@ body.admin{background:var(--paper);font-size:15px}
 .dropzone:focus-within{outline:3px solid var(--focus);outline-offset:2px}
 .media-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;align-items:start}
 .media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;padding:16px}
+.site-image-preview{display:block;width:100%;max-height:240px;background:var(--paper-2);border-radius:10px;object-position:center;object-fit:contain;height:auto}
+.site-image-preview.community-badge{width:min(240px,100%);max-height:none;background:#0A1F16}
+.site-image-preview--logo{width:auto;max-width:min(100%,320px);max-height:72px}
 .media-item{position:relative;border-radius:10px;overflow:hidden;background:var(--paper-2);border:2px solid transparent;cursor:pointer;padding:0;text-align:left;font:inherit}
 .media-item img{display:block;width:100%;aspect-ratio:1;object-fit:cover;transition:transform 400ms var(--ease-out,ease)}
 .media-item:hover img{transform:scale(1.04)}
@@ -242,7 +246,8 @@ body.admin{background:var(--paper);font-size:15px}
 .login__form form{max-width:400px;width:100%;display:flex;flex-direction:column;gap:20px}
 .login__brand{display:flex;align-items:center;gap:16px;margin-bottom:48px;flex-wrap:wrap}
 .login__art{position:relative;background:var(--forest-800);color:#fff;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;padding:56px}
-.login__art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.35;filter:saturate(.7)}
+.login__art > img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.35;filter:saturate(.7)}
+.login__art .login__mark{position:relative;z-index:1;width:min(240px,72%);margin-bottom:18px;filter:drop-shadow(0 16px 28px rgba(0,0,0,.35))}
 .login__art::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(14,42,30,.2),rgba(14,42,30,.92))}
 .login__art>*{position:relative;z-index:1}
 .login__art h2{font-size:clamp(32px,3.6vw,52px);letter-spacing:-.04em;line-height:1.02;max-width:14ch}
@@ -355,6 +360,7 @@ body.admin{background:var(--paper);font-size:15px}
 .drag-item{grid-template-columns:auto 96px minmax(0,1fr) auto}
 .drag-item .yr{white-space:nowrap}
 .empty .empty__art .i{width:30px;height:30px}
+.empty .empty__badge .i{width:15px;height:15px}
 @media (max-width:760px){.drag-item{grid-template-columns:auto 80px minmax(0,1fr)}.drag-item .yr{font-size:18px}}
 @media (max-width:760px){
   .table--cards tr{grid-template-columns:auto minmax(0,1fr)}

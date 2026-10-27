@@ -1,4 +1,4 @@
-# Maxim Nyansa Foundation · 2026 Cyber Security Bootcamp
+# Maxim Nyansa Foundation · 2026 Cybersecurity Bootcamp
 
 This branch holds the two applications side by side.
 
@@ -52,7 +52,7 @@ npm run seed
 npm run admin:create -- you@example.com
 ```
 
-`npm run seed` loads labelled sample lessons for local development. Do not run it against the hosted database. `npm run admin:create` asks for a password twice and never prints it. The password needs at least 12 characters, with a letter and a number. The command finishes with `Administrator account is ready.`
+`npm run seed` loads labelled sample lessons for local development, then imports the Cybersecurity Bootcamp timetable from `data/seed/bootcamp-timetable-and-outline.xlsx`. Do not run it against the hosted database. On a database that should not receive sample lessons, run `npm run migration:run` and then `npm run timetable:import` instead. `npm run admin:create` asks for a password twice and never prints it. The password needs at least 12 characters, with a letter and a number. The command finishes with `Administrator account is ready.`
 
 9. Start the API and leave that terminal open:
 

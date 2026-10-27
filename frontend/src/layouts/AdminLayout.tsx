@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '@/api/client';
 import { searchAdmin } from '@/api/search';
 import { useAuth } from '@/auth/AuthProvider';
 import { usesMockApi } from '@/config/runtime';
-import { OfficialLogo } from '@/components/Brand';
+import { CommunityIconLinks, OfficialLogo } from '@/components/Brand';
+import { APP_NAVIGATED } from '@/components/ScrollToTop';
 import { ShellMark } from '@/components/SiteChrome';
 import { Icon, type IconName } from '@/components/Icon';
 import { useToast } from '@/components/feedback';
@@ -15,6 +16,7 @@ const GROUPS: Array<{ label: string; items: Array<{ id: string; label: string; i
   { label: 'Workspace', items: [{ id: 'overview', label: 'Overview', icon: 'grid', to: '/admin', end: true, permission: 'content.read' }] },
   { label: 'Content', items: [
     { id: 'classes', label: 'Classes', icon: 'book', to: '/admin/classes', permission: 'content.read' },
+    { id: 'timetable', label: 'Timetable', icon: 'calendar', to: '/admin/classes/timetable', permission: 'content.read' },
     { id: 'trainees', label: 'Trainees', icon: 'users', to: '/admin/trainees', permission: 'content.read' },
     { id: 'projects', label: 'Projects', icon: 'terminal', to: '/admin/projects', permission: 'content.read' },
     { id: 'events', label: 'Events', icon: 'calendar', to: '/admin/events', permission: 'content.read' },
@@ -25,6 +27,7 @@ const GROUPS: Array<{ label: string; items: Array<{ id: string; label: string; i
     { id: 'content', label: 'Content editor', icon: 'file', to: '/admin/content', permission: 'content.read' },
     { id: 'timeline', label: 'Timeline', icon: 'commit', to: '/admin/timeline', permission: 'content.read' },
     { id: 'about', label: 'About & 10 Years', icon: 'award', to: '/admin/about', permission: 'content.read' },
+    { id: 'site-images', label: 'Site images', icon: 'image', to: '/admin/site-images', permission: 'content.read', administratorOnly: true },
   ] },
   { label: 'System', items: [
     { id: 'users', label: 'Users & roles', icon: 'users', to: '/admin/users', permission: 'users.read' },
@@ -38,6 +41,7 @@ const GROUPS: Array<{ label: string; items: Array<{ id: string; label: string; i
 export function AdminLayout() {
   const auth = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('mn-sb') === '1');
   const [drawer, setDrawer] = useState(false);
@@ -49,6 +53,12 @@ export function AdminLayout() {
   useEffect(() => {
     document.body.classList.add('admin');
     return () => document.body.classList.remove('admin');
+  }, []);
+  useEffect(() => { setDrawer(false); }, [location.pathname, location.search, location.hash]);
+  useEffect(() => {
+    const close = () => setDrawer(false);
+    window.addEventListener(APP_NAVIGATED, close);
+    return () => window.removeEventListener(APP_NAVIGATED, close);
   }, []);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -79,6 +89,7 @@ export function AdminLayout() {
   const mock = usesMockApi();
   return (
     <>
+      <CommunityIconLinks />
       <a className="skip-link" href="#main">Skip to content</a>
       {mock ? <div className="dev-banner"><strong>Development adapter.</strong> Sample data only. The live API is off for this session.</div> : null}
       <div className={`admin-shell${collapsed ? ' is-collapsed' : ''}${drawer ? ' drawer-open' : ''}`}>
@@ -154,7 +165,7 @@ export function AdminLayout() {
               </div>
             </div>
           </header>
-          <main id="main" className="admin-main"><Outlet /></main>
+          <main id="main" className="admin-main" tabIndex={-1}><Outlet /></main>
         </div>
       </div>
     </>

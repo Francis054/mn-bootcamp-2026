@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { APP_NAVIGATED } from '@/components/ScrollToTop';
 import { Lockup, Mark } from './Brand';
 import { usesMockApi } from '@/config/runtime';
 import { Icon, type IconName } from './Icon';
@@ -7,9 +8,10 @@ import { Icon, type IconName } from './Icon';
 const MENU: Array<{ id: string; label: string; to?: string; items?: Array<{ id: string; label: string; to: string; sub: string; icon: IconName }> }> = [
   { id: 'home', label: 'Home', to: '/' },
   { id: 'bootcamp', label: 'Bootcamp', items: [
-    { id: 'overview', label: 'Overview', to: '/bootcamp', sub: 'What the 2026 programme covers', icon: 'shield' },
-    { id: 'journey', label: 'Three-month journey', to: '/journey', sub: 'Oct – Dec 2026, phase by phase', icon: 'commit' },
-    { id: 'classes', label: 'Class archive', to: '/classes', sub: 'Weekly lessons and labs', icon: 'book' },
+    { id: 'overview', label: 'Overview', to: '/bootcamp', sub: 'The 12-week Cybersecurity Bootcamp', icon: 'shield' },
+    { id: 'schedule', label: 'Schedule', to: '/schedule', sub: 'Daily timetable, 5 Oct – 25 Dec', icon: 'calendar' },
+    { id: 'journey', label: 'Three-month journey', to: '/journey', sub: '5 Oct – 25 Dec 2026, week by week', icon: 'commit' },
+    { id: 'classes', label: 'Class archive', to: '/classes', sub: 'Sample lesson notes', icon: 'book' },
     { id: 'projects', label: 'Projects & labs', to: '/projects', sub: 'Practical work from the cohort', icon: 'terminal' },
   ] },
   { id: 'trainees', label: 'Trainees', to: '/trainees' },
@@ -25,7 +27,26 @@ export function SiteHeader({ page, tone }: { page: string; tone: 'light' | 'dark
   const [open, setOpen] = useState(false);
   const [menu, setMenu] = useState(false);
   const location = useLocation();
-  useEffect(() => { setMenu(false); document.body.classList.remove('menu-open'); }, [location.pathname]);
+  useEffect(() => {
+    setMenu(false);
+    setOpen(false);
+    document.body.classList.remove('menu-open');
+    document.body.style.overflow = '';
+  }, [location.pathname, location.search, location.hash, location.key]);
+  useEffect(() => {
+    const close = () => {
+      setMenu(false);
+      setOpen(false);
+      document.body.classList.remove('menu-open');
+      document.body.style.overflow = '';
+    };
+    window.addEventListener(APP_NAVIGATED, close);
+    return () => {
+      window.removeEventListener(APP_NAVIGATED, close);
+      document.body.classList.remove('menu-open');
+      document.body.style.overflow = '';
+    };
+  }, []);
   useEffect(() => {
     let last = window.scrollY;
     const onScroll = () => {
@@ -41,9 +62,21 @@ export function SiteHeader({ page, tone }: { page: string; tone: 'light' | 'dark
   }, []);
   const toggleMenu = (next: boolean) => {
     setMenu(next);
+    if (next) setHidden(false);
     document.body.classList.toggle('menu-open', next);
     document.body.style.overflow = next ? 'hidden' : '';
   };
+  useEffect(() => {
+    if (!menu) return;
+    const block = (event: TouchEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (document.getElementById('mobile-menu')?.contains(target)) return;
+      event.preventDefault();
+    };
+    document.addEventListener('touchmove', block, { passive: false });
+    return () => document.removeEventListener('touchmove', block);
+  }, [menu]);
   const flat = MENU.flatMap((item) => item.items ?? (item.to ? [{ id: item.id, label: item.label, to: item.to }] : []));
   return (
     <>
@@ -106,10 +139,10 @@ export function SiteFooter() {
         <div className="footer-top">
           <div className="footer-brand">
             <Lockup />
-            <p>A community site for the free 2026 Cyber Security Bootcamp, run by the Maxim Nyansa Foundation — creating career perspectives for young people with information technology since 2016.</p>
+            <p>A community site for the free 2026 Cybersecurity Bootcamp, run by the Maxim Nyansa Foundation — creating career perspectives for young people with information technology since 2016.</p>
           </div>
           <div><h3>Bootcamp</h3><ul>
-            <li><Link to="/bootcamp">Overview</Link></li><li><Link to="/journey">Journey</Link></li><li><Link to="/classes">Class archive</Link></li><li><Link to="/projects">Projects & labs</Link></li><li><Link to="/trainees">Trainees</Link></li>
+            <li><Link to="/bootcamp">Overview</Link></li><li><Link to="/schedule">Schedule</Link></li><li><Link to="/journey">Journey</Link></li><li><Link to="/classes">Class archive</Link></li><li><Link to="/projects">Projects & labs</Link></li><li><Link to="/trainees">Trainees</Link></li>
           </ul></div>
           <div><h3>Community</h3><ul>
             <li><Link to="/events">Events</Link></li><li><Link to="/gallery">Gallery</Link></li><li><Link to="/anniversary">10 Years of Impact</Link></li><li><Link to="/about">About the Foundation</Link></li>
@@ -128,7 +161,6 @@ export function SiteFooter() {
         <div className="footer-big" aria-hidden="true">Secure the future.</div>
         <div className="footer-bottom">
           <span>© 2026 Maxim Nyansa Foundation{usesMockApi() ? ' · Development build — sample data, not a live site' : ''}</span>
-          <span><Link to="/admin/login">Admin</Link></span>
         </div>
       </div>
     </footer>
@@ -183,7 +215,7 @@ export function ProtoFlag() {
 
 export function usePageMeta(title: string) {
   useEffect(() => {
-    document.title = `${title} · 2026 Cyber Bootcamp · Maxim Nyansa Foundation`;
+    document.title = `${title} · 2026 Cybersecurity Bootcamp · Maxim Nyansa Foundation`;
   }, [title]);
 }
 

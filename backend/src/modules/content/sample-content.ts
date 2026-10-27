@@ -44,7 +44,7 @@ function sampleHomepage(): HomepageContent {
   return {
     eyebrow: '2026 Cybersecurity Bootcamp',
     headline: 'Learn.\nBuild.\n*Secure the Future.*',
-    lead: 'A free, in-person cybersecurity bootcamp in Accra, from network security to incident response. Follow the 2026 cohort from its first week to graduation.',
+    lead: 'A free, in-person cybersecurity bootcamp in Accra. Twelve weeks, from 5 October to 25 December 2026.',
     ctaLabel: 'Explore the bootcamp',
     ctaHref: '/bootcamp',
     theme: 'dark',
@@ -106,7 +106,7 @@ function sampleMilestones(): Milestone[] {
 
 function sampleSettings(): SiteSettings {
   return {
-    siteName: '2026 Cyber Bootcamp',
+    siteName: '2026 Cybersecurity Bootcamp',
     timeZone: 'Africa/Accra (GMT)',
     contactEmail: 'mninfo@maximnyansa.com',
     accent: '#88CC00',

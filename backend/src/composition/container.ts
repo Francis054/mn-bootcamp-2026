@@ -38,6 +38,9 @@ import { EventService } from '../modules/events/event.service.js';
 import { MediaEntity } from '../modules/gallery/media.entity.js';
 import { MediaRepository } from '../modules/gallery/media.repository.js';
 import { MediaService } from '../modules/gallery/media.service.js';
+import { SiteImageEntity } from '../modules/site-images/site-image.entity.js';
+import { SiteImageRepository } from '../modules/site-images/site-image.repository.js';
+import { SiteImageService } from '../modules/site-images/site-image.service.js';
 import { WorkPhotoEntity } from '../modules/work-photos/work-photo.entity.js';
 import { WorkPhotoRepository } from '../modules/work-photos/work-photo.repository.js';
 import { WorkPhotoService } from '../modules/work-photos/work-photo.service.js';
@@ -56,6 +59,8 @@ import { UserEntity } from '../modules/users/user.entity.js';
 import { UserRepository } from '../modules/users/user.repository.js';
 import { UserService } from '../modules/users/user.service.js';
 import { HealthService } from '../modules/health/health.service.js';
+import { TimetableRepository } from '../modules/timetable/timetable.repository.js';
+import { TimetableService } from '../modules/timetable/timetable.service.js';
 import { createLogger, type AppLogger } from '../shared/logging/logger.js';
 import type { Router } from 'express';
 import type { DataSource } from 'typeorm';
@@ -87,11 +92,13 @@ export class AppContainer {
     events: EventService,
     media: MediaService,
     workPhotos: WorkPhotoService,
+    siteImages: SiteImageService,
     storage: StorageProvider,
     content: ContentService,
     mail: EmailProvider,
     accounts: AccountService,
     enquiries: EnquiryService,
+    timetable: TimetableService,
   ) {
     this.health = new HealthService(dataSource, logger);
     this.users = users;
@@ -112,7 +119,9 @@ export class AppContainer {
       accounts,
       enquiries,
       workPhotos,
+      siteImages,
       storage,
+      timetable,
     );
   }
 
@@ -241,6 +250,13 @@ export class AppContainer {
       storage,
       env.uploadMaxBytes,
     );
+    const siteImageService = new SiteImageService(
+      new SiteImageRepository(dataSource.getRepository(SiteImageEntity)),
+      audit,
+      storage,
+      env.uploadMaxBytes,
+    );
+    const timetable = new TimetableService(new TimetableRepository(dataSource), audit);
     return new AppContainer(
       env,
       logger,
@@ -255,11 +271,13 @@ export class AppContainer {
       eventService,
       mediaService,
       workPhotoService,
+      siteImageService,
       storage,
       contentService,
       mail,
       accounts,
       enquiries,
+      timetable,
     );
   }
 

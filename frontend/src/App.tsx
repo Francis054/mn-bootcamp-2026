@@ -1,7 +1,9 @@
 import { lazy, Suspense, type ReactNode } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { RequireAccess } from '@/auth/AuthProvider';
+import { BootScreen } from '@/components/BootScreen';
 import { AfterBoot, RouteFallback } from '@/components/Loader';
+import { RobotsMeta, ScrollToTop } from '@/components/ScrollToTop';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { PublicLayout } from '@/layouts/PublicLayout';
 
@@ -11,6 +13,7 @@ const ContentEditorPage = lazy(() => import('@/pages/admin/SystemPages').then((m
 const EnquiriesPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.EnquiriesPage })));
 const MediaPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.MediaPage })));
 const WorkPhotosPage = lazy(() => import('@/pages/admin/WorkPhotosPage').then((m) => ({ default: m.WorkPhotosPage })));
+const SiteImagesPage = lazy(() => import('@/pages/admin/SiteImagesPage').then((m) => ({ default: m.SiteImagesPage })));
 const SettingsPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.SettingsPage })));
 const StatesPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.StatesPage })));
 const TimelineEditorPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.TimelineEditorPage })));
@@ -20,6 +23,7 @@ const EventEditor = lazy(() => import('@/pages/admin/Editors').then((m) => ({ de
 const ProjectEditor = lazy(() => import('@/pages/admin/Editors').then((m) => ({ default: m.ProjectEditor })));
 const TraineeEditor = lazy(() => import('@/pages/admin/Editors').then((m) => ({ default: m.TraineeEditor })));
 const ClassListPage = lazy(() => import('@/pages/admin/Lists').then((m) => ({ default: m.ClassListPage })));
+const TimetablePage = lazy(() => import('@/pages/admin/TimetablePage').then((m) => ({ default: m.TimetablePage })));
 const EventListPage = lazy(() => import('@/pages/admin/Lists').then((m) => ({ default: m.EventListPage })));
 const ProjectListPage = lazy(() => import('@/pages/admin/Lists').then((m) => ({ default: m.ProjectListPage })));
 const TraineeListPage = lazy(() => import('@/pages/admin/Lists').then((m) => ({ default: m.TraineeListPage })));
@@ -41,6 +45,7 @@ const ProjectsPage = lazy(() => import('@/pages/public/CommunityPages').then((m)
 const TraineePage = lazy(() => import('@/pages/public/CommunityPages').then((m) => ({ default: m.TraineePage })));
 const TraineesPage = lazy(() => import('@/pages/public/CommunityPages').then((m) => ({ default: m.TraineesPage })));
 const HomePage = lazy(() => import('@/pages/public/HomePage').then((m) => ({ default: m.HomePage })));
+const SchedulePage = lazy(() => import('@/pages/public/SchedulePage').then((m) => ({ default: m.SchedulePage })));
 const BootcampPage = lazy(() => import('@/pages/public/ProgrammePages').then((m) => ({ default: m.BootcampPage })));
 const ClassesPage = lazy(() => import('@/pages/public/ProgrammePages').then((m) => ({ default: m.ClassesPage })));
 const JourneyPage = lazy(() => import('@/pages/public/ProgrammePages').then((m) => ({ default: m.JourneyPage })));
@@ -56,11 +61,16 @@ function Waiting({ children }: { children: ReactNode }) {
 
 export function App() {
   return (
+    <>
+    <RobotsMeta />
+    <ScrollToTop />
+    <BootScreen />
     <Routes>
       <Route element={<PublicLayout />}>
         <Route index element={<Waiting><HomePage /></Waiting>} handle={{ page: 'home', tone: 'dark', title: 'Home' }} />
         <Route path="bootcamp" element={<Waiting><BootcampPage /></Waiting>} handle={{ page: 'overview', tone: 'dark', title: 'Bootcamp' }} />
         <Route path="journey" element={<Waiting><JourneyPage /></Waiting>} handle={{ page: 'journey', tone: 'light', title: 'Journey' }} />
+        <Route path="schedule" element={<Waiting><SchedulePage /></Waiting>} handle={{ page: 'schedule', tone: 'light', title: 'Schedule' }} />
         <Route path="classes" element={<Waiting><ClassesPage /></Waiting>} handle={{ page: 'classes', tone: 'light', title: 'Classes' }} />
         <Route path="classes/:id" element={<Waiting><LessonPage /></Waiting>} handle={{ page: 'classes', tone: 'light', title: 'Lesson' }} />
         <Route path="projects" element={<Waiting><ProjectsPage /></Waiting>} handle={{ page: 'projects', tone: 'dark', title: 'Projects' }} />
@@ -83,6 +93,7 @@ export function App() {
       <Route path="/admin" element={<RequireAccess permission="content.read"><AdminLayout /></RequireAccess>}>
         <Route index element={<Waiting><OverviewPage /></Waiting>} />
         <Route path="classes" element={<Waiting><ClassListPage /></Waiting>} />
+        <Route path="classes/timetable" element={<Waiting><TimetablePage /></Waiting>} />
         <Route path="classes/new" element={<Waiting><ClassEditor /></Waiting>} />
         <Route path="classes/:id" element={<Waiting><ClassEditor /></Waiting>} />
         <Route path="trainees" element={<Waiting><TraineeListPage /></Waiting>} />
@@ -96,6 +107,7 @@ export function App() {
         <Route path="events/:id" element={<Waiting><EventEditor /></Waiting>} />
         <Route path="media" element={<Waiting><MediaPage /></Waiting>} />
         <Route path="work-photos" element={<Waiting><WorkPhotosPage /></Waiting>} />
+        <Route path="site-images" element={<Waiting><SiteImagesPage /></Waiting>} />
         <Route path="content" element={<Waiting><ContentEditorPage /></Waiting>} />
         <Route path="timeline" element={<Waiting><TimelineEditorPage /></Waiting>} />
         <Route path="about" element={<Waiting><AboutEditorPage /></Waiting>} />
@@ -106,5 +118,6 @@ export function App() {
         <Route path="settings" element={<Waiting><RequireAccess permission="settings.manage"><SettingsPage /></RequireAccess></Waiting>} />
       </Route>
     </Routes>
+    </>
   );
 }

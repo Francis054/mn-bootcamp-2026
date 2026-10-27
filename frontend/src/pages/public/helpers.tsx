@@ -84,6 +84,8 @@ export function PageIntro({
   headline,
   aside,
   dark = false,
+  backdrop,
+  headlineClassName = '',
   children,
 }: {
   title: string;
@@ -92,17 +94,21 @@ export function PageIntro({
   headline: string;
   aside?: ReactNode;
   dark?: boolean;
+  /** Sits behind the hero copy. Used for the overview network graphic. */
+  backdrop?: ReactNode;
+  headlineClassName?: string;
   children?: ReactNode;
 }) {
   usePageMeta(title);
   return (
     <section className={`page-hero${dark ? ' page-hero--dark' : ''}`} style={dark ? { paddingBottom: 0 } : undefined}>
+      {backdrop}
       <div className="container" style={{ position: 'relative' }}>
         <Crumbs items={crumbs} />
         <div className="split" style={{ alignItems: 'end' }}>
           <div className="split__a" style={{ gridColumn: '1 / span 7' }}>
             <Reveal><span className="eyebrow">{eyebrow}</span></Reveal>
-            <SplitHeading as="h1" className="h1" text={headline} />
+            <SplitHeading as="h1" className={`h1${headlineClassName ? ` ${headlineClassName}` : ''}`} text={headline} />
           </div>
           {aside ? <div className="split__b" style={{ gridColumn: '9 / span 4' }}>{aside}</div> : null}
         </div>

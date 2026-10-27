@@ -8,9 +8,11 @@ import { collect, emailAddress, httpUrl, minLength, required } from '@/domain/va
 import { currentEnv } from '@/config/runtime';
 import type { ApiRequest } from '@/api/liveTransport';
 import { MODULES, mediaSrc } from './fixtures';
+import { SITE_IMAGE_SLOTS, isSiteImageKey, siteImageAltError, siteImageTaglineError, slotDefaults, slotTagline, toPublicSiteImage } from '@/domain/siteImages';
 import { readWorkPhotoDataUrl, workPhotoFieldErrors, workPhotoFileError } from '@/domain/workPhoto';
 import { clearSession, markSessionExpired, readActiveSession, setSession } from './session';
 import { getState, updateState } from './store';
+import { isAdminTimetablePath, isPublicTimetablePath, NOT_HANDLED, resetTimetableStore, timetableRoute } from './timetable-store';
 
 const failures = new Map<string, { count: number; lockedUntil: number }>();
 const resetTickets = new Map<string, { userId: string; expiresAt: number }>();
@@ -24,6 +26,7 @@ export function resetDevTransport(): void {
   failures.clear();
   resetTickets.clear();
   armed = null;
+  resetTimetableStore();
 }
 
 function takeArmed(): void {
@@ -209,9 +212,20 @@ async function route(method: string, path: string, query: ListQuery & Record<str
   if (method === 'GET' && path.startsWith('/public/events/')) return publicOne(getState().events, path.split('/')[3] ?? '', toPublicEvent);
   if (method === 'GET' && path === '/public/media') return getState().media.filter(isPubliclyListable);
   if (method === 'GET' && path === '/public/work-photos') return publicWorkPhotos(query);
+  if (method === 'GET' && path === '/public/site-images') return getState().siteImages.map(toPublicSiteImage);
+  if (method === 'GET' && path.startsWith('/public/site-images/')) return publicSiteImage(path.split('/')[3] ?? '');
   if (method === 'POST' && path === '/public/enquiries') return createEnquiry(body);
+  if (isPublicTimetablePath(path)) {
+    const timetable = await timetableRoute(method, path, query, body);
+    if (timetable !== NOT_HANDLED) return timetable;
+  }
 
   if (path.startsWith('/admin/')) requireUser('content.read');
+  if (isAdminTimetablePath(path)) {
+    if (method !== 'GET') requireUser('content.write');
+    const timetable = await timetableRoute(method, path, query, body);
+    if (timetable !== NOT_HANDLED) return timetable;
+  }
 
   if (method === 'GET' && path === '/admin/search') return search(String(query.q ?? ''));
   if (method === 'GET' && path === '/admin/modules') {
@@ -264,6 +278,12 @@ async function route(method: string, path: string, query: ListQuery & Record<str
   if (method === 'POST' && /^\/admin\/work-photos\/[^/]+\/publish$/.test(path)) return publishWorkPhoto(id);
   if (method === 'POST' && /^\/admin\/work-photos\/[^/]+\/unpublish$/.test(path)) return unpublishWorkPhoto(id);
   if (method === 'DELETE' && /^\/admin\/work-photos\/[^/]+$/.test(path)) return removeWorkPhoto(id);
+
+  if (method === 'GET' && path === '/admin/site-images') return listSiteImages();
+  if (method === 'POST' && path === '/admin/site-images') return createSiteImage(body);
+  if (method === 'POST' && /^\/admin\/site-images\/[^/]+\/image$/.test(path)) return replaceSiteImage(id, body);
+  if (method === 'POST' && /^\/admin\/site-images\/[^/]+\/reset$/.test(path)) return resetSiteImage(id);
+  if (method === 'PATCH' && /^\/admin\/site-images\/[^/]+$/.test(path)) return patchSiteImageAlt(id, body);
 
   if (method === 'GET' && path === '/admin/milestones') return { milestones: getState().milestones, publicationStatus: getState().milestonePublicationStatus };
   if (method === 'PUT' && path === '/admin/milestones') return saveNew('content.write', () => updateState((s) => ({ ...s, milestones: Array.isArray(body.milestones) ? body.milestones as typeof s.milestones : s.milestones })).milestones);
@@ -947,6 +967,135 @@ function toPublicWorkPhoto(photo: WorkPhoto) {
     alt: photo.alt,
     caption: photo.caption,
   };
+}
+
+function publicSiteImage(key: string) {
+  const row = getState().siteImages.find((item) => item.key === key);
+  if (!row) fail('not_found', 'Image slot not found.', 404);
+  return toPublicSiteImage(row);
+}
+
+function listSiteImages() {
+  requireAdministrator();
+  return getState().siteImages;
+}
+
+function createSiteImage(body: Record<string, unknown>) {
+  const actor = requireAdministrator();
+  const key = String(body.key ?? '').trim();
+  if (!isSiteImageKey(key)) fail('validation', 'Check the highlighted fields.', 422, { key: 'Choose a known image slot.' });
+  if (getState().siteImages.some((row) => row.key === key)) {
+    fail('validation', 'Check the highlighted fields.', 422, { key: 'That image slot already exists.' });
+  }
+  const slot = SITE_IMAGE_SLOTS.find((item) => item.key === key);
+  if (!slot) fail('validation', 'Check the highlighted fields.', 422, { key: 'Choose a known image slot.' });
+  const row = {
+    key: slot.key,
+    label: slot.label,
+    description: slot.description,
+    url: slot.url,
+    alt: slot.alt,
+    width: slot.width,
+    height: slot.height,
+    fit: slot.fit,
+    defaultUrl: slot.url,
+    defaultAlt: slot.alt,
+    tagline: slotTagline(slot),
+    usingDefault: true,
+    updatedAt: new Date().toISOString(),
+    updatedBy: actor.id,
+  };
+  updateState((s) => ({ ...s, siteImages: [...s.siteImages, row] }));
+  return row;
+}
+
+async function replaceSiteImage(key: string, body: Record<string, unknown>) {
+  const actor = requireAdministrator();
+  const current = getState().siteImages.find((row) => row.key === key);
+  if (!current) fail('not_found', 'Image slot not found.', 404);
+  const alt = String(body.alt ?? '');
+  const file = body.file instanceof File ? body.file : undefined;
+  const problems: Record<string, string> = {};
+  const altProblem = siteImageAltError(alt);
+  if (altProblem) problems.alt = altProblem;
+  if (!file) problems.file = 'Choose an image.';
+  else {
+    const fileProblem = profilePhotoFileProblem(file);
+    if (fileProblem) problems.file = fileProblem;
+  }
+  assertFields(problems);
+  if (!file) fail('validation', 'Check the highlighted fields.', 422, { file: 'Choose an image.' });
+  let stored: { src: string; width: number; height: number };
+  try {
+    stored = await readWorkPhotoDataUrl(file);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Use a JPEG, PNG, or WebP image.';
+    fail('validation', 'Check the highlighted fields.', 422, { file: message });
+  }
+  const next = markSiteImage(current, {
+    url: stored.src,
+    alt: alt.trim(),
+    width: stored.width,
+    height: stored.height,
+    updatedBy: actor.id,
+  });
+  updateState((s) => ({ ...s, siteImages: s.siteImages.map((row) => (row.key === key ? next : row)) }));
+  return next;
+}
+
+function patchSiteImageAlt(key: string, body: Record<string, unknown>) {
+  const actor = requireAdministrator();
+  const current = getState().siteImages.find((row) => row.key === key);
+  if (!current) fail('not_found', 'Image slot not found.', 404);
+  const alt = String(body.alt ?? '');
+  const altProblem = siteImageAltError(alt);
+  if (altProblem) fail('validation', 'Check the highlighted fields.', 422, { alt: altProblem });
+  let nextTagline = current.tagline;
+  if (body.tagline !== undefined) {
+    if (typeof body.tagline !== 'string') fail('validation', 'Check the highlighted fields.', 422, { tagline: 'Use plain text.' });
+    const taglineProblem = siteImageTaglineError(body.tagline);
+    if (taglineProblem) fail('validation', 'Check the highlighted fields.', 422, { tagline: taglineProblem });
+    nextTagline = body.tagline.trim();
+  }
+  const next = markSiteImage(current, { alt: alt.trim(), tagline: nextTagline, updatedBy: actor.id });
+  updateState((s) => ({ ...s, siteImages: s.siteImages.map((row) => (row.key === key ? next : row)) }));
+  return next;
+}
+
+function resetSiteImage(key: string) {
+  const actor = requireAdministrator();
+  const current = getState().siteImages.find((row) => row.key === key);
+  if (!current) fail('not_found', 'Image slot not found.', 404);
+  const defaults = slotDefaults(key);
+  if (!defaults || current.usingDefault) return current;
+  const next = markSiteImage(current, {
+    url: defaults.url,
+    alt: defaults.alt,
+    width: defaults.width,
+    height: defaults.height,
+    fit: defaults.fit,
+    tagline: defaults.tagline,
+    updatedBy: actor.id,
+  });
+  updateState((s) => ({ ...s, siteImages: s.siteImages.map((row) => (row.key === key ? next : row)) }));
+  return next;
+}
+
+function markSiteImage(
+  current: ReturnType<typeof getState>['siteImages'][number],
+  patch: Partial<ReturnType<typeof getState>['siteImages'][number]>,
+) {
+  const next = { ...current, ...patch, updatedAt: new Date().toISOString() };
+  const defaults = slotDefaults(next.key);
+  next.usingDefault = Boolean(
+    defaults
+    && next.url === defaults.url
+    && next.alt === defaults.alt
+    && next.width === defaults.width
+    && next.height === defaults.height
+    && next.tagline === defaults.tagline,
+  );
+  return next;
 }
 
 function requireAdministrator() {

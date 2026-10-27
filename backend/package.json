@@ -22,7 +22,8 @@
     "migration:revert": "tsx ./node_modules/typeorm/cli.js migration:revert -d src/database/cli-data-source.ts",
     "migration:show": "tsx ./node_modules/typeorm/cli.js migration:show -d src/database/cli-data-source.ts",
     "admin:create": "tsx src/commands/admin-create.ts",
-    "seed": "tsx src/commands/seed.ts"
+    "seed": "tsx src/commands/seed.ts",
+    "timetable:import": "tsx src/commands/import-timetable.ts"
   },
   "dependencies": {
     "argon2": "^0.45.1",

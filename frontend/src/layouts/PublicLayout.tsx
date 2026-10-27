@@ -1,4 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom';
+import { CommunityIconLinks } from '@/components/Brand';
 import { PageTransition, ProtoFlag, SiteFooter, SiteHeader } from '@/components/SiteChrome';
 
 const PAGES: Record<string, { page: string; tone: 'light' | 'dark' }> = {
@@ -21,9 +22,10 @@ export function PublicLayout() {
   const handle = PAGES[key] ?? { page: '', tone: 'light' as const };
   return (
     <>
+      <CommunityIconLinks />
       <a className="skip-link" href="#main">Skip to content</a>
       <SiteHeader page={handle.page ?? ''} tone={handle.tone ?? 'light'} />
-      <main id="main"><Outlet /></main>
+      <main id="main" tabIndex={-1}><Outlet /></main>
       <SiteFooter />
       <ProtoFlag />
       <PageTransition />

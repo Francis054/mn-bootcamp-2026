@@ -1,29 +1,57 @@
 import { useEffect, useState, type CSSProperties, type ElementType, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { CommunityBadge } from '@/components/CommunityBadge';
+import { SiteImage } from '@/components/SiteImage';
+import { useSiteImage } from '@/hooks/useSiteImages';
 
+/** Compact crop of the community badge, beside the wordmark. */
 export function Mark({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M12 2.8l7.5 2.9v5.6c0 4.8-3.2 8-7.5 9.9-4.3-1.9-7.5-5.1-7.5-9.9V5.7z" />
-      <path d="M12 7.5v9M8.5 10.5L12 7.5l3.5 3" />
-    </svg>
-  );
+  return <CommunityBadge variant="mark" className={className} priority />;
 }
 
+/** Full community badge, for seals and empty states. Pass a label when the image is not next to the name. */
+export function HatMark({ className = 'hat-seal', label = '' }: { className?: string; label?: string }) {
+  return <CommunityBadge variant="full" className={className} label={label} />;
+}
+
+/** Parent-organisation plate. Never the main community mark. */
 export function OfficialLogo({ width }: { width?: number }) {
   return (
     <span className="logo-plate">
-      <img src="/assets/logo/maxim-nyansa-foundation-logo.png" width={200} height={41} alt="Maxim Nyansa Foundation logo" style={width ? { width } : undefined} />
+      <SiteImage slot="foundation-logo" priority style={width ? { maxWidth: width, width: 'auto', height: 'auto' } : undefined} />
     </span>
   );
 }
 
+/** Point the tab icon at the community logo once the slot list has loaded. */
+export function CommunityIconLinks() {
+  const image = useSiteImage('community-logo');
+  useEffect(() => {
+    const custom = image.src !== image.fallbackSrc;
+    assignIcon('icon', custom ? image.src : '/assets/logo/favicon-32.png');
+    assignIcon('apple-touch-icon', custom ? image.src : '/assets/logo/apple-touch-icon.png');
+  }, [image.fallbackSrc, image.src]);
+  return null;
+}
+
+function assignIcon(rel: string, href: string): void {
+  let link = document.querySelector<HTMLLinkElement>(`link[rel="${rel}"]`);
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = rel;
+    document.head.append(link);
+  }
+  if (link.getAttribute('href') === href) return;
+  link.href = href;
+  link.type = href.endsWith('.svg') ? 'image/svg+xml' : href.endsWith('.webp') ? 'image/webp' : 'image/png';
+}
+
 export function Lockup({ to = '/' }: { to?: string }) {
   return (
-    <Link className="lockup" to={to} aria-label="2026 Cyber Bootcamp by Maxim Nyansa Foundation — home">
+    <Link className="lockup" to={to} aria-label="2026 Cybersecurity Bootcamp by Maxim Nyansa Foundation — home">
       <span className="wordmark">
         <span className="wordmark__mark"><Mark /></span>
-        <span className="wordmark__text"><b>Cyber Bootcamp</b><small>2026 · Accra</small></span>
+        <span className="wordmark__text"><b>Cybersecurity</b><small>Bootcamp · 2026</small></span>
       </span>
       <span className="lockup__divider" aria-hidden="true" />
       <OfficialLogo />

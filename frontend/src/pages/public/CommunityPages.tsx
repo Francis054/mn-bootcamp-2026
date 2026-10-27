@@ -1,7 +1,8 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '@/api/client';
-import { CountUp, OfficialLogo, Photo, SplitHeading } from '@/components/Brand';
+import { CountUp, HatMark, OfficialLogo, Photo, SplitHeading } from '@/components/Brand';
+import { SiteImage } from '@/components/SiteImage';
 import { Chips, ErrorSummary, Field, Tabs } from '@/components/controls';
 import { EmptyState, ErrorState, useLightbox, useToast } from '@/components/feedback';
 import { Loader } from '@/components/Loader';
@@ -116,7 +117,7 @@ export function ProjectsPage() {
   return (
     <PublicGate loading={loading} error={error}>
     <>
-      <PageIntro dark title="Projects & labs" crumbs={[{ label: 'Home', to: '/' }, { label: 'Bootcamp' }, { label: 'Projects & labs' }]} eyebrow="Projects & labs" headline={'Built in the lab.\nReady for the field.'} aside={<><p className="lead">Every bootcamp includes a real-life project. Finished work appears here after it is published.</p>{projects.some((project) => project.listing !== 'public') ? <span className="ph" style={{ marginTop: 16 }}>Sample projects are labelled</span> : null}</>}>
+      <PageIntro dark title="Projects & labs" crumbs={[{ label: 'Home', to: '/' }, { label: 'Bootcamp' }, { label: 'Projects & labs' }]} eyebrow="Projects & labs" headline={'Built in the lab.\nReady for the field.'} aside={<><p className="lead">Each week has a practical session from 2:00 to 4:00 p.m. and a deliverable. Finished project pages appear here after they are published.</p>{projects.some((project) => project.listing !== 'public') ? <span className="ph" style={{ marginTop: 16 }}>Sample projects are labelled</span> : null}</>}>
         <Netlines />
       </PageIntro>
       <section className="section">
@@ -257,24 +258,24 @@ export function AboutPage() {
       <section className="section"><div className="container"><h1>The about page is not published yet.</h1></div></section>
     ) : (
     <>
-      <PageIntro title="About" crumbs={[{ label: 'Home', to: '/' }, { label: 'About' }]} eyebrow="About the Foundation" headline={'Maximal wisdom,\nshared widely.'} aside={<><OfficialLogo width={180} /><p className="lead">Established in Ghana in 2016 to create career perspectives for young Africans through information technology.</p></>} />
-      <section className="section" style={{ paddingTop: 0 }}><div className="container"><figure className="detail-media"><Photo file="anniversary-group-outdoor" alt="An outdoor group photo at a Foundation event" width={1600} height={1067} sizes="100vw" /></figure></div></section>
+      <PageIntro title="About" crumbs={[{ label: 'Home', to: '/' }, { label: 'About' }]} eyebrow="About the Foundation" headline={'Maximal wisdom,\nshared widely.'} aside={<><HatMark className="hat-seal hat-seal--block" label="Cyber Bootcamp" /><OfficialLogo width={180} /><p className="lead">Established in Ghana in 2016 to create career perspectives for young Africans through information technology.</p></>} />
+      <section className="section" style={{ paddingTop: 0 }}><div className="container"><figure className="detail-media"><SiteImage slot="about-banner" sizes="100vw" /></figure></div></section>
       <section className="section">
         <div className="container split split--even">
-          <div><span className="eyebrow">Mission</span><p className="statement" style={{ marginTop: 20, fontSize: 'clamp(1.6rem,3vw,2.4rem)' }}>“{about.mission}”</p></div>
-          <div><span className="eyebrow">Vision</span><p className="statement" style={{ marginTop: 20, fontSize: 'clamp(1.6rem,3vw,2.4rem)' }}>“{about.vision}”</p></div>
+          <div className="split__a"><span className="eyebrow">Mission</span><p className="statement">“{about.mission}”</p></div>
+          <div className="split__b"><span className="eyebrow">Vision</span><p className="statement">“{about.vision}”</p></div>
         </div>
       </section>
       <section className="section section--paper">
         <div className="container">
-          <div className="sec-head"><div className="sec-head__title"><span className="eyebrow">Our values</span><h2 className="h2">Eight values, one way of working.</h2></div><span className="verified">From maximnyansa.com</span></div>
+          <div className="sec-head"><div className="sec-head__title"><span className="eyebrow">Our values</span><h2 className="h2">Eight values, one way of working.</h2></div><div className="sec-head__aside"><span className="verified">From maximnyansa.com</span></div></div>
           <div className="values">{(about.values ?? []).length ? (about.values ?? []).map((value, index) => <div key={value}><span>{String(index + 1).padStart(2, '0')}</span>{value}</div>) : <p className="muted">Values will appear when the about page is published with them.</p>}</div>
         </div>
       </section>
       <section className="section">
         <div className="container">
           <span className="eyebrow">Foundation timeline</span>
-          <h2 className="h2" style={{ margin: '16px 0 32px' }}>A decade, with gaps still to fill.</h2>
+          <h2 className="h2" style={{ margin: 'var(--s-4) 0 var(--s-6)' }}>A decade, with gaps still to fill.</h2>
           <ol className="tl"><li className="tl__progress" style={{ height: 'calc(100% - 16px)' }} />
             {milestones.map((item) => (
               <li className="tl__item is-reached" key={item.id}><span className="tl__dot" /><div className="tl__card"><span className="tl__date">{item.year}</span><h3>{item.title}</h3><p>{item.description}</p>{item.source ? <span className="muted">{item.source}</span> : <span className="tbc">To be supplied</span>}</div></li>
@@ -285,9 +286,11 @@ export function AboutPage() {
       {foundationStats.length ? (
         <section className="section section--dark">
           <div className="container">
-            <div className="sec-head"><div><span className="eyebrow">Foundation-wide figures</span><h2 className="h2">Not bootcamp statistics.</h2></div><span className={about.figuresPermission ? 'verified' : 'tbc'}>{about.figuresPermission ? 'Published counters' : 'Self-reported · permission to display TBC'}</span></div>
-            <div className="stats">{foundationStats.map((stat) => <div className="stat" key={stat.id}><CountUp value={stat.value} suffix={stat.suffix} /><span>{stat.label}</span></div>)}</div>
-            <p className="muted" style={{ marginTop: 20 }}>These counters describe the Foundation’s wider work, not the 2026 cohort. Address: {about.address}. Email: <a href={`mailto:${about.email}`}>{about.email}</a>.</p>
+            <div className="sec-head"><div className="sec-head__title"><span className="eyebrow">Foundation-wide figures</span><h2 className="h2">Not bootcamp statistics.</h2></div><div className="sec-head__aside"><span className={about.figuresPermission ? 'verified' : 'tbc'}>{about.figuresPermission ? 'Published counters' : 'Self-reported · permission to display TBC'}</span></div></div>
+            <div className="stack">
+              <div className="stats">{foundationStats.map((stat) => <div className="stat" key={stat.id}><CountUp value={stat.value} suffix={stat.suffix} /><span>{stat.label}</span></div>)}</div>
+              <p className="muted">These counters describe the Foundation’s wider work, not the 2026 cohort. Address: {about.address}. Email: <a href={`mailto:${about.email}`}>{about.email}</a>.</p>
+            </div>
           </div>
         </section>
       ) : (
@@ -448,6 +451,6 @@ function ContactCard({ icon, label, text, href, note }: { icon: IconName; label:
 export function NotFoundPage() {
   usePageMeta('Page not found');
   return (
-    <section className="section"><div className="container"><ErrorState title="That page is not on this site" text="Use the menu to get back to the bootcamp, or open the class archive." /></div></section>
+    <section className="section"><div className="container"><HatMark className="hat-seal hat-seal--block" label="Cyber Bootcamp" /><ErrorState title="That page is not on this site" text="Use the menu to get back to the bootcamp, or open the class archive." /></div></section>
   );
 }
