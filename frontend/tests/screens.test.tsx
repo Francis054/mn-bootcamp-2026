@@ -93,6 +93,16 @@ describe('admin gate', () => {
     renderAt('/admin');
     expect(await screen.findByRole('heading', { name: /welcome back/i })).toBeInTheDocument();
     expect(screen.getAllByText(/not production authentication/i).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/sign in to open the admin/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/field needs attention/i)).not.toBeInTheDocument();
+  });
+
+  it('does not show an unauthorized notice before the visitor submits', async () => {
+    renderAt('/admin/login?reason=unauthorized&next=%2Fadmin');
+    expect(await screen.findByRole('heading', { name: /welcome back/i })).toBeInTheDocument();
+    expect(screen.queryByText(/sign in to open the admin/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/field needs attention/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/httponly cookie/i)).not.toBeInTheDocument();
   });
 
   it('requires the development acknowledgement', async () => {

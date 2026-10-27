@@ -85,7 +85,7 @@ export function RequireAccess({ permission, children }: { permission: Permission
   if (!auth.signedIn && auth.expired) return <Navigate to="/admin/session-expired" replace />;
   if (!auth.signedIn) {
     const next = encodeURIComponent(`${location.pathname}${location.search}`);
-    return <Navigate to={`/admin/login?reason=unauthorized&next=${next}`} replace />;
+    return <Navigate to={`/admin/login?next=${next}`} replace />;
   }
   if (!auth.allowed(permission)) return <Navigate to="/admin/forbidden" replace />;
   return children;

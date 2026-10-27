@@ -18,7 +18,7 @@ export function LoginPage() {
   const navigate = useNavigate();
   const mock = usesMockApi();
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [formError, setFormError] = useState(params.get('reason') === 'unauthorized' ? (mock ? 'Sign in to open the admin. This is not a production session.' : 'Sign in to open the admin.') : '');
+  const [formError, setFormError] = useState('');
   const [pending, setPending] = useState(false);
   const [show, setShow] = useState(false);
   usePageMeta('Sign in');
@@ -59,9 +59,7 @@ export function LoginPage() {
         <div className="login__brand"><span className="wordmark"><ShellMark /><span className="wordmark__text"><b>Bootcamp CMS</b><small>2026 cohort</small></span></span><OfficialLogo width={150} /></div>
         {mock ? <span className="badge badge--warning" style={{ alignSelf: 'flex-start', margin: '16px 0' }}>Development adapter — not production authentication</span> : null}
         <h1 style={{ fontSize: 34, letterSpacing: '-.03em', marginBottom: 8 }}>Welcome back</h1>
-        <p className="muted" style={{ marginBottom: 24 }}>{mock
-          ? 'Sign in to manage classes, trainees, events and media. The password is checked for length and then discarded. It is not stored and it is not a secret.'
-          : 'Sign in with the account created for this site. The session stays in an HttpOnly cookie. This browser does not store the password.'}</p>
+        {mock ? <p className="muted" style={{ marginBottom: 24 }}>Sign in to manage classes, trainees, events and media. The password is checked for length and then discarded. It is not stored and it is not a secret.</p> : null}
         <form onSubmit={(event) => void submit(event)} noValidate>
           <ErrorSummary errors={formError ? { form: formError, ...errors } : errors} />
           <Field id="email" label="Work email" error={errors.email} hint={mock ? 'Fixtures: viewer@example.test, editor@example.test, administrator@example.test' : undefined}>

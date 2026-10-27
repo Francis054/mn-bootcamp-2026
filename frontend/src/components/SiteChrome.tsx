@@ -62,9 +62,21 @@ export function SiteHeader({ page, tone }: { page: string; tone: 'light' | 'dark
   }, []);
   const toggleMenu = (next: boolean) => {
     setMenu(next);
+    if (next) setHidden(false);
     document.body.classList.toggle('menu-open', next);
     document.body.style.overflow = next ? 'hidden' : '';
   };
+  useEffect(() => {
+    if (!menu) return;
+    const block = (event: TouchEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (document.getElementById('mobile-menu')?.contains(target)) return;
+      event.preventDefault();
+    };
+    document.addEventListener('touchmove', block, { passive: false });
+    return () => document.removeEventListener('touchmove', block);
+  }, [menu]);
   const flat = MENU.flatMap((item) => item.items ?? (item.to ? [{ id: item.id, label: item.label, to: item.to }] : []));
   return (
     <>

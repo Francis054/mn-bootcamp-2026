@@ -1,4 +1,5 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AuthProvider } from '@/auth/AuthProvider';
@@ -180,6 +181,73 @@ describe('live API routes', () => {
     renderAt('/trainees/t1');
     expect(await screen.findByRole('img', { name: 'Sample Person' })).toHaveAttribute('src', photo);
     expect(screen.queryByText('Placeholder portrait')).not.toBeInTheDocument();
+  });
+
+  it('keeps the login form quiet until the visitor submits', async () => {
+    setEnvForTests(LIVE);
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('/auth/session')) return json({ authenticated: false });
+      if (url.includes('/auth/login')) {
+        return json({ error: { code: 'unauthenticated', message: 'The email or password is not correct.' } }, 401);
+      }
+      return json({ error: { code: 'not_found', message: 'Not found.' } }, 404);
+    }));
+    const user = userEvent.setup();
+    renderAt('/admin/login?reason=unauthorized&next=%2Fadmin');
+    expect(await screen.findByRole('heading', { name: /welcome back/i })).toBeInTheDocument();
+    expect(screen.queryByText(/sign in with the account created for this site/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/httponly cookie/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/sign in to open the admin/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/field needs attention/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /sign in/i }));
+    expect(await screen.findByText(/2 fields need attention/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/enter your email address/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/enter your password/i).length).toBeGreaterThan(0);
+
+    await user.type(screen.getByLabelText(/work email/i), 'person@example.com');
+    await user.type(screen.getByLabelText(/^password/i), 'wrong-password');
+    await user.click(screen.getByRole('button', { name: /sign in/i }));
+    expect(await screen.findByText(/email or password is not correct/i)).toBeInTheDocument();
+  });
+
+  it('follows next after a successful sign-in', async () => {
+    setEnvForTests(LIVE);
+    const userBody = {
+      id: 'u1',
+      email: 'person@example.com',
+      displayName: 'Ada Admin',
+      initials: 'AA',
+      hue: 140,
+      role: 'administrator' as const,
+    };
+    let signedIn = false;
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('/auth/login')) {
+        signedIn = true;
+        return json({ user: userBody, expiresAt: Date.now() + 60_000 });
+      }
+      if (url.includes('/auth/session')) {
+        return signedIn
+          ? json({ authenticated: true, user: userBody, expiresAt: Date.now() + 60_000 })
+          : json({ authenticated: false });
+      }
+      if (url.includes('/admin/media')) return json([]);
+      if (url.includes('/admin/')) return json({ items: [], page: 1, pageSize: 50, total: 0 });
+      return json({ error: { code: 'not_found', message: 'Not found.' } }, 404);
+    }));
+    const user = userEvent.setup();
+    renderAt('/admin/login?next=%2Fadmin');
+    await user.type(await screen.findByLabelText(/work email/i), 'person@example.com');
+    await waitFor(() => {
+      expect(vi.mocked(fetch).mock.calls.some(([input]) => String(input).includes('/auth/session'))).toBe(true);
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await user.type(screen.getByLabelText(/^password/i), 'correct-password');
+    await user.click(screen.getByRole('button', { name: /sign in/i }));
+    expect(await screen.findByRole('heading', { name: /ada admin/i })).toBeInTheDocument();
   });
 
   it('sends every admin route to a visible gate when the session is anonymous', async () => {
