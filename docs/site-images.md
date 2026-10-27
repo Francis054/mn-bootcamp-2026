@@ -2,15 +2,15 @@
 
 The community badge, the Maxim Nyansa Foundation logo, and the photographs that used to be written into the page templates are image slots. An administrator can replace a file, change its alt text, or put the original file back. Gallery photos, trainee portraits, work photos, lesson covers, project pictures, and event pictures stay on their own records. They are not slots.
 
-The community logo is a hand-drawn SVG: a person dressed in white, wearing a white hat. A forest disc and a lime ring keep that white figure readable on light and on dark. The Maxim Nyansa Foundation wordmark is the parent organisation. It is only the small plate beside the name in the header and footer, on the sign-in form, in the admin sidebar, on the about page, and in the loader footer. It is never the community logo, and it is not drawn on top of the mark.
+The community logo is a photograph: a person in a white cap at a laptop with a green screen, cropped to a round badge, graded in forest and lime, with a small MN chip. The same file is readable on light and on dark. The Maxim Nyansa Foundation wordmark is the parent organisation. It is only the small plate beside the name in the header and footer, on the sign-in form, in the admin sidebar, on the about page, and in the loader. It is never the community logo, and it is not drawn on top of the mark.
 
-While the community slot is still the bundled file, the page draws `white-hat.svg`. The tagline sits under the larger seals (hero, about, sign-in, and the site-image preview). Uploading a community logo replaces that figure, and the tagline is not drawn. Uploading a foundation logo updates the separate plate only.
+While the community slot is still the bundled file, the page shows `community-badge.webp`. The tagline sits under the larger seals (hero, about, sign-in, and the site-image preview). Uploading a community logo replaces that photograph, and the tagline is not drawn. Uploading a foundation logo updates the separate plate only. Source and license: [media credits](media-credits.md).
 
 ## Slots
 
 | Key | Label | Where it shows | Original file |
 | --- | --- | --- | --- |
-| `community-logo` | Community logo | Header, footer, sign-in panel, admin sidebar, seals, empty states, and the favicon. The boot screen uses a separate black-hat drawing. | `/assets/logo/community-badge.webp` |
+| `community-logo` | Community logo | Header, footer, sign-in panel, admin sidebar, seals, empty states, and the favicon. The boot screen uses a separate stock video. | `/assets/logo/community-badge.webp` |
 | `foundation-logo` | Maxim Nyansa Foundation logo | Header, footer, sign-in form, admin sidebar, about page, loader footer | `/assets/logo/maxim-nyansa-foundation-logo.png` |
 | `home-hero-main` | Homepage hero, main photo | Homepage hero, large frame | `/assets/img/participant-portrait-1600.webp` |
 | `home-hero-side` | Homepage hero, side photo | Homepage hero, upper small frame | `/assets/img/hack-coding-team-1600.webp` |
@@ -32,7 +32,7 @@ These stay hard-coded on purpose:
 - Lesson covers, project images, and event images are fields on those records.
 - Trainee profile photos and work photos already have their own upload screens.
 - Net lines, the “10” mark, and the select chevron stay drawn graphics.
-- The loading screen is drawn in the browser. It does not play a video file.
+- The loading screen plays `frontend/public/assets/boot/loader.mp4` (with a WebM source). It is not a site-image slot.
 - `hat-black.svg`, `hat-ethical.svg`, and the older wordmark SVGs remain in `frontend/public/assets/logo/` from the previous mark. No page uses them as the community logo.
 
 The class-row hover picture is `aria-hidden` because the row already has a title. The slot still stores a description for the admin list. The sign-in panel sits inside an `aria-hidden` aside, so that page sends an empty alt even though the slot keeps a description.
@@ -41,37 +41,39 @@ The class-row hover picture is `aria-hidden` because the row already has a title
 
 Sign in as an administrator and open **Site images** under Pages.
 
-**Community logo.** The preview is the live white-hat mark. Edit **Badge tagline** to change the caption (40 characters, one line). Save with no file to update the tagline and the alt text. Choose a JPEG, PNG, or WebP to replace the whole mark. A square file works best. After a replacement, the tagline is not drawn. Reset to original puts the SVG, the tagline, and the alt text back. SVG uploads are not accepted. The shipped favicon and `og-image.png` are rasters of the default SVG. They change when that file is rasterised, not when an administrator uploads a replacement. The tab icon does follow the upload.
+**Community logo.** The preview is the photographic badge. Edit **Badge tagline** to change the caption (40 characters, one line). Save with no file to update the tagline and the alt text. Choose a JPEG, PNG, or WebP to replace the whole mark. A square file works best. After a replacement, the tagline is not drawn. Reset to original puts the photograph, the tagline, and the alt text back. SVG uploads are not accepted. The shipped favicon and `og-image.png` are exports of that photograph. They change when the badge is rebuilt, not when an administrator uploads a replacement. The tab icon does follow the upload.
 
 **Maxim Nyansa Foundation logo.** This is only the parent-organisation plate. The bundled file is 200 pixels wide. A larger PNG or WebP stays sharper in that small plate; the page uses `object-fit: contain` and does not stretch it past its own size. SVG files are not accepted, because an uploaded SVG on this origin would be unsafe. Reset puts the bundled wordmark back.
 
-The header and the favicon use the same SVG, so the figure stays sharp from 16px up. A replacement community logo is shown as uploaded, including in the browser tab icon once the page has loaded.
+The header and the favicon use the same photograph. A replacement community logo is shown as uploaded, including in the browser tab icon once the page has loaded.
 
-## Regenerate the static mark
+## Regenerate the photographic mark
 
-The drawing is `frontend/public/assets/logo/white-hat.svg`. Edit that file. Do not trace a photograph over it. `frontend/scripts/brand/concept-a.jpg` is the retired badge.
+The source still is `frontend/scripts/brand/white-hat-source.jpg`. Credits are in [media credits](media-credits.md). `frontend/scripts/brand/concept-a.jpg` is the retired badge.
 
 From `frontend/`:
 
 ```bash
-python3 scripts/build-logos.py --badge-only
+python3 scripts/build-photo-mark.py
 ```
 
-That rasterises the SVG into `frontend/public/assets/logo/`:
+That writes `frontend/public/assets/logo/`:
 
-- `community-badge.webp` and `.png`, and the same pixels as `community-badge-bare.webp` and `.png` — the slot default, for clients that cannot use the SVG.
-- `favicon-16.png`, `favicon-32.png`, `apple-touch-icon.png`, `community-badge-mark.png` — the same emblem, scaled down.
+- `community-badge.webp` and `.png`, and the same pixels as `community-badge-bare.webp` and `.png` — the slot default. The WebP is the file the page shows.
+- `favicon-16.png`, `favicon-32.png`, `apple-touch-icon.png`, `community-badge-mark.png` — the same emblem on a forest square.
 - `og-image.png` — the emblem on a forest card.
 
-`--badge-only` needs Pillow and CairoSVG. The full `python3 scripts/build-logos.py` also redraws the older hat SVGs and needs Shapely and fontTools. Those older files are not the community logo.
+`python3 scripts/build-logos.py --badge-only` runs the same script. The full `python3 scripts/build-logos.py` also redraws the older hat SVGs and needs Shapely and fontTools. Those older files are not the community logo.
+
+The loader clip is rebuilt with `sh scripts/build-loader-video.sh /path/to/the-720p-source.mp4`. The download URL is in that script and in [media credits](media-credits.md).
 
 ## What the public site does
 
 `GET /api/v1/public/site-images` returns the stored slots, including `tagline`. The response is cached like the other public reads (`public, max-age=60, stale-while-revalidate=480`). The page paints the bundled file first. When the list arrives, it swaps in the stored address if that address is a same-origin asset, a same-origin upload, or `https`. A bad address, a failed request, or a file that will not load falls back to the bundled file. If that also fails, the frame stays at the original width and height and the broken icon is not shown.
 
-The first paint draws the bundled SVG. A custom community URL replaces that drawing with the uploaded image.
+The first paint draws the bundled WebP. A custom community URL replaces that photograph with the uploaded image.
 
-The loading screen stays up until the first route is ready, and at least about 2.6 seconds on a first visit in the tab (about 0.9 seconds when `sessionStorage` already has `mn-boot-seen`). It gives up after 8 seconds so a failed request cannot block the site. The screen is a drawn black-hat figure beside a fake terminal. `prefers-reduced-motion` shows the finished `ACCESS GRANTED` frame without typing. Repeat navigations inside the app use the shorter in-page loader.
+The loading screen stays up until the first route is ready, and for the 3.8 second clip on a first visit in the tab (about 0.9 seconds when `sessionStorage` already has `mn-boot-seen`). It gives up after 8 seconds so a failed request cannot block the site. The clip is a graded stock video of a hooded person at a laptop, with classroom terminal lines that end on `ACCESS GRANTED` and `welcome to MN Bootcamp 2026`. `prefers-reduced-motion` shows the poster still and skips the clip. A repeat visit in the same tab also shows that still for the shorter hold. If the video cannot load, the poster remains, and if that image fails too the same two lines are drawn in the page. Repeat navigations inside the app use the shorter in-page loader.
 
 ## Admin
 

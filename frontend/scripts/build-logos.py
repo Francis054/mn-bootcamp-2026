@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Build logo files for the Cyber Bootcamp site.
 
-The live community mark is the hand-drawn SVG `public/assets/logo/white-hat.svg`.
-`--badge-only` rasterises that file (Pillow + CairoSVG).
+The live community mark is the photographic badge from `build-photo-mark.py`.
+`--badge-only` rebuilds that badge, the favicons, and the social card.
 
 The rest of this script redraws the older two-hat SVGs. Those are not the
 community logo. That path needs fontTools and Shapely.
@@ -625,26 +625,10 @@ def social_card(badge: Image.Image) -> Image.Image:
 
 
 def build_community_badge() -> None:
-    """Rasterise the hand-drawn white-hat SVG into favicons and the social card.
+    """Rebuild the photographic community mark. See build-photo-mark.py."""
+    import runpy
 
-    The figure is authored in public/assets/logo/white-hat.svg. Do not trace a
-    photograph over it. concept-a.jpg is the retired badge artwork.
-    """
-    try:
-        import cairosvg
-    except ImportError as error:
-        raise SystemExit("cairosvg is required to rasterise white-hat.svg") from error
-    from io import BytesIO
-
-    png = cairosvg.svg2png(url=str(OUT / "white-hat.svg"), output_width=1024, output_height=1024)
-    emblem = Image.open(BytesIO(png)).convert("RGBA")
-    save_rgba(emblem, "community-badge")
-    save_rgba(emblem, "community-badge-bare")
-    for size, name in ((16, "favicon-16.png"), (32, "favicon-32.png"), (180, "apple-touch-icon.png"), (192, "community-badge-mark.png")):
-        emblem.resize((size, size), Image.Resampling.LANCZOS).save(OUT / name, "PNG", optimize=True)
-        print(f"wrote {name}")
-    social_card(emblem).save(OUT / "og-image.png", "PNG", optimize=True)
-    print(f"wrote og-image.png ({(OUT / 'og-image.png').stat().st_size} bytes)")
+    runpy.run_path(str(Path(__file__).with_name("build-photo-mark.py")), run_name="__main__")
 
 
 if __name__ == "__main__":

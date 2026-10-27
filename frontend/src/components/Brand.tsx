@@ -28,7 +28,7 @@ export function CommunityIconLinks() {
   const image = useSiteImage('community-logo');
   useEffect(() => {
     const custom = image.src !== image.fallbackSrc;
-    assignIcon('icon', custom ? image.src : '/assets/logo/white-hat.svg');
+    assignIcon('icon', custom ? image.src : '/assets/logo/favicon-32.png');
     assignIcon('apple-touch-icon', custom ? image.src : '/assets/logo/apple-touch-icon.png');
   }, [image.fallbackSrc, image.src]);
   return null;

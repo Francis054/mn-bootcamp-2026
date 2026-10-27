@@ -1,24 +1,27 @@
 import { act, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { HatMark, Lockup } from '@/components/Brand';
 import { Loader } from '@/components/Loader';
 
 const LOGO = path.resolve(process.cwd(), 'public/assets/logo');
-const MARK = '/assets/logo/white-hat.svg';
+const BOOT = path.resolve(process.cwd(), 'public/assets/boot');
+const MARK = '/assets/logo/community-badge.webp';
 
 describe('community badge', () => {
-  it('ships a hand-drawn white-hat mark, the favicon crop and the social image', () => {
-    const svg = readFileSync(`${LOGO}/white-hat.svg`, 'utf8');
-    expect(svg).toContain('viewBox="0 0 128 128"');
-    expect(svg).toContain('#88CC00');
-    expect(svg).toContain('#FFFFFF');
-    expect(svg).not.toMatch(/<image[\s>/]/);
-    for (const file of ['white-hat.svg', 'community-badge.webp', 'community-badge.png', 'favicon-16.png', 'favicon-32.png', 'apple-touch-icon.png', 'og-image.png', 'maxim-nyansa-foundation-logo.png']) {
+  it('ships the photographic badge, the favicon crop, the social image, and a short loader clip', () => {
+    for (const file of ['community-badge.webp', 'community-badge.png', 'favicon-16.png', 'favicon-32.png', 'apple-touch-icon.png', 'og-image.png', 'maxim-nyansa-foundation-logo.png']) {
       expect(existsSync(`${LOGO}/${file}`), file).toBe(true);
     }
+    expect(statSync(`${LOGO}/community-badge.webp`).size).toBeLessThanOrEqual(150 * 1024);
+    expect(statSync(`${LOGO}/community-badge.png`).size).toBeLessThanOrEqual(150 * 1024);
+    for (const file of ['loader.mp4', 'loader.webm', 'loader-poster.jpg', 'loader-start.jpg']) {
+      expect(existsSync(`${BOOT}/${file}`), file).toBe(true);
+    }
+    expect(statSync(`${BOOT}/loader.mp4`).size).toBeLessThanOrEqual(1.5 * 1024 * 1024);
+    expect(statSync(`${BOOT}/loader.webm`).size).toBeLessThanOrEqual(1.5 * 1024 * 1024);
   });
 
   it('uses the white-hat mark beside the community name and keeps the foundation plate separate', async () => {

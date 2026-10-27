@@ -6,7 +6,6 @@
 <title>2026 Cyber Bootcamp · Maxim Nyansa Foundation</title>
 <meta name="description" content="Learn. Build. Secure the Future. Follow the free 2026 Cybersecurity Bootcamp by the Maxim Nyansa Foundation in Accra.">
 <meta name="theme-color" content="#0E2A1E">
-<link rel="icon" href="/assets/logo/white-hat.svg" type="image/svg+xml">
 <link rel="icon" href="/assets/logo/favicon-32.png" type="image/png" sizes="32x32">
 <link rel="icon" href="/assets/logo/favicon-16.png" type="image/png" sizes="16x16">
 <link rel="apple-touch-icon" href="/assets/logo/apple-touch-icon.png">
@@ -16,7 +15,7 @@
 <meta property="og:image" content="/assets/logo/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="/assets/logo/og-image.png">
-<link rel="preload" href="/assets/logo/white-hat.svg" as="image">
+<link rel="preload" href="/assets/logo/community-badge.webp" as="image">
 <link rel="preload" href="/assets/logo/maxim-nyansa-foundation-logo.png" as="image">
 <link rel="stylesheet" href="/assets/fonts/fonts.css">
 <script>
@@ -33,23 +32,14 @@
 <style>
   html,body{margin:0;min-height:100%;background:#010905}
   #boot{
-    position:fixed;inset:0;z-index:400;display:grid;place-items:center;
-    background:#010905;color:#9BE36A;font-family:ui-monospace,"Cascadia Code","Segoe UI",monospace;
+    position:fixed;inset:0;z-index:400;background:#010905 url('/assets/boot/loader-start.jpg') center/contain no-repeat;
   }
-  #boot .term{
-    width:min(520px,88vw);padding:16px 18px;border:1px solid rgba(136,204,0,.4);border-radius:12px;
-    background:#04140c;box-shadow:0 0 32px rgba(136,204,0,.16);font-size:14px;
-  }
-  #boot p{margin:0}
-  #boot .cur{display:inline-block;width:.55em;height:1em;margin-left:3px;background:#9BE36A;vertical-align:-.12em}
   #boot .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-  @media (prefers-reduced-motion:reduce){#boot .cur{background:#9BE36A}}
 </style>
 </head>
 <body>
 <div id="root"></div>
 <div id="boot" role="status" aria-live="polite" aria-busy="true">
-  <div class="term" aria-hidden="true"><p>$ bootcamp --cohort 2026<span class="cur"></span></p></div>
   <span class="sr">Loading the bootcamp…</span>
 </div>
 <script type="module" src="/src/main.tsx"></script>
