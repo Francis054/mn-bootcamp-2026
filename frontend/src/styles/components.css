@@ -191,13 +191,12 @@ a.card:hover .go{background:var(--mn-lime);transform:rotate(-45deg)}
 .avatar--sm{width:36px;height:36px;font-size:13px}
 
 /* Header ------------------------------------------------------------------ */
-.site-header{position:fixed;top:0;left:0;right:0;z-index:80;height:var(--header-h);transition:background var(--d-base),box-shadow var(--d-base),color var(--d-base),top var(--d-base) var(--ease-out)}
+.site-header{position:fixed;top:0;left:0;right:0;z-index:80;height:var(--header-h);transition:background var(--d-base),box-shadow var(--d-base),color var(--d-base)}
 .site-header::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none}
 .site-header .bar{height:100%;display:flex;align-items:center;gap:var(--s-5)}
 .site-header[data-tone="dark"]{color:#fff}
 .site-header[data-tone="light"],.site-header.is-solid{color:var(--ink);box-shadow:0 1px 0 var(--line)}
 .site-header[data-tone="light"]::before,.site-header.is-solid::before{background:rgba(255,255,255,.94);backdrop-filter:saturate(1.4) blur(12px);-webkit-backdrop-filter:saturate(1.4) blur(12px)}
-.site-header.is-hidden{top:calc(var(--header-h) * -1)}
 .lockup{display:flex;align-items:center;gap:14px;text-decoration:none;flex:none}
 .wordmark{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:700;letter-spacing:-.03em;line-height:1}
 .wordmark__mark{width:44px;height:44px;border-radius:50%;background:transparent;display:grid;place-items:center;color:var(--forest-900);flex:none;overflow:hidden}
@@ -236,7 +235,7 @@ a.card:hover .go{background:var(--mn-lime);transform:rotate(-45deg)}
 .menu-open .menu-toggle .bars i:nth-child(3){transform:translateY(-5px) rotate(-45deg)}
 .mobile-menu{position:fixed;inset:0;z-index:79;background:var(--forest-900);color:#fff;padding:calc(var(--header-h) + 16px) var(--gutter) 32px;display:flex;flex-direction:column;clip-path:circle(0% at calc(100% - 44px) 38px);visibility:hidden;transition:clip-path 620ms var(--ease-in-out),visibility 0s linear 620ms;overflow-y:auto}
 .menu-open .mobile-menu{clip-path:circle(150% at calc(100% - 44px) 38px);visibility:visible;transition-delay:0s}
-.menu-open .site-header{top:0;color:#fff;background:transparent;box-shadow:none}
+.menu-open .site-header{color:#fff;background:transparent;box-shadow:none}
 .menu-open .site-header::before{background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none}
 body.menu-open{overscroll-behavior:none}
 .mobile-menu ol{list-style:none;margin:0;padding:0;counter-reset:m}
