@@ -17,6 +17,7 @@ The API uses PostgreSQL through TypeORM. `synchronize` is off. Schema changes ar
 13. Trainee profile photo (`photo_url` and `photo_storage_key`)
 14. Timetable (`programmes`, `curriculum_blocks`, `curriculum_weeks`, `week_deliverables`, `trainers`, `week_trainers`, `class_sessions`, `session_trainers`). This file stays `1793923200000-Timetable` so a database that already applied it does not run it again.
 15. Site images (`site_images`: one row per built-in logo or page photograph). This is `1794009600000-SiteImages`, the next day after the timetable migration. The two were written with the same timestamp; site images takes the later one so `migration:run` applies it after the timetable on a database that already has migration 14.
+16. Public row level security (`1794096000000-PublicRls`). Enables row level security on every ordinary table in `public`, including `schema_migrations`, and revokes `anon` and `authenticated`. It adds no policies. The statements and the reason are in `docs/security.md`.
 
 The migrations table is `schema_migrations`. Passwords are stored as Argon2id hashes. Session cookies are stored as hashes. The cookie value itself is not stored.
 
@@ -77,4 +78,4 @@ Run `npm run migration:run` once, before the first real request, and again only 
 
 Do not run `npm run seed` on the hosted database. After migration 14, load the real timetable with `npm run timetable:import` from `backend/`. That command reads `data/seed/bootcamp-timetable-and-outline.xlsx` and can be run again. It does not insert sample lessons. See `docs/timetable.md`. Migration 15 inserts the site-image slots. It does not load the workbook.
 
-Do not run `migration:revert` on the hosted database as a casual rollback. A reverted migration can drop columns. Roll back the Render deploy first, and read `docs/deployment.md` before touching the schema.
+Do not run `migration:revert` on the hosted database as a casual rollback. A reverted migration can drop columns. Rolling back `PublicRls1794096000000` also turns row level security off and grants `anon` and `authenticated` every privilege on `public` again. Roll back the Render deploy first, and read `docs/deployment.md` before touching the schema.
