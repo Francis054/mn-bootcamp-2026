@@ -2,33 +2,34 @@ import { useEffect, useRef, useState } from 'react';
 import { OfficialLogo } from '@/components/Brand';
 import { BootHacker } from '@/components/BootHacker';
 import { bootFrame } from '@/components/bootScript';
-import { BOOT_EXIT_MS, BOOT_FAIL_OPEN_MS, BOOT_MIN_REPEAT_MS, BOOT_SEEN_KEY, bootBlocked, bootMinMs, markBootSeen, setBootPhase, useBootCovering } from '@/components/bootHold';
+import { BOOT_EXIT_MS, BOOT_FAIL_OPEN_MS, BOOT_MIN_REPEAT_MS, bootBlocked, bootMinMs, markBootSeen, setBootPhase, useBootCovering } from '@/components/bootHold';
 
 function reducedMotion(): boolean {
   return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-function repeatVisit(): boolean {
-  try {
-    return sessionStorage.getItem(BOOT_SEEN_KEY) === '1';
-  } catch {
-    return false;
-  }
+/** Read once. React's dev replay would otherwise see the flag this effect is about to set. */
+function bootPlan(): { repeat: boolean; reduced: boolean; min: number } {
+  const reducedNow = reducedMotion();
+  const base = bootMinMs();
+  return {
+    repeat: base === BOOT_MIN_REPEAT_MS,
+    reduced: reducedNow,
+    min: reducedNow && base > 0 ? Math.min(base, BOOT_MIN_REPEAT_MS) : base,
+  };
 }
 
 export function BootScreen() {
   const covering = useBootCovering();
   const started = useRef(0);
   const minMs = useRef(0);
-  const [repeat] = useState(repeatVisit);
+  const [plan] = useState(bootPlan);
   const [fraction, setFraction] = useState(0);
   const [leaving, setLeaving] = useState(false);
-  const reduced = reducedMotion();
 
   useEffect(() => {
     dismissSplash();
-    const base = bootMinMs();
-    minMs.current = reduced && base > 0 ? Math.min(base, BOOT_MIN_REPEAT_MS) : base;
+    minMs.current = plan.min;
     markBootSeen();
     started.current = performance.now();
     let frame = 0;
@@ -51,7 +52,7 @@ export function BootScreen() {
         setBootPhase('exit');
         exitTimer = window.setTimeout(() => {
           if (!stopped) setBootPhase('done');
-        }, reduced ? 0 : BOOT_EXIT_MS);
+        }, plan.reduced ? 0 : BOOT_EXIT_MS);
         return;
       }
       frame = window.requestAnimationFrame(tick);
@@ -62,13 +63,13 @@ export function BootScreen() {
       window.cancelAnimationFrame(frame);
       window.clearTimeout(exitTimer);
     };
-  }, [reduced]);
+  }, [plan]);
 
   if (!covering) return null;
-  const frame = bootFrame(reduced ? 1 : fraction, repeat, reduced);
+  const frame = bootFrame(plan.reduced ? 1 : fraction, plan.repeat, plan.reduced);
 
   return (
-    <div className={`boot-screen${leaving ? ' is-leaving' : ''}${reduced ? ' is-still' : ''}${frame.granted ? ' is-granted' : ''}`} role="status" aria-live="polite" aria-busy="true">
+    <div className={`boot-screen${leaving ? ' is-leaving' : ''}${plan.reduced ? ' is-still' : ''}${frame.granted ? ' is-granted' : ''}`} role="status" aria-live="polite" aria-busy="true">
       <span className="sr-only">Loading the bootcamp…</span>
       <div className="boot-scene">
         <BootHacker />
@@ -91,7 +92,7 @@ export function BootScreen() {
             {frame.welcome ? <p className="boot-term__welcome">welcome to MN Bootcamp 2026</p> : null}
           </div>
           <div className="boot-term__meter" aria-hidden="true">
-            <span style={{ width: `${Math.round((reduced ? 1 : fraction) * 100)}%` }} />
+            <span style={{ width: `${Math.round((plan.reduced ? 1 : fraction) * 100)}%` }} />
           </div>
         </div>
       </div>
