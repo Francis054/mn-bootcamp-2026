@@ -23,7 +23,6 @@ const MENU: Array<{ id: string; label: string; to?: string; items?: Array<{ id: 
 
 export function SiteHeader({ page, tone }: { page: string; tone: 'light' | 'dark' }) {
   const [solid, setSolid] = useState(false);
-  const [hidden, setHidden] = useState(false);
   const [open, setOpen] = useState(false);
   const [menu, setMenu] = useState(false);
   const location = useLocation();
@@ -48,21 +47,13 @@ export function SiteHeader({ page, tone }: { page: string; tone: 'light' | 'dark
     };
   }, []);
   useEffect(() => {
-    let last = window.scrollY;
-    const onScroll = () => {
-      const y = window.scrollY;
-      setSolid(y > 24);
-      setHidden(y > 640 && y > last + 4 && !document.body.classList.contains('menu-open'));
-      if (y < last - 4) setHidden(false);
-      last = y;
-    };
+    const onScroll = () => setSolid(window.scrollY > 24);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
   const toggleMenu = (next: boolean) => {
     setMenu(next);
-    if (next) setHidden(false);
     document.body.classList.toggle('menu-open', next);
     document.body.style.overflow = next ? 'hidden' : '';
   };
@@ -80,7 +71,7 @@ export function SiteHeader({ page, tone }: { page: string; tone: 'light' | 'dark
   const flat = MENU.flatMap((item) => item.items ?? (item.to ? [{ id: item.id, label: item.label, to: item.to }] : []));
   return (
     <>
-      <header className={`site-header${solid ? ' is-solid' : ''}${hidden ? ' is-hidden' : ''}`} data-tone={tone}>
+      <header className={`site-header${solid ? ' is-solid' : ''}`} data-tone={tone}>
         <div className="container bar">
           <Lockup />
           <nav className="nav" aria-label="Primary">
