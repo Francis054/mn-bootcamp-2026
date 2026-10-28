@@ -42,6 +42,10 @@ export interface AppEnv {
   cloudinaryApiSecret?: string;
   resendApiKey?: string;
   emailFrom?: string;
+  /** Closed signup. Only `roster` is implemented. */
+  traineeSignupMode: 'roster';
+  /** Print that a development message was accepted. Refused in production. */
+  devMailLog: boolean;
 }
 
 const NODE_ENVS: readonly NodeEnv[] = ['development', 'test', 'production'];
@@ -143,6 +147,11 @@ export function loadEnv(
   if (resendCount === 1) {
     problems.push('RESEND_API_KEY and EMAIL_FROM must both be set, or both left blank.');
   }
+  const traineeSignupMode = readSignupMode(source.TRAINEE_SIGNUP_MODE, problems);
+  const devMailLog = readBooleanDefault(source.DEV_MAIL_LOG, false, 'DEV_MAIL_LOG', problems);
+  if (nodeEnv === 'production' && devMailLog) {
+    problems.push('DEV_MAIL_LOG must not be set in production.');
+  }
 
   if (problems.length > 0) {
     throw new EnvError(problems.join(' '));
@@ -164,6 +173,8 @@ export function loadEnv(
     loginLockMs,
     loginIpFailureLimit,
     uploadMaxBytes,
+    traineeSignupMode,
+    devMailLog,
   };
   if (databaseSslCa !== undefined) env.databaseSslCa = databaseSslCa;
   if (sessionSecret !== undefined) env.sessionSecret = sessionSecret;
@@ -405,6 +416,13 @@ function readUploadMax(raw: string | undefined, problems: string[]): number {
     return UPLOAD_MAX_DEFAULT;
   }
   return value;
+}
+
+function readSignupMode(raw: string | undefined, problems: string[]): 'roster' {
+  const value = raw?.trim() || 'roster';
+  if (value === 'roster') return 'roster';
+  problems.push('TRAINEE_SIGNUP_MODE must be roster.');
+  return 'roster';
 }
 
 function readOptional(raw: string | undefined): string | undefined {

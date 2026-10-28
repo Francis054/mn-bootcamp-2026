@@ -46,6 +46,10 @@ import { WorkPhotoRepository } from '../modules/work-photos/work-photo.repositor
 import { WorkPhotoService } from '../modules/work-photos/work-photo.service.js';
 import { createMail } from '../modules/mail/create-mail.js';
 import type { EmailProvider } from '../modules/mail/email-provider.js';
+import { ObservedMail } from '../modules/mail/observed-mail.js';
+import { PendingRegistrationEntity } from '../modules/trainee-auth/pending-registration.entity.js';
+import { PendingRegistrationRepository } from '../modules/trainee-auth/pending-registration.repository.js';
+import { SignupService } from '../modules/trainee-auth/signup.service.js';
 import { createStorage } from '../modules/storage/create-storage.js';
 import type { StorageProvider } from '../modules/storage/storage-provider.js';
 import { ProjectEntity } from '../modules/projects/project.entity.js';
@@ -99,6 +103,7 @@ export class AppContainer {
     accounts: AccountService,
     enquiries: EnquiryService,
     timetable: TimetableService,
+    signup: SignupService,
   ) {
     this.health = new HealthService(dataSource, logger);
     this.users = users;
@@ -122,6 +127,7 @@ export class AppContainer {
       siteImages,
       storage,
       timetable,
+      signup,
     );
   }
 
@@ -143,9 +149,11 @@ export class AppContainer {
     const audit = new AuditRepository(dataSource.getRepository(AuditEventEntity));
     const throttles = new LoginThrottleRepository(dataSource);
     const mail = createMail(env);
+    const outbound = new ObservedMail(mail, logger, env.devMailLog && env.nodeEnv !== 'production');
     const contentRepository = new ContentRepository(
       dataSource.getRepository(ContentSingletonEntity),
     );
+    const traineeRepository = new TraineeRepository(dataSource.getRepository(TraineeEntity));
     const accounts = new AccountService(
       users,
       userRepository,
@@ -154,7 +162,7 @@ export class AppContainer {
       throttles,
       audit,
       hasher,
-      mail,
+      outbound,
       env.sessionSecret,
       env.frontendUrl,
       {
@@ -162,11 +170,13 @@ export class AppContainer {
         ipFailureLimit: env.loginIpFailureLimit,
         lockMs: env.loginLockMs,
       },
+      traineeRepository,
+      logger,
     );
     const enquiries = new EnquiryService(
       new EnquiryRepository(dataSource.getRepository(EnquiryEntity)),
       contentRepository,
-      mail,
+      outbound,
       throttles,
       audit,
       { failureLimit: env.loginFailureLimit, lockMs: env.loginLockMs },
@@ -189,7 +199,6 @@ export class AppContainer {
     const moduleRepository = new ModuleRepository(dataSource.getRepository(ModuleEntity));
     const phaseRepository = new PhaseRepository(dataSource.getRepository(PhaseEntity));
     const lessonRepository = new LessonRepository(dataSource.getRepository(LessonEntity));
-    const traineeRepository = new TraineeRepository(dataSource.getRepository(TraineeEntity));
     const projectRepository = new ProjectRepository(dataSource.getRepository(ProjectEntity));
     const catalogue = new CatalogueService(
       trackRepository,
@@ -257,6 +266,21 @@ export class AppContainer {
       env.uploadMaxBytes,
     );
     const timetable = new TimetableService(new TimetableRepository(dataSource), audit);
+    const signup = new SignupService(
+      users,
+      userRepository,
+      traineeRepository,
+      traineeService,
+      moduleRepository,
+      new PendingRegistrationRepository(dataSource.getRepository(PendingRegistrationEntity)),
+      new AccessTokenRepository(dataSource.getRepository(AccessTokenEntity)),
+      throttles,
+      audit,
+      hasher,
+      accounts,
+      env.sessionSecret,
+      logger,
+    );
     return new AppContainer(
       env,
       logger,
@@ -278,6 +302,7 @@ export class AppContainer {
       accounts,
       enquiries,
       timetable,
+      signup,
     );
   }
 

@@ -84,6 +84,13 @@ export class TraineeEntity {
   @Column({ name: 'internal_notes', type: 'text' })
   internalNotes!: string;
 
+  /** Shareable profile address. Empty until a later publish step sets it. */
+  @Column({ type: 'varchar', length: 80, unique: true, nullable: true })
+  slug!: string | null;
+
+  @Column({ name: 'cohort_year', type: 'smallint', default: 2026 })
+  cohortYear!: number;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 

@@ -85,6 +85,7 @@ export function SiteHeader({ page, tone }: { page: string; tone: 'light' | 'dark
           <Lockup />
           <nav className="nav" aria-label="Primary">
             <ul>
+              <li><Link className="nav-link nav-link--account" to="/login">Trainee sign in / Create account</Link></li>
               {MENU.map((item) => item.items ? (
                 <li key={item.id} className={`has-menu${open ? ' is-open' : ''}`} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false); }}>
                   <button className="nav-link" type="button" aria-expanded={open} aria-haspopup="true" aria-current={item.items.some((child) => child.id === page) ? 'page' : undefined} onClick={() => setOpen((value) => !value)}>
@@ -110,6 +111,7 @@ export function SiteHeader({ page, tone }: { page: string; tone: 'light' | 'dark
       <div className="mobile-menu" id="mobile-menu" role="dialog" aria-modal="true" aria-label="Menu">
         <nav aria-label="Mobile">
           <ol>
+            <li><Link to="/login" onClick={() => toggleMenu(false)}>Trainee sign in / Create account</Link></li>
             {flat.map((item) => (
               <li key={item.id}><Link to={item.to} aria-current={item.id === page ? 'page' : undefined} onClick={() => toggleMenu(false)}>{item.label}</Link></li>
             ))}

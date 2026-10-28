@@ -45,6 +45,10 @@ export function LoginPage() {
       });
       if (!mock && result.user && result.expiresAt !== undefined) rememberSignedIn(result.user, result.expiresAt);
       const next = params.get('next');
+      if (result.user?.role === 'trainee') {
+        navigate('/portal');
+        return;
+      }
       navigate(next && next.startsWith('/admin') ? next : '/admin');
     } catch (error) {
       setFormError(isApiError(error) ? error.message : 'Sign-in failed.');

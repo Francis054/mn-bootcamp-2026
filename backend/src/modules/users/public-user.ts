@@ -8,4 +8,6 @@ export interface PublicUser {
   initials: string;
   hue: number;
   role: Role;
+  emailVerified: boolean;
+  traineeId: string | null;
 }

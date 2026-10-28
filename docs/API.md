@@ -70,7 +70,29 @@ or
 
 There is no `mode: "development"` and no `provider: "development-adapter"`. A missing, idle, or expired session is `authenticated: false`, not an error. A protected route then returns `401`.
 
-Idle time is 30 minutes. The session also ends 12 hours after sign-in. Both can be changed with environment variables. They are not part of the JSON contract.
+Idle time is 30 minutes for staff. A trainee session stays open for at least 2 idle hours. The session also ends 12 hours after sign-in. Both staff limits can be changed with environment variables. They are not part of the JSON contract.
+
+The user object also includes `emailVerified` (boolean) and `traineeId` (string or null). `role` may be `trainee` or `trainer` as well as `viewer`, `editor`, and `administrator`.
+
+A trainee whose email is not confirmed gets `403` and `Confirm your email before you sign in. You can request another link.` A suspended account gets the same `401` as a wrong password. Wrong password and unknown mailbox stay on that `401`.
+
+## Trainee signup
+
+`POST /public/trainee-signup` with `{ email, password, confirm, displayName?, acceptTerms: true }`. A non-empty `company` field is a honeypot: the response looks like success and nothing is stored. The password rules match stored passwords (12 characters, a letter, a number, not the mailbox).
+
+Success is `202` and this body for every address:
+
+```json
+{ "accepted": true, "message": "If this email is on the cohort list, we sent a link. If you do not see it, request another from the verification page." }
+```
+
+An email already on `trainees` creates or replaces an unverified trainee login and sends a 24-hour single-use link to `/verify-email`. An email that is not on the roster is stored in `pending_registrations` for an administrator. A verified account receives a different email and is not overwritten. The JSON does not say which happened.
+
+`POST /public/trainee-signup/verify` with `{ token }` confirms the email and does not start a session. A missing, used, or expired token is `422`. `POST /public/trainee-signup/resend` with `{ email }` returns the same `202` as signup. Signup allows 3 requests an hour per email and 5 per address. Resend allows 3 per email and 10 per address. Over the limit is `429` and `Too many requests. Try again later.`
+
+`GET /portal/me` needs `portal.access`. It returns `{ user, traineeId }`. Staff receive `403`.
+
+Administrators (`users.manage`) list `GET /admin/pending-registrations`, approve or reject a row, list `GET /admin/trainee-accounts`, and disable, enable, or resend. Approve creates a hidden trainee when the email is not already on the roster, links the login, and sends the confirmation email. `delivered` is false when mail was not accepted. The account still exists. Disable deletes that account's sessions.
 
 ## What the website should change later
 

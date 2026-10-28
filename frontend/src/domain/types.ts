@@ -238,6 +238,9 @@ export interface DevUser {
   role: Role;
   lastActiveLabel?: string;
   fixture?: true;
+  emailVerified?: boolean;
+  traineeId?: string | null;
+  disabled?: boolean;
 }
 
 export interface EnquiryRecord {
@@ -270,6 +273,8 @@ export interface SessionUser {
   initials: string;
   hue: number;
   role: Role;
+  emailVerified?: boolean;
+  traineeId?: string | null;
 }
 
 export interface DevSession {

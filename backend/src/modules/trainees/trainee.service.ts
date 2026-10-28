@@ -130,6 +130,8 @@ export class TraineeService {
       publicationStatus: decision.publicationStatus,
       statusLabel: dto.statusLabel?.trim() || 'In training',
       internalNotes: dto.internalNotes ?? '',
+      slug: null,
+      cohortYear: 2026,
     });
     await this.trainees.replaceLessons(saved.id, lessonIds);
     await this.writeAudit(actor, 'created', saved.id);

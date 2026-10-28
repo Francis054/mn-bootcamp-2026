@@ -5,8 +5,8 @@ import type { Role } from '../users/role.js';
  * Screen checks are not the security boundary. These are.
  *
  * `content.read` opens `/api/v1/admin`. Trainee and trainer do not have it,
- * so they cannot read other trainees' private records. `portal.access` and
- * `portal.write` are the trainee's own area. No portal route uses them yet.
+ * so they cannot read other trainees' private records. `portal.access` opens
+ * `/api/v1/portal`. `portal.write` is reserved for later edits.
  */
 export const PERMISSIONS = [
   'content.read',

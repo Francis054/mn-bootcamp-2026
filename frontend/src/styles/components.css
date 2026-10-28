@@ -226,6 +226,16 @@ a.card:hover .go{background:var(--mn-lime);transform:rotate(-45deg)}
 .dropdown a b{font-family:var(--font-display);font-size:15px;font-weight:600}
 .dropdown a span{font-size:13px;color:var(--ink-3)}
 .header-cta{margin-left:var(--s-3)}
+.nav-link--account{white-space:nowrap}
+.portal-shell{min-height:100vh;background:var(--paper);color:var(--ink)}
+.portal-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px var(--gutter);background:var(--forest-800);color:#fff}
+.portal-brand{display:flex;align-items:center;gap:12px;color:#fff;text-decoration:none}
+.portal-brand b{display:block;font-family:var(--font-display)}
+.portal-brand small{display:block;color:#c9d7cc}
+.portal-bar__actions{display:flex;align-items:center;gap:12px}
+.portal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:28px}
+.portal-card{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:20px}
+.portal-card h2{font-size:22px;margin-bottom:8px}
 .menu-toggle{display:none;margin-left:auto;flex:none;width:48px;height:48px;min-width:48px;aspect-ratio:1;border-radius:50%;border:1.5px solid currentColor;border-color:rgba(127,140,130,.4);background:transparent;place-items:center;box-sizing:border-box}
 .menu-toggle:focus-visible{border-radius:50%}
 .menu-toggle .bars{width:18px;height:12px;position:relative}

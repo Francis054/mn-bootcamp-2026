@@ -11,6 +11,7 @@ import { MODULES, mediaSrc } from './fixtures';
 import { SITE_IMAGE_SLOTS, isSiteImageKey, siteImageAltError, siteImageTaglineError, slotDefaults, slotTagline, toPublicSiteImage } from '@/domain/siteImages';
 import { readWorkPhotoDataUrl, workPhotoFieldErrors, workPhotoFileError } from '@/domain/workPhoto';
 import { clearSession, markSessionExpired, readActiveSession, setSession } from './session';
+import { resetTraineeAuthDev, traineeAuthRoute } from './trainee-auth';
 import { getState, updateState } from './store';
 import { isAdminTimetablePath, isPublicTimetablePath, NOT_HANDLED, resetTimetableStore, timetableRoute } from './timetable-store';
 
@@ -27,6 +28,7 @@ export function resetDevTransport(): void {
   resetTickets.clear();
   armed = null;
   resetTimetableStore();
+  resetTraineeAuthDev();
 }
 
 function takeArmed(): void {
@@ -182,6 +184,9 @@ function formFields(value: unknown): Record<string, unknown> {
 
 async function route(method: string, path: string, query: ListQuery & Record<string, string>, body: Record<string, unknown>): Promise<unknown> {
   const id = path.split('/')[3] ?? '';
+
+  const traineeAuth = traineeAuthRoute(method, path, body);
+  if (traineeAuth !== undefined) return traineeAuth;
 
   if (method === 'POST' && path === '/auth/login') return login(body);
   if (method === 'POST' && path === '/auth/logout') {
@@ -371,7 +376,7 @@ function login(body: Record<string, unknown>) {
   const locked = failures.get(email);
   if (locked && locked.lockedUntil > Date.now()) fail('rate_limited', 'Too many sign-in attempts. Wait a minute and try again.', 429);
   const user = getState().users.find((item) => item.email === email);
-  if (!user) {
+  if (!user || user.disabled) {
     const row = failures.get(email) ?? { count: 0, lockedUntil: 0 };
     row.count += 1;
     if (row.count >= 5) {
@@ -379,12 +384,24 @@ function login(body: Record<string, unknown>) {
       row.count = 0;
     }
     failures.set(email, row);
-    fail('unauthenticated', 'No development fixture matches that email. Try viewer@example.test, editor@example.test or administrator@example.test.', 401);
+    fail('unauthenticated', user ? 'The email or password is not correct.' : 'No development fixture matches that email. Try viewer@example.test, editor@example.test or administrator@example.test.', 401);
+  }
+  if (user.role === 'trainee' && user.emailVerified === false) {
+    fail('forbidden', 'Confirm your email before you sign in. You can request another link.', 403);
   }
   failures.delete(email);
   const session = {
     mode: 'development' as const,
-    user: { id: user.id, email: user.email, displayName: user.displayName, initials: user.initials, hue: user.hue, role: user.role },
+    user: {
+      id: user.id,
+      email: user.email,
+      displayName: user.displayName,
+      initials: user.initials,
+      hue: user.hue,
+      role: user.role,
+      emailVerified: user.emailVerified !== false,
+      traineeId: user.traineeId ?? null,
+    },
     expiresAt: Date.now() + env.sessionTtlMs,
   };
   setSession(session);
@@ -404,7 +421,7 @@ function requestReset(body: Record<string, unknown>) {
     accepted: true,
     delivered: false,
     message: 'No email was sent. The development adapter does not have a mail provider.',
-    developmentResetPath: user ? `/admin/reset-password?token=${token}` : null,
+    developmentResetPath: user ? `${user.role === 'trainee' ? '/portal/reset-password' : '/admin/reset-password'}?token=${token}` : null,
   };
 }
 
@@ -419,6 +436,12 @@ function completeReset(body: Record<string, unknown>) {
     confirm: next && next === confirm ? null : 'The two passwords do not match.',
   }));
   resetTickets.delete(token);
+  if (ticket) {
+    updateState((state) => ({
+      ...state,
+      users: state.users.map((user) => (user.id === ticket.userId ? { ...user, emailVerified: true } : user)),
+    }));
+  }
   return {
     completed: true,
     passwordStored: false,

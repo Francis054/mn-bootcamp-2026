@@ -24,15 +24,22 @@ export class ResendMail implements EmailProvider {
         Authorization: `Bearer ${this.settings.apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        from: this.settings.from,
-        to: message.to,
-        subject: message.subject,
-        text: message.text,
-      }),
+      body: JSON.stringify(resendBody(this.settings.from, message)),
     });
     await response.text();
     if (!response.ok) throw new Error('The mail provider refused the message.');
     return { delivered: true };
   }
+}
+
+function resendBody(from: string, message: OutboundMail): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    from,
+    to: message.to,
+    subject: message.subject,
+    text: message.text,
+  };
+  if (message.html) body.html = message.html;
+  if (message.replyTo) body.reply_to = message.replyTo;
+  return body;
 }

@@ -18,6 +18,17 @@ Errors use `{ "error": { "code", "message", "fieldErrors"? } }`. `code` is `vali
 | GET | `/api/v1/auth/session` |
 | POST | `/api/v1/auth/password-reset/request` |
 | POST | `/api/v1/auth/password-reset/complete` |
+| POST | `/api/v1/public/trainee-signup` |
+| POST | `/api/v1/public/trainee-signup/verify` |
+| POST | `/api/v1/public/trainee-signup/resend` |
+| GET | `/api/v1/portal/me` |
+| GET | `/api/v1/admin/pending-registrations` |
+| POST | `/api/v1/admin/pending-registrations/{id}/approve` |
+| POST | `/api/v1/admin/pending-registrations/{id}/reject` |
+| GET | `/api/v1/admin/trainee-accounts` |
+| POST | `/api/v1/admin/trainee-accounts/{id}/disable` |
+| POST | `/api/v1/admin/trainee-accounts/{id}/enable` |
+| POST | `/api/v1/admin/trainee-accounts/{id}/resend-invite` |
 | POST | `/api/v1/admin/account/password` |
 
 `GET /api/v1/health` returns 200 when the database answers and 503 when it does not. The body is `{ status, database, uptimeSeconds }` with `status` of `ok` or `degraded` and `database` of `up` or `down`.

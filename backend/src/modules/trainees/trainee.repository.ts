@@ -54,8 +54,13 @@ export class TraineeRepository extends BaseRepository<TraineeEntity> {
     );
   }
 
-  insert(trainee: Omit<TraineeEntity, 'createdAt' | 'updatedAt'>): Promise<TraineeEntity> {
-    return this.repository.save(this.repository.create(trainee));
+  insert(
+    trainee: Omit<TraineeEntity, 'createdAt' | 'updatedAt' | 'slug' | 'cohortYear'> &
+      Partial<Pick<TraineeEntity, 'slug' | 'cohortYear'>>,
+  ): Promise<TraineeEntity> {
+    return this.repository.save(
+      this.repository.create({ slug: null, cohortYear: 2026, ...trainee }),
+    );
   }
 
   async remove(trainee: TraineeEntity): Promise<void> {

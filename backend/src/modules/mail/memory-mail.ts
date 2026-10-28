@@ -10,7 +10,10 @@ export class MemoryMail implements EmailProvider {
   readonly sent: OutboundMail[] = [];
 
   send(message: OutboundMail): Promise<MailResult> {
-    this.sent.push({ to: message.to, subject: message.subject, text: message.text });
+    const copy: OutboundMail = { to: message.to, subject: message.subject, text: message.text };
+    if (message.html !== undefined) copy.html = message.html;
+    if (message.replyTo !== undefined) copy.replyTo = message.replyTo;
+    this.sent.push(copy);
     return Promise.resolve({ delivered: true });
   }
 }

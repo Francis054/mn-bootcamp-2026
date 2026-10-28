@@ -2,6 +2,9 @@ export interface OutboundMail {
   to: string;
   subject: string;
   text: string;
+  /** HTML part. Providers that only keep text may ignore it. */
+  html?: string;
+  replyTo?: string;
 }
 
 export interface MailResult {

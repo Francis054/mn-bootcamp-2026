@@ -31,6 +31,8 @@ const GROUPS: Array<{ label: string; items: Array<{ id: string; label: string; i
   ] },
   { label: 'System', items: [
     { id: 'users', label: 'Users & roles', icon: 'users', to: '/admin/users', permission: 'users.read' },
+    { id: 'pending', label: 'Signup requests', icon: 'mail', to: '/admin/pending-registrations', permission: 'users.manage' },
+    { id: 'trainee-accounts', label: 'Trainee accounts', icon: 'users', to: '/admin/trainee-accounts', permission: 'users.manage' },
     { id: 'enquiries', label: 'Enquiries', icon: 'mail', to: '/admin/enquiries', permission: 'users.manage' },
     { id: 'settings', label: 'Settings', icon: 'settings', to: '/admin/settings', permission: 'settings.manage' },
     { id: 'account', label: 'Account', icon: 'user', to: '/admin/account', permission: 'account.manage' },

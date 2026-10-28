@@ -40,6 +40,12 @@ import type { TraineeService } from '../trainees/trainee.service.js';
 import type { StorageProvider } from '../storage/storage-provider.js';
 import { mountAdminTimetable, mountPublicTimetable } from '../timetable/timetable.routes.js';
 import type { TimetableService } from '../timetable/timetable.service.js';
+import {
+  mountPortal,
+  mountPublicSignup,
+  mountTraineeAdmin,
+} from '../trainee-auth/signup.routes.js';
+import type { SignupService } from '../trainee-auth/signup.service.js';
 
 export function curriculumRouter(
   catalogue: CatalogueService,
@@ -57,6 +63,7 @@ export function curriculumRouter(
   siteImages: SiteImageService,
   storage: StorageProvider,
   timetable: TimetableService,
+  signup: SignupService,
 ): Router {
   const router = Router();
 
@@ -125,6 +132,8 @@ export function curriculumRouter(
   mountPublicContent(router, content);
   mountPublicEnquiries(router, enquiries);
   mountPublicTimetable(router, timetable);
+  mountPublicSignup(router, signup);
+  mountPortal(router, signup, sessions);
 
   const admin = Router();
   // Staff only. A trainee or trainer session stops here, before any admin read.
@@ -141,6 +150,7 @@ export function curriculumRouter(
   mountAdminSiteImages(admin, siteImages, maxBytes);
   mountAdminContent(admin, content);
   mountAccountAdmin(admin, accounts, enquiries);
+  mountTraineeAdmin(admin, signup);
   mountAdminTimetable(admin, timetable);
   router.use('/admin', admin);
   return router;

@@ -1,6 +1,17 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-const AUTH_AUDIT_ACTIONS = ['auth.login.succeeded', 'auth.login.failed', 'auth.logout'] as const;
+const AUTH_AUDIT_ACTIONS = [
+  'auth.login.succeeded',
+  'auth.login.failed',
+  'auth.logout',
+  'auth.trainee.signup',
+  'auth.trainee.verified',
+  'auth.trainee.verify.resent',
+  'auth.trainee.approved',
+  'auth.trainee.rejected',
+  'auth.user.disabled',
+  'auth.user.enabled',
+] as const;
 
 const ACCOUNT_AUDIT_ACTIONS = [
   'auth.password.changed',

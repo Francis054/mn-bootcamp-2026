@@ -23,6 +23,8 @@ import { CatalogueLinks1793664000000 } from './migrations/1793664000000-Catalogu
 import { WorkPhotos1793750400000 } from './migrations/1793750400000-WorkPhotos.js';
 import { SiteImages1794009600000 } from './migrations/1794009600000-SiteImages.js';
 import { AuditActionPattern1794096000000 } from './migrations/1794096000000-AuditActionPattern.js';
+import { TraineeAuth1794182400000 } from './migrations/1794182400000-TraineeAuth.js';
+import { PendingRegistrationEntity } from '../modules/trainee-auth/pending-registration.entity.js';
 import { TraineePhoto1793836800000 } from './migrations/1793836800000-TraineePhoto.js';
 import { RolesAndOptionalLinks1793577600000 } from './migrations/1793577600000-RolesAndOptionalLinks.js';
 import { Auth1792868400000 } from './migrations/1792868400000-Auth.js';
@@ -74,6 +76,7 @@ export function createDataSource(
       SiteImageEntity,
       ContentSingletonEntity,
       AccessTokenEntity,
+      PendingRegistrationEntity,
       EnquiryEntity,
       ProgrammeEntity,
       BlockEntity,
@@ -101,6 +104,7 @@ export function createDataSource(
       Timetable1793923200000,
       SiteImages1794009600000,
       AuditActionPattern1794096000000,
+      TraineeAuth1794182400000,
     ],
     migrationsTableName: 'schema_migrations',
     ssl: sslConfigForDriver(env.databaseSsl, env.databaseSslCa),

@@ -1,4 +1,5 @@
 import { ApiError } from '../../shared/errors/api-error.js';
+import { EMAIL_NOT_VERIFIED } from '../trainee-auth/signup.rules.js';
 import type { AppLogger } from '../../shared/logging/logger.js';
 import type { PublicUser } from '../users/public-user.js';
 import { toPublicUser, type UserService } from '../users/user.service.js';
@@ -75,7 +76,18 @@ export class AuthService {
       throw new ApiError('unauthenticated', BAD_LOGIN);
     }
 
+    if (user.disabledAt) {
+      await this.recordFailure(user.id, ip, attempt.requestId);
+      throw new ApiError('unauthenticated', BAD_LOGIN);
+    }
+
+    if (user.role === 'trainee' && !(user.emailVerifiedAt instanceof Date)) {
+      await this.recordFailure(user.id, ip, attempt.requestId);
+      throw new ApiError('forbidden', EMAIL_NOT_VERIFIED);
+    }
+
     await this.throttles.clear(emailKey);
+    await this.users.touchLastLogin(user.id, attempt.now);
     const session = await this.sessions.start(user, attempt.now);
     await this.audits.record({
       action: 'auth.login.succeeded',

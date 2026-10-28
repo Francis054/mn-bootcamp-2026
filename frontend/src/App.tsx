@@ -18,6 +18,14 @@ const SettingsPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => 
 const StatesPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.StatesPage })));
 const TimelineEditorPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.TimelineEditorPage })));
 const UsersPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.UsersPage })));
+const PendingRegistrationsPage = lazy(() => import('@/pages/admin/TraineeAccessPages').then((m) => ({ default: m.PendingRegistrationsPage })));
+const TraineeAccountsPage = lazy(() => import('@/pages/admin/TraineeAccessPages').then((m) => ({ default: m.TraineeAccountsPage })));
+const SignupPage = lazy(() => import('@/pages/portal/PortalPages').then((m) => ({ default: m.SignupPage })));
+const VerifyEmailPage = lazy(() => import('@/pages/portal/PortalPages').then((m) => ({ default: m.VerifyEmailPage })));
+const TraineeLoginPage = lazy(() => import('@/pages/portal/PortalPages').then((m) => ({ default: m.TraineeLoginPage })));
+const TraineeForgotPage = lazy(() => import('@/pages/portal/PortalPages').then((m) => ({ default: m.TraineeForgotPage })));
+const TraineeResetPage = lazy(() => import('@/pages/portal/PortalPages').then((m) => ({ default: m.TraineeResetPage })));
+const PortalHomePage = lazy(() => import('@/pages/portal/PortalPages').then((m) => ({ default: m.PortalHomePage })));
 const ClassEditor = lazy(() => import('@/pages/admin/Editors').then((m) => ({ default: m.ClassEditor })));
 const EventEditor = lazy(() => import('@/pages/admin/Editors').then((m) => ({ default: m.EventEditor })));
 const ProjectEditor = lazy(() => import('@/pages/admin/Editors').then((m) => ({ default: m.ProjectEditor })));
@@ -85,6 +93,12 @@ export function App() {
         <Route path="contact" element={<Waiting><ContactPage /></Waiting>} handle={{ page: 'contact', tone: 'light', title: 'Contact' }} />
         <Route path="*" element={<Waiting><NotFoundPage /></Waiting>} handle={{ page: '', tone: 'light', title: 'Not found' }} />
       </Route>
+      <Route path="/signup" element={<Waiting><SignupPage /></Waiting>} />
+      <Route path="/verify-email" element={<Waiting><VerifyEmailPage /></Waiting>} />
+      <Route path="/login" element={<Waiting><TraineeLoginPage /></Waiting>} />
+      <Route path="/forgot-password" element={<Waiting><TraineeForgotPage /></Waiting>} />
+      <Route path="/portal/reset-password" element={<Waiting><TraineeResetPage /></Waiting>} />
+      <Route path="/portal" element={<RequireAccess permission="portal.access"><Waiting><PortalHomePage /></Waiting></RequireAccess>} />
       <Route path="/admin/login" element={<Waiting><LoginPage /></Waiting>} />
       <Route path="/admin/forgot-password" element={<Waiting><ForgotPasswordPage /></Waiting>} />
       <Route path="/admin/reset-password" element={<Waiting><ResetPasswordPage /></Waiting>} />
@@ -114,6 +128,8 @@ export function App() {
         <Route path="account" element={<Waiting><AccountPage /></Waiting>} />
         <Route path="states" element={<Waiting><StatesPage /></Waiting>} />
         <Route path="users" element={<Waiting><RequireAccess permission="users.read"><UsersPage /></RequireAccess></Waiting>} />
+        <Route path="pending-registrations" element={<Waiting><RequireAccess permission="users.manage"><PendingRegistrationsPage /></RequireAccess></Waiting>} />
+        <Route path="trainee-accounts" element={<Waiting><RequireAccess permission="users.manage"><TraineeAccountsPage /></RequireAccess></Waiting>} />
         <Route path="enquiries" element={<Waiting><RequireAccess permission="users.manage"><EnquiriesPage /></RequireAccess></Waiting>} />
         <Route path="settings" element={<Waiting><RequireAccess permission="settings.manage"><SettingsPage /></RequireAccess></Waiting>} />
       </Route>
