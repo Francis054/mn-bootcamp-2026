@@ -22,6 +22,7 @@ import { Accounts1793404800000 } from './migrations/1793404800000-Accounts.js';
 import { CatalogueLinks1793664000000 } from './migrations/1793664000000-CatalogueLinks.js';
 import { WorkPhotos1793750400000 } from './migrations/1793750400000-WorkPhotos.js';
 import { SiteImages1794009600000 } from './migrations/1794009600000-SiteImages.js';
+import { AuditActionPattern1794096000000 } from './migrations/1794096000000-AuditActionPattern.js';
 import { TraineePhoto1793836800000 } from './migrations/1793836800000-TraineePhoto.js';
 import { RolesAndOptionalLinks1793577600000 } from './migrations/1793577600000-RolesAndOptionalLinks.js';
 import { Auth1792868400000 } from './migrations/1792868400000-Auth.js';
@@ -99,6 +100,7 @@ export function createDataSource(
       TraineePhoto1793836800000,
       Timetable1793923200000,
       SiteImages1794009600000,
+      AuditActionPattern1794096000000,
     ],
     migrationsTableName: 'schema_migrations',
     ssl: sslConfigForDriver(env.databaseSsl, env.databaseSslCa),

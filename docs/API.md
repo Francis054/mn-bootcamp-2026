@@ -81,7 +81,17 @@ Idle time is 30 minutes. The session also ends 12 hours after sign-in. Both can 
 - Keep sending `X-CSRF-Token` from `mn_csrf` on sign-out and on later changes.
 - Treat `403` with code `forbidden` as "this role cannot do that", and `401` as "sign in again".
 
-The permission names match `frontend/src/domain/permissions.ts`. A trainee or a trainer can read content, upload media, and manage their own account. A viewer can read content and manage their own account. An editor can also change content and publish media. Content changes use `content.write` and cover classes, trainee profiles, projects, events, the homepage, the about page, and the timeline. Photo uploads use `media.upload`. Publishing a photo, confirming consent, and deleting a photo use `media.write`. Settings, including the foundation counters, use `settings.manage`. Invitations, role changes, and the enquiry inbox use `users.manage`. Listing accounts uses `users.read`. Only an administrator has those last permissions. The server enforces that. The React route guard does not. There is no separate publish permission. An administrator may send `{ confirmConsent: true }` on `POST /admin/media/:id/publish` to verify consent and publish together. Any other role that sends `confirmConsent` is refused. An empty publish body still requires consent that was verified earlier and does not change the listing.
+The permission names match `frontend/src/domain/permissions.ts` and `backend/src/modules/auth/permissions.ts`.
+
+| Role | Permissions |
+| --- | --- |
+| Trainee | `portal.access`, `portal.write`, `account.manage` |
+| Trainer | `account.manage` |
+| Viewer | `content.read`, `account.manage` |
+| Editor | viewer, plus `content.write`, `media.upload`, `media.write` |
+| Administrator | editor, plus `users.read`, `users.manage`, `settings.manage` |
+
+`content.read` is required for every `/admin` route. A trainee or a trainer is refused with `403` `forbidden` before any admin body is returned. Content changes use `content.write` and cover classes, trainee profiles, projects, events, the homepage, the about page, and the timeline. Photo uploads use `media.upload` as well as `content.read`. An editor or an administrator can upload. Publishing a photo, confirming consent, and deleting a photo use `media.write`. Settings, including the foundation counters, use `settings.manage`. Invitations, role changes, and the enquiry inbox use `users.manage`. Listing accounts uses `users.read`. Only an administrator has those last permissions. The server enforces that. The React admin shell uses the same `content.read` check. There is no separate publish permission. An administrator may send `{ confirmConsent: true }` on `POST /admin/media/:id/publish` to verify consent and publish together. Any other role that sends `confirmConsent` is refused. An empty publish body still requires consent that was verified earlier and does not change the listing.
 
 ## Curriculum routes that exist now
 
@@ -223,7 +233,7 @@ A JSON `POST /admin/media` cannot set `src`, `consent`, or `publicationStatus`. 
 | GET    | `/public/media` and `/public/media/:id`             | Anyone. `PublicMedia`. Published, visible, and verified only.                               |
 | GET    | `/admin/media`                                      | `content.read`. An array of every photo, including drafts.                                  |
 | GET    | `/admin/media/:id`                                  | `content.read`. Full photo, including a draft and consent bookkeeping.                      |
-| POST   | `/admin/media`                                      | `media.upload`. JSON metadata or one multipart image. A trainee or trainer can upload.     |
+| POST   | `/admin/media`                                      | `content.read` and `media.upload`. JSON metadata or one multipart image. An editor or an administrator can upload. |
 | PATCH  | `/admin/media/:id`                                  | `media.write`. Omitted fields stay as they are. Verified consent does not publish.          |
 | DELETE | `/admin/media/:id`                                  | `media.write`. `{ deleted: true, id }`. An upload is removed from storage first.            |
 | POST   | `/admin/media/:id/publish` and `/unpublish`         | `media.write`. An empty body does not change `listing`. An administrator may send `confirmConsent` and `listing`. |

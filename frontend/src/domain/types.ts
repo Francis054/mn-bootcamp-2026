@@ -10,7 +10,9 @@ export type Permission =
   | 'users.read'
   | 'users.manage'
   | 'settings.manage'
-  | 'account.manage';
+  | 'account.manage'
+  | 'portal.access'
+  | 'portal.write';
 
 export type PublicationStatus = 'draft' | 'in_review' | 'scheduled' | 'published';
 

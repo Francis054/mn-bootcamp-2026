@@ -285,7 +285,7 @@ A JSON create starts as pending, draft, and hidden, with an empty src. A file up
 
 `POST /api/v1/admin/media/:id/withdraw-consent` sets consent to withdrawn, returns the workflow to draft, hides the listing, clears src, and deletes an uploaded object from storage. A static seed row has no uploaded object, so withdrawal only clears the metadata. If storage cannot delete the object, the photo is already off the public site and the key is kept so the request can be tried again. The audit row stores the action and the photo id. It does not store the alt text, the caption, the address, or the file bytes.
 
-Uploading uses `media.upload`. A trainee, a trainer, an editor, and an administrator can upload. Publishing, editing, and deleting use `media.write`. A viewer can read the admin list. A change needs the session cookie and the matching `X-CSRF-Token` header. There is no media bulk action.
+Uploading uses `media.upload` and the admin router, which also requires `content.read`. An editor and an administrator can upload. A trainee or a trainer cannot. Publishing, editing, and deleting use `media.write`. A viewer can read the admin list. A change needs the session cookie and the matching `X-CSRF-Token` header. There is no media bulk action.
 
 `npm run seed` also inserts three labelled placeholders: `sample-banner`, `sample-bench`, and `sample-mark`. They are drawings and banners, not photographs of people. Consent is pending and the workflow is draft, so the public gallery does not include them. Run the command again and it leaves an edited row alone.
 

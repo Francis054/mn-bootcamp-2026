@@ -17,6 +17,7 @@ The API uses PostgreSQL through TypeORM. `synchronize` is off. Schema changes ar
 13. Trainee profile photo (`photo_url` and `photo_storage_key`)
 14. Timetable (`programmes`, `curriculum_blocks`, `curriculum_weeks`, `week_deliverables`, `trainers`, `week_trainers`, `class_sessions`, `session_trainers`). This file stays `1793923200000-Timetable` so a database that already applied it does not run it again.
 15. Site images (`site_images`: one row per built-in logo or page photograph). This is `1794009600000-SiteImages`, the next day after the timetable migration. The two were written with the same timestamp; site images takes the later one so `migration:run` applies it after the timetable on a database that already has migration 14.
+16. Audit action pattern (`1794096000000-AuditActionPattern`). Replaces `audit_events_action_check` with `CHECK (action ~ '^[a-z_]+(\.[a-z_]+)+$')`. New audit names are checked in code (`isAuditAction`) and do not need another rewrite of this constraint. It does not change existing rows. `down` restores the allow-list from migrations 1–15 and deletes only rows whose action is outside that list. A database that already ran migrations 1–15 can apply it and revert it.
 
 The migrations table is `schema_migrations`. Passwords are stored as Argon2id hashes. Session cookies are stored as hashes. The cookie value itself is not stored.
 
@@ -73,7 +74,7 @@ A database on your own computer does not need `DATABASE_SSL_CA`. Leave it blank 
 
 ## What runs against production
 
-Run `npm run migration:run` once, before the first real request, and again only when a new migration is added. The command reads `DATABASE_URL`, `DATABASE_SSL`, and `DATABASE_SSL_CA` from the environment and connects the same way the server does. It does not print the URL or the certificate.
+Run `npm run migration:run` once, before the first real request, and again before serving whenever a new migration is added. The command reads `DATABASE_URL`, `DATABASE_SSL`, and `DATABASE_SSL_CA` from the environment and connects the same way the server does. It does not print the URL or the certificate. Migration 16 only replaces the audit-action check. Run it before serving that deploy.
 
 Do not run `npm run seed` on the hosted database. After migration 14, load the real timetable with `npm run timetable:import` from `backend/`. That command reads `data/seed/bootcamp-timetable-and-outline.xlsx` and can be run again. It does not insert sample lessons. See `docs/timetable.md`. Migration 15 inserts the site-image slots. It does not load the workbook.
 

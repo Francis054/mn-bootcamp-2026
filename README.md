@@ -116,6 +116,10 @@ npm run build
 
 `npm test` uses `TEST_DATABASE_URL` when it points at a Postgres database whose name ends with `_test`. Otherwise it starts PostgreSQL with Testcontainers when Docker is available.
 
+## Checks on a pull request
+
+`.github/workflows/ci.yml` runs on every pull request to `main`. It typechecks, lints, tests, and builds `frontend/` and `backend/`. Backend integration tests use a Postgres service. The keep-alive workflow is separate and only pings the public health URL. See `docs/deployment.md`.
+
 ## Structure
 
 ```

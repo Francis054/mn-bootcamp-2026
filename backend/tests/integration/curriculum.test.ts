@@ -264,7 +264,8 @@ describe('curriculum', () => {
       },
     });
     expect(code).toBe(0);
-    expect(stdout).toEqual(['Sample curriculum is ready.']);
+    // Every seed also prints the timetable import report. The last line is this seed.
+    expect(stdout.at(-1)).toBe('Sample curriculum is ready.');
     const stored: unknown = await current.dataSource.query(
       `SELECT title FROM lessons WHERE id = '1'`,
     );

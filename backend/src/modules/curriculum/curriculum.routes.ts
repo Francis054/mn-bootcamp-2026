@@ -127,6 +127,7 @@ export function curriculumRouter(
   mountPublicTimetable(router, timetable);
 
   const admin = Router();
+  // Staff only. A trainee or trainer session stops here, before any admin read.
   admin.use(requireAuth(sessions), requirePermission('content.read'));
   mountTracks(admin, catalogue);
   mountModules(admin, catalogue);

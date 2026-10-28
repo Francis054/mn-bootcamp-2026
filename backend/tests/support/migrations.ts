@@ -16,6 +16,7 @@ export const MIGRATION_NAMES = [
   'TraineePhoto1793836800000',
   'Timetable1793923200000',
   'SiteImages1794009600000',
+  'AuditActionPattern1794096000000',
 ] as const;
 
 const OURS = new Set<string>(MIGRATION_NAMES);

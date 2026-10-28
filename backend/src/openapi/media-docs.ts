@@ -53,7 +53,7 @@ export const mediaPaths = {
       operationId: 'createMedia',
       summary: 'Add photo metadata or upload an image',
       description:
-        'Requires media.upload. A trainee, a trainer, an editor, and an administrator can upload. A JSON body stores metadata only and starts pending, draft, and hidden. A multipart body stores one JPEG, PNG, or WebP. The bytes are sniffed. The file name is not trusted and is not kept. The size cap is UPLOAD_MAX_BYTES, 5 MB unless the host sets another value. Verifying consent is a later edit. This request does not publish.',
+        'Requires content.read and media.upload. An editor or an administrator can upload. A trainee or a trainer cannot open the admin router. A JSON body stores metadata only and starts pending, draft, and hidden. A multipart body stores one JPEG, PNG, or WebP. The bytes are sniffed. The file name is not trusted and is not kept. The size cap is UPLOAD_MAX_BYTES, 5 MB unless the host sets another value. Verifying consent is a later edit. This request does not publish.',
       responses: {
         '201': { description: 'Created.', content: { 'application/json': { schema: mediaRef } } },
         '401': { description: 'Sign in.', content: errorRef },
