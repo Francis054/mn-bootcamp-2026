@@ -65,7 +65,7 @@ That writes `frontend/public/assets/logo/`:
 
 `python3 scripts/build-logos.py --badge-only` runs the same script. The full `python3 scripts/build-logos.py` also redraws the older hat SVGs and needs Shapely and fontTools. Those older files are not the community logo.
 
-The loader clip is rebuilt with `sh scripts/build-loader-video.sh /path/to/the-720p-source.mp4`. The download URL is in that script and in [media credits](media-credits.md).
+The loader clip is an original animation rebuilt with `python3 scripts/build-loader-console.py`.
 
 ## What the public site does
 
@@ -73,7 +73,7 @@ The loader clip is rebuilt with `sh scripts/build-loader-video.sh /path/to/the-7
 
 The first paint draws the bundled line mark. A custom community URL replaces that drawing with the uploaded image.
 
-The loading screen stays up until the first route is ready, and for the 3.8 second clip on a first visit in the tab (about 0.9 seconds when `sessionStorage` already has `mn-boot-seen`). It gives up after 8 seconds so a failed request cannot block the site. The clip is a graded stock video of a hooded person at a laptop, with classroom terminal lines that end on `ACCESS GRANTED` and `welcome to MN Bootcamp 2026`. `prefers-reduced-motion` shows the poster still and skips the clip. A repeat visit in the same tab also shows that still for the shorter hold. If the video cannot load, the poster remains, and if that image fails too the same two lines are drawn in the page. Repeat navigations inside the app use the shorter in-page loader.
+The loading screen stays up until the first route is ready, and for the 4.2 second clip on a first visit in the tab (about 0.9 seconds when `sessionStorage` already has `mn-boot-seen`). It gives up after 8 seconds so a failed request cannot block the site. The clip is an original forest-green console for MN Cybersecurity Bootcamp 2026. It ends on `ACCESS GRANTED` and `welcome to MN Bootcamp 2026`, with the hood mark. `prefers-reduced-motion` shows the poster still and skips the clip. A repeat visit in the same tab also shows that still for the shorter hold. If the video cannot load, the poster remains, and if that image fails too the same two lines are drawn in the page. The video uses `object-fit: contain`, so the full frame, including the grant line, stays visible on a phone. Repeat navigations inside the app use the shorter in-page loader.
 
 ## Admin
 

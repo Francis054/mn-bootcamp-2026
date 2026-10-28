@@ -1,8 +1,8 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react';
 
 export const BOOT_SEEN_KEY = 'mn-boot-seen';
-/** Matches the photographic loader clip (3.8s). */
-export const BOOT_MIN_FIRST_MS = 3800;
+/** Matches the original console clip (4.2s). */
+export const BOOT_MIN_FIRST_MS = 4200;
 export const BOOT_MIN_REPEAT_MS = 900;
 export const BOOT_FAIL_OPEN_MS = 8000;
 export const BOOT_EXIT_MS = 340;

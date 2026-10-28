@@ -197,7 +197,7 @@
   z-index: 400;
   display: grid;
   place-items: center;
-  background: #010905;
+  background: #0A1F16;
   overflow: hidden;
   transition: opacity 340ms ease, visibility 340ms ease;
 }
@@ -209,7 +209,7 @@
   width: min(1280px, 100%);
   height: min(720px, 100%);
   object-fit: contain;
-  background: #010905;
+  background: #0A1F16;
 }
 
 .boot-fallback {
