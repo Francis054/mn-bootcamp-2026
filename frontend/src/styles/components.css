@@ -254,7 +254,7 @@ body.menu-open{overscroll-behavior:none}
   .site-header .wordmark{gap:8px}
   .site-header .wordmark__text b{font-size:14px}
 }
-@media (max-width:340px){
+@media (max-width:640px){
   .site-header .wordmark__text{display:none}
 }
 @media (max-width:520px){.logo-plate img{max-width:112px}.wordmark__text small{display:none}.wordmark__text b{font-size:15px}.lockup{gap:10px}.wordmark__mark{width:64px;height:36px}.wordmark__mark svg,.wordmark__mark img{width:64px;height:36px}.community-badge--mark{width:64px;height:36px}}
