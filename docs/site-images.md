@@ -2,15 +2,15 @@
 
 The community badge, the Maxim Nyansa Foundation logo, and the photographs that used to be written into the page templates are image slots. An administrator can replace a file, change its alt text, or put the original file back. Gallery photos, trainee portraits, work photos, lesson covers, project pictures, and event pictures stay on their own records. They are not slots.
 
-The community logo is an original line drawing: a hooded figure at a laptop, paper white only, with the face left as a dark void. On a light header the same white mark sits on a small forest circle so it stays visible. The Maxim Nyansa Foundation wordmark is the parent organisation. It is only the small plate beside the name in the header and footer, on the sign-in form, in the admin sidebar, on the about page, and in the loader. It is never the community logo, and it is not drawn on top of the mark.
+The community logo is the cohort fedora photograph: MAXIM NYANSA on the crown and CYBERSECURITY 2026 on the band. The header wordmark carries the name beside it, because the embroidery is too small to read at that size. The Maxim Nyansa Foundation wordmark is the parent organisation. It is only the small plate beside the name in the header and footer, on the sign-in form, in the admin sidebar, on the about page, and in the loader. It is never the community logo.
 
-While the community slot is still the bundled file, the page draws `hood-mark.svg`. The tagline sits under the larger seals (hero, about, sign-in, and the site-image preview). Uploading a community logo replaces that drawing, and the tagline is not drawn. Uploading a foundation logo updates the separate plate only. The boot clip credit stays in [media credits](media-credits.md).
+While the community slot is still the bundled file, the page shows that photograph. The tagline sits under the larger seals (hero, about, sign-in, and the site-image preview). Uploading a community logo replaces the photograph, and the tagline is not drawn. Uploading a foundation logo updates the separate plate only. The loader is drawn in the page, not a video file. Its credit stays in [media credits](media-credits.md).
 
 ## Slots
 
 | Key | Label | Where it shows | Original file |
 | --- | --- | --- | --- |
-| `community-logo` | Community logo | Header, footer, sign-in panel, admin sidebar, seals, empty states, and the favicon. The boot screen uses a separate stock video. | `/assets/logo/community-badge.webp` |
+| `community-logo` | Community logo | Header, footer, sign-in panel, admin sidebar, seals, empty states, the favicon, and the loader reveal. | `/assets/logo/community-badge.webp` |
 | `foundation-logo` | Maxim Nyansa Foundation logo | Header, footer, sign-in form, admin sidebar, about page, loader footer | `/assets/logo/maxim-nyansa-foundation-logo.png` |
 | `home-hero-main` | Homepage hero, main photo | Homepage hero, large frame | `/assets/img/participant-portrait-1600.webp` |
 | `home-hero-side` | Homepage hero, side photo | Homepage hero, upper small frame | `/assets/img/hack-coding-team-1600.webp` |
@@ -32,7 +32,7 @@ These stay hard-coded on purpose:
 - Lesson covers, project images, and event images are fields on those records.
 - Trainee profile photos and work photos already have their own upload screens.
 - Net lines, the “10” mark, and the select chevron stay drawn graphics.
-- The loading screen plays `frontend/public/assets/boot/loader.mp4` (with a WebM source). It is not a site-image slot.
+- The loading screen is drawn by the page. It is not a site-image slot and it does not ship a video.
 - `hat-black.svg`, `hat-ethical.svg`, and the older wordmark SVGs remain in `frontend/public/assets/logo/` from the previous mark. No page uses them as the community logo.
 
 The class-row hover picture is `aria-hidden` because the row already has a title. The slot still stores a description for the admin list. The sign-in panel sits inside an `aria-hidden` aside, so that page sends an empty alt even though the slot keeps a description.
@@ -41,31 +41,29 @@ The class-row hover picture is `aria-hidden` because the row already has a title
 
 Sign in as an administrator and open **Site images** under Pages.
 
-**Community logo.** The preview is the hood line mark. Edit **Badge tagline** to change the caption (40 characters, one line). Save with no file to update the tagline and the alt text. Choose a JPEG, PNG, or WebP to replace the whole mark. A square file works best. After a replacement, the tagline is not drawn. Reset to original puts the drawing, the tagline, and the alt text back. SVG uploads are not accepted. The shipped favicon and `og-image.png` are rasters of that drawing on a forest square. They change when the mark is rebuilt, not when an administrator uploads a replacement. The tab icon does follow the upload.
+**Community logo.** The preview is the fedora. Edit **Badge tagline** to change the caption (40 characters, one line). Save with no file to update the tagline and the alt text. Choose a JPEG, PNG, or WebP to replace the whole mark. A wide picture works best. After a replacement, the tagline is not drawn. Reset to original puts the photograph, the tagline, and the alt text back. SVG uploads are not accepted. The shipped favicon and `og-image.png` are the hat on a forest tile. They change when the mark is rebuilt, not when an administrator uploads a replacement. The tab icon does follow the upload.
 
 **Maxim Nyansa Foundation logo.** This is only the parent-organisation plate. The bundled file is 200 pixels wide. A larger PNG or WebP stays sharper in that small plate; the page uses `object-fit: contain` and does not stretch it past its own size. SVG files are not accepted, because an uploaded SVG on this origin would be unsafe. Reset puts the bundled wordmark back.
 
-The header draws the same SVG the favicon is rasterised from. A replacement community logo is shown as uploaded, including in the browser tab icon once the page has loaded.
+The header shows the same photograph the favicon is cropped from. A replacement community logo is shown as uploaded, including in the browser tab icon once the page has loaded.
 
-## Regenerate the line mark
+## Regenerate the fedora logo
 
-The drawing is `frontend/src/components/hood-mark.svg`. `frontend/scripts/brand/concept-a.jpg` is the retired badge.
+The source photograph is `frontend/public/assets/gear/bootcamp-hat.png`. The gear section keeps that file. The logo script only writes the slot and the icons.
 
 From `frontend/`:
 
 ```bash
-python3 scripts/build-hood-mark.py
+python3 scripts/build-fedora-logo.py
 ```
 
 That writes `frontend/public/assets/logo/`:
 
-- `community-badge.webp` and `.png`, and the same pixels as `community-badge-bare.webp` and `.png` — the slot file, paper lines on a forest square.
-- `favicon-16.png`, `favicon-32.png`, `apple-touch-icon.png`, `community-badge-mark.png` — the same emblem.
-- `og-image.png` — the emblem on a forest card.
+- `community-badge.webp` and `.png`, and the same pixels as `community-badge-bare.webp` and `.png` — the hat with a cleaned edge.
+- `favicon-16.png`, `favicon-32.png`, `apple-touch-icon.png`, `community-badge-mark.png` — the hat on a forest tile.
+- `og-image.png` — the hat on a forest card.
 
 `python3 scripts/build-logos.py --badge-only` runs the same script. The full `python3 scripts/build-logos.py` also redraws the older hat SVGs and needs Shapely and fontTools. Those older files are not the community logo.
-
-The loader clip is an original animation rebuilt with `python3 scripts/build-loader-console.py`.
 
 ## What the public site does
 

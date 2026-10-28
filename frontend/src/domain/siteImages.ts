@@ -6,11 +6,11 @@ export const SITE_IMAGE_SLOTS = [
   {
     key: 'community-logo',
     label: 'Community logo',
-    description: 'Line mark of a hooded figure at a laptop, drawn in paper white with a dark face void. Header, footer, sign-in, admin sidebar, seals, empty states, and the favicon. On a light header it sits on a forest plate. An uploaded image replaces it. The tagline sits under the larger seals.',
+    description: 'The cohort fedora: MAXIM NYANSA on the crown and CYBERSECURITY 2026 on the band. Header, footer, sign-in, admin sidebar, seals, empty states, the favicon, and the loader reveal. An uploaded image replaces it. The tagline sits under the larger seals.',
     url: '/assets/logo/community-badge.webp',
     alt: 'Cyber Bootcamp community logo',
-    width: 1024,
-    height: 1024,
+    width: 840,
+    height: 473,
     fit: 'contain',
     tagline: 'STRONGER TOGETHER',
   },
@@ -78,7 +78,7 @@ export interface ResolvedSiteImage {
   srcSet?: string;
   fallbackSrcSet?: string;
   tagline: string;
-  /** The community slot is still the bundled file, so the page draws the hood line mark and its tagline. */
+  /** The community slot is still the bundled fedora, so the page shows that photograph and its tagline. */
   liveBadge: boolean;
 }
 

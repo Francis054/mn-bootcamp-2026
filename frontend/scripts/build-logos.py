@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build logo files for the Cyber Bootcamp site.
 
-The live community mark is the hood line drawing in `src/components/hood-mark.svg`.
+The live community mark is the cohort fedora from `public/assets/gear/bootcamp-hat.png`.
 `--badge-only` rasterises that file into the favicons and the social card.
 
 The rest of this script redraws the older two-hat SVGs. Those are not the
@@ -625,10 +625,10 @@ def social_card(badge: Image.Image) -> Image.Image:
 
 
 def build_community_badge() -> None:
-    """Rasterise the hood mark. See build-hood-mark.py."""
+    """Rasterise the cohort fedora. See build-fedora-logo.py."""
     import runpy
 
-    runpy.run_path(str(Path(__file__).with_name("build-hood-mark.py")), run_name="__main__")
+    runpy.run_path(str(Path(__file__).with_name("build-fedora-logo.py")), run_name="__main__")
 
 
 if __name__ == "__main__":
