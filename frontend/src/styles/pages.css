@@ -593,3 +593,17 @@ a.tl__card:hover{box-shadow:var(--shadow-2);transform:translateX(4px)}
   .week-sheet__head,.week-sheet__grid{grid-template-columns:1fr}
   .sess{grid-template-columns:1fr;gap:4px}
 }
+
+/* ---------- Bootcamp gear (home) ---------- */
+.gear{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:var(--grid-gap);align-items:center}
+.gear__copy{grid-column:1 / span 5;min-width:0}
+.gear__photo{grid-column:7 / span 6;margin:0;min-width:0}
+.gear__photo img{display:block;width:100%;height:auto}
+.gear__facts{list-style:none;padding:0;margin:var(--s-6) 0 0;display:flex;flex-direction:column;gap:var(--s-3)}
+.gear__facts li{display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--line-dark);padding-top:var(--s-3)}
+.gear__facts span{font-family:var(--font-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:rgba(233,240,234,.62)}
+.gear__facts b{font-family:var(--font-display);font-weight:600;letter-spacing:.04em;font-size:15px}
+@media (max-width:900px){
+  .gear__copy,.gear__photo{grid-column:1 / -1}
+  .gear__photo{margin-top:var(--s-6)}
+}

@@ -191,17 +191,16 @@ a.card:hover .go{background:var(--mn-lime);transform:rotate(-45deg)}
 .avatar--sm{width:36px;height:36px;font-size:13px}
 
 /* Header ------------------------------------------------------------------ */
-.site-header{position:fixed;top:0;left:0;right:0;z-index:80;height:var(--header-h);transition:background var(--d-base),box-shadow var(--d-base),color var(--d-base),top var(--d-base) var(--ease-out)}
+.site-header{position:fixed;top:0;left:0;right:0;z-index:80;height:var(--header-h);transition:background var(--d-base),box-shadow var(--d-base),color var(--d-base)}
 .site-header::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none}
 .site-header .bar{height:100%;display:flex;align-items:center;gap:var(--s-5)}
 .site-header[data-tone="dark"]{color:#fff}
 .site-header[data-tone="light"],.site-header.is-solid{color:var(--ink);box-shadow:0 1px 0 var(--line)}
 .site-header[data-tone="light"]::before,.site-header.is-solid::before{background:rgba(255,255,255,.94);backdrop-filter:saturate(1.4) blur(12px);-webkit-backdrop-filter:saturate(1.4) blur(12px)}
-.site-header.is-hidden{top:calc(var(--header-h) * -1)}
 .lockup{display:flex;align-items:center;gap:14px;text-decoration:none;flex:none}
 .wordmark{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:700;letter-spacing:-.03em;line-height:1}
-.wordmark__mark{width:44px;height:44px;border-radius:50%;background:transparent;display:grid;place-items:center;color:var(--forest-900);flex:none;overflow:hidden}
-.wordmark__mark svg,.wordmark__mark img{width:44px;height:44px;display:block;object-fit:cover}
+.wordmark__mark{width:78px;height:44px;border-radius:0;background:transparent;display:grid;place-items:center;color:inherit;flex:none;overflow:visible}
+.wordmark__mark svg,.wordmark__mark img{width:78px;height:44px;display:block;object-fit:contain}
 .wordmark__text{display:flex;flex-direction:column;gap:3px}
 .wordmark__text b{font-size:17px;font-weight:700}
 .wordmark__text small{font-family:var(--font-mono);font-size:10px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;opacity:.7}
@@ -236,7 +235,7 @@ a.card:hover .go{background:var(--mn-lime);transform:rotate(-45deg)}
 .menu-open .menu-toggle .bars i:nth-child(3){transform:translateY(-5px) rotate(-45deg)}
 .mobile-menu{position:fixed;inset:0;z-index:79;background:var(--forest-900);color:#fff;padding:calc(var(--header-h) + 16px) var(--gutter) 32px;display:flex;flex-direction:column;clip-path:circle(0% at calc(100% - 44px) 38px);visibility:hidden;transition:clip-path 620ms var(--ease-in-out),visibility 0s linear 620ms;overflow-y:auto}
 .menu-open .mobile-menu{clip-path:circle(150% at calc(100% - 44px) 38px);visibility:visible;transition-delay:0s}
-.menu-open .site-header{top:0;color:#fff;background:transparent;box-shadow:none}
+.menu-open .site-header{color:#fff;background:transparent;box-shadow:none}
 .menu-open .site-header::before{background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none}
 body.menu-open{overscroll-behavior:none}
 .mobile-menu ol{list-style:none;margin:0;padding:0;counter-reset:m}
@@ -258,7 +257,7 @@ body.menu-open{overscroll-behavior:none}
 @media (max-width:340px){
   .site-header .wordmark__text{display:none}
 }
-@media (max-width:520px){.logo-plate img{max-width:112px}.wordmark__text small{display:none}.wordmark__text b{font-size:15px}.lockup{gap:10px}.wordmark__mark{width:40px;height:40px}.wordmark__mark img{width:40px;height:40px}}
+@media (max-width:520px){.logo-plate img{max-width:112px}.wordmark__text small{display:none}.wordmark__text b{font-size:15px}.lockup{gap:10px}.wordmark__mark{width:64px;height:36px}.wordmark__mark svg,.wordmark__mark img{width:64px;height:36px}.community-badge--mark{width:64px;height:36px}}
 @media (max-width:370px){.lockup__divider{display:none}.logo-plate img{max-width:96px}}
 
 /* Footer ------------------------------------------------------------------ */
@@ -370,16 +369,21 @@ body.menu-open{overscroll-behavior:none}
 .empty{text-align:center;padding:var(--s-10) var(--s-5);color:var(--ink-3)}
 .empty .empty__art{position:relative;width:120px;height:84px;margin:0 auto var(--s-5);border-radius:24px;background:var(--lime-100);display:grid;place-items:center;color:var(--forest-600)}
 .empty__mark{width:92px;height:auto;display:block}
-.community-badge{position:relative;display:block;width:100%;aspect-ratio:1;line-height:0}
+.community-badge{position:relative;display:grid;justify-items:center;width:100%;line-height:0}
 .community-badge__art{display:block;width:100%;height:auto}
-.community-badge__overlay{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-.community-badge__plate{position:absolute;left:37.793%;top:72.705%;width:24.414%;height:4.98%;object-fit:contain;object-position:center;pointer-events:none}
-.community-badge--mark{width:44px;height:44px;overflow:hidden;border-radius:50%}
-.community-badge--mark .community-badge__art{width:44px;height:44px;object-fit:cover;transform:scale(1.48);transform-origin:center 28%}
+.community-badge__tagline{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.hat-seal--hero .community-badge__tagline,
+.hat-seal--block .community-badge__tagline,
+.login__mark .community-badge__tagline,
+.site-image-preview .community-badge__tagline{position:static;width:auto;height:auto;margin:8px 0 0;overflow:visible;clip:auto;display:inline-block;padding:5px 10px;border-radius:999px;background:#0A1F16;color:#88CC00;border:1px solid #88CC00;font-family:var(--font-body);font-size:10px;font-weight:800;letter-spacing:.1em;line-height:1.2;text-transform:uppercase}
+.community-badge--mark{width:78px;height:44px;overflow:visible;border-radius:0}
+.community-badge--mark .community-badge__art{width:100%;height:100%;object-fit:contain}
+.site-header[data-tone="light"] .wordmark__mark img,
+.site-header.is-solid .wordmark__mark img{filter:drop-shadow(0 1px 1px rgba(15,26,20,.28))}
 .community-badge--custom{width:100%;height:auto;object-fit:contain}
 .hat-seal.community-badge{width:54px}
 .hat-seal--hero.community-badge{width:148px}
-.hat-seal--block.community-badge{width:120px}
+.hat-seal--block.community-badge{width:148px}
 .empty .community-badge.empty__mark{width:92px}
 .empty__badge{position:absolute;right:-6px;bottom:-6px;width:30px;height:30px;border-radius:50%;background:var(--forest-800);color:var(--mn-lime);display:grid;place-items:center;box-shadow:0 0 0 3px var(--bg, #fff)}
 .empty__badge .i{width:15px;height:15px}

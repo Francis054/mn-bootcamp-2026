@@ -38,6 +38,13 @@ describe('public routes', () => {
     expect(await screen.findByRole('heading', { name: /secure the future/i })).toBeInTheDocument();
     expect(screen.getByText('5 Oct 2026')).toBeInTheDocument();
     expect(screen.getByText('Free')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /the 2026 white hat/i })).toBeInTheDocument();
+    const hat = screen.getByRole('img', { name: /white fedora with maxim nyansa/i });
+    expect(hat).toHaveAttribute('src', '/assets/gear/bootcamp-hat.png');
+    expect(hat).toHaveAttribute('width', '1467');
+    expect(hat).toHaveAttribute('height', '843');
+    expect(hat).toHaveAttribute('loading', 'lazy');
+    expect(hat.parentElement?.querySelector('source')?.getAttribute('srcset')).toContain('bootcamp-hat.webp');
   });
 
   it('does not point visitors at the admin panel', async () => {

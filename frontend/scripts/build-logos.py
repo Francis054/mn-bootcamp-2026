@@ -1,23 +1,28 @@
 #!/usr/bin/env python3
-"""Build the Cyber Bootcamp community logo system.
+"""Build logo files for the Cyber Bootcamp site.
 
-The mark is two fedoras in opposition: a black hat facing an ethical hat,
-with a lime spark in the gap. Geometry is cubic beziers posed by an affine
-transform, so the shipped SVGs stay editable paths rather than traced blobs.
+The live community mark is the cohort fedora from `public/assets/gear/bootcamp-hat.png`.
+`--badge-only` rasterises that file into the favicons and the social card.
 
-Outputs land in frontend/public/assets/logo/.
+The rest of this script redraws the older two-hat SVGs. Those are not the
+community logo. That path needs fontTools and Shapely.
 """
 from __future__ import annotations
 
 from pathlib import Path
 
-from fontTools.pens.svgPathPen import SVGPathPen
-from fontTools.ttLib import TTFont
-from fontTools.varLib import instancer
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
-from shapely import affinity
-from shapely.geometry import Point, Polygon
-from shapely.ops import unary_union
+
+try:
+    from fontTools.pens.svgPathPen import SVGPathPen
+    from fontTools.ttLib import TTFont
+    from fontTools.varLib import instancer
+    from shapely import affinity
+    from shapely.geometry import Point, Polygon
+    from shapely.ops import unary_union
+except ImportError:  # `--badge-only` does not need these.
+    SVGPathPen = TTFont = instancer = None  # type: ignore[misc, assignment]
+    affinity = Point = Polygon = unary_union = None  # type: ignore[misc, assignment]
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "public" / "assets" / "logo"
@@ -132,7 +137,7 @@ def hat_origin():
     return ((minx + maxx) / 2, (miny + maxy) / 2)
 
 
-ORIGIN = hat_origin()
+ORIGIN = hat_origin() if Polygon is not None else (0.0, 0.0)
 
 
 def pose_geom(geom, side: str, shift: float):
@@ -446,6 +451,8 @@ def raster_mark(colors_b, colors_w, keyline, bg, scale=3, gap=34):
 
 
 def main():
+    if SVGPathPen is None or affinity is None:
+        raise SystemExit("fontTools and shapely are required to redraw the older hat SVGs")
     OUT.mkdir(parents=True, exist_ok=True)
     title = "Cyber Bootcamp community logo"
     desc = "A black hat and an ethical white hat face each other across a lime spark. Community mark of the 2026 Cyber Bootcamp."
@@ -608,25 +615,20 @@ def social_card(badge: Image.Image) -> Image.Image:
     draw.ellipse((-180, -240, 560, 420), fill=(136, 204, 0, 46))
     draw.ellipse((760, -180, 1380, 380), fill=(217, 164, 65, 40))
     card = Image.alpha_composite(img.convert("RGBA"), overlay)
-    mark = badge.resize((480, 480), Image.Resampling.LANCZOS)
-    card.paste(mark, ((width - 480) // 2, (height - 480) // 2 - 8), mark)
+    mark = badge.resize((420, 420), Image.Resampling.LANCZOS)
+    card.paste(mark, ((width - 420) // 2, 48), mark)
+    caption = ImageDraw.Draw(card)
+    font = ImageFont.truetype(str(POPPINS_BLACK), 40)
+    text = "2026 CYBERSECURITY BOOTCAMP"
+    caption.text(((width - caption.textlength(text, font=font)) / 2, 500), text, font=font, fill=(136, 204, 0, 255))
     return card.convert("RGB")
 
 
 def build_community_badge() -> None:
-    """Circular community badge, header crop, favicon, apple touch, and social card."""
-    concept = Image.open(BRAND / "concept-a.jpg").convert("RGB").resize((1024, 1024), Image.Resampling.LANCZOS)
-    foundation = Image.open(OUT / "maxim-nyansa-foundation-logo.png")
-    bare = circular_rgba(concept)
-    composed = circular_rgba(compose_approved_badge(concept, foundation))
-    save_rgba(bare, "community-badge-bare")
-    save_rgba(composed, "community-badge")
-    for size, name in ((16, "favicon-16.png"), (32, "favicon-32.png"), (180, "apple-touch-icon.png"), (192, "community-badge-mark.png")):
-        emblem_crop(composed, size).save(OUT / name, "PNG", optimize=True)
-        print(f"wrote {name}")
-    social_card(composed).save(OUT / "og-image.png", "PNG", optimize=True)
-    print(f"wrote og-image.png ({(OUT / 'og-image.png').stat().st_size} bytes)")
-    subset_poppins()
+    """Rasterise the cohort fedora. See build-fedora-logo.py."""
+    import runpy
+
+    runpy.run_path(str(Path(__file__).with_name("build-fedora-logo.py")), run_name="__main__")
 
 
 if __name__ == "__main__":
