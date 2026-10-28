@@ -119,11 +119,14 @@ export function isCacheablePublicGet(method: string, path: string): boolean {
   return pathname.startsWith('/api/v1/public/');
 }
 
-/** Publish, unpublish, and other admin edits should drop the saved public pages in this browser. */
+/** Publish, unpublish, portal edits, and other staff edits drop the saved public pages in this browser. */
 export function isAdminWrite(method: string, path: string): boolean {
   if (!WRITES.has(method)) return false;
   const pathname = path.split('?')[0] ?? path;
-  return pathname === '/api/v1/admin' || pathname.startsWith('/api/v1/admin/');
+  return pathname === '/api/v1/admin'
+    || pathname.startsWith('/api/v1/admin/')
+    || pathname === '/api/v1/portal'
+    || pathname.startsWith('/api/v1/portal/');
 }
 
 export function readPublicCache<T>(url: string, now = Date.now()): { data: T; storedAt: number; fresh: boolean } | null {

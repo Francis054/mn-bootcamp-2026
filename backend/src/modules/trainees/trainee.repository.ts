@@ -2,6 +2,30 @@ import { groupedIds, replaceIds } from '../../shared/persistence/id-links.js';
 import { BaseRepository } from '../../shared/persistence/base-repository.js';
 import type { TraineeEntity } from './trainee.entity.js';
 
+type DefaultedTraineeColumn =
+  | 'slug'
+  | 'cohortYear'
+  | 'headline'
+  | 'location'
+  | 'githubUrl'
+  | 'photoConsent'
+  | 'contactConsent'
+  | 'publicLinks'
+  | 'profileReviewStatus'
+  | 'profileRejectionReason'
+  | 'profileSubmittedAt'
+  | 'profileReviewedAt'
+  | 'profileReviewedBy'
+  | 'pendingDisplayName'
+  | 'pendingHeadline'
+  | 'pendingBio'
+  | 'pendingLocation'
+  | 'pendingLinkedin'
+  | 'pendingGithubUrl'
+  | 'pendingPortfolio'
+  | 'pendingPhotoUrl'
+  | 'pendingPhotoStorageKey';
+
 export class TraineeRepository extends BaseRepository<TraineeEntity> {
   findAll(): Promise<TraineeEntity[]> {
     return this.repository.find({ order: { displayName: 'ASC', id: 'ASC' } });
@@ -55,11 +79,38 @@ export class TraineeRepository extends BaseRepository<TraineeEntity> {
   }
 
   insert(
-    trainee: Omit<TraineeEntity, 'createdAt' | 'updatedAt' | 'slug' | 'cohortYear'> &
-      Partial<Pick<TraineeEntity, 'slug' | 'cohortYear'>>,
+    trainee: Omit<TraineeEntity, 'createdAt' | 'updatedAt' | DefaultedTraineeColumn> &
+      Partial<Pick<TraineeEntity, DefaultedTraineeColumn>>,
   ): Promise<TraineeEntity> {
+    const reviewStatus =
+      trainee.profileReviewStatus ??
+      (trainee.publicationStatus === 'published' ? 'approved' : 'draft');
     return this.repository.save(
-      this.repository.create({ slug: null, cohortYear: 2026, ...trainee }),
+      this.repository.create({
+        slug: null,
+        cohortYear: 2026,
+        headline: '',
+        location: '',
+        githubUrl: null,
+        photoConsent: false,
+        contactConsent: false,
+        publicLinks: false,
+        profileReviewStatus: reviewStatus,
+        profileRejectionReason: '',
+        profileSubmittedAt: null,
+        profileReviewedAt: null,
+        profileReviewedBy: null,
+        pendingDisplayName: null,
+        pendingHeadline: null,
+        pendingBio: null,
+        pendingLocation: null,
+        pendingLinkedin: null,
+        pendingGithubUrl: null,
+        pendingPortfolio: null,
+        pendingPhotoUrl: null,
+        pendingPhotoStorageKey: null,
+        ...trainee,
+      }),
     );
   }
 

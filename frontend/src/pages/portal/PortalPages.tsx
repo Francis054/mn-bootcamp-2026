@@ -12,6 +12,7 @@ import { ShellMark, usePageMeta } from '@/components/SiteChrome';
 import { SiteImage } from '@/components/SiteImage';
 import { usesMockApi } from '@/config/runtime';
 import { isApiError, type SessionUser } from '@/domain/types';
+import { CONSENT_WORDING, githubProblem, linkedinProblem, type PortalProfile, type ProfileFields } from '@/domain/portalProfile';
 import { collect, emailAddress, minLength, newPassword, required } from '@/domain/validate';
 import { clearSession, rememberSignedIn } from '@/dev/session';
 
@@ -461,8 +462,8 @@ export function PortalHomePage() {
               <p className="eyebrow">Signed in</p>
               <h1>Hello, {name}.</h1>
               <p className="muted">Your email is {verified ? 'confirmed' : 'not confirmed yet'}.{me?.traineeId ? ` Roster id ${me.traineeId}.` : ''}</p>
+              <ProfileEditor />
               <div className="portal-grid">
-                <section className="portal-card"><h2>Profile</h2><p>Coming next. You will edit your public profile here.</p></section>
                 <section className="portal-card"><h2>Projects</h2><p>Coming next. Labs and case studies will be listed here.</p></section>
                 <section className="portal-card"><h2>Labs</h2><p>Coming next. Completed labs will be recorded here.</p></section>
                 <section className="portal-card"><h2>CV</h2><p>Coming next. Your CV stays private until you choose otherwise.</p></section>
@@ -474,4 +475,199 @@ export function PortalHomePage() {
       </main>
     </div>
   );
+}
+
+const STATUS_LABEL: Record<PortalProfile['status'], string> = {
+  draft: 'Draft',
+  pending: 'Pending review',
+  approved: 'Approved',
+  rejected: 'Rejected',
+};
+
+function ProfileEditor() {
+  const [profile, setProfile] = useState<PortalProfile | null>(null);
+  const [fields, setFields] = useState<ProfileFields | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [formError, setFormError] = useState('');
+  const [pending, setPending] = useState(false);
+  const [notice, setNotice] = useState('');
+  useEffect(() => {
+    let cancel = false;
+    api<PortalProfile>({ method: 'GET', path: '/portal/profile' })
+      .then((result) => {
+        if (cancel) return;
+        setProfile(result);
+        setFields(result.draft);
+      })
+      .catch((error: unknown) => {
+        if (!cancel) setFormError(isApiError(error) ? error.message : 'Your profile could not be loaded.');
+      });
+    return () => {
+      cancel = true;
+    };
+  }, []);
+  if (formError && !profile) return <ErrorState title="Your profile could not be opened" text={formError} />;
+  if (!profile || !fields) return <p role="status"><Loader variant="inline" label="Loading your profile" /> Loading your profile.</p>;
+  const set = (key: keyof ProfileFields, value: string) => {
+    setFields({ ...fields, [key]: value });
+  };
+  const save = async () => {
+    const fieldErrors = profileErrors(fields);
+    setErrors(fieldErrors);
+    if (Object.keys(fieldErrors).length) return false;
+    setPending(true);
+    setFormError('');
+    try {
+      const saved = await api<PortalProfile>({
+        method: 'PATCH',
+        path: '/portal/profile',
+        body: {
+          displayName: fields.displayName,
+          headline: fields.headline,
+          bio: fields.bio,
+          location: fields.location,
+          linkedin: fields.linkedin,
+          githubUrl: fields.githubUrl,
+          portfolio: fields.portfolio,
+        },
+      });
+      setProfile(saved);
+      setFields(saved.draft);
+      setNotice('Saved. Submit it when you want an administrator to review the public version.');
+      return true;
+    } catch (error) {
+      setFormError(isApiError(error) ? error.message : 'The profile could not be saved.');
+      if (isApiError(error) && error.fieldErrors) setErrors(error.fieldErrors);
+      return false;
+    } finally {
+      setPending(false);
+    }
+  };
+  const submit = async () => {
+    const saved = await save();
+    if (!saved) return;
+    setPending(true);
+    try {
+      const result = await api<PortalProfile>({ method: 'POST', path: '/portal/profile/submit' });
+      setProfile(result);
+      setFields(result.draft);
+      setNotice('Submitted. The last approved version stays public until this one is approved.');
+    } catch (error) {
+      setFormError(isApiError(error) ? error.message : 'The profile could not be submitted.');
+    } finally {
+      setPending(false);
+    }
+  };
+  const consent = async (key: 'publicProfile' | 'publicPhoto' | 'contactRelay', granted: boolean) => {
+    setPending(true);
+    setFormError('');
+    try {
+      const result = await api<PortalProfile>({ method: 'PUT', path: '/portal/consents', body: { [key]: granted } });
+      setProfile(result);
+      setNotice('Consent saved.');
+    } catch (error) {
+      setFormError(isApiError(error) ? error.message : 'Consent could not be saved.');
+    } finally {
+      setPending(false);
+    }
+  };
+  const upload = async (file: File | undefined) => {
+    if (!file) return;
+    const payload = new FormData();
+    payload.set('file', file);
+    setPending(true);
+    setFormError('');
+    try {
+      const result = await api<PortalProfile>({ method: 'POST', path: '/portal/profile/photo', body: payload });
+      setProfile(result);
+      setFields(result.draft);
+      setNotice('Photo saved on your draft. It is not public until it is approved and you allow the photo.');
+    } catch (error) {
+      setFormError(isApiError(error) ? error.message : 'The photo could not be uploaded.');
+      if (isApiError(error) && error.fieldErrors) setErrors(error.fieldErrors);
+    } finally {
+      setPending(false);
+    }
+  };
+  const removePhoto = async () => {
+    setPending(true);
+    try {
+      const result = await api<PortalProfile>({ method: 'DELETE', path: '/portal/profile/photo' });
+      setProfile(result);
+      setFields(result.draft);
+    } catch (error) {
+      setFormError(isApiError(error) ? error.message : 'The photo could not be removed.');
+    } finally {
+      setPending(false);
+    }
+  };
+  return (
+    <section className="portal-card portal-profile" aria-labelledby="profile-title">
+      <h2 id="profile-title">Your profile</h2>
+      <p className="portal-status" role="status">
+        <span className="tag">{STATUS_LABEL[profile.status]}</span>
+        {profile.status === 'pending' ? ' An administrator still has to approve this version. The last approved version stays on the public site.' : null}
+        {profile.status === 'approved' ? ' This version can appear on the public site when your consent allows it.' : null}
+        {profile.status === 'draft' ? ' This draft is not the public version yet.' : null}
+      </p>
+      {profile.status === 'rejected' ? <p role="alert">Rejected: {profile.rejectionReason}</p> : null}
+      {notice ? <p role="status">{notice}</p> : null}
+      <ErrorSummary errors={formError ? { form: formError, ...errors } : errors} />
+      <div className="portal-form">
+        <Field id="profile-name" label="Display name" error={errors.displayName}>
+          <input className="input" id="profile-name" value={fields.displayName} onChange={(event) => set('displayName', event.target.value)} autoComplete="name" />
+        </Field>
+        <Field id="profile-headline" label="Headline" error={errors.headline} hint="A short line, such as the role you are aiming for.">
+          <input className="input" id="profile-headline" value={fields.headline} onChange={(event) => set('headline', event.target.value)} />
+        </Field>
+        <Field id="profile-bio" label="Short bio" error={errors.bio}>
+          <textarea className="textarea" id="profile-bio" value={fields.bio} onChange={(event) => set('bio', event.target.value)} rows={5} />
+        </Field>
+        <Field id="profile-location" label="Location" error={errors.location} hint="City or country only.">
+          <input className="input" id="profile-location" value={fields.location} onChange={(event) => set('location', event.target.value)} autoComplete="address-level2" />
+        </Field>
+        <Field id="profile-linkedin" label="LinkedIn" error={errors.linkedin} hint="A https://www.linkedin.com link, or leave this blank.">
+          <input className="input" id="profile-linkedin" value={fields.linkedin ?? ''} onChange={(event) => set('linkedin', event.target.value)} inputMode="url" />
+        </Field>
+        <Field id="profile-github" label="GitHub" error={errors.githubUrl} hint="A https://github.com link, or leave this blank.">
+          <input className="input" id="profile-github" value={fields.githubUrl ?? ''} onChange={(event) => set('githubUrl', event.target.value)} inputMode="url" />
+        </Field>
+        <Field id="profile-portfolio" label="Portfolio" error={errors.portfolio} hint="Another https link, or leave this blank.">
+          <input className="input" id="profile-portfolio" value={fields.portfolio ?? ''} onChange={(event) => set('portfolio', event.target.value)} inputMode="url" />
+        </Field>
+        <Field id="profile-photo" label="Profile photo" error={errors.photoUrl} hint="JPEG, PNG, or WebP. SVG files are not accepted. Location data is removed.">
+          {fields.photoUrl ? <img className="portal-photo" src={fields.photoUrl} alt="" /> : <p className="muted">No photo on this draft.</p>}
+          <input id="profile-photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void upload(event.target.files?.[0])} />
+          {fields.photoUrl ? <button className="btn btn--sm" type="button" onClick={() => void removePhoto()} disabled={pending}>Remove photo</button> : null}
+        </Field>
+      </div>
+      <fieldset className="portal-consent">
+        <legend>Consent</legend>
+        <p className="muted">Wording version {profile.policyVersion}. You can change these at any time.</p>
+        <label className="check"><input type="checkbox" checked={profile.consents.publicProfile} onChange={(event) => void consent('publicProfile', event.target.checked)} /> {CONSENT_WORDING.publicProfile}</label>
+        <label className="check"><input type="checkbox" checked={profile.consents.publicPhoto} onChange={(event) => void consent('publicPhoto', event.target.checked)} /> {CONSENT_WORDING.publicPhoto}</label>
+        <label className="check"><input type="checkbox" checked={profile.consents.contactRelay} onChange={(event) => void consent('contactRelay', event.target.checked)} /> {CONSENT_WORDING.contactRelay}</label>
+      </fieldset>
+      <div className="portal-actions">
+        <button className="btn btn--dark" type="button" onClick={() => void save()} disabled={pending}>Save profile</button>
+        <button className="btn" type="button" onClick={() => void submit()} disabled={pending || profile.status === 'pending'}>Submit for review</button>
+      </div>
+    </section>
+  );
+}
+
+function profileErrors(fields: ProfileFields): Record<string, string> {
+  const errors: Record<string, string> = {};
+  if (!fields.displayName.trim()) errors.displayName = 'Enter a display name.';
+  else if (fields.displayName.trim().length > 120) errors.displayName = 'Use at most 120 characters.';
+  if (fields.headline.trim().length > 160) errors.headline = 'Use at most 160 characters.';
+  if (fields.bio.length > 5000) errors.bio = 'Use at most 5000 characters.';
+  if (fields.location.trim().length > 120) errors.location = 'Use at most 120 characters.';
+  const linkedin = linkedinProblem(fields.linkedin ?? '');
+  const github = githubProblem(fields.githubUrl ?? '');
+  if (linkedin) errors.linkedin = linkedin;
+  if (github) errors.githubUrl = github;
+  const portfolio = (fields.portfolio ?? '').trim();
+  if (portfolio && !portfolio.startsWith('https://')) errors.portfolio = 'Enter a full link starting with https://.';
+  return errors;
 }

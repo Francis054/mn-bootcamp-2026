@@ -24,6 +24,8 @@ import { normalizeEmail, photoPairMessage } from './trainee.rules.js';
 import type { StorageProvider } from '../storage/storage-provider.js';
 import { isTraineeTrack } from './tracks.js';
 import { CONSENT_REQUIRED, consentWrite, isPublicTrainee } from './visibility.js';
+import type { TraineeConsentRepository } from './trainee-consent.repository.js';
+import { CONSENT_POLICY_VERSION, CONSENT_WORDING } from './consent-policy.js';
 
 export class TraineeService {
   constructor(
@@ -34,6 +36,7 @@ export class TraineeService {
     private readonly audit: AuditRepository,
     private readonly storage: StorageProvider,
     private readonly maxBytes: number,
+    private readonly consents: TraineeConsentRepository,
     private readonly now: () => Date = () => new Date(),
   ) {}
 
@@ -118,6 +121,7 @@ export class TraineeService {
       portfolio: storedLink(dto.portfolio),
       photoUrl: photo.photoUrl,
       photoStorageKey: photo.photoStorageKey,
+      photoConsent: Boolean(photo.photoUrl),
       consentReceived,
       consentReceivedAt: consentReceived ? this.now() : null,
       consentRecordedBy: consentReceived ? actor.userId : null,
@@ -166,6 +170,10 @@ export class TraineeService {
 
     const wasPublished = current.publicationStatus === 'published';
     const previousEmail = current.email;
+    const beforeText = profileText(current);
+    const beforePhoto = current.photoUrl;
+    const beforeProfileConsent = current.consentReceived;
+    const beforePhotoConsent = current.photoConsent;
     current.displayName = displayName;
     if (patch.initials !== undefined) {
       current.initials = patch.initials.trim() || initialsFrom(displayName);
@@ -180,6 +188,9 @@ export class TraineeService {
     if (patch.quote !== undefined) current.quote = patch.quote;
     if (patch.linkedin !== undefined) current.linkedin = storedLink(patch.linkedin);
     if (patch.portfolio !== undefined) current.portfolio = storedLink(patch.portfolio);
+    if (patch.githubUrl !== undefined) current.githubUrl = storedLink(patch.githubUrl);
+    if (patch.headline !== undefined) current.headline = patch.headline.trim();
+    if (patch.location !== undefined) current.location = patch.location.trim();
     if (patch.statusLabel !== undefined) {
       current.statusLabel = patch.statusLabel.trim() || 'In training';
     }
@@ -208,6 +219,20 @@ export class TraineeService {
     if (patch.lessonIds !== undefined) await this.trainees.replaceLessons(saved.id, lessonIds);
     const verb: CurriculumVerb = decision.withdrawing && wasPublished ? 'unpublished' : 'updated';
     await this.writeAudit(actor, verb, saved.id);
+    if (profileText(saved) !== beforeText) await this.writePortalAudit(actor, 'portal.profile.admin_updated', saved.id);
+    if (saved.photoUrl !== beforePhoto) await this.writePortalAudit(actor, 'portal.photo.changed', saved.id);
+    if (saved.consentReceived !== beforeProfileConsent) {
+      await this.recordConsent(saved.id, 'public_profile', saved.consentReceived, actor);
+    }
+    if (saved.photoConsent !== beforePhotoConsent) {
+      await this.recordConsent(saved.id, 'public_photo', saved.photoConsent, actor);
+    }
+    if (
+      saved.consentReceived !== beforeProfileConsent ||
+      saved.photoConsent !== beforePhotoConsent
+    ) {
+      await this.writePortalAudit(actor, 'portal.consent.changed', saved.id);
+    }
     if (dropKey) await this.removeStored(dropKey);
     return this.present(saved);
   }
@@ -285,9 +310,7 @@ export class TraineeService {
     }
   }
 
-  private async insert(
-    trainee: Omit<TraineeEntity, 'createdAt' | 'updatedAt'>,
-  ): Promise<TraineeEntity> {
+  private async insert(trainee: Parameters<TraineeRepository['insert']>[0]): Promise<TraineeEntity> {
     try {
       return await this.trainees.insert(trainee);
     } catch (error) {
@@ -323,6 +346,14 @@ export class TraineeService {
       quote: row.quote,
       linkedin: row.linkedin,
       portfolio: row.portfolio,
+      headline: row.headline,
+      location: row.location,
+      githubUrl: row.githubUrl,
+      photoConsent: row.photoConsent,
+      contactConsent: row.contactConsent,
+      publicLinks: row.publicLinks,
+      profileReviewStatus: row.profileReviewStatus,
+      profileRejectionReason: row.profileRejectionReason,
       photoUrl: row.photoUrl,
       photoStorageKey: row.photoStorageKey,
       consentReceived: row.consentReceived,
@@ -340,6 +371,38 @@ export class TraineeService {
       lessonIds,
       updatedAt: isoTimestamp(row.updatedAt),
     };
+  }
+
+  private writePortalAudit(
+    actor: Actor,
+    action: 'portal.profile.admin_updated' | 'portal.photo.changed' | 'portal.consent.changed',
+    id: string,
+  ): Promise<void> {
+    return this.audit.record({
+      action,
+      actorUserId: actor.userId,
+      ip: actor.ip,
+      requestId: actor.requestId,
+      subjectType: action === 'portal.photo.changed' ? 'trainee_photo' : 'trainee',
+      subjectId: id,
+    });
+  }
+
+  private recordConsent(
+    traineeId: string,
+    scope: 'public_profile' | 'public_photo',
+    granted: boolean,
+    actor: Actor,
+  ): Promise<unknown> {
+    return this.consents.record({
+      traineeId,
+      scope,
+      granted,
+      source: 'admin',
+      policyVersion: CONSENT_POLICY_VERSION,
+      wording: CONSENT_WORDING[scope],
+      recordedBy: actor.userId,
+    });
   }
 
   private writeAudit(actor: Actor, verb: CurriculumVerb, id: string): Promise<void> {
@@ -374,6 +437,7 @@ export class TraineeService {
       const previous = current.photoStorageKey;
       current.photoUrl = null;
       current.photoStorageKey = null;
+      current.photoConsent = false;
       return previous;
     }
     const key = patch.photoStorageKey?.trim() ?? '';
@@ -385,6 +449,7 @@ export class TraineeService {
     if (patch.photoUrl === current.photoUrl && key === (previous ?? '')) return null;
     current.photoUrl = patch.photoUrl;
     current.photoStorageKey = key;
+    current.photoConsent = true;
     return previous && previous !== key ? previous : null;
   }
 
@@ -399,6 +464,19 @@ export class TraineeService {
       throw new ApiError('server', 'The previous photo could not be removed.');
     }
   }
+}
+
+function profileText(row: TraineeEntity): string {
+  return [
+    row.displayName,
+    row.headline,
+    row.bio,
+    row.quote,
+    row.location,
+    row.linkedin ?? '',
+    row.githubUrl ?? '',
+    row.portfolio ?? '',
+  ].join('\n');
 }
 
 function storedLink(value: string | null | undefined): string | null {

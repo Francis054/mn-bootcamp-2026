@@ -18,6 +18,7 @@ const GROUPS: Array<{ label: string; items: Array<{ id: string; label: string; i
     { id: 'classes', label: 'Classes', icon: 'book', to: '/admin/classes', permission: 'content.read' },
     { id: 'timetable', label: 'Timetable', icon: 'calendar', to: '/admin/classes/timetable', permission: 'content.read' },
     { id: 'trainees', label: 'Trainees', icon: 'users', to: '/admin/trainees', permission: 'content.read' },
+    { id: 'review', label: 'Review queue', icon: 'check', to: '/admin/review', permission: 'content.read' },
     { id: 'projects', label: 'Projects', icon: 'terminal', to: '/admin/projects', permission: 'content.read' },
     { id: 'events', label: 'Events', icon: 'calendar', to: '/admin/events', permission: 'content.read' },
     { id: 'media', label: 'Media library', icon: 'image', to: '/admin/media', permission: 'content.read' },

@@ -13,6 +13,14 @@ const AUTH_AUDIT_ACTIONS = [
   'auth.user.enabled',
 ] as const;
 
+const PORTAL_AUDIT_ACTIONS = [
+  'portal.profile.approved',
+  'portal.profile.rejected',
+  'portal.profile.admin_updated',
+  'portal.photo.changed',
+  'portal.consent.changed',
+] as const;
+
 const ACCOUNT_AUDIT_ACTIONS = [
   'auth.password.changed',
   'auth.password.reset.requested',
@@ -56,11 +64,13 @@ export type CurriculumAuditAction = `curriculum.${CurriculumKind}.${CurriculumVe
 export type AuditAction =
   | (typeof AUTH_AUDIT_ACTIONS)[number]
   | (typeof ACCOUNT_AUDIT_ACTIONS)[number]
+  | (typeof PORTAL_AUDIT_ACTIONS)[number]
   | CurriculumAuditAction;
 
 export const AUDIT_ACTIONS: readonly AuditAction[] = [
   ...AUTH_AUDIT_ACTIONS,
   ...ACCOUNT_AUDIT_ACTIONS,
+  ...PORTAL_AUDIT_ACTIONS,
   ...CURRICULUM_KINDS.flatMap((kind) =>
     CURRICULUM_VERBS.map((verb): CurriculumAuditAction => `curriculum.${kind}.${verb}`),
   ),

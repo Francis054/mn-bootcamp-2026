@@ -19,6 +19,7 @@ const StatesPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({
 const TimelineEditorPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.TimelineEditorPage })));
 const UsersPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.UsersPage })));
 const PendingRegistrationsPage = lazy(() => import('@/pages/admin/TraineeAccessPages').then((m) => ({ default: m.PendingRegistrationsPage })));
+const ReviewQueuePage = lazy(() => import('@/pages/admin/ReviewQueuePage').then((m) => ({ default: m.ReviewQueuePage })));
 const TraineeAccountsPage = lazy(() => import('@/pages/admin/TraineeAccessPages').then((m) => ({ default: m.TraineeAccountsPage })));
 const SignupPage = lazy(() => import('@/pages/portal/PortalPages').then((m) => ({ default: m.SignupPage })));
 const VerifyEmailPage = lazy(() => import('@/pages/portal/PortalPages').then((m) => ({ default: m.VerifyEmailPage })));
@@ -111,6 +112,7 @@ export function App() {
         <Route path="classes/new" element={<Waiting><ClassEditor /></Waiting>} />
         <Route path="classes/:id" element={<Waiting><ClassEditor /></Waiting>} />
         <Route path="trainees" element={<Waiting><TraineeListPage /></Waiting>} />
+        <Route path="review" element={<Waiting><ReviewQueuePage /></Waiting>} />
         <Route path="trainees/new" element={<Waiting><TraineeEditor /></Waiting>} />
         <Route path="trainees/:id" element={<Waiting><TraineeEditor /></Waiting>} />
         <Route path="projects" element={<Waiting><ProjectListPage /></Waiting>} />

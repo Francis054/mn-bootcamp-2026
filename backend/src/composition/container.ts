@@ -57,6 +57,9 @@ import { liveRepositoryVisibility } from '../modules/projects/project-url.js';
 import { ProjectRepository } from '../modules/projects/project.repository.js';
 import { ProjectService } from '../modules/projects/project.service.js';
 import { TraineeEntity } from '../modules/trainees/trainee.entity.js';
+import { TraineeConsentEntity } from '../modules/trainees/trainee-consent.entity.js';
+import { TraineeConsentRepository } from '../modules/trainees/trainee-consent.repository.js';
+import { PortalProfileService } from '../modules/trainees/portal-profile.service.js';
 import { TraineeRepository } from '../modules/trainees/trainee.repository.js';
 import { TraineeService } from '../modules/trainees/trainee.service.js';
 import { UserEntity } from '../modules/users/user.entity.js';
@@ -104,6 +107,7 @@ export class AppContainer {
     enquiries: EnquiryService,
     timetable: TimetableService,
     signup: SignupService,
+    profiles: PortalProfileService,
   ) {
     this.health = new HealthService(dataSource, logger);
     this.users = users;
@@ -128,6 +132,7 @@ export class AppContainer {
       storage,
       timetable,
       signup,
+      profiles,
     );
   }
 
@@ -217,6 +222,9 @@ export class AppContainer {
       accraToday,
     );
     const storage = createStorage(env);
+    const consentRepository = new TraineeConsentRepository(
+      dataSource.getRepository(TraineeConsentEntity),
+    );
     const traineeService = new TraineeService(
       traineeRepository,
       moduleRepository,
@@ -225,6 +233,7 @@ export class AppContainer {
       audit,
       storage,
       env.uploadMaxBytes,
+      consentRepository,
     );
     const projectService = new ProjectService(
       projectRepository,
@@ -281,6 +290,14 @@ export class AppContainer {
       env.sessionSecret,
       logger,
     );
+    const profiles = new PortalProfileService(
+      traineeRepository,
+      userRepository,
+      consentRepository,
+      audit,
+      storage,
+      env.uploadMaxBytes,
+    );
     return new AppContainer(
       env,
       logger,
@@ -303,6 +320,7 @@ export class AppContainer {
       enquiries,
       timetable,
       signup,
+      profiles,
     );
   }
 

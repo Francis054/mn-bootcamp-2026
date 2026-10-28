@@ -24,6 +24,8 @@ import { WorkPhotos1793750400000 } from './migrations/1793750400000-WorkPhotos.j
 import { SiteImages1794009600000 } from './migrations/1794009600000-SiteImages.js';
 import { AuditActionPattern1794096000000 } from './migrations/1794096000000-AuditActionPattern.js';
 import { TraineeAuth1794182400000 } from './migrations/1794182400000-TraineeAuth.js';
+import { TraineeProfile1794268800000 } from './migrations/1794268800000-TraineeProfile.js';
+import { TraineeConsentEntity } from '../modules/trainees/trainee-consent.entity.js';
 import { PendingRegistrationEntity } from '../modules/trainee-auth/pending-registration.entity.js';
 import { TraineePhoto1793836800000 } from './migrations/1793836800000-TraineePhoto.js';
 import { RolesAndOptionalLinks1793577600000 } from './migrations/1793577600000-RolesAndOptionalLinks.js';
@@ -69,6 +71,7 @@ export function createDataSource(
       PhaseEntity,
       LessonEntity,
       TraineeEntity,
+      TraineeConsentEntity,
       ProjectEntity,
       EventEntity,
       MediaEntity,
@@ -105,6 +108,7 @@ export function createDataSource(
       SiteImages1794009600000,
       AuditActionPattern1794096000000,
       TraineeAuth1794182400000,
+      TraineeProfile1794268800000,
     ],
     migrationsTableName: 'schema_migrations',
     ssl: sslConfigForDriver(env.databaseSsl, env.databaseSslCa),

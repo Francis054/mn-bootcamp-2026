@@ -51,6 +51,7 @@ const ADMIN = [
   '/admin/classes/timetable',
   '/admin/classes/new',
   '/admin/trainees',
+  '/admin/review',
   '/admin/projects',
   '/admin/events',
   '/admin/media',

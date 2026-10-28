@@ -92,6 +92,10 @@ An email already on `trainees` creates or replaces an unverified trainee login a
 
 `GET /portal/me` needs `portal.access`. It returns `{ user, traineeId }`. Staff receive `403`.
 
+`GET /portal/profile` and `PATCH /portal/profile` use the trainee id on the session. One trainee cannot read or change another trainee's profile or photo. `POST /portal/profile/photo` stores a JPEG, PNG, or WebP and strips EXIF before it is saved. SVG is refused. `PUT /portal/consents` records public profile, photo, and employer-contact consent with a wording version and a timestamp. `POST /portal/profile/submit` needs public-profile consent and moves the draft to `pending`. The last approved text, photo, and links stay on the public site until an editor approves the new version. `GET /admin/review-queue` lists those pending profiles. Approve, reject (with a reason), and edit need `content.write`.
+
+There is no age confirmation and no retention period in this version.
+
 Administrators (`users.manage`) list `GET /admin/pending-registrations`, approve or reject a row, list `GET /admin/trainee-accounts`, and disable, enable, or resend. Approve creates a hidden trainee when the email is not already on the roster, links the login, and sends the confirmation email. `delivered` is false when mail was not accepted. The account still exists. Disable deletes that account's sessions.
 
 ## What the website should change later

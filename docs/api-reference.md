@@ -22,6 +22,14 @@ Errors use `{ "error": { "code", "message", "fieldErrors"? } }`. `code` is `vali
 | POST | `/api/v1/public/trainee-signup/verify` |
 | POST | `/api/v1/public/trainee-signup/resend` |
 | GET | `/api/v1/portal/me` |
+| GET, PATCH | `/api/v1/portal/profile` |
+| POST, DELETE | `/api/v1/portal/profile/photo` |
+| POST | `/api/v1/portal/profile/submit` |
+| PUT | `/api/v1/portal/consents` |
+| GET | `/api/v1/admin/review-queue` |
+| PATCH | `/api/v1/admin/review-queue/{traineeId}` |
+| POST | `/api/v1/admin/review-queue/{traineeId}/approve` |
+| POST | `/api/v1/admin/review-queue/{traineeId}/reject` |
 | GET | `/api/v1/admin/pending-registrations` |
 | POST | `/api/v1/admin/pending-registrations/{id}/approve` |
 | POST | `/api/v1/admin/pending-registrations/{id}/reject` |

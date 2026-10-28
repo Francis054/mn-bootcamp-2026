@@ -25,6 +25,10 @@ export class UserRepository extends BaseRepository<UserEntity> {
     return this.repository.find({ where: { role }, order: { displayName: 'ASC' } });
   }
 
+  async rename(id: string, displayName: string, initials: string): Promise<void> {
+    await this.repository.update({ id }, { displayName, initials });
+  }
+
   async updatePassword(id: string, passwordHash: string): Promise<void> {
     await this.repository.update({ id }, { passwordHash });
   }

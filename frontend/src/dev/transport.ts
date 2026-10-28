@@ -12,6 +12,7 @@ import { SITE_IMAGE_SLOTS, isSiteImageKey, siteImageAltError, siteImageTaglineEr
 import { readWorkPhotoDataUrl, workPhotoFieldErrors, workPhotoFileError } from '@/domain/workPhoto';
 import { clearSession, markSessionExpired, readActiveSession, setSession } from './session';
 import { resetTraineeAuthDev, traineeAuthRoute } from './trainee-auth';
+import { portalProfileRoute, resetPortalProfileDev } from './portal-profile';
 import { getState, updateState } from './store';
 import { isAdminTimetablePath, isPublicTimetablePath, NOT_HANDLED, resetTimetableStore, timetableRoute } from './timetable-store';
 
@@ -29,6 +30,7 @@ export function resetDevTransport(): void {
   armed = null;
   resetTimetableStore();
   resetTraineeAuthDev();
+  resetPortalProfileDev();
 }
 
 function takeArmed(): void {
@@ -134,6 +136,8 @@ export async function devTransport<T>(req: ApiRequest): Promise<T> {
   takeArmed();
   const path = req.path.split('?')[0] || '/';
   const method = req.method;
+  const portalProfile = await portalProfileRoute(method, path, req.body);
+  if (portalProfile !== undefined) return portalProfile as T;
   if (method === 'POST' && path === '/admin/trainees/photo') {
     return (await storeTraineePhoto(req.body)) as T;
   }
@@ -591,7 +595,12 @@ function traineeBody(input: Record<string, unknown>, current?: Trainee): Trainee
     quote: String(input.quote ?? current?.quote ?? ''),
     linkedin: linkValue(input.linkedin, current?.linkedin).stored,
     portfolio: linkValue(input.portfolio, current?.portfolio).stored,
+    headline: String(input.headline ?? current?.headline ?? ''),
+    location: String(input.location ?? current?.location ?? ''),
+    githubUrl: linkValue(input.githubUrl, current?.githubUrl).stored,
     photoUrl: storedPhoto(input.photoUrl, current?.photoUrl ?? null),
+    photoConsent: input.photoUrl === undefined ? current?.photoConsent : Boolean(storedPhoto(input.photoUrl, current?.photoUrl ?? null)),
+    publicLinks: current?.publicLinks,
     consentReceived,
     listing,
     publicationStatus,

@@ -6,7 +6,8 @@ import type { Role } from '../users/role.js';
  *
  * `content.read` opens `/api/v1/admin`. Trainee and trainer do not have it,
  * so they cannot read other trainees' private records. `portal.access` opens
- * `/api/v1/portal`. `portal.write` is reserved for later edits.
+ * `/api/v1/portal`. `portal.write` saves the signed-in trainee's own profile,
+ * photo, and consent.
  */
 export const PERMISSIONS = [
   'content.read',

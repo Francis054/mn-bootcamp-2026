@@ -225,6 +225,202 @@ export const portalPaths = {
       },
     },
   },
+  '/api/v1/portal/profile': {
+    get: {
+      operationId: 'getOwnTraineeProfile',
+      summary: 'The signed-in trainee profile',
+      description:
+        'Requires portal.access. The trainee id comes from the session. The draft is what the trainee is editing. The live object is the last approved version.',
+      responses: {
+        '200': {
+          description: 'The trainee profile, review status, and consent.',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/PortalProfile' } } },
+        },
+        '401': { description: 'Sign in to continue.', content: errorRef },
+        '403': { description: 'This session cannot open the portal.', content: errorRef },
+        '404': { description: 'The login is not linked to a trainee.', content: errorRef },
+      },
+    },
+    patch: {
+      operationId: 'updateOwnTraineeProfile',
+      summary: 'Save the signed-in trainee profile',
+      description:
+        'Requires portal.write. A trainee id in the body is ignored. Public fields stay in draft until an administrator approves them.',
+      requestBody: {
+        required: true,
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/PortalProfilePatch' } } },
+      },
+      responses: {
+        '200': {
+          description: 'The saved draft.',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/PortalProfile' } } },
+        },
+        '401': { description: 'Sign in to continue.', content: errorRef },
+        '403': { description: 'This session cannot edit the portal.', content: errorRef },
+        '422': { description: 'The form failed validation.', content: errorRef },
+      },
+    },
+  },
+  '/api/v1/portal/profile/photo': {
+    post: {
+      operationId: 'uploadOwnTraineePhoto',
+      summary: 'Upload a profile photo for review',
+      description:
+        'Requires portal.write. One JPEG, PNG, or WebP. SVG is refused. EXIF and location data are removed before storage. The photo is not public until it is approved and photo consent is on.',
+      requestBody: {
+        required: true,
+        content: { 'multipart/form-data': { schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } } },
+      },
+      responses: {
+        '201': {
+          description: 'The photo is stored on the draft.',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/PortalProfile' } } },
+        },
+        '401': { description: 'Sign in to continue.', content: errorRef },
+        '403': { description: 'This session cannot edit the portal.', content: errorRef },
+        '422': { description: 'The file is not an allowed image.', content: errorRef },
+      },
+    },
+    delete: {
+      operationId: 'clearOwnTraineePhoto',
+      summary: 'Remove the draft profile photo',
+      description: 'Requires portal.write. The last approved photo stays public until this removal is approved.',
+      responses: {
+        '200': {
+          description: 'The draft photo is cleared.',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/PortalProfile' } } },
+        },
+        '401': { description: 'Sign in to continue.', content: errorRef },
+        '403': { description: 'This session cannot edit the portal.', content: errorRef },
+      },
+    },
+  },
+  '/api/v1/portal/profile/submit': {
+    post: {
+      operationId: 'submitOwnTraineeProfile',
+      summary: 'Send the profile to the review queue',
+      description: 'Requires portal.write and public-profile consent. The last approved version stays public.',
+      responses: {
+        '200': {
+          description: 'The profile is pending review.',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/PortalProfile' } } },
+        },
+        '401': { description: 'Sign in to continue.', content: errorRef },
+        '403': { description: 'This session cannot edit the portal.', content: errorRef },
+        '422': { description: 'Consent is missing, or there is nothing new to submit.', content: errorRef },
+      },
+    },
+  },
+  '/api/v1/portal/consents': {
+    put: {
+      operationId: 'setOwnTraineeConsents',
+      summary: 'Change per-item consent',
+      description:
+        'Requires portal.write. Each change stores the wording version and the time. Withdrawing public-profile consent unpublishes immediately. There is no age check and no retention period.',
+      requestBody: {
+        required: true,
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/PortalConsentPatch' } } },
+      },
+      responses: {
+        '200': {
+          description: 'The current consent.',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/PortalProfile' } } },
+        },
+        '401': { description: 'Sign in to continue.', content: errorRef },
+        '403': { description: 'This session cannot edit the portal.', content: errorRef },
+        '422': { description: 'A choice was not yes or no.', content: errorRef },
+      },
+    },
+  },
+  '/api/v1/admin/review-queue': {
+    get: {
+      operationId: 'listProfileReviewQueue',
+      summary: 'Profiles waiting for review',
+      description: 'Requires content.read. Pending bio, photo, and links. The live object is what is public now.',
+      responses: {
+        '200': {
+          description: 'Pending profiles.',
+          content: {
+            'application/json': {
+              schema: { type: 'array', items: { $ref: '#/components/schemas/ReviewQueueItem' } },
+            },
+          },
+        },
+        '401': { description: 'Sign in to continue.', content: errorRef },
+        '403': { description: 'You do not have access to that.', content: errorRef },
+      },
+    },
+  },
+  '/api/v1/admin/review-queue/{traineeId}': {
+    patch: {
+      operationId: 'editPendingTraineeProfile',
+      summary: 'Edit a profile that is waiting for review',
+      description: 'Requires content.write. This changes the pending version, not the public one, until it is approved.',
+      parameters: [{ name: 'traineeId', in: 'path', required: true, schema: { type: 'string' } }],
+      requestBody: {
+        required: true,
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/PortalProfilePatch' } } },
+      },
+      responses: {
+        '200': {
+          description: 'The pending profile.',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/ReviewQueueItem' } } },
+        },
+        '401': { description: 'Sign in to continue.', content: errorRef },
+        '403': { description: 'You do not have access to that.', content: errorRef },
+        '404': { description: 'That profile is not waiting for review.', content: errorRef },
+        '422': { description: 'The form failed validation.', content: errorRef },
+      },
+    },
+  },
+  '/api/v1/admin/review-queue/{traineeId}/approve': {
+    post: {
+      operationId: 'approveTraineeProfile',
+      summary: 'Approve a trainee profile',
+      description:
+        'Requires content.write. Copies the pending version onto the public profile. The photo is public only when photo consent is on.',
+      parameters: [{ name: 'traineeId', in: 'path', required: true, schema: { type: 'string' } }],
+      responses: {
+        '200': {
+          description: 'Approved.',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/ReviewQueueItem' } } },
+        },
+        '401': { description: 'Sign in to continue.', content: errorRef },
+        '403': { description: 'You do not have access to that.', content: errorRef },
+        '404': { description: 'That profile is not waiting for review.', content: errorRef },
+      },
+    },
+  },
+  '/api/v1/admin/review-queue/{traineeId}/reject': {
+    post: {
+      operationId: 'rejectTraineeProfile',
+      summary: 'Reject a trainee profile',
+      description: 'Requires content.write. The reason is shown to the trainee. The last approved version stays public.',
+      parameters: [{ name: 'traineeId', in: 'path', required: true, schema: { type: 'string' } }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['reason'],
+              properties: { reason: { type: 'string', maxLength: 500 } },
+            },
+          },
+        },
+      },
+      responses: {
+        '200': {
+          description: 'Rejected.',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/ReviewQueueItem' } } },
+        },
+        '401': { description: 'Sign in to continue.', content: errorRef },
+        '403': { description: 'You do not have access to that.', content: errorRef },
+        '404': { description: 'That profile is not waiting for review.', content: errorRef },
+        '422': { description: 'A reason is required.', content: errorRef },
+      },
+    },
+  },
 };
 
 export const portalSchemas = {
@@ -317,6 +513,51 @@ export const portalSchemas = {
       disabled: { type: 'boolean' },
       lastLoginAt: { type: 'string', format: 'date-time', nullable: true },
       createdAt: { type: 'string', format: 'date-time' },
+    },
+  },
+  PortalProfile: {
+    type: 'object',
+    additionalProperties: true,
+    required: ['traineeId', 'status', 'draft', 'live', 'consents', 'policyVersion', 'wording'],
+    properties: {
+      traineeId: { type: 'string' },
+      status: { type: 'string', enum: ['draft', 'pending', 'approved', 'rejected'] },
+      rejectionReason: { type: 'string' },
+      policyVersion: { type: 'string' },
+    },
+  },
+  PortalProfilePatch: {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      displayName: { type: 'string' },
+      headline: { type: 'string' },
+      bio: { type: 'string' },
+      location: { type: 'string' },
+      linkedin: { type: 'string', nullable: true },
+      githubUrl: { type: 'string', nullable: true },
+      portfolio: { type: 'string', nullable: true },
+      photoUrl: { type: 'string', nullable: true },
+      photoStorageKey: { type: 'string', nullable: true },
+    },
+  },
+  PortalConsentPatch: {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      publicProfile: { type: 'boolean' },
+      publicPhoto: { type: 'boolean' },
+      contactRelay: { type: 'boolean' },
+    },
+  },
+  ReviewQueueItem: {
+    type: 'object',
+    additionalProperties: true,
+    required: ['traineeId', 'status', 'draft', 'live'],
+    properties: {
+      traineeId: { type: 'string' },
+      email: { type: 'string' },
+      status: { type: 'string' },
     },
   },
   TraineeMailResult: {

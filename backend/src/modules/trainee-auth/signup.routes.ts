@@ -3,6 +3,8 @@ import { ApiError } from '../../shared/errors/api-error.js';
 import { requireAuth, requirePermission } from '../auth/require-auth.js';
 import type { SessionService } from '../auth/session.service.js';
 import type { SignupService } from './signup.service.js';
+import { mountPortalProfile } from '../trainees/portal-profile.routes.js';
+import type { PortalProfileService } from '../trainees/portal-profile.service.js';
 
 export function mountPublicSignup(router: Router, signup: SignupService): void {
   router.post('/public/trainee-signup', (req, res, next) => {
@@ -34,9 +36,16 @@ export function mountPublicSignup(router: Router, signup: SignupService): void {
   });
 }
 
-export function mountPortal(router: Router, signup: SignupService, sessions: SessionService): void {
+export function mountPortal(
+  router: Router,
+  signup: SignupService,
+  sessions: SessionService,
+  profiles: PortalProfileService,
+  maxBytes: number,
+): void {
   const portal = Router();
   portal.use(requireAuth(sessions), requirePermission('portal.access'));
+  mountPortalProfile(portal, profiles, maxBytes);
   portal.get('/me', (req, res, next) => {
     const user = req.user;
     if (!user) {
