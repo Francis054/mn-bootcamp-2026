@@ -50,7 +50,7 @@ export const SITE_IMAGE_SLOTS: readonly SiteImageSlot[] = [
     key: 'community-logo',
     label: 'Community logo',
     description:
-      'White-hat community mark: a photograph of a person in a white cap at a laptop, graded in forest and lime inside a round badge. Header, footer, sign-in, admin sidebar, seals, empty states, and the favicon. An uploaded image replaces it. The tagline sits under the larger seals.',
+      'Line mark of a hooded figure at a laptop, in the site forest, paper, and lime colours. Header, footer, sign-in, admin sidebar, seals, empty states, and the favicon. An uploaded image replaces it. The tagline sits under the larger seals.',
     url: '/assets/logo/community-badge.webp',
     alt: 'Cyber Bootcamp community logo',
     width: 1024,

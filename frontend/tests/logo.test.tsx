@@ -8,10 +8,8 @@ import { Loader } from '@/components/Loader';
 
 const LOGO = path.resolve(process.cwd(), 'public/assets/logo');
 const BOOT = path.resolve(process.cwd(), 'public/assets/boot');
-const MARK = '/assets/logo/community-badge.webp';
-
 describe('community badge', () => {
-  it('ships the photographic badge, the favicon crop, the social image, and a short loader clip', () => {
+  it('ships the hood line mark, the favicon crop, the social image, and the loader clip', () => {
     for (const file of ['community-badge.webp', 'community-badge.png', 'favicon-16.png', 'favicon-32.png', 'apple-touch-icon.png', 'og-image.png', 'maxim-nyansa-foundation-logo.png']) {
       expect(existsSync(`${LOGO}/${file}`), file).toBe(true);
     }
@@ -31,9 +29,8 @@ describe('community badge', () => {
       </MemoryRouter>,
     );
     const link = screen.getByRole('link', { name: /2026 cybersecurity bootcamp/i });
-    const art = link.querySelector(`img[src="${MARK}"]`);
-    expect(art).not.toBeNull();
-    expect(art).toHaveAttribute('alt', '');
+    expect(link.querySelector('svg')).not.toBeNull();
+    expect(link.querySelector('.hood-mark')).not.toBeNull();
     expect(link.querySelector('img[src="/assets/logo/maxim-nyansa-foundation-logo.png"]')).not.toBeNull();
     expect(link).toHaveTextContent('Cybersecurity');
     expect(link).toHaveTextContent('Bootcamp · 2026');
@@ -45,7 +42,7 @@ describe('community badge', () => {
   it('names the full mark and keeps the tagline with the original artwork', async () => {
     render(<HatMark label="Cyber Bootcamp" />);
     const badge = screen.getByRole('img', { name: 'Cyber Bootcamp' });
-    expect(badge.querySelector('img')).toHaveAttribute('src', MARK);
+    expect(badge.querySelector('.hood-mark svg')).not.toBeNull();
     expect(badge).toHaveTextContent('STRONGER TOGETHER');
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
@@ -55,7 +52,7 @@ describe('community badge', () => {
   it('puts the mark in the in-page loader and keeps the status text polite', async () => {
     render(<Loader message="Loading the bootcamp…" />);
     const status = screen.getByRole('status');
-    expect(status.querySelector(`img[src="${MARK}"]`)).not.toBeNull();
+    expect(status.querySelector('.hood-mark svg')).not.toBeNull();
     expect(status.querySelector('.sr-only')).toHaveTextContent('Loading the bootcamp…');
     expect(screen.getByText('Loading the bootcamp…', { selector: 'p' })).toHaveAttribute('aria-hidden', 'true');
     await act(async () => {

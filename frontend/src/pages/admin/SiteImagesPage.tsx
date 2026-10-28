@@ -40,7 +40,7 @@ export function SiteImagesPage() {
         <div>
           <h1>Site images</h1>
           <p>
-            Replace the community logo or the Maxim Nyansa Foundation logo and the public site updates without a redeploy. The original community logo is a round photograph of a person in a white cap at a laptop, and its tagline sits under the larger seals. Uploading a community logo replaces that photograph. The foundation wordmark stays a separate plate. Gallery photos, trainee portraits, and project pictures stay on their own
+            Replace the community logo or the Maxim Nyansa Foundation logo and the public site updates without a redeploy. The original community logo is a line drawing of a hooded figure at a laptop, in the site colours, and its tagline sits under the larger seals. Uploading a community logo replaces that drawing. The foundation wordmark stays a separate plate. Gallery photos, trainee portraits, and project pictures stay on their own
             pages.
           </p>
         </div>
@@ -227,7 +227,7 @@ function SiteImageCard({ row, onSaved }: { row: SiteImageAdmin; onSaved: () => v
 
 function fileHint(key: string): string {
   if (key === 'community-logo') {
-    return 'JPEG, PNG, or WebP. A square picture works best. Uploading a file replaces the white-cap photograph and hides the tagline. SVG files are not accepted.';
+    return 'JPEG, PNG, or WebP. A square picture works best. Uploading a file replaces the hood line mark and hides the tagline. SVG files are not accepted.';
   }
   if (key === 'foundation-logo') {
     return 'JPEG, PNG, or WebP. The bundled file is 200 pixels wide, so a larger PNG or WebP stays sharper in the small plate. SVG files are not accepted. Leave this empty to change only the alt text.';

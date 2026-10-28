@@ -199,8 +199,8 @@ a.card:hover .go{background:var(--mn-lime);transform:rotate(-45deg)}
 .site-header[data-tone="light"]::before,.site-header.is-solid::before{background:rgba(255,255,255,.94);backdrop-filter:saturate(1.4) blur(12px);-webkit-backdrop-filter:saturate(1.4) blur(12px)}
 .lockup{display:flex;align-items:center;gap:14px;text-decoration:none;flex:none}
 .wordmark{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:700;letter-spacing:-.03em;line-height:1}
-.wordmark__mark{width:44px;height:44px;border-radius:50%;background:transparent;display:grid;place-items:center;color:var(--forest-900);flex:none;overflow:hidden}
-.wordmark__mark svg,.wordmark__mark img{width:44px;height:44px;display:block;object-fit:cover}
+.wordmark__mark{width:44px;height:44px;border-radius:0;background:transparent;display:grid;place-items:center;color:inherit;flex:none;overflow:visible}
+.wordmark__mark svg,.wordmark__mark img{width:44px;height:44px;display:block;object-fit:contain}
 .wordmark__text{display:flex;flex-direction:column;gap:3px}
 .wordmark__text b{font-size:17px;font-weight:700}
 .wordmark__text small{font-family:var(--font-mono);font-size:10px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;opacity:.7}
@@ -257,7 +257,7 @@ body.menu-open{overscroll-behavior:none}
 @media (max-width:340px){
   .site-header .wordmark__text{display:none}
 }
-@media (max-width:520px){.logo-plate img{max-width:112px}.wordmark__text small{display:none}.wordmark__text b{font-size:15px}.lockup{gap:10px}.wordmark__mark{width:40px;height:40px}.wordmark__mark img{width:40px;height:40px}}
+@media (max-width:520px){.logo-plate img{max-width:112px}.wordmark__text small{display:none}.wordmark__text b{font-size:15px}.lockup{gap:10px}.wordmark__mark{width:40px;height:40px}.wordmark__mark svg,.wordmark__mark img{width:40px;height:40px}}
 @media (max-width:370px){.lockup__divider{display:none}.logo-plate img{max-width:96px}}
 
 /* Footer ------------------------------------------------------------------ */
@@ -376,8 +376,13 @@ body.menu-open{overscroll-behavior:none}
 .hat-seal--block .community-badge__tagline,
 .login__mark .community-badge__tagline,
 .site-image-preview .community-badge__tagline{position:static;width:auto;height:auto;margin:8px 0 0;overflow:visible;clip:auto;display:inline-block;padding:5px 10px;border-radius:999px;background:#0A1F16;color:#88CC00;border:1px solid #88CC00;font-family:var(--font-body);font-size:10px;font-weight:800;letter-spacing:.1em;line-height:1.2;text-transform:uppercase}
-.community-badge--mark{width:44px;height:44px;overflow:hidden;border-radius:50%}
-.community-badge--mark .community-badge__art{width:44px;height:44px;object-fit:contain}
+.community-badge--mark{width:44px;height:44px;overflow:visible;border-radius:0}
+.community-badge--mark .community-badge__art,.community-badge--mark .hood-mark{width:44px;height:44px}
+.hood-mark{display:block;width:100%;line-height:0;color:inherit}
+.hood-mark svg{display:block;width:100%;height:auto}
+.site-header[data-tone="dark"] .hood-mark{color:#F6F7F2}
+.site-header[data-tone="light"] .hood-mark,.site-header.is-solid .hood-mark{color:var(--ink)}
+.site-footer .hood-mark,.page-hero--dark .hood-mark,.section--dark .hood-mark,.brand-loader--page .hood-mark{color:#F6F7F2}
 .community-badge--custom{width:100%;height:auto;object-fit:contain}
 .hat-seal.community-badge{width:54px}
 .hat-seal--hero.community-badge{width:148px}

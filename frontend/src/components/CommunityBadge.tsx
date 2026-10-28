@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
+import hoodMark from '@/components/hood-mark.svg?raw';
 import { useSiteImage } from '@/hooks/useSiteImages';
 
-/** Photographic community mark. The original is the round white-cap badge. A replacement image is shown on its own. */
+/** Line mark of a hooded figure at a laptop. Strokes follow the surrounding text colour. A replacement image is shown on its own. */
 export function CommunityBadge({ variant = 'full', className = '', label = '', priority = false }: { variant?: 'full' | 'mark'; className?: string; label?: string; priority?: boolean }) {
   const badge = useSiteImage('community-logo');
   const [broken, setBroken] = useState(false);
@@ -21,7 +22,7 @@ export function CommunityBadge({ variant = 'full', className = '', label = '', p
 
   return (
     <span className={classNames} role={named ? 'img' : undefined} aria-label={named ? label : undefined} aria-hidden={named ? undefined : true}>
-      <img className="community-badge__art" src="/assets/logo/community-badge.webp" alt="" width={1024} height={1024} decoding="async" fetchPriority={priority ? 'high' : 'auto'} />
+      <span className="hood-mark" dangerouslySetInnerHTML={{ __html: hoodMark }} />
       {variant === 'full' && tagline ? <span className="community-badge__tagline">{tagline}</span> : null}
     </span>
   );

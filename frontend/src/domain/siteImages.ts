@@ -6,7 +6,7 @@ export const SITE_IMAGE_SLOTS = [
   {
     key: 'community-logo',
     label: 'Community logo',
-    description: 'White-hat community mark: a photograph of a person in a white cap at a laptop, graded in forest and lime inside a round badge. Header, footer, sign-in, admin sidebar, seals, empty states, and the favicon. An uploaded image replaces it. The tagline sits under the larger seals.',
+    description: 'Line mark of a hooded figure at a laptop, in the site forest, paper, and lime colours. Header, footer, sign-in, admin sidebar, seals, empty states, and the favicon. An uploaded image replaces it. The tagline sits under the larger seals.',
     url: '/assets/logo/community-badge.webp',
     alt: 'Cyber Bootcamp community logo',
     width: 1024,
@@ -78,7 +78,7 @@ export interface ResolvedSiteImage {
   srcSet?: string;
   fallbackSrcSet?: string;
   tagline: string;
-  /** The community slot is still the bundled photograph, so the page draws the round badge and its tagline. */
+  /** The community slot is still the bundled file, so the page draws the hood line mark and its tagline. */
   liveBadge: boolean;
 }
 

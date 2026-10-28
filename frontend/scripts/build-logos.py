@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Build logo files for the Cyber Bootcamp site.
 
-The live community mark is the photographic badge from `build-photo-mark.py`.
-`--badge-only` rebuilds that badge, the favicons, and the social card.
+The live community mark is the hood line drawing in `src/components/hood-mark.svg`.
+`--badge-only` rasterises that file into the favicons and the social card.
 
 The rest of this script redraws the older two-hat SVGs. Those are not the
 community logo. That path needs fontTools and Shapely.
@@ -625,10 +625,10 @@ def social_card(badge: Image.Image) -> Image.Image:
 
 
 def build_community_badge() -> None:
-    """Rebuild the photographic community mark. See build-photo-mark.py."""
+    """Rasterise the hood mark. See build-hood-mark.py."""
     import runpy
 
-    runpy.run_path(str(Path(__file__).with_name("build-photo-mark.py")), run_name="__main__")
+    runpy.run_path(str(Path(__file__).with_name("build-hood-mark.py")), run_name="__main__")
 
 
 if __name__ == "__main__":
