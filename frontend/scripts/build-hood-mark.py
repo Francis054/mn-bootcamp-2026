@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Rasterise the original hood mark for favicons and the social card.
 
-The drawing is frontend/src/components/hood-mark.svg. Strokes follow the page
-colour. These files bake the on-dark version: paper lines on forest, lime screen.
+The drawing is frontend/src/components/hood-mark.svg. These files bake the
+paper-white mark on a forest tile for the favicon and social card.
 """
 from __future__ import annotations
 

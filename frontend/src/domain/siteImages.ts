@@ -6,7 +6,7 @@ export const SITE_IMAGE_SLOTS = [
   {
     key: 'community-logo',
     label: 'Community logo',
-    description: 'Line mark of a hooded figure at a laptop, in the site forest, paper, and lime colours. Header, footer, sign-in, admin sidebar, seals, empty states, and the favicon. An uploaded image replaces it. The tagline sits under the larger seals.',
+    description: 'Line mark of a hooded figure at a laptop, drawn in paper white with a dark face void. Header, footer, sign-in, admin sidebar, seals, empty states, and the favicon. On a light header it sits on a forest plate. An uploaded image replaces it. The tagline sits under the larger seals.',
     url: '/assets/logo/community-badge.webp',
     alt: 'Cyber Bootcamp community logo',
     width: 1024,

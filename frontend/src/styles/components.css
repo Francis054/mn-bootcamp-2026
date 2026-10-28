@@ -378,11 +378,18 @@ body.menu-open{overscroll-behavior:none}
 .site-image-preview .community-badge__tagline{position:static;width:auto;height:auto;margin:8px 0 0;overflow:visible;clip:auto;display:inline-block;padding:5px 10px;border-radius:999px;background:#0A1F16;color:#88CC00;border:1px solid #88CC00;font-family:var(--font-body);font-size:10px;font-weight:800;letter-spacing:.1em;line-height:1.2;text-transform:uppercase}
 .community-badge--mark{width:44px;height:44px;overflow:visible;border-radius:0}
 .community-badge--mark .community-badge__art,.community-badge--mark .hood-mark{width:44px;height:44px}
-.hood-mark{display:block;width:100%;line-height:0;color:inherit}
+.hood-mark{display:block;width:100%;line-height:0;color:#F6F7F2}
 .hood-mark svg{display:block;width:100%;height:auto}
-.site-header[data-tone="dark"] .hood-mark{color:#F6F7F2}
-.site-header[data-tone="light"] .hood-mark,.site-header.is-solid .hood-mark{color:var(--ink)}
-.site-footer .hood-mark,.page-hero--dark .hood-mark,.section--dark .hood-mark,.brand-loader--page .hood-mark{color:#F6F7F2}
+.site-header[data-tone="light"] .wordmark__mark,
+.site-header.is-solid .wordmark__mark,
+.page-hero:not(.page-hero--dark) .hat-seal.community-badge,
+.section:not(.section--dark) .eyebrow .hat-seal,
+.login__brand .wordmark__mark,
+.empty .community-badge.empty__mark{background:#0E2A1E;border-radius:50%}
+.site-header[data-tone="light"] .wordmark__mark .hood-mark,
+.site-header.is-solid .wordmark__mark .hood-mark{width:34px;height:34px}
+.page-hero:not(.page-hero--dark) .hat-seal .hood-mark,
+.section:not(.section--dark) .eyebrow .hat-seal .hood-mark{width:78%;margin-inline:auto}
 .community-badge--custom{width:100%;height:auto;object-fit:contain}
 .hat-seal.community-badge{width:54px}
 .hat-seal--hero.community-badge{width:148px}

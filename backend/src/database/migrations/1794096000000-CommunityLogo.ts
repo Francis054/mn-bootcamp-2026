@@ -9,8 +9,11 @@ const SVG_COMMUNITY =
 const PHOTO_COMMUNITY =
   'White-hat community mark: a photograph of a person in a white cap at a laptop, graded in forest and lime inside a round badge. Header, footer, sign-in, admin sidebar, seals, empty states, and the favicon. An uploaded image replaces it. The tagline sits under the larger seals.';
 
-const NEXT_COMMUNITY =
+const LIME_COMMUNITY =
   'Line mark of a hooded figure at a laptop, in the site forest, paper, and lime colours. Header, footer, sign-in, admin sidebar, seals, empty states, and the favicon. An uploaded image replaces it. The tagline sits under the larger seals.';
+
+const NEXT_COMMUNITY =
+  'Line mark of a hooded figure at a laptop, drawn in paper white with a dark face void. Header, footer, sign-in, admin sidebar, seals, empty states, and the favicon. On a light header it sits on a forest plate. An uploaded image replaces it. The tagline sits under the larger seals.';
 
 const PREVIOUS_FOUNDATION =
   'The parent-organisation wordmark. It is drawn inside the community badge, in the header and footer plate, on the sign-in form, in the admin sidebar, on the about page, and in the loader footer. It is not the community logo. A larger PNG or WebP stays sharper. SVG files are not accepted.';
@@ -40,6 +43,10 @@ export class CommunityLogo1794096000000 implements MigrationInterface {
     await queryRunner.query(
       `UPDATE "site_images" SET "description" = $1 WHERE "key" = 'community-logo' AND "description" = $2`,
       [NEXT_COMMUNITY, PHOTO_COMMUNITY],
+    );
+    await queryRunner.query(
+      `UPDATE "site_images" SET "description" = $1 WHERE "key" = 'community-logo' AND "description" = $2`,
+      [NEXT_COMMUNITY, LIME_COMMUNITY],
     );
     await queryRunner.query(
       `UPDATE "site_images" SET "description" = $1 WHERE "key" = 'foundation-logo' AND "description" = $2`,
