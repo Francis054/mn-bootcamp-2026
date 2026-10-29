@@ -3,6 +3,8 @@ import { ApiError } from '../../shared/errors/api-error.js';
 import { requireAuth, requirePermission } from '../auth/require-auth.js';
 import type { SessionService } from '../auth/session.service.js';
 import type { SignupService } from './signup.service.js';
+import { mountPortalPortfolio } from '../portfolio/portfolio.routes.js';
+import type { PortfolioService } from '../portfolio/portfolio.service.js';
 import { mountPortalProfile } from '../trainees/portal-profile.routes.js';
 import type { PortalProfileService } from '../trainees/portal-profile.service.js';
 
@@ -41,11 +43,14 @@ export function mountPortal(
   signup: SignupService,
   sessions: SessionService,
   profiles: PortalProfileService,
+  portfolio: PortfolioService,
   maxBytes: number,
+  videoMaxBytes: number,
 ): void {
   const portal = Router();
   portal.use(requireAuth(sessions), requirePermission('portal.access'));
   mountPortalProfile(portal, profiles, maxBytes);
+  mountPortalPortfolio(portal, portfolio, maxBytes, videoMaxBytes);
   portal.get('/me', (req, res, next) => {
     const user = req.user;
     if (!user) {

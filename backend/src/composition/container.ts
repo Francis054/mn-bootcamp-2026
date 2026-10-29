@@ -59,6 +59,9 @@ import { ProjectService } from '../modules/projects/project.service.js';
 import { TraineeEntity } from '../modules/trainees/trainee.entity.js';
 import { TraineeConsentEntity } from '../modules/trainees/trainee-consent.entity.js';
 import { TraineeConsentRepository } from '../modules/trainees/trainee-consent.repository.js';
+import { CloudinaryStorage } from '../modules/storage/cloudinary-storage.js';
+import { PortfolioRepository } from '../modules/portfolio/portfolio.repository.js';
+import { PortfolioService } from '../modules/portfolio/portfolio.service.js';
 import { PortalProfileService } from '../modules/trainees/portal-profile.service.js';
 import { TraineeRepository } from '../modules/trainees/trainee.repository.js';
 import { TraineeService } from '../modules/trainees/trainee.service.js';
@@ -108,6 +111,7 @@ export class AppContainer {
     timetable: TimetableService,
     signup: SignupService,
     profiles: PortalProfileService,
+    portfolio: PortfolioService,
   ) {
     this.health = new HealthService(dataSource, logger);
     this.users = users;
@@ -133,6 +137,8 @@ export class AppContainer {
       timetable,
       signup,
       profiles,
+      portfolio,
+      env.videoUploadMaxBytes,
     );
   }
 
@@ -298,6 +304,16 @@ export class AppContainer {
       storage,
       env.uploadMaxBytes,
     );
+    const portfolio = new PortfolioService(
+      new PortfolioRepository(dataSource),
+      userRepository,
+      traineeRepository,
+      audit,
+      storage,
+      storage instanceof CloudinaryStorage ? storage : null,
+      env.uploadMaxBytes,
+      env.videoUploadMaxBytes,
+    );
     return new AppContainer(
       env,
       logger,
@@ -321,6 +337,7 @@ export class AppContainer {
       timetable,
       signup,
       profiles,
+      portfolio,
     );
   }
 

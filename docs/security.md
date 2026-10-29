@@ -21,7 +21,9 @@ Cookies:
 
 ## Requests
 
-- JSON bodies are capped at 1 MB. Uploads default to 5 MB and cannot be set above 10 MB (`UPLOAD_MAX_BYTES`).
+- JSON bodies are capped at 1 MB. Image uploads default to 5 MB and cannot be set above 10 MB (`UPLOAD_MAX_BYTES`).
+- Video uploads default to 50 MB and cannot be set above 200 MB (`VIDEO_UPLOAD_MAX_BYTES`). The API checks the declared type (MP4, WebM, or MOV) and size before it will sign an upload. When Cloudinary is configured, the browser sends the file straight to Cloudinary’s video endpoint. The API then reads the stored object back and keeps it only if the format and size match. The file is not buffered in the API process on that path. Development and tests, which keep files in memory, accept the bytes on the API and sniff them. A video link may only be YouTube, Vimeo, or Loom. The page builds the official embed (`youtube-nocookie`, Vimeo with `dnt=1`, or Loom’s embed). It does not iframe an address the trainee typed.
+- The API content security policy allows frames only from `https://www.youtube-nocookie.com`, `https://player.vimeo.com`, and `https://www.loom.com`, and images and video from this site and `https://res.cloudinary.com`. The public site sends the same frame allow-list in a meta policy. Other iframes are refused.
 - Page reads, including public pages and `GET /api/v1/auth/session`, allow 600 requests per 60 seconds per visitor. If `RATE_LIMIT_MAX` is set higher than 600, reads use that higher number instead. Sign-in, password reset, uploads, and other writes stay on `RATE_LIMIT_MAX` (300 per 60 seconds per visitor when it is unset). `GET /api/v1/health` is not counted. Leave `TRUST_PROXY` true on Render so each visitor is counted separately, not as one shared address. The limit is stored under both the current name and the older `max` name, so an older copy of the rate-limit library cannot fall back to 5 requests.
 - Sign-in failures lock a mailbox after 5 failures for 60 seconds, and an address after 30 failures. The error does not say whether the mailbox exists.
 - Unsafe methods that present `mn_session` must send `X-CSRF-Token` equal to `mn_csrf`. A mismatch is 403.

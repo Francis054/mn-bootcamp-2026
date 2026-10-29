@@ -172,6 +172,12 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
      Example: 5242880
      That is 5 MB, which is also the default if you leave it blank.
 
+   VIDEO_UPLOAD_MAX_BYTES
+     What: largest trainee video upload, in bytes. The ceiling is 209715200 (200 MB).
+     Example: 52428800
+     That is 50 MB, which is also the default if you leave it blank.
+     When Cloudinary is set, the browser uploads the file directly. This API does not buffer it.
+
    CLOUDINARY_CLOUD_NAME
      What: which Cloudinary account receives photos.
      Value you already have: i5rrintk

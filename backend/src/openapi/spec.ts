@@ -9,6 +9,7 @@ import { projectPaths, projectSchemas } from './project-docs.js';
 import { traineePaths, traineeSchemas } from './trainee-docs.js';
 import { timetablePaths, timetableSchemas } from './timetable-docs.js';
 import { portalPaths, portalSchemas } from './portal-docs.js';
+import { portfolioPaths, portfolioSchemas } from './portfolio-docs.js';
 
 export const openApiSpec = {
   openapi: '3.0.3',
@@ -130,6 +131,7 @@ export const openApiSpec = {
     ...accountPaths,
     ...timetablePaths,
     ...portalPaths,
+    ...portfolioPaths,
   },
   components: {
     schemas: {
@@ -232,6 +234,7 @@ export const openApiSpec = {
       ...accountSchemas,
       ...timetableSchemas,
       ...portalSchemas,
+      ...portfolioSchemas,
     },
   },
 };

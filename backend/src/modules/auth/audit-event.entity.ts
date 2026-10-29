@@ -19,6 +19,10 @@ const PORTAL_AUDIT_ACTIONS = [
   'portal.profile.admin_updated',
   'portal.photo.changed',
   'portal.consent.changed',
+  'portal.portfolio.approved',
+  'portal.portfolio.rejected',
+  'portal.portfolio.admin_updated',
+  'portal.portfolio.deleted',
 ] as const;
 
 const ACCOUNT_AUDIT_ACTIONS = [

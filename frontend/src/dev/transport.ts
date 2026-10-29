@@ -13,6 +13,7 @@ import { readWorkPhotoDataUrl, workPhotoFieldErrors, workPhotoFileError } from '
 import { clearSession, markSessionExpired, readActiveSession, setSession } from './session';
 import { resetTraineeAuthDev, traineeAuthRoute } from './trainee-auth';
 import { portalProfileRoute, resetPortalProfileDev } from './portal-profile';
+import { portfolioRoute, resetPortfolioDev } from './portfolio';
 import { getState, updateState } from './store';
 import { isAdminTimetablePath, isPublicTimetablePath, NOT_HANDLED, resetTimetableStore, timetableRoute } from './timetable-store';
 
@@ -31,6 +32,7 @@ export function resetDevTransport(): void {
   resetTimetableStore();
   resetTraineeAuthDev();
   resetPortalProfileDev();
+  resetPortfolioDev();
 }
 
 function takeArmed(): void {
@@ -138,6 +140,8 @@ export async function devTransport<T>(req: ApiRequest): Promise<T> {
   const method = req.method;
   const portalProfile = await portalProfileRoute(method, path, req.body);
   if (portalProfile !== undefined) return portalProfile as T;
+  const portfolio = await portfolioRoute(method, path, req.body);
+  if (portfolio !== undefined) return portfolio as T;
   if (method === 'POST' && path === '/admin/trainees/photo') {
     return (await storeTraineePhoto(req.body)) as T;
   }

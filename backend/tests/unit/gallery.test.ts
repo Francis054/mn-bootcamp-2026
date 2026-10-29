@@ -105,6 +105,49 @@ describe('image storage', () => {
     expect(seen).toEqual(['https://api.cloudinary.com/v1_1/example-cloud/image/upload']);
   });
 
+  it('signs a direct video upload without putting the secret in the URL', () => {
+    const storage = new CloudinaryStorage({
+      cloudName: 'example-cloud',
+      apiKey: 'key-value',
+      apiSecret: 'secret-value',
+    });
+    const signed = storage.signVideoUpload('mn-video-1', 10_000);
+    expect(signed.uploadUrl).toBe('https://api.cloudinary.com/v1_1/example-cloud/video/upload');
+    expect(signed.uploadUrl).not.toContain('secret-value');
+    expect(signed.fields.public_id).toBe('mn-video-1');
+    expect(signed.fields.api_key).toBe('key-value');
+    expect(signed.fields.signature).toBe(sign({ public_id: 'mn-video-1', timestamp: '10' }, 'secret-value'));
+    expect(JSON.stringify(signed.fields)).not.toContain('secret-value');
+  });
+
+  it('confirms a stored video from the admin API and does not put the secret in the URL', async () => {
+    const seen: string[] = [];
+    const storage = new CloudinaryStorage({
+      cloudName: 'example-cloud',
+      apiKey: 'key-value',
+      apiSecret: 'secret-value',
+      fetchImpl: (input) => {
+        seen.push(requestUrl(input));
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              secure_url: 'https://res.cloudinary.com/example-cloud/video/upload/mn-video-1.mp4',
+              bytes: 20,
+              format: 'mp4',
+              resource_type: 'video',
+            }),
+            { status: 200 },
+          ),
+        );
+      },
+    });
+    const described = await storage.describeVideo('mn-video-1');
+    expect(described?.format).toBe('mp4');
+    expect(described?.bytes).toBe(20);
+    expect(seen[0]).toBe('https://api.cloudinary.com/v1_1/example-cloud/resources/video/upload/mn-video-1');
+    expect(seen[0]).not.toContain('secret-value');
+  });
+
   it('turns a refused storage response into a generic error', async () => {
     const storage = new CloudinaryStorage({
       cloudName: 'example-cloud',
