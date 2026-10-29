@@ -13,6 +13,7 @@ import { usePageMeta } from '@/components/SiteChrome';
 import { ALBUM_LABEL, MODULES } from '@/dev/fixtures';
 import { usesMockApi } from '@/config/runtime';
 import { APP_TODAY, parseUtcDate } from '@/domain/format';
+import { cvRequestAllowed, isSafeCvDownloadPath, readPublicCv } from '@/domain/cv';
 import { isApiError } from '@/domain/types';
 import { collect, emailAddress, minLength, required } from '@/domain/validate';
 import { usePublicContent } from '@/hooks/useContent';
@@ -89,6 +90,7 @@ export function TraineePage() {
               {trainee.githubUrl ? <a className="btn btn--ghost btn--sm" href={trainee.githubUrl} rel="noopener noreferrer nofollow" target="_blank">GitHub</a> : null}
               {trainee.portfolio ? <a className="btn btn--ghost btn--sm" href={trainee.portfolio} rel="noopener noreferrer nofollow" target="_blank">Portfolio</a> : null}
               <button className="btn btn--dark btn--sm" type="button" onClick={() => { void navigator.clipboard?.writeText(window.location.href); toast('Link copied', 'This copies the address only. No private fields are included.', 'info'); }}><Icon name="copy" className="i--sm" />Copy profile link</button>
+              <CvOffer traineeId={trainee.id} cv={readPublicCv(trainee.cv)} toast={toast} />
             </div>
           </div>
         </div>
@@ -112,6 +114,45 @@ export function TraineePage() {
     )}
     </PublicGate>
   );
+}
+
+function CvOffer({
+  traineeId,
+  cv,
+  toast,
+}: {
+  traineeId: string;
+  cv: ReturnType<typeof readPublicCv>;
+  toast: (title: string, message?: string, kind?: 'success' | 'error' | 'info') => void;
+}) {
+  if (cv.available && cv.mode === 'public') {
+    return (
+      <button
+        className="btn btn--dark btn--sm"
+        type="button"
+        onClick={() => {
+          void api<{ path: string }>({ method: 'POST', path: `/public/trainees/${traineeId}/cv-link` })
+            .then((link) => {
+              if (!isSafeCvDownloadPath(link.path)) {
+                toast('Download unavailable', 'The link was not a CV download.', 'error');
+                return;
+              }
+              window.location.assign(link.path);
+            })
+            .catch((error: unknown) => {
+              toast('Download unavailable', isApiError(error) ? error.message : 'The CV could not be downloaded.', 'error');
+            });
+        }}
+      >
+        Download CV
+      </button>
+    );
+  }
+  // The request form is PR 5b. This only shows that a request would be allowed.
+  if (cvRequestAllowed(cv)) {
+    return <p className="muted">This trainee can share a CV when someone asks. Asking through the site comes later.</p>;
+  }
+  return null;
 }
 
 export function ProjectsPage() {

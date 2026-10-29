@@ -9,6 +9,11 @@ export function isPublicGetPath(method: string, path: string): boolean {
   return method === 'GET' && (path === '/api/v1/public' || path.startsWith('/api/v1/public/'));
 }
 
+/** CV metadata, signed links, and PDF bytes stay out of the public cache. */
+export function isUncachedCvPath(path: string): boolean {
+  return /\/cv(\/|$)/.test(path) || path.includes('/cv-link');
+}
+
 export function isPrivateApiPath(path: string): boolean {
   return (
     path === '/api/v1/auth' ||
@@ -32,6 +37,11 @@ export function isPublicWritePath(method: string, path: string): boolean {
  */
 export function cacheControlHeaders(): RequestHandler {
   return (req, res, next) => {
+    if (isUncachedCvPath(req.path)) {
+      res.setHeader('Cache-Control', PRIVATE_CACHE_CONTROL);
+      next();
+      return;
+    }
     if (isPrivateApiPath(req.path) || isPublicWritePath(req.method, req.path)) {
       res.setHeader('Cache-Control', PRIVATE_CACHE_CONTROL);
       next();

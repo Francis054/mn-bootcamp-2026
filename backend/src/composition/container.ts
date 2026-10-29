@@ -52,6 +52,10 @@ import { PendingRegistrationRepository } from '../modules/trainee-auth/pending-r
 import { SignupService } from '../modules/trainee-auth/signup.service.js';
 import { createStorage } from '../modules/storage/create-storage.js';
 import type { StorageProvider } from '../modules/storage/storage-provider.js';
+import { createDocumentStorage } from '../modules/documents/create-document-storage.js';
+import type { DocumentStorage } from '../modules/documents/document-storage.js';
+import { DocumentRepository } from '../modules/documents/document.repository.js';
+import { CvService } from '../modules/documents/cv.service.js';
 import { ProjectEntity } from '../modules/projects/project.entity.js';
 import { liveRepositoryVisibility } from '../modules/projects/project-url.js';
 import { ProjectRepository } from '../modules/projects/project.repository.js';
@@ -88,6 +92,7 @@ export class AppContainer {
   readonly authRouter: Router;
   readonly curriculumRouter: Router;
   readonly storage: StorageProvider;
+  readonly documents: DocumentStorage;
   readonly mail: EmailProvider;
 
   constructor(
@@ -106,6 +111,7 @@ export class AppContainer {
     workPhotos: WorkPhotoService,
     siteImages: SiteImageService,
     storage: StorageProvider,
+    documents: DocumentStorage,
     content: ContentService,
     mail: EmailProvider,
     accounts: AccountService,
@@ -115,11 +121,13 @@ export class AppContainer {
     profiles: PortalProfileService,
     portfolio: PortfolioService,
     progress: ProgressService,
+    cvs: CvService,
   ) {
     this.health = new HealthService(dataSource, logger);
     this.users = users;
     this.sessions = sessions;
     this.storage = storage;
+    this.documents = documents;
     this.mail = mail;
     this.authRouter = authRouter(auth, sessions, accounts);
     this.curriculumRouter = curriculumRouter(
@@ -143,6 +151,7 @@ export class AppContainer {
       portfolio,
       env.videoUploadMaxBytes,
       progress,
+      cvs,
     );
   }
 
@@ -232,6 +241,19 @@ export class AppContainer {
       accraToday,
     );
     const storage = createStorage(env);
+    const documents = createDocumentStorage(env);
+    const cvs = new CvService(
+      new DocumentRepository(dataSource),
+      userRepository,
+      traineeRepository,
+      audit,
+      documents,
+      env.sessionSecret,
+      env.cvLinkTtlMs,
+      env.cvUploadMax,
+      env.cvDownloadMax,
+      env.cvRateWindowMs,
+    );
     const consentRepository = new TraineeConsentRepository(
       dataSource.getRepository(TraineeConsentEntity),
     );
@@ -346,6 +368,7 @@ export class AppContainer {
       workPhotoService,
       siteImageService,
       storage,
+      documents,
       contentService,
       mail,
       accounts,
@@ -355,6 +378,7 @@ export class AppContainer {
       profiles,
       portfolio,
       progress,
+      cvs,
     );
   }
 

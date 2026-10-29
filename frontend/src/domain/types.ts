@@ -1,5 +1,7 @@
 /** Frontend models for the `/api/v1` contract. The live client sends cookies, not stored tokens. */
 
+import type { PublicCv } from './cv';
+
 export type Role = 'trainee' | 'trainer' | 'viewer' | 'editor' | 'administrator';
 
 export type Permission =
@@ -93,6 +95,8 @@ export type PublicTrainee = Omit<Trainee, 'email' | 'internalNotes' | 'linkedin'
   linkedin?: string;
   githubUrl?: string;
   portfolio?: string;
+  /** Whether a CV can be downloaded or requested. Never a file address. */
+  cv?: PublicCv;
 };
 
 export interface Project {

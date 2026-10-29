@@ -15,6 +15,7 @@ import { resetTraineeAuthDev, traineeAuthRoute } from './trainee-auth';
 import { portalProfileRoute, resetPortalProfileDev } from './portal-profile';
 import { portfolioRoute, resetPortfolioDev } from './portfolio';
 import { progressRoute, resetProgressDev } from './progress';
+import { cvRoute, publicCvFor, resetCvDev } from './cv';
 import { getState, updateState } from './store';
 import { isAdminTimetablePath, isPublicTimetablePath, NOT_HANDLED, resetTimetableStore, timetableRoute } from './timetable-store';
 
@@ -35,6 +36,7 @@ export function resetDevTransport(): void {
   resetPortalProfileDev();
   resetPortfolioDev();
   resetProgressDev();
+  resetCvDev();
 }
 
 function takeArmed(): void {
@@ -146,6 +148,8 @@ export async function devTransport<T>(req: ApiRequest): Promise<T> {
   if (portfolio !== undefined) return portfolio as T;
   const progress = await progressRoute(method, path, req.body);
   if (progress !== undefined) return progress as T;
+  const cv = await cvRoute(method, path, req.body);
+  if (cv !== undefined) return cv as T;
   if (method === 'POST' && path === '/admin/trainees/photo') {
     return (await storeTraineePhoto(req.body)) as T;
   }
@@ -221,8 +225,14 @@ async function route(method: string, path: string, query: ListQuery & Record<str
   if (method === 'GET' && path === '/public/milestones') return getState().milestones;
   if (method === 'GET' && path === '/public/classes') return getState().lessons.filter(isPubliclyListable).map(toPublicLesson);
   if (method === 'GET' && path.startsWith('/public/classes/')) return publicOne(getState().lessons, path.split('/')[3] ?? '', toPublicLesson);
-  if (method === 'GET' && path === '/public/trainees') return getState().trainees.filter(isPubliclyListable).map(toPublicTrainee);
-  if (method === 'GET' && path.startsWith('/public/trainees/')) return publicOne(getState().trainees, path.split('/')[3] ?? '', toPublicTrainee);
+  if (method === 'GET' && path === '/public/trainees') {
+    return getState().trainees.filter(isPubliclyListable).map((row) => ({ ...toPublicTrainee(row), cv: publicCvFor(row.id) }));
+  }
+  if (method === 'GET' && /^\/public\/trainees\/[^/]+$/.test(path)) {
+    const traineeId = decodeURIComponent(path.split('/')[3] ?? '');
+    const one = publicOne(getState().trainees, traineeId, toPublicTrainee);
+    return { ...one, cv: publicCvFor(traineeId) };
+  }
   if (method === 'GET' && path === '/public/projects') return getState().projects.filter(isPubliclyListable).map(toPublicProject);
   if (method === 'GET' && path.startsWith('/public/projects/')) return publicOne(getState().projects, path.split('/')[3] ?? '', toPublicProject);
   if (method === 'GET' && path === '/public/events') return getState().events.filter(isPubliclyListable).map(toPublicEvent);

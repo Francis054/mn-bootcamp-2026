@@ -31,6 +31,12 @@ const PORTAL_AUDIT_ACTIONS = [
   'portal.event.rejected',
   'portal.event.admin_updated',
   'portal.event.deleted',
+  'portal.cv.uploaded',
+  'portal.cv.replaced',
+  'portal.cv.removed',
+  'portal.cv.approved',
+  'portal.cv.rejected',
+  'portal.cv.visibility',
 ] as const;
 
 const ACCOUNT_AUDIT_ACTIONS = [

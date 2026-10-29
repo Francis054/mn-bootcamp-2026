@@ -219,3 +219,22 @@ The logo and the built-in page photographs. Anyone can read them. The list uses 
 | DELETE | `/api/v1/admin/enquiries/{id}` | `users.manage` |
 
 There is no public registration. There is no `POST /auth/session/expire`.
+
+## Trainee CVs
+
+One current PDF per trainee, at most 5 MB and 10 pages. A replacement deletes the previous file. A new file waits for review. The public trainee payload adds `cv` with `available` and `mode` only. It never includes a file address. A public download works only when the profile is public, the CV is approved, and the trainee chose public. The link lasts five minutes and the PDF is sent as an attachment. Asking for an on-request CV is not part of this API yet.
+
+| Method | Path | Who |
+| --- | --- | --- |
+| GET, POST, PATCH, DELETE | `/api/v1/portal/cv` | The signed-in trainee |
+| GET | `/api/v1/portal/cv/file` | The signed-in trainee |
+| POST | `/api/v1/public/trainees/{id}/cv-link` | Anyone, only for a public approved CV |
+| GET | `/api/v1/public/cv/{token}` | Anyone with a live signed link |
+| GET | `/api/v1/admin/review-queue/cvs` | Staff who can read the admin area |
+| POST | `/api/v1/admin/review-queue/cvs/{id}/approve` | Editor or administrator |
+| POST | `/api/v1/admin/review-queue/cvs/{id}/reject` | Editor or administrator |
+| GET | `/api/v1/admin/trainees/{traineeId}/cv` | Staff who can read the admin area |
+| GET | `/api/v1/admin/trainees/{traineeId}/cv/file` | Administrator |
+| POST, DELETE | `/api/v1/admin/trainees/{traineeId}/cv` | Administrator |
+
+`POST` upload is `multipart/form-data` with `file` and an optional `visibility` of `private`, `on_request`, or `public`. These responses are not cached.

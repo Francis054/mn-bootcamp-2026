@@ -42,6 +42,18 @@ export interface AppEnv {
   cloudinaryCloudName?: string;
   cloudinaryApiKey?: string;
   cloudinaryApiSecret?: string;
+  /** Origin only. The service role key never belongs in a `VITE_` variable. */
+  supabaseUrl?: string;
+  supabaseServiceRoleKey?: string;
+  /** Private bucket. The hosted default is `trainee-cvs`. */
+  cvBucket: string;
+  /** CV uploads allowed per visitor in `cvRateWindowMs`. Stricter than the general write limit. */
+  cvUploadMax: number;
+  /** CV downloads and signed links allowed per visitor in `cvRateWindowMs`. */
+  cvDownloadMax: number;
+  cvRateWindowMs: number;
+  /** Lifetime of a public CV download link. Five minutes unless the host sets another value. */
+  cvLinkTtlMs: number;
   resendApiKey?: string;
   emailFrom?: string;
   /** Closed signup. Only `roster` is implemented. */
@@ -144,6 +156,42 @@ export function loadEnv(
       'CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET must all be set, or all left blank.',
     );
   }
+  const supabaseUrl = readSupabaseUrl(source.SUPABASE_URL, problems);
+  const supabaseServiceRoleKey = readServiceRoleKey(source.SUPABASE_SERVICE_ROLE_KEY, problems);
+  const supabaseCount = [supabaseUrl, supabaseServiceRoleKey].filter(
+    (value) => value !== undefined,
+  ).length;
+  if (supabaseCount === 1) {
+    problems.push(
+      'SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must both be set, or both left blank.',
+    );
+  }
+  const cvBucket = readCvBucket(source.CV_BUCKET, problems);
+  const cvUploadMax = readBoundedInt(source.CV_UPLOAD_MAX, 8, 1, 100, 'CV_UPLOAD_MAX', problems);
+  const cvDownloadMax = readBoundedInt(
+    source.CV_DOWNLOAD_MAX,
+    30,
+    1,
+    300,
+    'CV_DOWNLOAD_MAX',
+    problems,
+  );
+  const cvRateWindowMs = readBoundedInt(
+    source.CV_RATE_WINDOW_MS,
+    900_000,
+    1_000,
+    86_400_000,
+    'CV_RATE_WINDOW_MS',
+    problems,
+  );
+  const cvLinkTtlMs = readBoundedInt(
+    source.CV_LINK_TTL_MS,
+    300_000,
+    1_000,
+    900_000,
+    'CV_LINK_TTL_MS',
+    problems,
+  );
   const resendApiKey = readOptional(source.RESEND_API_KEY);
   const emailFrom = readOptional(source.EMAIL_FROM);
   const resendCount = [resendApiKey, emailFrom].filter((value) => value !== undefined).length;
@@ -177,6 +225,11 @@ export function loadEnv(
     loginIpFailureLimit,
     uploadMaxBytes,
     videoUploadMaxBytes,
+    cvBucket,
+    cvUploadMax,
+    cvDownloadMax,
+    cvRateWindowMs,
+    cvLinkTtlMs,
     traineeSignupMode,
     devMailLog,
   };
@@ -185,6 +238,8 @@ export function loadEnv(
   if (cloudinaryCloudName !== undefined) env.cloudinaryCloudName = cloudinaryCloudName;
   if (cloudinaryApiKey !== undefined) env.cloudinaryApiKey = cloudinaryApiKey;
   if (cloudinaryApiSecret !== undefined) env.cloudinaryApiSecret = cloudinaryApiSecret;
+  if (supabaseUrl !== undefined) env.supabaseUrl = supabaseUrl;
+  if (supabaseServiceRoleKey !== undefined) env.supabaseServiceRoleKey = supabaseServiceRoleKey;
   if (resendApiKey !== undefined) env.resendApiKey = resendApiKey;
   if (emailFrom !== undefined) env.emailFrom = emailFrom;
   return env;
@@ -434,6 +489,69 @@ function readVideoMax(raw: string | undefined, problems: string[]): number {
   if (value < 1 || value > VIDEO_MAX_CEILING) {
     problems.push('VIDEO_UPLOAD_MAX_BYTES must be a whole number from 1 to 209715200.');
     return VIDEO_MAX_DEFAULT;
+  }
+  return value;
+}
+
+function readSupabaseUrl(raw: string | undefined, problems: string[]): string | undefined {
+  const value = raw?.trim() ?? '';
+  if (value === '') return undefined;
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    problems.push('SUPABASE_URL must be an https origin.');
+    return undefined;
+  }
+  if (parsed.protocol !== 'https:' || parsed.username !== '' || parsed.password !== '') {
+    problems.push('SUPABASE_URL must be an https origin.');
+    return undefined;
+  }
+  if (parsed.pathname !== '/' && parsed.pathname !== '') {
+    problems.push('SUPABASE_URL must be an https origin.');
+    return undefined;
+  }
+  return parsed.origin;
+}
+
+function readServiceRoleKey(raw: string | undefined, problems: string[]): string | undefined {
+  const value = raw?.trim() ?? '';
+  if (value === '') return undefined;
+  if (value.length < 20 || /\s/.test(value)) {
+    problems.push(
+      'SUPABASE_SERVICE_ROLE_KEY must be the service role key from the Supabase dashboard.',
+    );
+    return undefined;
+  }
+  return value;
+}
+
+function readCvBucket(raw: string | undefined, problems: string[]): string {
+  const value = raw?.trim() || 'trainee-cvs';
+  if (!/^[a-z0-9][a-z0-9-]{1,62}$/.test(value)) {
+    problems.push('CV_BUCKET must be a short lowercase name such as trainee-cvs.');
+    return 'trainee-cvs';
+  }
+  return value;
+}
+
+function readBoundedInt(
+  raw: string | undefined,
+  fallback: number,
+  min: number,
+  max: number,
+  name: string,
+  problems: string[],
+): number {
+  if (raw === undefined || raw.trim() === '') return fallback;
+  if (!/^[0-9]+$/.test(raw.trim())) {
+    problems.push(`${name} must be a whole number from ${min} to ${max}.`);
+    return fallback;
+  }
+  const value = Number(raw.trim());
+  if (value < min || value > max) {
+    problems.push(`${name} must be a whole number from ${min} to ${max}.`);
+    return fallback;
   }
   return value;
 }

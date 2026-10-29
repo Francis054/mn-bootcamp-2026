@@ -1,3 +1,4 @@
+import { readPublicCv } from './cv';
 import { displayPhotoUrl } from './photo';
 import type {
   AboutContent,
@@ -162,6 +163,7 @@ export function normalizeTrainees(value: unknown): PublicTrainee[] {
       listing: listing(row.listing),
       publicationStatus: status(row.publicationStatus),
       statusLabel: text(row.statusLabel, 'In training'),
+      cv: readPublicCv(row.cv),
     }];
   });
 }

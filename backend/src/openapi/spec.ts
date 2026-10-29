@@ -11,6 +11,7 @@ import { timetablePaths, timetableSchemas } from './timetable-docs.js';
 import { portalPaths, portalSchemas } from './portal-docs.js';
 import { portfolioPaths, portfolioSchemas } from './portfolio-docs.js';
 import { progressPaths, progressSchemas } from './progress-docs.js';
+import { cvPaths, cvSchemas } from './cv-docs.js';
 
 export const openApiSpec = {
   openapi: '3.0.3',
@@ -134,6 +135,7 @@ export const openApiSpec = {
     ...portalPaths,
     ...portfolioPaths,
     ...progressPaths,
+    ...cvPaths,
   },
   components: {
     schemas: {
@@ -238,6 +240,7 @@ export const openApiSpec = {
       ...portalSchemas,
       ...portfolioSchemas,
       ...progressSchemas,
+      ...cvSchemas,
     },
   },
 };

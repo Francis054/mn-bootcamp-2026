@@ -15,6 +15,7 @@ import { isApiError, type SessionUser } from '@/domain/types';
 import { CONSENT_WORDING, githubProblem, linkedinProblem, type PortalProfile, type ProfileFields } from '@/domain/portalProfile';
 import { collect, emailAddress, minLength, newPassword, required } from '@/domain/validate';
 import { clearSession, rememberSignedIn } from '@/dev/session';
+import { CvEditor } from '@/pages/portal/CvEditor';
 import { PortfolioEditor } from '@/pages/portal/PortfolioEditor';
 import { ProgressEditor } from '@/pages/portal/ProgressEditor';
 
@@ -471,9 +472,7 @@ export function PortalHomePage() {
               <ProfileEditor />
               <PortfolioEditor />
               <ProgressEditor />
-              <div className="portal-grid">
-                <section className="portal-card"><h2>CV</h2><p>Coming next. Your CV stays private until you choose otherwise.</p></section>
-              </div>
+              <CvEditor />
               {!me ? <EmptyState icon="users" title="Nothing to show yet" text="Sign in again if this stays empty." /> : null}
             </>
           ) : null}

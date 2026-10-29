@@ -180,7 +180,7 @@ export const traineeSchemas = {
   PublicTrainee: {
     type: 'object',
     description:
-      'A trainee without email, linkedin, portfolio, internalNotes, photoStorageKey, consentReceived, or consent bookkeeping. photoUrl is null until a photo is saved.',
+      'A trainee without email, linkedin, portfolio, internalNotes, photoStorageKey, consentReceived, or consent bookkeeping. photoUrl is null until a photo is saved. cv says only whether a CV can be downloaded or requested. It is never a file address.',
     required: [
       'id',
       'displayName',
@@ -210,6 +210,7 @@ export const traineeSchemas = {
       listing: { type: 'string' },
       publicationStatus: { type: 'string' },
       statusLabel: { type: 'string' },
+      cv: { $ref: '#/components/schemas/PublicCv' },
     },
   },
 };

@@ -4,7 +4,13 @@ import type { ReviewStatus } from './profile-review.js';
 /** Wording trainees see and that each consent row stores. No age or retention term. */
 export const CONSENT_POLICY_VERSION = '2026-10-28';
 
-export const CONSENT_SCOPES = ['public_profile', 'public_photo', 'contact_relay'] as const;
+export const CONSENT_SCOPES = [
+  'public_profile',
+  'public_photo',
+  'contact_relay',
+  'cv_public',
+  'cv_on_request',
+] as const;
 export type ConsentScope = (typeof CONSENT_SCOPES)[number];
 
 export const CONSENT_WORDING: Record<ConsentScope, string> = {
@@ -14,6 +20,10 @@ export const CONSENT_WORDING: Record<ConsentScope, string> = {
     'I agree that my profile photo may appear on the public bootcamp site after an administrator approves it.',
   contact_relay:
     'I agree that employers may contact me through the bootcamp site. My email address stays hidden.',
+  cv_public:
+    'I agree that my CV may be downloaded from the public bootcamp site after an administrator approves it.',
+  cv_on_request:
+    'I agree that my CV may be shared when someone asks through the bootcamp site, after an administrator approves it. The file stays off the public page until I choose public.',
 };
 
 export function isConsentScope(value: string): value is ConsentScope {

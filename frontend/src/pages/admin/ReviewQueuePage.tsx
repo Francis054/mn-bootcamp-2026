@@ -8,6 +8,7 @@ import type { ProfileFields, ReviewStatus } from '@/domain/portalProfile';
 import { KIND_LABEL, type PortfolioContent, type PortfolioReviewShape } from '@/domain/portfolio';
 import type { EventContent, ProgressReview, SkillContent } from '@/domain/progress';
 import { EventReviewList, SkillReviewList } from '@/pages/admin/ProgressReview';
+import { CvReviewList, type CvQueueItem } from '@/pages/admin/TraineeCvPanel';
 import { useAsync } from '@/hooks/useAsync';
 import { useAuth } from '@/auth/AuthProvider';
 
@@ -26,16 +27,60 @@ export function ReviewQueuePage() {
   const toast = useToast();
   const auth = useAuth();
   const writable = auth.allowed('content.write');
+  const administrator = auth.role === 'administrator';
   const [nonce, setNonce] = useState(0);
   const [busy, setBusy] = useState('');
   const [reasons, setReasons] = useState<Record<string, string>>({});
+  const [cvReasons, setCvReasons] = useState<Record<string, string>>({});
   const [edits, setEdits] = useState<Record<string, ProfileFields>>({});
   const record = useAsync(`review:${nonce}`, () => api<ReviewItem[]>({ method: 'GET', path: '/admin/review-queue' }));
   const items = useAsync(`review-items:${nonce}`, () => api<PortfolioReviewShape[]>({ method: 'GET', path: '/admin/review-queue/items' }));
   const skills = useAsync(`review-skills:${nonce}`, () => api<Array<ProgressReview<SkillContent> & { id: string }>>({ method: 'GET', path: '/admin/review-queue/skills' }));
   const events = useAsync(`review-events:${nonce}`, () => api<Array<ProgressReview<EventContent>>>({ method: 'GET', path: '/admin/review-queue/events' }));
+  const cvs = useAsync(`review-cvs:${nonce}`, () => api<CvQueueItem[]>({ method: 'GET', path: '/admin/review-queue/cvs' }));
   usePageMeta('Review queue');
   const reload = () => setNonce((value) => value + 1);
+  const approveCv = async (item: CvQueueItem) => {
+    setBusy(item.id);
+    try {
+      await api({ method: 'POST', path: `/admin/review-queue/cvs/${item.id}/approve` });
+      toast('CV approved', 'It can be downloaded publicly only if the trainee chose public.', 'success');
+      reload();
+    } catch (error) {
+      toast('Could not approve', isApiError(error) ? error.message : 'Request failed.', 'error');
+    } finally {
+      setBusy('');
+    }
+  };
+  const rejectCv = async (item: CvQueueItem) => {
+    const reason = (cvReasons[item.id] ?? '').trim();
+    if (!reason) {
+      toast('Add a reason', 'The trainee will see this reason.', 'error');
+      return;
+    }
+    setBusy(item.id);
+    try {
+      await api({ method: 'POST', path: `/admin/review-queue/cvs/${item.id}/reject`, body: { reason } });
+      toast('CV rejected', 'The trainee can upload another PDF.', 'success');
+      reload();
+    } catch (error) {
+      toast('Could not reject', isApiError(error) ? error.message : 'Request failed.', 'error');
+    } finally {
+      setBusy('');
+    }
+  };
+  const removeCv = async (item: CvQueueItem) => {
+    setBusy(item.id);
+    try {
+      await api({ method: 'DELETE', path: `/admin/trainees/${item.traineeId}/cv` });
+      toast('CV removed', 'The file has been deleted.', 'success');
+      reload();
+    } catch (error) {
+      toast('Could not remove', isApiError(error) ? error.message : 'Request failed.', 'error');
+    } finally {
+      setBusy('');
+    }
+  };
   const approve = async (item: ReviewItem) => {
     setBusy(item.traineeId);
     try {
@@ -71,13 +116,14 @@ export function ReviewQueuePage() {
   };
   return (
     <>
-      <div className="a-head"><div><h1>Review queue</h1><p>Profiles, portfolio items, skills, and events a trainee submitted. The last approved version stays on the public site until you approve the new one.</p></div></div>
-      {record.loading || items.loading || skills.loading || events.loading ? <LoadingRows /> : null}
+      <div className="a-head"><div><h1>Review queue</h1><p>Profiles, portfolio items, skills, events, and CVs a trainee submitted. The last approved version stays on the public site until you approve the new one.</p></div></div>
+      {record.loading || items.loading || skills.loading || events.loading || cvs.loading ? <LoadingRows /> : null}
       {record.error ? <ErrorState title="Could not load the review queue" text={record.error.message} /> : null}
       {items.error ? <ErrorState title="Could not load portfolio items" text={items.error.message} /> : null}
       {skills.error ? <ErrorState title="Could not load skills" text={skills.error.message} /> : null}
       {events.error ? <ErrorState title="Could not load events" text={events.error.message} /> : null}
-      {!record.loading && !items.loading && !skills.loading && !events.loading && record.data && !record.data.length && items.data && !items.data.length && skills.data && !skills.data.length && events.data && !events.data.length ? <EmptyState icon="users" title="Nothing is waiting" text="When a trainee submits a profile, a portfolio item, a skill, or an event, it is listed here." /> : null}
+      {cvs.error ? <ErrorState title="Could not load CVs" text={cvs.error.message} /> : null}
+      {!record.loading && !items.loading && !skills.loading && !events.loading && !cvs.loading && record.data && !record.data.length && items.data && !items.data.length && skills.data && !skills.data.length && events.data && !events.data.length && cvs.data && !cvs.data.length ? <EmptyState icon="users" title="Nothing is waiting" text="When a trainee submits a profile, a portfolio item, a skill, an event, or a CV, it is listed here." /> : null}
       <div className="review-list">
         {record.data?.map((item) => {
           const draft = edits[item.traineeId] ?? item.draft;
@@ -113,6 +159,17 @@ export function ReviewQueuePage() {
       </div>
       <SkillReviewList rows={skills.data ?? []} writable={writable} busy={busy} setBusy={setBusy} reload={reload} toast={toast} />
       <EventReviewList rows={events.data ?? []} writable={writable} busy={busy} setBusy={setBusy} reload={reload} toast={toast} />
+      <CvReviewList
+        rows={cvs.data ?? []}
+        writable={writable}
+        administrator={administrator}
+        busy={busy}
+        reasons={cvReasons}
+        setReasons={setCvReasons}
+        onApprove={(item) => void approveCv(item)}
+        onReject={(item) => void rejectCv(item)}
+        onRemove={(item) => void removeCv(item)}
+      />
       <PortfolioReviewList
         rows={items.data ?? []}
         writable={writable}
