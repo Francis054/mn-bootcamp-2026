@@ -1,17 +1,19 @@
-# Typecheck, lint, test, and build on every pull request to main.
+# Typecheck, lint, test, and build on pull requests and pushes to dev and main.
 # This does not deploy and does not use production credentials.
 
 name: CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [dev, main]
+  push:
+    branches: [dev, main]
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number }}
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:

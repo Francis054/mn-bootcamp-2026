@@ -15,11 +15,11 @@ async function revealHeader(page: Page) {
     window.scrollTo(0, Math.max(max, 900));
   });
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(640);
-  // The bar hides on the way down and stays hidden near the bottom. Scroll back
-  // above that threshold so the links can be clicked, while still leaving the page offset.
+  await expect(page.locator('header.site-header')).not.toHaveClass(/is-hidden/);
+  await expect.poll(() => page.evaluate(() => Math.round(document.querySelector('header.site-header')?.getBoundingClientRect().top ?? -1))).toBe(0);
+  // Leave the page offset, not pinned to the bottom, so the next click starts away from the top.
   await page.evaluate(() => window.scrollTo(0, 480));
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(200);
-  await expect(page.locator('header.site-header')).not.toHaveClass(/is-hidden/, { timeout: 5_000 });
 }
 
 async function expectTop(page: Page) {

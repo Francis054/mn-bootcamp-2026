@@ -41,6 +41,8 @@ API web service:
 
 Migrations: Render’s deploy docs say the pre-deploy command is available for paid web services, private services, and background workers (https://render.com/docs/deploys). The Free instance may not show that box. If it does, set it to `npm run migration:run`. If it does not, run that command once from your computer or from the service Shell, with the production `DATABASE_URL` in that shell only. Do not run `npm run seed`.
 
+`PublicRls1794096000000` turns on row level security for every table in `public` and revokes the Supabase Data API roles. Production deploys from `main`, and a free Render service may not run migrations during that deploy. Until `schema_migrations` contains `PublicRls1794096000000`, paste the SQL from `docs/security.md` into the Supabase SQL editor. Running `npm run migration:run` afterwards is safe: the statements can run more than once, and that command records the migration row. Then rerun the Security Advisor. Do not revert this migration on the hosted database.
+
 Static site:
 
 - Root directory `frontend`

@@ -175,6 +175,27 @@ export function HomePage() {
           </div>
         </div>
       </section>
+      <section className="section section--dark" id="gear" aria-labelledby="gear-title">
+        <div className="container">
+          <div className="gear">
+            <div className="gear__copy">
+              <Reveal><span className="eyebrow">Bootcamp gear</span></Reveal>
+              <Reveal><h2 id="gear-title" className="h2">The 2026 white hat.</h2></Reveal>
+              <Reveal><p className="lead">A fedora for the cohort. The name is stitched across the crown, and the year sits on the black band.</p></Reveal>
+              <ul className="gear__facts">
+                <li><span>Crown</span><b>MAXIM NYANSA</b></li>
+                <li><span>Band</span><b>CYBERSECURITY 2026</b></li>
+              </ul>
+            </div>
+            <Reveal as="figure" className="gear__photo" reveal="scale">
+              <picture>
+                <source type="image/webp" srcSet="/assets/gear/bootcamp-hat-800.webp 800w, /assets/gear/bootcamp-hat.webp 1467w" sizes="(max-width: 900px) 92vw, 560px" />
+                <img src="/assets/gear/bootcamp-hat.png" width={1467} height={843} alt="White fedora with MAXIM NYANSA stitched on the crown and CYBERSECURITY 2026 on the black band." loading="lazy" decoding="async" />
+              </picture>
+            </Reveal>
+          </div>
+        </div>
+      </section>
       <section className="section" aria-labelledby="tr-title">
         <div className="container">
           <div className="sec-head">

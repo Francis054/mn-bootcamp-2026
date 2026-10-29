@@ -41,7 +41,7 @@ export class SiteImageEntity {
   @Column({ name: 'default_height', type: 'int' })
   defaultHeight!: number;
 
-  /** Banner drawn on the original community badge. Empty for other slots. */
+  /** Caption under the original community mark. Empty for other slots. */
   @Column({ type: 'varchar', length: 40, default: '' })
   tagline!: string;
 

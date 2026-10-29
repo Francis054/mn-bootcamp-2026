@@ -7,12 +7,13 @@ import {
 /**
  * Replaces the enumerated audit-action check with a name pattern.
  * Later features validate new names in code (`isAuditAction`) and do not
- * rewrite this constraint. Down restores the allow-list from migrations 1–15
- * and deletes only rows whose names are outside that list, so a database
- * that already applied those migrations can move forward and back.
+ * rewrite this constraint. The timestamp is the day after
+ * `PublicRls1794096000000`, so a database that already recorded that
+ * migration still runs this one. Down restores the allow-list from
+ * migrations 1–15 and deletes only rows whose names are outside that list.
  */
-export class AuditActionPattern1794096000000 implements MigrationInterface {
-  name = 'AuditActionPattern1794096000000';
+export class AuditActionPattern1794182400000 implements MigrationInterface {
+  name = 'AuditActionPattern1794182400000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(

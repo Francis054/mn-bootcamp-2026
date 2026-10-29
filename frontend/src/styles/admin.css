@@ -10,8 +10,8 @@ body.admin{background:var(--paper);font-size:15px}
 .admin-sidebar{position:sticky;top:0;height:100vh;background:var(--forest-800);color:#E9F0EA;display:flex;flex-direction:column;overflow:hidden;z-index:60}
 .sb-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:18px 16px 18px 20px;border-bottom:1px solid var(--line-dark);min-height:72px;flex-shrink:0}
 .sb-brand{display:flex;align-items:center;gap:12px;color:#fff;text-decoration:none;min-width:0}
-.sb-brand .wordmark__mark{width:44px;height:44px;border-radius:50%;background:transparent;color:var(--forest-900);display:grid;place-items:center;flex:none;overflow:hidden}
-.sb-brand .wordmark__mark svg,.sb-brand .wordmark__mark img{width:44px;height:44px}
+.sb-brand .wordmark__mark{width:78px;height:44px;border-radius:0;background:transparent;color:#F6F7F2;display:grid;place-items:center;flex:none;overflow:visible}
+.sb-brand .wordmark__mark svg,.sb-brand .wordmark__mark img{width:78px;height:44px;object-fit:contain}
 .sb-brand b{display:block;font-family:var(--font-display);font-size:16px;line-height:1.1;white-space:nowrap}
 .sb-brand small{display:block;font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;color:rgba(233,240,234,.6);text-transform:uppercase;white-space:nowrap}
 .admin-sidebar .icon-btn{color:rgba(233,240,234,.7)}
