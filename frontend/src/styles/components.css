@@ -254,8 +254,15 @@ body.menu-open{overscroll-behavior:none}
   .site-header .wordmark{gap:8px}
   .site-header .wordmark__text b{font-size:14px}
 }
-@media (max-width:340px){
+@media (max-width:640px){
+  .site-header .bar{padding-inline:32px}
   .site-header .wordmark__text{display:none}
+  .site-header .lockup{align-items:center}
+  .site-header .wordmark__mark,
+  .site-header .community-badge--mark,
+  .site-header .wordmark__mark img,
+  .site-header .community-badge--mark .community-badge__art{width:72px;height:40px}
+  .site-header .logo-plate{align-self:center}
 }
 @media (max-width:520px){.logo-plate img{max-width:112px}.wordmark__text small{display:none}.wordmark__text b{font-size:15px}.lockup{gap:10px}.wordmark__mark{width:64px;height:36px}.wordmark__mark svg,.wordmark__mark img{width:64px;height:36px}.community-badge--mark{width:64px;height:36px}}
 @media (max-width:370px){.lockup__divider{display:none}.logo-plate img{max-width:96px}}
