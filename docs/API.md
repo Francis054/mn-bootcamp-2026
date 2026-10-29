@@ -96,6 +96,8 @@ An email already on `trainees` creates or replaces an unverified trainee login a
 
 `GET /portal/portfolio` lists only the signed-in trainee's projects, labs, and case studies, including drafts. Another trainee's item is not found. Pictures go through the same JPEG, PNG, and WebP pipeline as profile photos, with location data removed. A video is either an MP4, WebM, or MOV upload, or a YouTube, Vimeo, or Loom link. Other video hosts are refused. When Cloudinary is configured, the browser uploads the file directly with a short-lived signature and the API confirms the stored format and size. `VIDEO_UPLOAD_MAX_BYTES` defaults to 50 MB and cannot be set above 200 MB. `GET /public/trainees/{id}/portfolio` returns the last approved version only, and only when the profile is public. Pictures and videos are omitted unless the trainee has also agreed to a public photo. `GET /admin/review-queue/items` lists pending items. Approve, reject with a reason, edit, and delete need `content.write` and write an audit row.
 
+`GET /portal/skills` and `GET /portal/events` list only the signed-in trainee's rows, including drafts. Another trainee's id is not found. A skill has a level from 1 (learning) to 4 (can teach) and may cite one of that trainee's portfolio items as evidence. An event has a title, date, organiser, optional https link, and an optional certificate image. The certificate uses the same JPEG, PNG, and WebP checks as a profile photo. Submit needs public-profile consent. `GET /public/trainees/{id}/skills` and `GET /public/trainees/{id}/events` return the last approved version only, and only when the profile is public. The certificate is omitted unless photo consent is on. Evidence is omitted unless that portfolio item has an approved title. `GET /admin/review-queue/skills` and `GET /admin/review-queue/events` list pending rows. Approve, reject, edit, and delete need `content.write` and write an audit row. `GET /progress/trainees` needs `progress.read` and a timetable trainer row linked to that login. It does not include email addresses.
+
 There is no age confirmation and no retention period in this version.
 
 Administrators (`users.manage`) list `GET /admin/pending-registrations`, approve or reject a row, list `GET /admin/trainee-accounts`, and disable, enable, or resend. Approve creates a hidden trainee when the email is not already on the roster, links the login, and sends the confirmation email. `delivered` is false when mail was not accepted. The account still exists. Disable deletes that account's sessions.
@@ -114,7 +116,7 @@ The permission names match `frontend/src/domain/permissions.ts` and `backend/src
 | Role | Permissions |
 | --- | --- |
 | Trainee | `portal.access`, `portal.write`, `account.manage` |
-| Trainer | `account.manage` |
+| Trainer | `account.manage`, `progress.read` |
 | Viewer | `content.read`, `account.manage` |
 | Editor | viewer, plus `content.write`, `media.upload`, `media.write` |
 | Administrator | editor, plus `users.read`, `users.manage`, `settings.manage` |

@@ -7,7 +7,8 @@ import type { Role } from '../users/role.js';
  * `content.read` opens `/api/v1/admin`. Trainee and trainer do not have it,
  * so they cannot read other trainees' private records. `portal.access` opens
  * `/api/v1/portal`. `portal.write` saves the signed-in trainee's own profile,
- * photo, and consent.
+ * photo, consent, skills, and events. `progress.read` lets a trainer whose
+ * login is linked on the timetable read skills and events. It does not open `/admin`.
  */
 export const PERMISSIONS = [
   'content.read',
@@ -20,13 +21,14 @@ export const PERMISSIONS = [
   'account.manage',
   'portal.access',
   'portal.write',
+  'progress.read',
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
 
 export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
   trainee: ['portal.access', 'portal.write', 'account.manage'],
-  trainer: ['account.manage'],
+  trainer: ['account.manage', 'progress.read'],
   viewer: ['content.read', 'account.manage'],
   editor: ['content.read', 'content.write', 'media.upload', 'media.write', 'account.manage'],
   administrator: [

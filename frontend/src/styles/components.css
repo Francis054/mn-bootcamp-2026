@@ -257,6 +257,20 @@ a.card:hover .go{background:var(--mn-lime);transform:rotate(-45deg)}
 .portfolio-public{display:grid;gap:24px;margin-top:8px}
 .portfolio-public__item{display:grid;gap:8px}
 .portfolio-links{display:flex;flex-wrap:wrap;gap:12px}
+.progress-editor{margin-top:24px}
+.progress-list{list-style:none;margin:16px 0;padding:0;display:grid;gap:12px}
+.progress-public{display:grid;gap:28px;margin-top:24px}
+.progress-cards{list-style:none;margin:12px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.progress-card{border:1px solid var(--line);border-radius:var(--r-md);padding:16px;background:#fff}
+.progress-card h4{margin:0 0 8px;font-size:18px}
+.event-cert{width:100%;max-width:280px;height:auto;border-radius:12px;margin-top:8px}
+@media (max-width:1024px){
+  .progress-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:720px){
+  .progress-cards{grid-template-columns:1fr}
+  .event-cert{max-width:none}
+}
 @media (max-width:720px){
   .portfolio-dates{grid-template-columns:1fr}
   .portfolio-media{grid-template-columns:1fr}

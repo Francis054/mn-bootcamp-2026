@@ -6,6 +6,8 @@ import { EnvError, loadEnv } from '../config/env.js';
 import { createDataSource } from '../database/data-source.js';
 import { AuditRepository } from '../modules/auth/audit.repository.js';
 import { AuditEventEntity } from '../modules/auth/audit-event.entity.js';
+import { UserEntity } from '../modules/users/user.entity.js';
+import { UserRepository } from '../modules/users/user.repository.js';
 import { TimetableRepository } from '../modules/timetable/timetable.repository.js';
 import { TimetableService } from '../modules/timetable/timetable.service.js';
 import { timetableWorkbookPath } from '../modules/timetable/workbook-path.js';
@@ -36,6 +38,7 @@ export async function runTimetableImport(options: ImportIO = {}): Promise<number
     const service = new TimetableService(
       new TimetableRepository(dataSource),
       new AuditRepository(dataSource.getRepository(AuditEventEntity)),
+      new UserRepository(dataSource.getRepository(UserEntity)),
     );
     const report = await service.importBuffer(readFileSync(timetableWorkbookPath()), {
       userId: null,

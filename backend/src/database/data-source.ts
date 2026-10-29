@@ -26,6 +26,9 @@ import { AuditActionPattern1794096000000 } from './migrations/1794096000000-Audi
 import { TraineeAuth1794182400000 } from './migrations/1794182400000-TraineeAuth.js';
 import { TraineeProfile1794268800000 } from './migrations/1794268800000-TraineeProfile.js';
 import { TraineePortfolio1794355200000 } from './migrations/1794355200000-TraineePortfolio.js';
+import { TraineeProgress1794441600000 } from './migrations/1794441600000-TraineeProgress.js';
+import { TraineeEventEntity } from '../modules/progress/trainee-event.entity.js';
+import { TraineeSkillEntity } from '../modules/progress/trainee-skill.entity.js';
 import { PortfolioItemEntity } from '../modules/portfolio/portfolio-item.entity.js';
 import { PortfolioMediaEntity } from '../modules/portfolio/portfolio-media.entity.js';
 import { PortfolioVideoGrantEntity } from '../modules/portfolio/portfolio-grant.entity.js';
@@ -79,6 +82,8 @@ export function createDataSource(
       PortfolioItemEntity,
       PortfolioMediaEntity,
       PortfolioVideoGrantEntity,
+      TraineeSkillEntity,
+      TraineeEventEntity,
       ProjectEntity,
       EventEntity,
       MediaEntity,
@@ -117,6 +122,7 @@ export function createDataSource(
       TraineeAuth1794182400000,
       TraineeProfile1794268800000,
       TraineePortfolio1794355200000,
+      TraineeProgress1794441600000,
     ],
     migrationsTableName: 'schema_migrations',
     ssl: sslConfigForDriver(env.databaseSsl, env.databaseSslCa),

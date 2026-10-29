@@ -48,6 +48,13 @@ import {
 import type { SignupService } from '../trainee-auth/signup.service.js';
 import { mountPortfolioReview, mountPublicPortfolio } from '../portfolio/portfolio.routes.js';
 import type { PortfolioService } from '../portfolio/portfolio.service.js';
+import {
+  mountAdminProgress,
+  mountProgressReview,
+  mountPublicProgress,
+  mountTrainerProgress,
+} from '../progress/progress.routes.js';
+import type { ProgressService } from '../progress/progress.service.js';
 import { mountReviewQueue } from '../trainees/portal-profile.routes.js';
 import type { PortalProfileService } from '../trainees/portal-profile.service.js';
 
@@ -71,6 +78,7 @@ export function curriculumRouter(
   profiles: PortalProfileService,
   portfolio: PortfolioService,
   videoMaxBytes: number,
+  progress: ProgressService,
 ): Router {
   const router = Router();
 
@@ -141,7 +149,9 @@ export function curriculumRouter(
   mountPublicTimetable(router, timetable);
   mountPublicSignup(router, signup);
   mountPublicPortfolio(router, portfolio);
-  mountPortal(router, signup, sessions, profiles, portfolio, maxBytes, videoMaxBytes);
+  mountPublicProgress(router, progress);
+  mountTrainerProgress(router, sessions, progress);
+  mountPortal(router, signup, sessions, profiles, portfolio, maxBytes, videoMaxBytes, progress);
 
   const admin = Router();
   // Staff only. A trainee or trainer session stops here, before any admin read.
@@ -161,6 +171,8 @@ export function curriculumRouter(
   mountTraineeAdmin(admin, signup);
   mountReviewQueue(admin, profiles);
   mountPortfolioReview(admin, portfolio);
+  mountProgressReview(admin, progress);
+  mountAdminProgress(admin, progress, maxBytes);
   mountAdminTimetable(admin, timetable);
   router.use('/admin', admin);
   return router;

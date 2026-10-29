@@ -7,6 +7,8 @@ import { mountPortalPortfolio } from '../portfolio/portfolio.routes.js';
 import type { PortfolioService } from '../portfolio/portfolio.service.js';
 import { mountPortalProfile } from '../trainees/portal-profile.routes.js';
 import type { PortalProfileService } from '../trainees/portal-profile.service.js';
+import { mountPortalProgress } from '../progress/progress.routes.js';
+import type { ProgressService } from '../progress/progress.service.js';
 
 export function mountPublicSignup(router: Router, signup: SignupService): void {
   router.post('/public/trainee-signup', (req, res, next) => {
@@ -46,11 +48,13 @@ export function mountPortal(
   portfolio: PortfolioService,
   maxBytes: number,
   videoMaxBytes: number,
+  progress: ProgressService,
 ): void {
   const portal = Router();
   portal.use(requireAuth(sessions), requirePermission('portal.access'));
   mountPortalProfile(portal, profiles, maxBytes);
   mountPortalPortfolio(portal, portfolio, maxBytes, videoMaxBytes);
+  mountPortalProgress(portal, progress, maxBytes);
   portal.get('/me', (req, res, next) => {
     const user = req.user;
     if (!user) {

@@ -250,6 +250,10 @@ export class TimetableRepository {
     return this.dataSource.getRepository(TrainerEntity).findOne({ where: { id } });
   }
 
+  findTrainerByUserId(userId: string): Promise<TrainerEntity | null> {
+    return this.dataSource.getRepository(TrainerEntity).findOne({ where: { userId } });
+  }
+
   async deleteBlock(block: BlockEntity): Promise<void> {
     await this.dataSource.getRepository(BlockEntity).remove(block);
   }

@@ -19,6 +19,7 @@ import { usePublicContent } from '@/hooks/useContent';
 import { downloadCalendar, EventRow, moduleOf, PageIntro, PublicGate, SampleMark, TraineeArt } from './helpers';
 import { PublicWorkPhotos } from './WorkPhotos';
 import { TraineePortfolio } from './TraineePortfolio';
+import { TraineeProgress } from './TraineeProgress';
 
 export { ProjectPage } from './ProjectPage';
 
@@ -101,7 +102,7 @@ export function TraineePage() {
           <div className="split__b">
             <Tabs label="Profile sections" value={tab} onChange={setTab} tabs={[{ id: 'about', label: 'About' }, { id: 'progress', label: 'Progress' }, { id: 'work', label: 'Work' }]} />
             {tab === 'about' ? <div style={{ marginTop: 24 }}><p>{trainee.bio}</p>{trainee.quote ? <blockquote style={{ marginTop: 20 }}>“{trainee.quote}”</blockquote> : null}<p className="muted" style={{ marginTop: 16 }}>Email and private notes are not on this page. Links appear here after the trainee agrees and an administrator approves them.</p></div> : null}
-            {tab === 'progress' ? <p className="muted" style={{ marginTop: 24 }}>Week-by-week progress will be recorded by trainers. Nothing here is an assessment result.</p> : null}
+            {tab === 'progress' ? <TraineeProgress traineeId={trainee.id} /> : null}
             {tab === 'work' ? <div style={{ marginTop: 24 }}><TraineePortfolio traineeId={trainee.id} />{related.length ? related.map((project) => <Link key={project.id} className="link" to={`/projects/${project.id}`}>{project.title}</Link>) : <p className="muted">No sample projects in this focus yet.</p>}</div> : null}
           </div>
         </div>
