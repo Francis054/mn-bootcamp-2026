@@ -34,6 +34,14 @@ describe('loadEnv', () => {
     expect(env.loginLockMs).toBe(60_000);
     expect(env.loginIpFailureLimit).toBe(30);
     expect(env.videoUploadMaxBytes).toBe(50 * 1024 * 1024);
+    expect(env.cvBucket).toBe('trainee-cvs');
+    expect(env.cvUploadMax).toBe(8);
+    expect(env.cvDownloadMax).toBe(30);
+    expect(env.cvRateWindowMs).toBe(900_000);
+    expect(env.cvLinkTtlMs).toBe(300_000);
+    expect(env.cvRequestLinkTtlMs).toBe(86_400_000);
+    expect(env.supabaseUrl).toBeUndefined();
+    expect(env.supabaseServiceRoleKey).toBeUndefined();
     expect(env.sessionSecret).toBeUndefined();
   });
 
@@ -97,6 +105,34 @@ describe('loadEnv', () => {
     expect(env.cloudinaryCloudName).toBeUndefined();
     expect(env.cloudinaryApiKey).toBeUndefined();
     expect(env.cloudinaryApiSecret).toBeUndefined();
+  });
+
+  it('accepts a private Supabase origin and refuses a partial setup', () => {
+    const ready = loadEnv(
+      productionSource({
+        SUPABASE_URL: 'https://example.supabase.co',
+        SUPABASE_SERVICE_ROLE_KEY: 'service-role-key-value',
+        CV_BUCKET: 'trainee-cvs',
+      }),
+      { loadDotenv: false },
+    );
+    expect(ready.supabaseUrl).toBe('https://example.supabase.co');
+    expect(ready.supabaseServiceRoleKey).toBe('service-role-key-value');
+    expect(ready.cvBucket).toBe('trainee-cvs');
+
+    expect.assertions(6);
+    try {
+      loadEnv(productionSource({ SUPABASE_SERVICE_ROLE_KEY: 'service-role-key-value' }), {
+        loadDotenv: false,
+      });
+    } catch (error) {
+      expect(error).toBeInstanceOf(EnvError);
+      const message = error instanceof Error ? error.message : '';
+      expect(message).toBe(
+        'SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must both be set, or both left blank.',
+      );
+      expect(message).not.toContain('service-role-key-value');
+    }
   });
 
   it('refuses a partial Cloudinary setup and does not repeat the values', () => {
@@ -244,7 +280,9 @@ describe('loadEnv', () => {
     expect(() =>
       loadEnv(productionSource({ VIDEO_UPLOAD_MAX_BYTES: '209715201' }), { loadDotenv: false }),
     ).toThrow(/VIDEO_UPLOAD_MAX_BYTES/);
-    const set = loadEnv(productionSource({ VIDEO_UPLOAD_MAX_BYTES: '1048576' }), { loadDotenv: false });
+    const set = loadEnv(productionSource({ VIDEO_UPLOAD_MAX_BYTES: '1048576' }), {
+      loadDotenv: false,
+    });
     expect(set.videoUploadMaxBytes).toBe(1_048_576);
   });
 

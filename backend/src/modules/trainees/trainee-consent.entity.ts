@@ -1,6 +1,11 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-export type ConsentScope = 'public_profile' | 'public_photo' | 'contact_relay';
+export type ConsentScope =
+  | 'public_profile'
+  | 'public_photo'
+  | 'contact_relay'
+  | 'cv_public'
+  | 'cv_on_request';
 export type ConsentSource = 'self' | 'admin';
 
 /** One row each time a trainee or an administrator changes a consent item. */

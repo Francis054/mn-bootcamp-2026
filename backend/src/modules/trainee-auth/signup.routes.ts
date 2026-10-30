@@ -9,6 +9,10 @@ import { mountPortalProfile } from '../trainees/portal-profile.routes.js';
 import type { PortalProfileService } from '../trainees/portal-profile.service.js';
 import { mountPortalProgress } from '../progress/progress.routes.js';
 import type { ProgressService } from '../progress/progress.service.js';
+import { mountPortalCv } from '../documents/cv.routes.js';
+import type { CvService } from '../documents/cv.service.js';
+import { mountPortalJourney } from '../journey/journey.routes.js';
+import type { JourneyService } from '../journey/journey.service.js';
 
 export function mountPublicSignup(router: Router, signup: SignupService): void {
   router.post('/public/trainee-signup', (req, res, next) => {
@@ -49,12 +53,16 @@ export function mountPortal(
   maxBytes: number,
   videoMaxBytes: number,
   progress: ProgressService,
+  cvs: CvService,
+  journey: JourneyService,
 ): void {
   const portal = Router();
   portal.use(requireAuth(sessions), requirePermission('portal.access'));
   mountPortalProfile(portal, profiles, maxBytes);
   mountPortalPortfolio(portal, portfolio, maxBytes, videoMaxBytes);
   mountPortalProgress(portal, progress, maxBytes);
+  mountPortalCv(portal, cvs);
+  mountPortalJourney(portal, journey);
   portal.get('/me', (req, res, next) => {
     const user = req.user;
     if (!user) {

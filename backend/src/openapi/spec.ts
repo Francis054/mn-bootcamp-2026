@@ -11,6 +11,10 @@ import { timetablePaths, timetableSchemas } from './timetable-docs.js';
 import { portalPaths, portalSchemas } from './portal-docs.js';
 import { portfolioPaths, portfolioSchemas } from './portfolio-docs.js';
 import { progressPaths, progressSchemas } from './progress-docs.js';
+import { cvPaths, cvSchemas } from './cv-docs.js';
+import { reachPaths, reachSchemas } from './reach-docs.js';
+import { journeyPaths, journeySchemas } from './journey-docs.js';
+import { privacyPaths, privacySchemas } from './privacy-docs.js';
 
 export const openApiSpec = {
   openapi: '3.0.3',
@@ -134,6 +138,10 @@ export const openApiSpec = {
     ...portalPaths,
     ...portfolioPaths,
     ...progressPaths,
+    ...cvPaths,
+    ...reachPaths,
+    ...journeyPaths,
+    ...privacyPaths,
   },
   components: {
     schemas: {
@@ -160,7 +168,16 @@ export const openApiSpec = {
       PublicUser: {
         type: 'object',
         additionalProperties: false,
-        required: ['id', 'email', 'displayName', 'initials', 'hue', 'role', 'emailVerified', 'traineeId'],
+        required: [
+          'id',
+          'email',
+          'displayName',
+          'initials',
+          'hue',
+          'role',
+          'emailVerified',
+          'traineeId',
+        ],
         properties: {
           id: { type: 'string', format: 'uuid' },
           email: { type: 'string' },
@@ -238,6 +255,10 @@ export const openApiSpec = {
       ...portalSchemas,
       ...portfolioSchemas,
       ...progressSchemas,
+      ...cvSchemas,
+      ...reachSchemas,
+      ...journeySchemas,
+      ...privacySchemas,
     },
   },
 };

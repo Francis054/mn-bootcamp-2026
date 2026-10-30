@@ -9,8 +9,11 @@ import { readMediaUpload } from '../gallery/upload.js';
 import type { StorageProvider } from '../storage/storage-provider.js';
 import { readMemoryUpload } from './profile-photo.js';
 import { TraineeCreateDto, TraineePatchDto } from './trainee.dto.js';
+import { readDirectoryQuery } from '../reach/directory.js';
 import { readTraineeListQuery } from './list-query.js';
 import type { TraineeService } from './trainee.service.js';
+import { withPublicCv } from '../documents/cv.routes.js';
+import type { CvService } from '../documents/cv.service.js';
 
 export function mountPublicTraineePhotos(router: Router, storage: StorageProvider): void {
   router.get('/public/uploads/:key', (req, res, next) => {
@@ -27,17 +30,30 @@ export function mountPublicTraineePhotos(router: Router, storage: StorageProvide
   });
 }
 
-export function mountPublicTrainees(router: Router, trainees: TraineeService): void {
-  router.get('/public/trainees', (_req, res, next) => {
+export function mountPublicTrainees(
+  router: Router,
+  trainees: TraineeService,
+  cvs: CvService,
+): void {
+  router.get('/public/trainees', (req, res, next) => {
     trainees
-      .listPublic()
+      .listPublic(readDirectoryQuery(req.query))
+      .then((rows) => withPublicCv(cvs, rows))
       .then((rows) => res.json(rows))
       .catch(next);
   });
   router.get('/public/trainees/:id', (req, res, next) => {
     trainees
       .getPublic(param(req))
-      .then((row) => res.json(row))
+      .then((row) => withPublicCv(cvs, [row]))
+      .then((rows) => {
+        const one = rows[0];
+        if (!one) {
+          next(new ApiError('not_found', 'That page is not available.'));
+          return;
+        }
+        res.json(one);
+      })
       .catch(next);
   });
 }

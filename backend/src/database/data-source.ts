@@ -27,6 +27,15 @@ import { TraineeAuth1794182400000 } from './migrations/1794182400000-TraineeAuth
 import { TraineeProfile1794268800000 } from './migrations/1794268800000-TraineeProfile.js';
 import { TraineePortfolio1794355200000 } from './migrations/1794355200000-TraineePortfolio.js';
 import { TraineeProgress1794441600000 } from './migrations/1794441600000-TraineeProgress.js';
+import { TraineeDocuments1794528000000 } from './migrations/1794528000000-TraineeDocuments.js';
+import { EmployerReach1794614400000 } from './migrations/1794614400000-EmployerReach.js';
+import { TraineeMilestones1794700800000 } from './migrations/1794700800000-TraineeMilestones.js';
+import { EmailOutboxAndRemoval1794787200000 } from './migrations/1794787200000-EmailOutboxAndRemoval.js';
+import { EmailOutboxEntity } from '../modules/mail/email-outbox.entity.js';
+import { TraineeMilestoneEntity } from '../modules/journey/trainee-milestone.entity.js';
+import { ContactRequestEntity } from '../modules/reach/contact-request.entity.js';
+import { CvRequestEntity } from '../modules/reach/cv-request.entity.js';
+import { TraineeDocumentEntity } from '../modules/documents/trainee-document.entity.js';
 import { TraineeEventEntity } from '../modules/progress/trainee-event.entity.js';
 import { TraineeSkillEntity } from '../modules/progress/trainee-skill.entity.js';
 import { PortfolioItemEntity } from '../modules/portfolio/portfolio-item.entity.js';
@@ -84,6 +93,7 @@ export function createDataSource(
       PortfolioVideoGrantEntity,
       TraineeSkillEntity,
       TraineeEventEntity,
+      TraineeDocumentEntity,
       ProjectEntity,
       EventEntity,
       MediaEntity,
@@ -93,6 +103,10 @@ export function createDataSource(
       AccessTokenEntity,
       PendingRegistrationEntity,
       EnquiryEntity,
+      ContactRequestEntity,
+      CvRequestEntity,
+      TraineeMilestoneEntity,
+      EmailOutboxEntity,
       ProgrammeEntity,
       BlockEntity,
       WeekEntity,
@@ -123,6 +137,10 @@ export function createDataSource(
       TraineeProfile1794268800000,
       TraineePortfolio1794355200000,
       TraineeProgress1794441600000,
+      TraineeDocuments1794528000000,
+      EmployerReach1794614400000,
+      TraineeMilestones1794700800000,
+      EmailOutboxAndRemoval1794787200000,
     ],
     migrationsTableName: 'schema_migrations',
     ssl: sslConfigForDriver(env.databaseSsl, env.databaseSslCa),

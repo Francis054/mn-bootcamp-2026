@@ -47,11 +47,22 @@ import { WorkPhotoService } from '../modules/work-photos/work-photo.service.js';
 import { createMail } from '../modules/mail/create-mail.js';
 import type { EmailProvider } from '../modules/mail/email-provider.js';
 import { ObservedMail } from '../modules/mail/observed-mail.js';
+import { OutboxMail } from '../modules/mail/outbox-mail.js';
+import { PostgresOutboxStore } from '../modules/mail/outbox-store.js';
+import { TraineePrivacyService } from '../modules/privacy/trainee-privacy.service.js';
 import { PendingRegistrationEntity } from '../modules/trainee-auth/pending-registration.entity.js';
 import { PendingRegistrationRepository } from '../modules/trainee-auth/pending-registration.repository.js';
 import { SignupService } from '../modules/trainee-auth/signup.service.js';
 import { createStorage } from '../modules/storage/create-storage.js';
 import type { StorageProvider } from '../modules/storage/storage-provider.js';
+import { createDocumentStorage } from '../modules/documents/create-document-storage.js';
+import type { DocumentStorage } from '../modules/documents/document-storage.js';
+import { DocumentRepository } from '../modules/documents/document.repository.js';
+import { CvService } from '../modules/documents/cv.service.js';
+import { ReachRepository } from '../modules/reach/reach.repository.js';
+import { ReachService } from '../modules/reach/reach.service.js';
+import { JourneyRepository } from '../modules/journey/journey.repository.js';
+import { JourneyService } from '../modules/journey/journey.service.js';
 import { ProjectEntity } from '../modules/projects/project.entity.js';
 import { liveRepositoryVisibility } from '../modules/projects/project-url.js';
 import { ProjectRepository } from '../modules/projects/project.repository.js';
@@ -88,7 +99,9 @@ export class AppContainer {
   readonly authRouter: Router;
   readonly curriculumRouter: Router;
   readonly storage: StorageProvider;
+  readonly documents: DocumentStorage;
   readonly mail: EmailProvider;
+  readonly outbox: OutboxMail;
 
   constructor(
     readonly env: AppEnv,
@@ -106,8 +119,10 @@ export class AppContainer {
     workPhotos: WorkPhotoService,
     siteImages: SiteImageService,
     storage: StorageProvider,
+    documents: DocumentStorage,
     content: ContentService,
     mail: EmailProvider,
+    outbox: OutboxMail,
     accounts: AccountService,
     enquiries: EnquiryService,
     timetable: TimetableService,
@@ -115,12 +130,18 @@ export class AppContainer {
     profiles: PortalProfileService,
     portfolio: PortfolioService,
     progress: ProgressService,
+    cvs: CvService,
+    reach: ReachService,
+    journey: JourneyService,
+    privacy: TraineePrivacyService,
   ) {
     this.health = new HealthService(dataSource, logger);
     this.users = users;
     this.sessions = sessions;
     this.storage = storage;
+    this.documents = documents;
     this.mail = mail;
+    this.outbox = outbox;
     this.authRouter = authRouter(auth, sessions, accounts);
     this.curriculumRouter = curriculumRouter(
       catalogue,
@@ -143,6 +164,11 @@ export class AppContainer {
       portfolio,
       env.videoUploadMaxBytes,
       progress,
+      cvs,
+      reach,
+      journey,
+      outbox,
+      privacy,
     );
   }
 
@@ -164,7 +190,13 @@ export class AppContainer {
     const audit = new AuditRepository(dataSource.getRepository(AuditEventEntity));
     const throttles = new LoginThrottleRepository(dataSource);
     const mail = createMail(env);
-    const outbound = new ObservedMail(mail, logger, env.devMailLog && env.nodeEnv !== 'production');
+    const outbox = new OutboxMail(mail, new PostgresOutboxStore(dataSource), logger);
+    if (env.nodeEnv !== 'test') outbox.start();
+    const outbound = new ObservedMail(
+      outbox,
+      logger,
+      env.devMailLog && env.nodeEnv !== 'production',
+    );
     const contentRepository = new ContentRepository(
       dataSource.getRepository(ContentSingletonEntity),
     );
@@ -232,6 +264,23 @@ export class AppContainer {
       accraToday,
     );
     const storage = createStorage(env);
+    const documents = createDocumentStorage(env);
+    const documentRepository = new DocumentRepository(dataSource);
+    const cvs = new CvService(
+      documentRepository,
+      userRepository,
+      traineeRepository,
+      audit,
+      documents,
+      env.sessionSecret,
+      env.cvLinkTtlMs,
+      env.cvUploadMax,
+      env.cvDownloadMax,
+      env.cvRateWindowMs,
+      env.cvRequestLinkTtlMs,
+      env.frontendUrl,
+      outbound,
+    );
     const consentRepository = new TraineeConsentRepository(
       dataSource.getRepository(TraineeConsentEntity),
     );
@@ -308,6 +357,8 @@ export class AppContainer {
       audit,
       storage,
       env.uploadMaxBytes,
+      outbound,
+      `${env.frontendUrl}/portal`,
     );
     const portfolioRepository = new PortfolioRepository(dataSource);
     const portfolio = new PortfolioService(
@@ -319,6 +370,8 @@ export class AppContainer {
       storage instanceof CloudinaryStorage ? storage : null,
       env.uploadMaxBytes,
       env.videoUploadMaxBytes,
+      outbound,
+      `${env.frontendUrl}/portal`,
     );
     const progress = new ProgressService(
       new ProgressRepository(dataSource),
@@ -329,6 +382,35 @@ export class AppContainer {
       audit,
       storage,
       env.uploadMaxBytes,
+      outbound,
+      `${env.frontendUrl}/portal`,
+    );
+    const journey = new JourneyService(
+      new JourneyRepository(dataSource),
+      traineeRepository,
+      userRepository,
+      portfolioRepository,
+      new ProgressRepository(dataSource),
+      projectRepository,
+      timetableRepository,
+      audit,
+    );
+    const reach = new ReachService(
+      new ReachRepository(dataSource),
+      traineeService,
+      documentRepository,
+      cvs,
+      outbound,
+      audit,
+      env.sessionSecret,
+      env.frontendUrl,
+    );
+    const privacy = new TraineePrivacyService(
+      dataSource,
+      storage,
+      storage instanceof CloudinaryStorage ? storage : null,
+      documents,
+      audit,
     );
     return new AppContainer(
       env,
@@ -346,8 +428,10 @@ export class AppContainer {
       workPhotoService,
       siteImageService,
       storage,
+      documents,
       contentService,
       mail,
+      outbox,
       accounts,
       enquiries,
       timetable,
@@ -355,10 +439,15 @@ export class AppContainer {
       profiles,
       portfolio,
       progress,
+      cvs,
+      reach,
+      journey,
+      privacy,
     );
   }
 
   async close(): Promise<void> {
+    this.outbox.stop();
     if (this.dataSource.isInitialized) {
       await this.dataSource.destroy();
     }
