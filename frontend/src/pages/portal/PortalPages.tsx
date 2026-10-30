@@ -311,7 +311,7 @@ export function TraineeLoginPage() {
         </button>
         {unverified ? <p style={{ marginTop: 12 }}><Link to="/verify-email">Request another confirmation link</Link></p> : null}
         <p style={{ marginTop: 12 }}><Link to="/forgot-password">Forgot password?</Link></p>
-        <p style={{ marginTop: 8 }}><Link to="/signup">Create account</Link></p>
+        <p style={{ marginTop: 8 }}><Link to="/signup">Sign up</Link></p>
       </form>
     </AuthSplit>
   );
