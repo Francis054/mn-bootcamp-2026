@@ -172,6 +172,12 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
      Example: 5242880
      That is 5 MB, which is also the default if you leave it blank.
 
+   VIDEO_UPLOAD_MAX_BYTES
+     What: largest trainee video upload, in bytes. The ceiling is 209715200 (200 MB).
+     Example: 52428800
+     That is 50 MB, which is also the default if you leave it blank.
+     When Cloudinary is set, the browser uploads the file directly. This API does not buffer it.
+
    CLOUDINARY_CLOUD_NAME
      What: which Cloudinary account receives photos.
      Value you already have: i5rrintk
@@ -190,6 +196,43 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
      Where: the same API Keys page. Reveal the secret there.
      Example shape: a long random string from that page. Do not paste the real one here.
      Paste it only in this Environment tab.
+
+   SUPABASE_URL
+     What: the Supabase project address used for the private CV bucket.
+     Example shape: https://YOUR-PROJECT.supabase.co
+     Where: Supabase dashboard, Project Settings, API, Project URL.
+     Paste it only on the Render API service. Never on the static site, and never as a VITE_ name.
+
+   SUPABASE_SERVICE_ROLE_KEY
+     What: the service role key that lets the API read and write the private CV bucket.
+     Where: Supabase dashboard, Project Settings, API, service_role secret.
+     Example shape: a long JWT from that page. Do not paste the real one here.
+     Both Supabase variables must be set, or both left blank.
+     If they are blank in production, the site still boots and CV uploads are refused.
+     Paste it only on the Render API service. Never on the static site.
+
+   CV_BUCKET
+     What: the private Storage bucket name. Leave blank to use trainee-cvs.
+     Example: trainee-cvs
+     Create that bucket in Supabase Storage and leave Public switched off.
+
+   CV_UPLOAD_MAX
+     What: how many CV uploads one visitor may make in the CV window.
+     Example: 8
+
+   CV_DOWNLOAD_MAX
+     What: how many CV downloads and signed links one visitor may make in the CV window.
+     Example: 30
+
+   CV_RATE_WINDOW_MS
+     What: the length of that window, in milliseconds.
+     Example: 900000
+     That is 15 minutes.
+
+   CV_LINK_TTL_MS
+     What: how long a public CV download link lasts, in milliseconds.
+     Example: 300000
+     That is 5 minutes.
 
    RESEND_API_KEY
      What: lets the API send invitation and password-reset mail.

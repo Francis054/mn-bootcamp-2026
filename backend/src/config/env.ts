@@ -35,13 +35,33 @@ export interface AppEnv {
   loginFailureLimit: number;
   loginLockMs: number;
   loginIpFailureLimit: number;
-  /** Largest accepted upload. Defaults to 5 MB. */
+  /** Largest accepted image upload. Defaults to 5 MB. */
   uploadMaxBytes: number;
+  /** Largest accepted video upload. Defaults to 50 MB. The file is not buffered when Cloudinary is configured. */
+  videoUploadMaxBytes: number;
   cloudinaryCloudName?: string;
   cloudinaryApiKey?: string;
   cloudinaryApiSecret?: string;
+  /** Origin only. The service role key never belongs in a `VITE_` variable. */
+  supabaseUrl?: string;
+  supabaseServiceRoleKey?: string;
+  /** Private bucket. The hosted default is `trainee-cvs`. */
+  cvBucket: string;
+  /** CV uploads allowed per visitor in `cvRateWindowMs`. Stricter than the general write limit. */
+  cvUploadMax: number;
+  /** CV downloads and signed links allowed per visitor in `cvRateWindowMs`. */
+  cvDownloadMax: number;
+  cvRateWindowMs: number;
+  /** Lifetime of a public CV download link. Five minutes unless the host sets another value. */
+  cvLinkTtlMs: number;
+  /** Lifetime of an emailed on-request CV link. One day unless the host sets another value. */
+  cvRequestLinkTtlMs: number;
   resendApiKey?: string;
   emailFrom?: string;
+  /** Closed signup. Only `roster` is implemented. */
+  traineeSignupMode: 'roster';
+  /** Print that a development message was accepted. Refused in production. */
+  devMailLog: boolean;
 }
 
 const NODE_ENVS: readonly NodeEnv[] = ['development', 'test', 'production'];
@@ -126,6 +146,7 @@ export function loadEnv(
     problems,
   );
   const uploadMaxBytes = readUploadMax(source.UPLOAD_MAX_BYTES, problems);
+  const videoUploadMaxBytes = readVideoMax(source.VIDEO_UPLOAD_MAX_BYTES, problems);
   const cloudinaryCloudName = readOptional(source.CLOUDINARY_CLOUD_NAME);
   const cloudinaryApiKey = readOptional(source.CLOUDINARY_API_KEY);
   const cloudinaryApiSecret = readOptional(source.CLOUDINARY_API_SECRET);
@@ -137,11 +158,60 @@ export function loadEnv(
       'CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET must all be set, or all left blank.',
     );
   }
+  const supabaseUrl = readSupabaseUrl(source.SUPABASE_URL, problems);
+  const supabaseServiceRoleKey = readServiceRoleKey(source.SUPABASE_SERVICE_ROLE_KEY, problems);
+  const supabaseCount = [supabaseUrl, supabaseServiceRoleKey].filter(
+    (value) => value !== undefined,
+  ).length;
+  if (supabaseCount === 1) {
+    problems.push(
+      'SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must both be set, or both left blank.',
+    );
+  }
+  const cvBucket = readCvBucket(source.CV_BUCKET, problems);
+  const cvUploadMax = readBoundedInt(source.CV_UPLOAD_MAX, 8, 1, 100, 'CV_UPLOAD_MAX', problems);
+  const cvDownloadMax = readBoundedInt(
+    source.CV_DOWNLOAD_MAX,
+    30,
+    1,
+    300,
+    'CV_DOWNLOAD_MAX',
+    problems,
+  );
+  const cvRateWindowMs = readBoundedInt(
+    source.CV_RATE_WINDOW_MS,
+    900_000,
+    1_000,
+    86_400_000,
+    'CV_RATE_WINDOW_MS',
+    problems,
+  );
+  const cvLinkTtlMs = readBoundedInt(
+    source.CV_LINK_TTL_MS,
+    300_000,
+    1_000,
+    900_000,
+    'CV_LINK_TTL_MS',
+    problems,
+  );
+  const cvRequestLinkTtlMs = readBoundedInt(
+    source.CV_REQUEST_LINK_TTL_MS,
+    86_400_000,
+    60_000,
+    604_800_000,
+    'CV_REQUEST_LINK_TTL_MS',
+    problems,
+  );
   const resendApiKey = readOptional(source.RESEND_API_KEY);
   const emailFrom = readOptional(source.EMAIL_FROM);
   const resendCount = [resendApiKey, emailFrom].filter((value) => value !== undefined).length;
   if (resendCount === 1) {
     problems.push('RESEND_API_KEY and EMAIL_FROM must both be set, or both left blank.');
+  }
+  const traineeSignupMode = readSignupMode(source.TRAINEE_SIGNUP_MODE, problems);
+  const devMailLog = readBooleanDefault(source.DEV_MAIL_LOG, false, 'DEV_MAIL_LOG', problems);
+  if (nodeEnv === 'production' && devMailLog) {
+    problems.push('DEV_MAIL_LOG must not be set in production.');
   }
 
   if (problems.length > 0) {
@@ -164,12 +234,23 @@ export function loadEnv(
     loginLockMs,
     loginIpFailureLimit,
     uploadMaxBytes,
+    videoUploadMaxBytes,
+    cvBucket,
+    cvUploadMax,
+    cvDownloadMax,
+    cvRateWindowMs,
+    cvLinkTtlMs,
+    cvRequestLinkTtlMs,
+    traineeSignupMode,
+    devMailLog,
   };
   if (databaseSslCa !== undefined) env.databaseSslCa = databaseSslCa;
   if (sessionSecret !== undefined) env.sessionSecret = sessionSecret;
   if (cloudinaryCloudName !== undefined) env.cloudinaryCloudName = cloudinaryCloudName;
   if (cloudinaryApiKey !== undefined) env.cloudinaryApiKey = cloudinaryApiKey;
   if (cloudinaryApiSecret !== undefined) env.cloudinaryApiSecret = cloudinaryApiSecret;
+  if (supabaseUrl !== undefined) env.supabaseUrl = supabaseUrl;
+  if (supabaseServiceRoleKey !== undefined) env.supabaseServiceRoleKey = supabaseServiceRoleKey;
   if (resendApiKey !== undefined) env.resendApiKey = resendApiKey;
   if (emailFrom !== undefined) env.emailFrom = emailFrom;
   return env;
@@ -392,6 +473,8 @@ function readPositiveInt(
 
 const UPLOAD_MAX_DEFAULT = 5 * 1024 * 1024;
 const UPLOAD_MAX_CEILING = 10 * 1024 * 1024;
+const VIDEO_MAX_DEFAULT = 50 * 1024 * 1024;
+const VIDEO_MAX_CEILING = 200 * 1024 * 1024;
 
 function readUploadMax(raw: string | undefined, problems: string[]): number {
   if (raw === undefined || raw.trim() === '') return UPLOAD_MAX_DEFAULT;
@@ -405,6 +488,90 @@ function readUploadMax(raw: string | undefined, problems: string[]): number {
     return UPLOAD_MAX_DEFAULT;
   }
   return value;
+}
+
+function readVideoMax(raw: string | undefined, problems: string[]): number {
+  if (raw === undefined || raw.trim() === '') return VIDEO_MAX_DEFAULT;
+  if (!/^[0-9]+$/.test(raw.trim())) {
+    problems.push('VIDEO_UPLOAD_MAX_BYTES must be a whole number from 1 to 209715200.');
+    return VIDEO_MAX_DEFAULT;
+  }
+  const value = Number(raw.trim());
+  if (value < 1 || value > VIDEO_MAX_CEILING) {
+    problems.push('VIDEO_UPLOAD_MAX_BYTES must be a whole number from 1 to 209715200.');
+    return VIDEO_MAX_DEFAULT;
+  }
+  return value;
+}
+
+function readSupabaseUrl(raw: string | undefined, problems: string[]): string | undefined {
+  const value = raw?.trim() ?? '';
+  if (value === '') return undefined;
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    problems.push('SUPABASE_URL must be an https origin.');
+    return undefined;
+  }
+  if (parsed.protocol !== 'https:' || parsed.username !== '' || parsed.password !== '') {
+    problems.push('SUPABASE_URL must be an https origin.');
+    return undefined;
+  }
+  if (parsed.pathname !== '/' && parsed.pathname !== '') {
+    problems.push('SUPABASE_URL must be an https origin.');
+    return undefined;
+  }
+  return parsed.origin;
+}
+
+function readServiceRoleKey(raw: string | undefined, problems: string[]): string | undefined {
+  const value = raw?.trim() ?? '';
+  if (value === '') return undefined;
+  if (value.length < 20 || /\s/.test(value)) {
+    problems.push(
+      'SUPABASE_SERVICE_ROLE_KEY must be the service role key from the Supabase dashboard.',
+    );
+    return undefined;
+  }
+  return value;
+}
+
+function readCvBucket(raw: string | undefined, problems: string[]): string {
+  const value = raw?.trim() || 'trainee-cvs';
+  if (!/^[a-z0-9][a-z0-9-]{1,62}$/.test(value)) {
+    problems.push('CV_BUCKET must be a short lowercase name such as trainee-cvs.');
+    return 'trainee-cvs';
+  }
+  return value;
+}
+
+function readBoundedInt(
+  raw: string | undefined,
+  fallback: number,
+  min: number,
+  max: number,
+  name: string,
+  problems: string[],
+): number {
+  if (raw === undefined || raw.trim() === '') return fallback;
+  if (!/^[0-9]+$/.test(raw.trim())) {
+    problems.push(`${name} must be a whole number from ${min} to ${max}.`);
+    return fallback;
+  }
+  const value = Number(raw.trim());
+  if (value < min || value > max) {
+    problems.push(`${name} must be a whole number from ${min} to ${max}.`);
+    return fallback;
+  }
+  return value;
+}
+
+function readSignupMode(raw: string | undefined, problems: string[]): 'roster' {
+  const value = raw?.trim() || 'roster';
+  if (value === 'roster') return 'roster';
+  problems.push('TRAINEE_SIGNUP_MODE must be roster.');
+  return 'roster';
 }
 
 function readOptional(raw: string | undefined): string | undefined {

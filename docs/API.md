@@ -70,7 +70,37 @@ or
 
 There is no `mode: "development"` and no `provider: "development-adapter"`. A missing, idle, or expired session is `authenticated: false`, not an error. A protected route then returns `401`.
 
-Idle time is 30 minutes. The session also ends 12 hours after sign-in. Both can be changed with environment variables. They are not part of the JSON contract.
+Idle time is 30 minutes for staff. A trainee session stays open for at least 2 idle hours. The session also ends 12 hours after sign-in. Both staff limits can be changed with environment variables. They are not part of the JSON contract.
+
+The user object also includes `emailVerified` (boolean) and `traineeId` (string or null). `role` may be `trainee` or `trainer` as well as `viewer`, `editor`, and `administrator`.
+
+A trainee whose email is not confirmed gets `403` and `Confirm your email before you sign in. You can request another link.` A suspended account gets the same `401` as a wrong password. Wrong password and unknown mailbox stay on that `401`.
+
+## Trainee signup
+
+`POST /public/trainee-signup` with `{ email, password, confirm, displayName?, acceptTerms: true }`. A non-empty `company` field is a honeypot: the response looks like success and nothing is stored. The password rules match stored passwords (12 characters, a letter, a number, not the mailbox).
+
+Success is `202` and this body for every address:
+
+```json
+{ "accepted": true, "message": "If this email is on the cohort list, we sent a link. If you do not see it, request another from the verification page." }
+```
+
+An email already on `trainees` creates or replaces an unverified trainee login and sends a 24-hour single-use link to `/verify-email`. An email that is not on the roster is stored in `pending_registrations` for an administrator. A verified account receives a different email and is not overwritten. The JSON does not say which happened.
+
+`POST /public/trainee-signup/verify` with `{ token }` confirms the email and does not start a session. A missing, used, or expired token is `422`. `POST /public/trainee-signup/resend` with `{ email }` returns the same `202` as signup. Signup allows 3 requests an hour per email and 5 per address. Resend allows 3 per email and 10 per address. Over the limit is `429` and `Too many requests. Try again later.`
+
+`GET /portal/me` needs `portal.access`. It returns `{ user, traineeId }`. Staff receive `403`.
+
+`GET /portal/profile` and `PATCH /portal/profile` use the trainee id on the session. One trainee cannot read or change another trainee's profile or photo. `POST /portal/profile/photo` stores a JPEG, PNG, or WebP and strips EXIF before it is saved. SVG is refused. `PUT /portal/consents` records public profile, photo, and employer-contact consent with a wording version and a timestamp. `POST /portal/profile/submit` needs public-profile consent and moves the draft to `pending`. The last approved text, photo, and links stay on the public site until an editor approves the new version. `GET /admin/review-queue` lists those pending profiles. Approve, reject (with a reason), and edit need `content.write`.
+
+`GET /portal/portfolio` lists only the signed-in trainee's projects, labs, and case studies, including drafts. Another trainee's item is not found. Pictures go through the same JPEG, PNG, and WebP pipeline as profile photos, with location data removed. A video is either an MP4, WebM, or MOV upload, or a YouTube, Vimeo, or Loom link. Other video hosts are refused. When Cloudinary is configured, the browser uploads the file directly with a short-lived signature and the API confirms the stored format and size. `VIDEO_UPLOAD_MAX_BYTES` defaults to 50 MB and cannot be set above 200 MB. `GET /public/trainees/{id}/portfolio` returns the last approved version only, and only when the profile is public. Pictures and videos are omitted unless the trainee has also agreed to a public photo. `GET /admin/review-queue/items` lists pending items. Approve, reject with a reason, edit, and delete need `content.write` and write an audit row.
+
+`GET /portal/skills` and `GET /portal/events` list only the signed-in trainee's rows, including drafts. Another trainee's id is not found. A skill has a level from 1 (learning) to 4 (can teach) and may cite one of that trainee's portfolio items as evidence. An event has a title, date, organiser, optional https link, and an optional certificate image. The certificate uses the same JPEG, PNG, and WebP checks as a profile photo. Submit needs public-profile consent. `GET /public/trainees/{id}/skills` and `GET /public/trainees/{id}/events` return the last approved version only, and only when the profile is public. The certificate is omitted unless photo consent is on. Evidence is omitted unless that portfolio item has an approved title. `GET /admin/review-queue/skills` and `GET /admin/review-queue/events` list pending rows. Approve, reject, edit, and delete need `content.write` and write an audit row. `GET /progress/trainees` needs `progress.read` and a timetable trainer row linked to that login. It does not include email addresses.
+
+There is no age confirmation and no retention period in this version.
+
+Administrators (`users.manage`) list `GET /admin/pending-registrations`, approve or reject a row, list `GET /admin/trainee-accounts`, and disable, enable, or resend. Approve creates a hidden trainee when the email is not already on the roster, links the login, and sends the confirmation email. `delivered` is false when mail was not accepted. The account still exists. Disable deletes that account's sessions.
 
 ## What the website should change later
 
@@ -86,7 +116,7 @@ The permission names match `frontend/src/domain/permissions.ts` and `backend/src
 | Role | Permissions |
 | --- | --- |
 | Trainee | `portal.access`, `portal.write`, `account.manage` |
-| Trainer | `account.manage` |
+| Trainer | `account.manage`, `progress.read` |
 | Viewer | `content.read`, `account.manage` |
 | Editor | viewer, plus `content.write`, `media.upload`, `media.write` |
 | Administrator | editor, plus `users.read`, `users.manage`, `settings.manage` |
@@ -327,6 +357,16 @@ Success is `{ id, delivered, message }`. `message` is a status sentence, not the
 `GET /admin/enquiries` needs `users.manage`. The body is an array, newest first, with `id`, `name`, `email`, `topic`, `message`, `createdAt`, `handled`, and `notified`. A viewer and an editor receive `403`. `PATCH /admin/enquiries/:id` body `{ handled }`. `DELETE /admin/enquiries/:id` returns `{ deleted: true, id }`. Those changes need `X-CSRF-Token`.
 
 The audit row stores the action and the enquiry id. It does not store the mailbox, the token, or the message.
+
+## Trainee journey
+
+The journey is computed when it is read. There is no journey table. It joins the timetable (blocks, weeks, and that week’s deliverables), the trainee’s labs, published projects, events attended, achieved skills, and account milestones such as signed up, email confirmed, profile approved, and profile published. A trainee can also add a milestone and mark it private or public. Those rows live in `trainee_milestones`.
+
+`GET /public/trainees/:slug/journey` is public only when the profile is published and consent is on. The same rule as the public profile applies, including a lookup by roster id or slug. The body lists public items only. Draft labs, unapproved skills and events, unpublished projects, and private milestones are left out. The response has no email address and no CV. A missing or private profile is `404` with `That page is not available.`
+
+`GET /portal/journey` needs `portal.access`. The trainee comes from the session. It includes the private items as well. Creating, editing, and deleting a milestone needs `portal.write` and `X-CSRF-Token`. Another trainee’s milestone is `404`.
+
+A milestone needs a title (`Enter a title.`), a date (`Pick a date.`), and a choice of private or public (`Choose private or public.`). The note is optional.
 
 ## Not in this milestone
 

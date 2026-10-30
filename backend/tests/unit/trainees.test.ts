@@ -27,6 +27,14 @@ const profile: TraineeRecord = {
   quote: 'Sample quote.',
   linkedin: 'https://profiles.example.test/private-link',
   portfolio: 'https://profiles.example.test/private-portfolio',
+  headline: '',
+  location: '',
+  githubUrl: null,
+  photoConsent: false,
+  contactConsent: false,
+  publicLinks: false,
+  profileReviewStatus: 'approved',
+  profileRejectionReason: '',
   photoUrl: null,
   photoStorageKey: null,
   consentReceived: true,
@@ -42,6 +50,7 @@ const profile: TraineeRecord = {
   statusLabel: 'In training',
   internalNotes: 'Development fixture. Do not replace with a real person without written consent.',
   lessonIds: [],
+  slug: null,
   updatedAt: '2026-10-24T00:00:00.000Z',
 };
 
@@ -116,12 +125,15 @@ describe('trainee rules', () => {
     expect(Object.keys(visible).sort()).toEqual(
       [
         'bio',
+        'contactAvailable',
         'displayName',
         'focus',
+        'headline',
         'hue',
         'id',
         'initials',
         'listing',
+        'location',
         'photoUrl',
         'publicationStatus',
         'quote',

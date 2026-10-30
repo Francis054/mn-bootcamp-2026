@@ -14,6 +14,7 @@ import {
   type TrainerStatus,
 } from '@/domain/timetable';
 import { ApiError } from '@/domain/types';
+import { getState } from './store';
 
 const DATE = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
 const CLOCK = /^([01][0-9]|2[0-3]):[0-5][0-9]$/;
@@ -167,6 +168,11 @@ async function ensure(): Promise<State> {
   await loading;
   if (!state) throw new ApiError('server', 'The timetable snapshot did not load.', 500);
   return state;
+}
+
+export async function trainerIsLinked(userId: string): Promise<boolean> {
+  const store = await ensure();
+  return store.trainers.some((trainer) => trainer.userId === userId);
 }
 
 export function resetTimetableStore(): void {
@@ -502,6 +508,17 @@ export async function timetableRoute(
       trainer.normalizedName = normalizeName(trainer.displayName);
     }
     if (typeof body.proposed === 'boolean') trainer.proposed = body.proposed;
+    if ('loginEmail' in body) {
+      const email = String(body.loginEmail ?? '').trim().toLowerCase();
+      if (!email) trainer.userId = null;
+      else {
+        const login = getState().users.find((user) => user.email === email && user.role === 'trainer');
+        if (!login) throw new ApiError('validation', 'Check the highlighted fields.', 422, { loginEmail: 'Enter the email of a trainer login.' });
+        const taken = store.trainers.find((item) => item.userId === login.id && item.id !== trainer.id);
+        if (taken) throw new ApiError('validation', 'Check the highlighted fields.', 422, { loginEmail: 'That login is already linked to another trainer.' });
+        trainer.userId = login.id;
+      }
+    }
     return { ...trainer };
   }
 

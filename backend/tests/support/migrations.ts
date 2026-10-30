@@ -19,6 +19,14 @@ export const MIGRATION_NAMES = [
   'PublicRls1794096000000',
   'CommunityLogo1794096000000',
   'AuditActionPattern1794182400000',
+  'TraineeAuth1794182400000',
+  'TraineeProfile1794268800000',
+  'TraineePortfolio1794355200000',
+  'TraineeProgress1794441600000',
+  'TraineeDocuments1794528000000',
+  'EmployerReach1794614400000',
+  'TraineeMilestones1794700800000',
+  'EmailOutboxAndRemoval1794787200000',
 ] as const;
 
 const OURS = new Set<string>(MIGRATION_NAMES);

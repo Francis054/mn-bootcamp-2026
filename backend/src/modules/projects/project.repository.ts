@@ -19,6 +19,22 @@ export class ProjectRepository extends BaseRepository<ProjectEntity> {
       .then((value: unknown) => readCount(value));
   }
 
+  async idsForTrainee(traineeId: string): Promise<string[]> {
+    const rows: unknown = await this.repository.manager.query(
+      `SELECT project_id FROM project_trainees WHERE trainee_id = $1 ORDER BY project_id`,
+      [traineeId],
+    );
+    if (!Array.isArray(rows)) return [];
+    const ids: string[] = [];
+    for (const entry of rows) {
+      const item: unknown = entry;
+      if (typeof item !== 'object' || item === null || !('project_id' in item)) continue;
+      const projectId: unknown = item.project_id;
+      if (typeof projectId === 'string') ids.push(projectId);
+    }
+    return ids;
+  }
+
   async traineeIdsByProject(projectIds: readonly string[]): Promise<Map<string, string[]>> {
     const grouped = new Map<string, string[]>();
     if (projectIds.length === 0) return grouped;

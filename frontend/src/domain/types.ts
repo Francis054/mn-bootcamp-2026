@@ -1,5 +1,7 @@
 /** Frontend models for the `/api/v1` contract. The live client sends cookies, not stored tokens. */
 
+import type { PublicCv } from './cv';
+
 export type Role = 'trainee' | 'trainer' | 'viewer' | 'editor' | 'administrator';
 
 export type Permission =
@@ -12,7 +14,8 @@ export type Permission =
   | 'settings.manage'
   | 'account.manage'
   | 'portal.access'
-  | 'portal.write';
+  | 'portal.write'
+  | 'progress.read';
 
 export type PublicationStatus = 'draft' | 'in_review' | 'scheduled' | 'published';
 
@@ -73,7 +76,15 @@ export interface Trainee {
   quote: string;
   linkedin: string | null;
   portfolio: string | null;
+  headline?: string;
+  location?: string;
+  githubUrl?: string | null;
   photoUrl: string | null;
+  photoConsent?: boolean;
+  /** The trainee agreed employers may write through the site. The public page uses contactAvailable instead. */
+  contactConsent?: boolean;
+  slug?: string | null;
+  publicLinks?: boolean;
   consentReceived: boolean;
   listing: Listing;
   publicationStatus: PublicationStatus;
@@ -82,7 +93,17 @@ export interface Trainee {
   lessonIds?: string[];
 }
 
-export type PublicTrainee = Omit<Trainee, 'email' | 'internalNotes' | 'linkedin' | 'portfolio' | 'consentReceived' | 'lessonIds'>;
+export type PublicTrainee = Omit<Trainee, 'email' | 'internalNotes' | 'linkedin' | 'portfolio' | 'githubUrl' | 'consentReceived' | 'lessonIds' | 'photoConsent' | 'publicLinks' | 'contactConsent' | 'slug'> & {
+  /** Present after the trainee agrees and an administrator approves the links. */
+  linkedin?: string;
+  githubUrl?: string;
+  portfolio?: string;
+  /** Whether a CV can be downloaded or requested. Never a file address. */
+  cv?: PublicCv;
+  /** The contact form is shown only when this is true. It is not an email address. */
+  contactAvailable?: boolean;
+  slug?: string;
+};
 
 export interface Project {
   id: string;
@@ -238,6 +259,9 @@ export interface DevUser {
   role: Role;
   lastActiveLabel?: string;
   fixture?: true;
+  emailVerified?: boolean;
+  traineeId?: string | null;
+  disabled?: boolean;
 }
 
 export interface EnquiryRecord {
@@ -270,6 +294,8 @@ export interface SessionUser {
   initials: string;
   hue: number;
   role: Role;
+  emailVerified?: boolean;
+  traineeId?: string | null;
 }
 
 export interface DevSession {

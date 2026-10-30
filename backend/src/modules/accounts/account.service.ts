@@ -1,6 +1,7 @@
 import { ApiError } from '../../shared/errors/api-error.js';
 import { UserFacingError } from '../../shared/errors/user-facing-error.js';
-import type { AccessTokenEntity } from '../auth/access-token.entity.js';
+import type { AppLogger } from '../../shared/logging/logger.js';
+import type { AccessTokenEntity, TokenPurpose } from '../auth/access-token.entity.js';
 import type { AccessTokenRepository } from '../auth/access-token.repository.js';
 import type { AuditRepository } from '../auth/audit.repository.js';
 import { TOO_MANY_REQUESTS } from '../auth/login-throttle.js';
@@ -9,8 +10,18 @@ import type { Argon2Hasher } from '../auth/password-hasher.js';
 import type { SessionService } from '../auth/session.service.js';
 import { newSecretToken, sessionTokenHash } from '../auth/tokens.js';
 import type { EmailProvider } from '../mail/email-provider.js';
+import {
+  existingAccountLetter,
+  inviteLetter,
+  resetLetter,
+  verificationLetter,
+  type Letter,
+} from '../mail/letters.js';
+import { deliverReview } from '../mail/review-mail.js';
+import type { TraineeRepository } from '../trainees/trainee.repository.js';
 import type { PublicUser } from '../users/public-user.js';
 import { isRole, type Role } from '../users/role.js';
+import type { UserEntity } from '../users/user.entity.js';
 import { toPublicUser, type UserService } from '../users/user.service.js';
 import type { UserRepository } from '../users/user.repository.js';
 import {
@@ -27,6 +38,8 @@ import {
   RESET_TTL_MS,
   unusablePassword,
 } from './account.rules.js';
+
+const VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
 
 const CHECK = 'Check the highlighted fields.';
 
@@ -53,6 +66,8 @@ export class AccountService {
     private readonly secret: string | undefined,
     private readonly frontendUrl: string,
     private readonly limits: LimitSettings,
+    private readonly trainees: TraineeRepository,
+    private readonly logger: AppLogger,
   ) {}
 
   async requestReset(input: {
@@ -68,10 +83,15 @@ export class AccountService {
     await this.assertResetOpen(email, ip, input.now);
     const user = await this.users.findByEmail(email);
     if (user) {
-      await this.issueToken(user.id, 'reset', user.email, RESET_TTL_MS, input.now, (link) => ({
-        subject: 'Reset your Maxim Nyansa password',
-        text: `Use this link to choose a new password. It expires in 15 minutes.\n\n${link}\n`,
-      }));
+      await this.issueToken(
+        user.id,
+        'reset',
+        user.email,
+        user.role,
+        RESET_TTL_MS,
+        input.now,
+        resetLetter,
+      );
     }
     await this.audits.record({
       action: 'auth.password.reset.requested',
@@ -100,6 +120,8 @@ export class AccountService {
     if (!found || !user) throw new ApiError('validation', CHECK, { token: RESET_LINK_PROBLEM });
 
     await this.userRows.updatePassword(user.id, await this.hasher.hash(input.password));
+    await this.userRows.markEmailVerified(user.id, input.now);
+    await this.linkTrainee(user);
     await this.tokens.deleteById(found.id);
     await this.sessions.revokeOthers(user.id, null);
     await this.audits.record({
@@ -214,12 +236,10 @@ export class AccountService {
       created.id,
       'invite',
       email,
+      role,
       INVITE_TTL_MS,
       input.now,
-      (link) => ({
-        subject: 'Invitation to the Maxim Nyansa admin',
-        text: `Choose a password with this link. It expires in 24 hours.\n\n${link}\n`,
-      }),
+      inviteLetter,
     );
     await this.audits.record({
       action: 'auth.user.invited',
@@ -235,7 +255,12 @@ export class AccountService {
 
   private async createInvitedUser(email: string, role: Role): Promise<PublicUser> {
     try {
-      return await this.users.createUser({ email, password: unusablePassword(), role });
+      return await this.users.createUser({
+        email,
+        password: unusablePassword(),
+        role,
+        verified: false,
+      });
     } catch (error) {
       if (
         error instanceof UserFacingError &&
@@ -270,17 +295,67 @@ export class AccountService {
     }
   }
 
+  /** Ends every session for the account. Used when an administrator suspends it. */
+  revokeSessions(userId: string): Promise<void> {
+    return this.sessions.revokeOthers(userId, null);
+  }
+
+  /** Confirmation link for a trainee who still has to verify the mailbox. */
+  sendVerificationEmail(userId: string, email: string, now: Date): Promise<boolean> {
+    return this.issueToken(
+      userId,
+      'verify_email',
+      email,
+      'trainee',
+      VERIFY_TTL_MS,
+      now,
+      verificationLetter,
+    );
+  }
+
+  /** Sent when the mailbox already has a verified account. No token is minted. */
+  async sendExistingAccountNotice(email: string, role: Role): Promise<boolean> {
+    const path = role === 'trainee' ? '/forgot-password' : '/admin/forgot-password';
+    const letter = existingAccountLetter(`${this.frontendUrl}${path}`);
+    return this.mailTo(email, letter, 'existing_account', role);
+  }
+
+  /** Review outcome. The trainee id is attached when this address is on the roster. */
+  async sendReview(input: {
+    to: string;
+    item: string;
+    title: string;
+    approved: boolean;
+    reason: string;
+    path: string;
+  }): Promise<boolean> {
+    const trainee = await this.trainees.findByEmail(input.to);
+    return deliverReview(this.mail, {
+      to: input.to,
+      traineeId: trainee?.id ?? null,
+      item: input.item,
+      title: input.title,
+      approved: input.approved,
+      reason: input.reason,
+      portalUrl: `${this.frontendUrl}${input.path}`,
+    });
+  }
+
   private async issueToken(
     userId: string,
-    purpose: 'reset' | 'invite',
+    purpose: 'reset' | 'invite' | 'verify_email',
     to: string,
+    role: Role,
     ttlMs: number,
     now: Date,
-    compose: (link: string) => { subject: string; text: string },
+    compose: (link: string) => Letter,
   ): Promise<boolean> {
     const secret = this.secret;
-    if (!secret) return false;
-    if (purpose === 'reset') await this.tokens.deleteForUser(userId, 'reset');
+    if (!secret) {
+      this.logger.error({ purpose }, 'Mail was not sent because sign-in is not configured');
+      return false;
+    }
+    await this.tokens.deleteForUser(userId, purpose);
     const raw = newSecretToken();
     await this.tokens.insert({
       tokenHash: sessionTokenHash(raw, secret),
@@ -288,20 +363,45 @@ export class AccountService {
       userId,
       expiresAt: new Date(now.getTime() + ttlMs),
     });
-    const link = `${this.frontendUrl}/admin/reset-password?token=${encodeURIComponent(raw)}`;
-    const letter = compose(link);
-    try {
-      const result = await this.mail.send({ to, subject: letter.subject, text: letter.text });
-      return result.delivered;
-    } catch {
-      return false;
-    }
+    const letter = compose(this.linkFor(purpose, role, raw));
+    const kind =
+      purpose === 'reset' ? 'password_reset' : purpose === 'invite' ? 'invitation' : 'verification';
+    return this.mailTo(to, letter, kind, role);
+  }
+
+  private async mailTo(to: string, letter: Letter, kind: string, role: Role): Promise<boolean> {
+    const trainee = role === 'trainee' ? await this.trainees.findByEmail(to) : null;
+    const result = await this.mail.send({
+      to,
+      subject: letter.subject,
+      text: letter.text,
+      html: letter.html,
+      kind,
+      ...(trainee ? { traineeId: trainee.id } : {}),
+    });
+    return result.delivered;
+  }
+
+  private linkFor(purpose: TokenPurpose, role: Role, raw: string): string {
+    const token = encodeURIComponent(raw);
+    if (purpose === 'verify_email') return `${this.frontendUrl}/verify-email?token=${token}`;
+    const path = role === 'trainee' ? '/portal/reset-password' : '/admin/reset-password';
+    return `${this.frontendUrl}${path}?token=${token}`;
+  }
+
+  private async linkTrainee(user: UserEntity): Promise<void> {
+    if (user.role !== 'trainee' || user.traineeId) return;
+    const trainee = await this.trainees.findByEmail(user.email);
+    if (!trainee) return;
+    const taken = await this.userRows.findByTraineeId(trainee.id);
+    if (taken && taken.id !== user.id) return;
+    await this.userRows.setTraineeLink(user.id, trainee.id);
   }
 
   private async findLiveToken(token: string, now: Date): Promise<AccessTokenEntity | null> {
     if (!this.secret || token.length === 0) return null;
     const row = await this.tokens.findByHash(sessionTokenHash(token, this.secret));
-    if (!row) return null;
+    if (!row || (row.purpose !== 'reset' && row.purpose !== 'invite')) return null;
     if (row.expiresAt.getTime() <= now.getTime()) {
       await this.tokens.deleteById(row.id);
       return null;

@@ -82,10 +82,14 @@ export function RequireAccess({ permission, children }: { permission: Permission
   const location = useLocation();
   const covering = useBootCovering();
   if (!auth.ready) return covering ? null : <Loader variant="page" message="Loading the bootcamp…" label="Checking your session" />;
-  if (!auth.signedIn && auth.expired) return <Navigate to="/admin/session-expired" replace />;
+  const traineeGate = permission === 'portal.access';
+  if (!auth.signedIn && auth.expired) {
+    return <Navigate to={traineeGate ? '/login' : '/admin/session-expired'} replace />;
+  }
   if (!auth.signedIn) {
     const next = encodeURIComponent(`${location.pathname}${location.search}`);
-    return <Navigate to={`/admin/login?next=${next}`} replace />;
+    const gate = traineeGate ? '/login' : '/admin/login';
+    return <Navigate to={`${gate}?next=${next}`} replace />;
   }
   if (!auth.allowed(permission)) return <Navigate to="/admin/forbidden" replace />;
   return children;

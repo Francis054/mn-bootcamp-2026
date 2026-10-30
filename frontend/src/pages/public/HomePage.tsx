@@ -207,7 +207,7 @@ export function HomePage() {
             {trainees.slice(0, 6).map((trainee) => (
               <Link className="tcard" to={`/trainees/${trainee.id}`} key={trainee.id}>
                 <TraineeArt trainee={trainee} variant="card" />
-                <div className="tcard__body"><h3>{trainee.displayName}</h3><p>Focus: {moduleOf(trainee.focus).name}</p></div>
+                <div className="tcard__body"><h3>{trainee.displayName}</h3><p>{trainee.headline ? trainee.headline : `Focus: ${moduleOf(trainee.focus).name}`}</p>{trainee.location ? <p className="muted">{trainee.location}</p> : null}</div>
               </Link>
             ))}
           </div>

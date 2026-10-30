@@ -8,6 +8,13 @@ import { workPhotoPaths, workPhotoSchemas } from './work-photo-docs.js';
 import { projectPaths, projectSchemas } from './project-docs.js';
 import { traineePaths, traineeSchemas } from './trainee-docs.js';
 import { timetablePaths, timetableSchemas } from './timetable-docs.js';
+import { portalPaths, portalSchemas } from './portal-docs.js';
+import { portfolioPaths, portfolioSchemas } from './portfolio-docs.js';
+import { progressPaths, progressSchemas } from './progress-docs.js';
+import { cvPaths, cvSchemas } from './cv-docs.js';
+import { reachPaths, reachSchemas } from './reach-docs.js';
+import { journeyPaths, journeySchemas } from './journey-docs.js';
+import { privacyPaths, privacySchemas } from './privacy-docs.js';
 
 export const openApiSpec = {
   openapi: '3.0.3',
@@ -15,7 +22,7 @@ export const openApiSpec = {
     title: 'Maxim Nyansa Bootcamp API',
     version: '0.9.0',
     description:
-      'Bootcamp API. Implemented routes: health, sign-in, sessions, password change and reset, invitations, the curriculum, trainee profiles, projects, events, the gallery, work photos, the content singletons, and the contact form. Public reads return published copies. Homepage, about, the timeline, and settings each keep a draft for editors. The announcement banner is part of the homepage. Foundation counters are stored with settings and are published with them. A public gallery photo also needs verified consent. Verifying consent does not publish the photo. Work photos are uploaded by an administrator and stay off the public site until that administrator publishes them. Site image slots are the community badge, the parent-organisation plate, and the built-in page photographs. Anyone can read them. Only an administrator can replace one or put the bundled file back. A scheduled event stays off the public routes until its Africa/Accra start, and that clock is UTC. A public trainee also needs profile consent. Project links are included only when every linked trainee has agreed to share them. A password reset response does not say whether the mailbox exists. There is no public registration.',
+      'Bootcamp API. Implemented routes: health, sign-in, sessions, password change and reset, invitations, trainee signup and email confirmation, the trainee portal, the curriculum, trainee profiles, projects, events, the gallery, work photos, the content singletons, and the contact form. Public reads return published copies. Homepage, about, the timeline, and settings each keep a draft for editors. The announcement banner is part of the homepage. Foundation counters are stored with settings and are published with them. A public gallery photo also needs verified consent. Verifying consent does not publish the photo. Work photos are uploaded by an administrator and stay off the public site until that administrator publishes them. Site image slots are the community badge, the parent-organisation plate, and the built-in page photographs. Anyone can read them. Only an administrator can replace one or put the bundled file back. A scheduled event stays off the public routes until its Africa/Accra start, and that clock is UTC. A public trainee also needs profile consent. Project links are included only when every linked trainee has agreed to share them. A password reset response does not say whether the mailbox exists. Trainee signup is roster-only: an email that is not on the cohort list is queued for an administrator, and the public response does not say which happened.',
   },
   servers: [{ url: '/' }],
   paths: {
@@ -74,6 +81,11 @@ export const openApiSpec = {
             description: 'The body failed validation.',
             content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorBody' } } },
           },
+          '403': {
+            description:
+              'The password matched a trainee account whose email is not confirmed yet. A suspended account uses the same 401 as a wrong password.',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorBody' } } },
+          },
           '429': {
             description: 'Too many sign-in attempts.',
             content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorBody' } } },
@@ -123,6 +135,13 @@ export const openApiSpec = {
     ...contentPaths,
     ...accountPaths,
     ...timetablePaths,
+    ...portalPaths,
+    ...portfolioPaths,
+    ...progressPaths,
+    ...cvPaths,
+    ...reachPaths,
+    ...journeyPaths,
+    ...privacyPaths,
   },
   components: {
     schemas: {
@@ -149,14 +168,28 @@ export const openApiSpec = {
       PublicUser: {
         type: 'object',
         additionalProperties: false,
-        required: ['id', 'email', 'displayName', 'initials', 'hue', 'role'],
+        required: [
+          'id',
+          'email',
+          'displayName',
+          'initials',
+          'hue',
+          'role',
+          'emailVerified',
+          'traineeId',
+        ],
         properties: {
           id: { type: 'string', format: 'uuid' },
           email: { type: 'string' },
           displayName: { type: 'string' },
           initials: { type: 'string' },
           hue: { type: 'integer', minimum: 0, maximum: 359 },
-          role: { type: 'string', enum: ['viewer', 'editor', 'administrator'] },
+          role: {
+            type: 'string',
+            enum: ['trainee', 'trainer', 'viewer', 'editor', 'administrator'],
+          },
+          emailVerified: { type: 'boolean' },
+          traineeId: { type: 'string', nullable: true },
         },
       },
       LoginResponse: {
@@ -219,6 +252,13 @@ export const openApiSpec = {
       ...contentSchemas,
       ...accountSchemas,
       ...timetableSchemas,
+      ...portalSchemas,
+      ...portfolioSchemas,
+      ...progressSchemas,
+      ...cvSchemas,
+      ...reachSchemas,
+      ...journeySchemas,
+      ...privacySchemas,
     },
   },
 };

@@ -1,4 +1,5 @@
 import type { Listing, PublicationStatus } from '../curriculum/publication.js';
+import { visiblePhotoUrl } from './profile-review.js';
 
 /**
  * The admin shape. It matches the website's `Trainee` and adds the consent
@@ -18,6 +19,14 @@ export interface TraineeRecord {
   quote: string;
   linkedin: string | null;
   portfolio: string | null;
+  headline: string;
+  location: string;
+  githubUrl: string | null;
+  photoConsent: boolean;
+  contactConsent: boolean;
+  publicLinks: boolean;
+  profileReviewStatus: string;
+  profileRejectionReason: string;
   photoUrl: string | null;
   /** Absent from the public profile. Used only to delete the stored object. */
   photoStorageKey: string | null;
@@ -34,6 +43,7 @@ export interface TraineeRecord {
   statusLabel: string;
   internalNotes: string;
   lessonIds: string[];
+  slug: string | null;
   updatedAt: string;
 }
 
@@ -48,10 +58,18 @@ export interface PublicTrainee {
   skills: string[];
   bio: string;
   quote: string;
+  headline: string;
+  location: string;
   photoUrl: string | null;
+  linkedin?: string;
+  githubUrl?: string;
+  portfolio?: string;
   listing: Listing;
   publicationStatus: PublicationStatus;
   statusLabel: string;
+  /** True when the trainee agreed that employers may write through the site. The address stays off this object. */
+  contactAvailable: boolean;
+  slug?: string;
 }
 
 export function toPublicTrainee(row: TraineeRecord): PublicTrainee {
@@ -65,9 +83,16 @@ export function toPublicTrainee(row: TraineeRecord): PublicTrainee {
     skills: row.skills,
     bio: row.bio,
     quote: row.quote,
-    photoUrl: row.photoUrl,
+    headline: row.headline,
+    location: row.location,
+    photoUrl: visiblePhotoUrl(row.photoUrl, row.photoConsent),
+    ...(row.publicLinks && row.linkedin ? { linkedin: row.linkedin } : {}),
+    ...(row.publicLinks && row.githubUrl ? { githubUrl: row.githubUrl } : {}),
+    ...(row.publicLinks && row.portfolio ? { portfolio: row.portfolio } : {}),
     listing: row.listing,
     publicationStatus: row.publicationStatus,
     statusLabel: row.statusLabel,
+    contactAvailable: row.contactConsent,
+    ...(row.slug ? { slug: row.slug } : {}),
   };
 }

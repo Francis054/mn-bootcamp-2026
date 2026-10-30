@@ -265,6 +265,17 @@ describe('HTTP pipeline', () => {
     expect(fresh.headers['cache-control']).toBe('private, no-store');
   });
 
+  it('does not cache a public CV download', async () => {
+    const curriculum = Router();
+    curriculum.get('/public/cv/:token', (_req, res) => {
+      res.status(200).type('application/pdf').send(Buffer.from('%PDF-1.7'));
+    });
+    const { app } = appWith({ curriculumRouter: curriculum });
+    const response = await request(app).get('/api/v1/public/cv/sample.token').expect(200);
+    expect(response.headers['cache-control']).toBe(PRIVATE_CACHE_CONTROL);
+    expect(String(response.headers['cache-control'])).not.toContain('public');
+  });
+
   it('refuses to store admin, sign-in, and public writes', async () => {
     const auth = Router();
     auth.get('/session', (_req, res) => {

@@ -1,6 +1,57 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-const AUTH_AUDIT_ACTIONS = ['auth.login.succeeded', 'auth.login.failed', 'auth.logout'] as const;
+const AUTH_AUDIT_ACTIONS = [
+  'auth.login.succeeded',
+  'auth.login.failed',
+  'auth.logout',
+  'auth.trainee.signup',
+  'auth.trainee.verified',
+  'auth.trainee.verify.resent',
+  'auth.trainee.approved',
+  'auth.trainee.rejected',
+  'auth.user.disabled',
+  'auth.user.enabled',
+] as const;
+
+const PORTAL_AUDIT_ACTIONS = [
+  'portal.profile.approved',
+  'portal.profile.rejected',
+  'portal.profile.admin_updated',
+  'portal.photo.changed',
+  'portal.consent.changed',
+  'portal.portfolio.approved',
+  'portal.portfolio.rejected',
+  'portal.portfolio.admin_updated',
+  'portal.portfolio.deleted',
+  'portal.skill.approved',
+  'portal.skill.rejected',
+  'portal.skill.admin_updated',
+  'portal.skill.deleted',
+  'portal.event.approved',
+  'portal.event.rejected',
+  'portal.event.admin_updated',
+  'portal.event.deleted',
+  'portal.cv.uploaded',
+  'portal.cv.replaced',
+  'portal.cv.removed',
+  'portal.cv.approved',
+  'portal.cv.rejected',
+  'portal.cv.visibility',
+  'contact.created',
+  'contact.blocked',
+  'cv.request.created',
+  'cv.request.sent',
+  'portal.milestone.created',
+  'portal.milestone.updated',
+  'portal.milestone.deleted',
+] as const;
+
+const PRIVACY_AUDIT_ACTIONS = [
+  'mail.outbox.resent',
+  'trainee.data.exported',
+  'trainee.data.removed',
+  'trainee.removal.retried',
+] as const;
 
 const ACCOUNT_AUDIT_ACTIONS = [
   'auth.password.changed',
@@ -45,11 +96,15 @@ export type CurriculumAuditAction = `curriculum.${CurriculumKind}.${CurriculumVe
 export type AuditAction =
   | (typeof AUTH_AUDIT_ACTIONS)[number]
   | (typeof ACCOUNT_AUDIT_ACTIONS)[number]
+  | (typeof PORTAL_AUDIT_ACTIONS)[number]
+  | (typeof PRIVACY_AUDIT_ACTIONS)[number]
   | CurriculumAuditAction;
 
 export const AUDIT_ACTIONS: readonly AuditAction[] = [
   ...AUTH_AUDIT_ACTIONS,
   ...ACCOUNT_AUDIT_ACTIONS,
+  ...PORTAL_AUDIT_ACTIONS,
+  ...PRIVACY_AUDIT_ACTIONS,
   ...CURRICULUM_KINDS.flatMap((kind) =>
     CURRICULUM_VERBS.map((verb): CurriculumAuditAction => `curriculum.${kind}.${verb}`),
   ),

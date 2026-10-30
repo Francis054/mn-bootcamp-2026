@@ -11,6 +11,15 @@ import { MODULES, mediaSrc } from './fixtures';
 import { SITE_IMAGE_SLOTS, isSiteImageKey, siteImageAltError, siteImageTaglineError, slotDefaults, slotTagline, toPublicSiteImage } from '@/domain/siteImages';
 import { readWorkPhotoDataUrl, workPhotoFieldErrors, workPhotoFileError } from '@/domain/workPhoto';
 import { clearSession, markSessionExpired, readActiveSession, setSession } from './session';
+import { resetTraineeAuthDev, traineeAuthRoute } from './trainee-auth';
+import { portalProfileRoute, resetPortalProfileDev } from './portal-profile';
+import { portfolioRoute, resetPortfolioDev } from './portfolio';
+import { progressRoute, resetProgressDev } from './progress';
+import { cvRoute, publicCvFor, resetCvDev } from './cv';
+import { reachRoute, resetReachDev } from './reach';
+import { journeyRoute, resetJourneyDev } from './journey';
+import { privacyRoute, resetPrivacyDev } from './privacy';
+import { filterDirectory } from '@/domain/directory';
 import { getState, updateState } from './store';
 import { isAdminTimetablePath, isPublicTimetablePath, NOT_HANDLED, resetTimetableStore, timetableRoute } from './timetable-store';
 
@@ -27,6 +36,14 @@ export function resetDevTransport(): void {
   resetTickets.clear();
   armed = null;
   resetTimetableStore();
+  resetTraineeAuthDev();
+  resetPortalProfileDev();
+  resetPortfolioDev();
+  resetProgressDev();
+  resetCvDev();
+  resetReachDev();
+  resetJourneyDev();
+  resetPrivacyDev();
 }
 
 function takeArmed(): void {
@@ -132,6 +149,20 @@ export async function devTransport<T>(req: ApiRequest): Promise<T> {
   takeArmed();
   const path = req.path.split('?')[0] || '/';
   const method = req.method;
+  const portalProfile = await portalProfileRoute(method, path, req.body);
+  if (portalProfile !== undefined) return portalProfile as T;
+  const portfolio = await portfolioRoute(method, path, req.body);
+  if (portfolio !== undefined) return portfolio as T;
+  const progress = await progressRoute(method, path, req.body);
+  if (progress !== undefined) return progress as T;
+  const cv = await cvRoute(method, path, req.body);
+  if (cv !== undefined) return cv as T;
+  const reach = reachRoute(method, path, formFields(req.body));
+  if (reach !== undefined) return reach as T;
+  const journey = await journeyRoute(method, path, req.body);
+  if (journey !== undefined) return journey as T;
+  const privacy = privacyRoute(method, path, formFields(req.body));
+  if (privacy !== undefined) return privacy as T;
   if (method === 'POST' && path === '/admin/trainees/photo') {
     return (await storeTraineePhoto(req.body)) as T;
   }
@@ -183,6 +214,9 @@ function formFields(value: unknown): Record<string, unknown> {
 async function route(method: string, path: string, query: ListQuery & Record<string, string>, body: Record<string, unknown>): Promise<unknown> {
   const id = path.split('/')[3] ?? '';
 
+  const traineeAuth = traineeAuthRoute(method, path, body);
+  if (traineeAuth !== undefined) return traineeAuth;
+
   if (method === 'POST' && path === '/auth/login') return login(body);
   if (method === 'POST' && path === '/auth/logout') {
     clearSession();
@@ -204,8 +238,20 @@ async function route(method: string, path: string, query: ListQuery & Record<str
   if (method === 'GET' && path === '/public/milestones') return getState().milestones;
   if (method === 'GET' && path === '/public/classes') return getState().lessons.filter(isPubliclyListable).map(toPublicLesson);
   if (method === 'GET' && path.startsWith('/public/classes/')) return publicOne(getState().lessons, path.split('/')[3] ?? '', toPublicLesson);
-  if (method === 'GET' && path === '/public/trainees') return getState().trainees.filter(isPubliclyListable).map(toPublicTrainee);
-  if (method === 'GET' && path.startsWith('/public/trainees/')) return publicOne(getState().trainees, path.split('/')[3] ?? '', toPublicTrainee);
+  if (method === 'GET' && path === '/public/trainees') {
+    const rows = getState().trainees.filter(isPubliclyListable).map((row) => ({ ...toPublicTrainee(row), cv: publicCvFor(row.id) }));
+    return filterDirectory(rows, {
+      q: String(query.q ?? ''),
+      track: String(query.track ?? ''),
+      focus: String(query.focus ?? ''),
+      skill: String(query.skill ?? ''),
+    });
+  }
+  if (method === 'GET' && /^\/public\/trainees\/[^/]+$/.test(path)) {
+    const traineeId = decodeURIComponent(path.split('/')[3] ?? '');
+    const one = publicOne(getState().trainees, traineeId, toPublicTrainee);
+    return { ...one, cv: publicCvFor(traineeId) };
+  }
   if (method === 'GET' && path === '/public/projects') return getState().projects.filter(isPubliclyListable).map(toPublicProject);
   if (method === 'GET' && path.startsWith('/public/projects/')) return publicOne(getState().projects, path.split('/')[3] ?? '', toPublicProject);
   if (method === 'GET' && path === '/public/events') return getState().events.filter(isPubliclyListable).map(toPublicEvent);
@@ -371,7 +417,7 @@ function login(body: Record<string, unknown>) {
   const locked = failures.get(email);
   if (locked && locked.lockedUntil > Date.now()) fail('rate_limited', 'Too many sign-in attempts. Wait a minute and try again.', 429);
   const user = getState().users.find((item) => item.email === email);
-  if (!user) {
+  if (!user || user.disabled) {
     const row = failures.get(email) ?? { count: 0, lockedUntil: 0 };
     row.count += 1;
     if (row.count >= 5) {
@@ -379,12 +425,24 @@ function login(body: Record<string, unknown>) {
       row.count = 0;
     }
     failures.set(email, row);
-    fail('unauthenticated', 'No development fixture matches that email. Try viewer@example.test, editor@example.test or administrator@example.test.', 401);
+    fail('unauthenticated', user ? 'The email or password is not correct.' : 'No development fixture matches that email. Try viewer@example.test, editor@example.test or administrator@example.test.', 401);
+  }
+  if (user.role === 'trainee' && user.emailVerified === false) {
+    fail('forbidden', 'Confirm your email before you sign in. You can request another link.', 403);
   }
   failures.delete(email);
   const session = {
     mode: 'development' as const,
-    user: { id: user.id, email: user.email, displayName: user.displayName, initials: user.initials, hue: user.hue, role: user.role },
+    user: {
+      id: user.id,
+      email: user.email,
+      displayName: user.displayName,
+      initials: user.initials,
+      hue: user.hue,
+      role: user.role,
+      emailVerified: user.emailVerified !== false,
+      traineeId: user.traineeId ?? null,
+    },
     expiresAt: Date.now() + env.sessionTtlMs,
   };
   setSession(session);
@@ -404,7 +462,7 @@ function requestReset(body: Record<string, unknown>) {
     accepted: true,
     delivered: false,
     message: 'No email was sent. The development adapter does not have a mail provider.',
-    developmentResetPath: user ? `/admin/reset-password?token=${token}` : null,
+    developmentResetPath: user ? `${user.role === 'trainee' ? '/portal/reset-password' : '/admin/reset-password'}?token=${token}` : null,
   };
 }
 
@@ -419,6 +477,12 @@ function completeReset(body: Record<string, unknown>) {
     confirm: next && next === confirm ? null : 'The two passwords do not match.',
   }));
   resetTickets.delete(token);
+  if (ticket) {
+    updateState((state) => ({
+      ...state,
+      users: state.users.map((user) => (user.id === ticket.userId ? { ...user, emailVerified: true } : user)),
+    }));
+  }
   return {
     completed: true,
     passwordStored: false,
@@ -568,7 +632,12 @@ function traineeBody(input: Record<string, unknown>, current?: Trainee): Trainee
     quote: String(input.quote ?? current?.quote ?? ''),
     linkedin: linkValue(input.linkedin, current?.linkedin).stored,
     portfolio: linkValue(input.portfolio, current?.portfolio).stored,
+    headline: String(input.headline ?? current?.headline ?? ''),
+    location: String(input.location ?? current?.location ?? ''),
+    githubUrl: linkValue(input.githubUrl, current?.githubUrl).stored,
     photoUrl: storedPhoto(input.photoUrl, current?.photoUrl ?? null),
+    photoConsent: input.photoUrl === undefined ? current?.photoConsent : Boolean(storedPhoto(input.photoUrl, current?.photoUrl ?? null)),
+    publicLinks: current?.publicLinks,
     consentReceived,
     listing,
     publicationStatus,
