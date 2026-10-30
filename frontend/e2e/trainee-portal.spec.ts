@@ -50,8 +50,20 @@ test('trainee signup, verification, portal, and the admin queue', async ({ page 
   await page.getByRole('checkbox').check();
   await page.getByRole('button', { name: /sign in/i }).click();
   await expect(page.getByRole('heading', { name: /hello, roster person/i })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Projects' })).toBeVisible();
-  await shot(page, `trainee-portal-${suffix}`);
+  await expect(page.getByRole('heading', { name: 'Your profile' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Portfolio' })).toBeVisible();
+  await page.getByRole('textbox', { name: 'Headline', exact: true }).fill('Aspiring SOC analyst');
+  await page.getByRole('textbox', { name: 'Short bio', exact: true }).fill('I am learning detection and response.');
+  await page.getByRole('textbox', { name: 'Location', exact: true }).fill('Accra');
+  await page.getByRole('textbox', { name: 'LinkedIn', exact: true }).fill('https://www.linkedin.com/in/roster-person');
+  await page.getByRole('textbox', { name: 'GitHub', exact: true }).fill('https://github.com/roster-person');
+  await page.getByRole('button', { name: 'Save profile' }).click();
+  await expect(page.getByText(/Saved/)).toBeVisible();
+  await page.getByRole('checkbox', { name: /name, headline/i }).check();
+  await expect(page.getByText('Consent saved.')).toBeVisible();
+  await page.getByRole('button', { name: 'Submit for review' }).click();
+  await expect(page.getByText('Pending review')).toBeVisible();
+  await shot(page, `trainee-profile-${suffix}`);
 
   await page.getByRole('button', { name: /log out/i }).click();
   await clientGo(page, '/admin/login');
@@ -60,6 +72,13 @@ test('trainee signup, verification, portal, and the admin queue', async ({ page 
   await page.getByRole('checkbox').check();
   await page.getByRole('button', { name: /sign in/i }).click();
   await expect(page.getByRole('heading', { name: /sample administrator/i })).toBeVisible();
+  await clientGo(page, '/admin/review');
+  await expect(page.getByRole('heading', { name: /review queue/i })).toBeVisible();
+  await expect(page.getByText('trainee05@example.test')).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Short bio', exact: true })).toHaveValue(/learning detection/);
+  await page.waitForFunction(() => document.querySelector('.boot-screen') === null);
+  await shot(page, `admin-review-${suffix}`);
+
   await clientGo(page, '/admin/pending-registrations');
   await expect(page.getByRole('heading', { name: /signup requests/i })).toBeVisible();
   await expect(page.getByText('not-on-roster@example.test')).toBeVisible();

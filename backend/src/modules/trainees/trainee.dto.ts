@@ -90,6 +90,19 @@ export class TraineeCreateDto {
   portfolio?: string | null;
 
   @IsOptional()
+  @rule('headline', (value) => plainTextMessage(typeof value === 'string' ? value.trim() : value, 160), 'Use at most 160 characters.')
+  headline?: string;
+
+  @IsOptional()
+  @rule('location', (value) => plainTextMessage(typeof value === 'string' ? value.trim() : value, 120), 'Use at most 120 characters.')
+  location?: string;
+
+  @IsOptional()
+  @Transform(blankLink)
+  @rule('githubUrl', optionalHttpUrlMessage, 'Enter a full link starting with https://')
+  githubUrl?: string | null;
+
+  @IsOptional()
   @Transform(blankLink)
   @rule('photoUrl', photoUrlMessage, 'Use a JPEG, PNG, or WebP image.')
   photoUrl?: string | null;
@@ -181,6 +194,19 @@ export class TraineePatchDto {
   @Transform(blankLink)
   @rule('portfolio', optionalHttpUrlMessage, 'Enter a full link starting with https://')
   portfolio?: string | null;
+
+  @IsOptional()
+  @rule('headline', (value) => plainTextMessage(typeof value === 'string' ? value.trim() : value, 160), 'Use at most 160 characters.')
+  headline?: string;
+
+  @IsOptional()
+  @rule('location', (value) => plainTextMessage(typeof value === 'string' ? value.trim() : value, 120), 'Use at most 120 characters.')
+  location?: string;
+
+  @IsOptional()
+  @Transform(blankLink)
+  @rule('githubUrl', optionalHttpUrlMessage, 'Enter a full link starting with https://')
+  githubUrl?: string | null;
 
   @IsOptional()
   @Transform(blankLink)

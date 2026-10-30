@@ -1,5 +1,7 @@
 import { ApiError } from '../../shared/errors/api-error.js';
-import { readImage, type ImageMime } from '../gallery/image-bytes.js';
+import { readImage } from '../gallery/image-bytes.js';
+import { sniffVideo } from '../portfolio/video-bytes.js';
+import { stripImageMetadata } from '../gallery/strip-metadata.js';
 import { imageSizeMessage } from '../gallery/media.rules.js';
 import { MemoryStorage } from '../storage/memory-storage.js';
 import type { StorageProvider } from '../storage/storage-provider.js';
@@ -32,8 +34,12 @@ export async function storeProfilePhoto(
       photoUrl: 'Use a JPEG, PNG, or WebP image.',
     });
   }
+  const stripped = stripImageMetadata(bytes);
+  const checked = readImage(stripped);
+  const payload = checked ? stripped : bytes;
+  const mime = checked?.mime ?? image.mime;
   try {
-    const stored = await storage.put({ bytes, mime: image.mime });
+    const stored = await storage.put({ bytes: payload, mime });
     const photoUrl = stored.publicUrl.startsWith('memory:')
       ? `${LOCAL_PREFIX}${stored.key}`
       : stored.publicUrl;
@@ -47,13 +53,15 @@ export async function storeProfilePhoto(
 export function readMemoryUpload(
   storage: StorageProvider,
   key: string,
-): { bytes: Buffer; mime: ImageMime } | undefined {
+): { bytes: Buffer; mime: string } | undefined {
   if (!UUID.test(key) || !(storage instanceof MemoryStorage)) return undefined;
   const bytes = storage.objects.get(key);
   if (!bytes) return undefined;
   const image = readImage(bytes);
-  if (!image) return undefined;
-  return { bytes, mime: image.mime };
+  if (image) return { bytes, mime: image.mime };
+  const video = sniffVideo(bytes);
+  if (!video) return undefined;
+  return { bytes, mime: video };
 }
 
 function storageFailure(error: unknown): ApiError {

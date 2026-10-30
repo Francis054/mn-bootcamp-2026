@@ -42,6 +42,58 @@ export class CloudinaryStorage implements StorageProvider {
     await this.request('image/destroy', body);
   }
 
+  /**
+   * Signed direct upload. The browser posts the file to Cloudinary.
+   * The API secret stays here and is not one of the returned fields.
+   */
+  signVideoUpload(publicId: string, now = Date.now()): { uploadUrl: string; fields: Record<string, string> } {
+    const timestamp = String(Math.floor(now / 1000));
+    const signature = sign({ public_id: publicId, timestamp }, this.settings.apiSecret);
+    const cloud = encodeURIComponent(this.settings.cloudName);
+    return {
+      uploadUrl: `https://api.cloudinary.com/v1_1/${cloud}/video/upload`,
+      fields: {
+        api_key: this.settings.apiKey,
+        timestamp,
+        public_id: publicId,
+        signature,
+      },
+    };
+  }
+
+  /** Read back a video Cloudinary accepted. Undefined when the asset is missing. */
+  async describeVideo(
+    publicId: string,
+  ): Promise<{ publicUrl: string; bytes: number; format: string; resourceType: string } | undefined> {
+    const cloud = encodeURIComponent(this.settings.cloudName);
+    const id = encodeURIComponent(publicId);
+    const token = Buffer.from(`${this.settings.apiKey}:${this.settings.apiSecret}`).toString('base64');
+    const response = await (this.settings.fetchImpl ?? fetch)(
+      `https://api.cloudinary.com/v1_1/${cloud}/resources/video/upload/${id}`,
+      { headers: { Authorization: `Basic ${token}` } },
+    );
+    if (!response.ok) return undefined;
+    const payload: unknown = await response.json();
+    if (typeof payload !== 'object' || payload === null || Array.isArray(payload)) return undefined;
+    const record = payload as Record<string, unknown>;
+    const publicUrl = typeof record.secure_url === 'string' ? record.secure_url : '';
+    const format = typeof record.format === 'string' ? record.format : '';
+    const bytes = typeof record.bytes === 'number' ? record.bytes : -1;
+    const resourceType = typeof record.resource_type === 'string' ? record.resource_type : '';
+    if (publicUrl === '') return undefined;
+    return { publicUrl, bytes, format, resourceType };
+  }
+
+  async deleteVideo(publicId: string): Promise<void> {
+    const timestamp = String(Math.floor(Date.now() / 1000));
+    const body = new URLSearchParams();
+    body.set('public_id', publicId);
+    body.set('timestamp', timestamp);
+    body.set('api_key', this.settings.apiKey);
+    body.set('signature', sign({ public_id: publicId, timestamp }, this.settings.apiSecret));
+    await this.request('video/destroy', body);
+  }
+
   private async request(action: string, body: FormData | URLSearchParams): Promise<JsonRecord> {
     const cloud = encodeURIComponent(this.settings.cloudName);
     const response = await (this.settings.fetchImpl ?? fetch)(

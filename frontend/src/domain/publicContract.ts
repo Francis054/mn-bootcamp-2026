@@ -155,7 +155,10 @@ export function normalizeTrainees(value: unknown): PublicTrainee[] {
       skills: lines(row.skills),
       bio: text(row.bio),
       quote: text(row.quote),
+      ...(text(row.headline) ? { headline: text(row.headline) } : {}),
+      ...(text(row.location) ? { location: text(row.location) } : {}),
       photoUrl: displayPhotoUrl(row.photoUrl),
+      ...publicTraineeLinks(row),
       listing: listing(row.listing),
       publicationStatus: status(row.publicationStatus),
       statusLabel: text(row.statusLabel, 'In training'),
@@ -164,6 +167,28 @@ export function normalizeTrainees(value: unknown): PublicTrainee[] {
 }
 
 /** A public https link with no embedded password. Anything else stays off the page. */
+function publicTraineeLinks(row: Record<string, unknown>): Pick<PublicTrainee, 'linkedin' | 'githubUrl' | 'portfolio'> {
+  const linkedin = hostedHttps(row.linkedin, (host) => host === 'linkedin.com' || host.endsWith('.linkedin.com'));
+  const githubUrl = hostedHttps(row.githubUrl, (host) => host === 'github.com' || host === 'www.github.com');
+  const portfolio = publicHttpsUrl(row.portfolio);
+  return {
+    ...(linkedin ? { linkedin } : {}),
+    ...(githubUrl ? { githubUrl } : {}),
+    ...(portfolio ? { portfolio } : {}),
+  };
+}
+
+function hostedHttps(value: unknown, allowed: (host: string) => boolean): string | undefined {
+  const url = publicHttpsUrl(value);
+  if (!url) return undefined;
+  try {
+    const host = new URL(url).hostname.toLowerCase().replace(/\.$/, '');
+    return allowed(host) ? url : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function publicHttpsUrl(value: unknown): string | undefined {
   if (typeof value !== 'string') return undefined;
   const trimmed = value.trim();

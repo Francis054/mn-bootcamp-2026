@@ -91,6 +91,10 @@ function appFor(role: 'editor' | 'viewer' | null) {
       {} as never,
       timetable,
       {} as never,
+      {} as never,
+      {} as never,
+      50 * 1024 * 1024,
+      {} as never,
     ),
   );
   app.use(errorHandler(pino({ level: 'silent' }), { nodeEnv: 'test' } as never));

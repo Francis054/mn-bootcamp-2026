@@ -6,7 +6,7 @@ import type { Permission, Role } from './types';
  */
 export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
   trainee: ['portal.access', 'portal.write', 'account.manage'],
-  trainer: ['account.manage'],
+  trainer: ['account.manage', 'progress.read'],
   viewer: ['content.read', 'account.manage'],
   editor: ['content.read', 'content.write', 'media.upload', 'media.write', 'account.manage'],
   administrator: [

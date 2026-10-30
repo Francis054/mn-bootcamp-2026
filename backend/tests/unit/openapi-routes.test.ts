@@ -45,6 +45,10 @@ function registeredOperations(): string[] {
     {} as never,
     {} as never,
     {} as never,
+    {} as never,
+    {} as never,
+    50 * 1024 * 1024,
+    {} as never,
   );
   const operations = [
     ...walk(health, '/api/v1/health'),

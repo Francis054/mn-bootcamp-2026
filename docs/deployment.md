@@ -87,7 +87,7 @@ Supabase free backup retention was not confirmed for this note. Look at the proj
 - Integration tests use a Postgres 16 service and `TEST_DATABASE_URL` ending in `mn_bootcamp_test`. They do not start Docker.
 - npm caches the lockfiles. The two jobs run at the same time. Playwright is not part of this workflow.
 
-After the pull request is merged, run `npm run migration:run` from `backend/` before serving. Do not run `npm run seed` on the hosted database. Trainee signup also needs `TRAINEE_SIGNUP_MODE=roster` (or leave it unset), `RESEND_API_KEY`, and `EMAIL_FROM` on a verified domain. Until the domain is verified, confirmation mail only reaches the Resend account owner. The DNS steps are in `docs/email.md`.
+After the pull request is merged, run `npm run migration:run` from `backend/` before serving. Migration 19 adds trainee portfolio items. Do not run `npm run seed` on the hosted database. `VIDEO_UPLOAD_MAX_BYTES` is optional. Leave it blank for a 50 MB video limit. Trainee signup also needs `TRAINEE_SIGNUP_MODE=roster` (or leave it unset), `RESEND_API_KEY`, and `EMAIL_FROM` on a verified domain. Until the domain is verified, confirmation mail only reaches the Resend account owner. The DNS steps are in `docs/email.md`.
 
 GitHub runs a scheduled workflow only from the repository’s default branch, and only if the workflow file is on that branch (https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule, checked 24 October 2026). The workflow and the script are on `main`, and `main` is the default branch, so the schedule runs once `KEEPALIVE_URL` is set. Do not change the default branch.
 

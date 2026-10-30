@@ -18,6 +18,8 @@ import { collect, emailAddress, minLength, required } from '@/domain/validate';
 import { usePublicContent } from '@/hooks/useContent';
 import { downloadCalendar, EventRow, moduleOf, PageIntro, PublicGate, SampleMark, TraineeArt } from './helpers';
 import { PublicWorkPhotos } from './WorkPhotos';
+import { TraineePortfolio } from './TraineePortfolio';
+import { TraineeProgress } from './TraineeProgress';
 
 export { ProjectPage } from './ProjectPage';
 
@@ -45,7 +47,7 @@ export function TraineesPage() {
                 {rows.map((trainee) => (
                   <Link className="tcard" to={`/trainees/${trainee.id}`} key={trainee.id}>
                     <TraineeArt trainee={trainee} variant="card" />
-                    <div className="tcard__body"><h3>{trainee.displayName}</h3><p>{trainee.track} · {moduleOf(trainee.focus).short}</p><div className="tcard__tags">{(trainee.skills ?? []).slice(0, 2).map((skill) => <span className="tag" key={skill}>{skill}</span>)}</div></div>
+                    <div className="tcard__body"><h3>{trainee.displayName}</h3>{trainee.headline ? <p>{trainee.headline}</p> : null}<p>{trainee.track} · {moduleOf(trainee.focus).short}</p><div className="tcard__tags">{(trainee.skills ?? []).slice(0, 2).map((skill) => <span className="tag" key={skill}>{skill}</span>)}</div></div>
                   </Link>
                 ))}
               </div>
@@ -79,10 +81,13 @@ export function TraineePage() {
             <div>
               <div className="flex wrap" style={{ gap: 10 }}><span className="badge badge--lime">{trainee.statusLabel}</span><SampleMark listing={trainee.listing}>Sample profile — placeholder</SampleMark></div>
               <h1 style={{ marginTop: 16 }}>{trainee.displayName}</h1>
-              <p className="lead">{trainee.track} · focus on {moduleOf(trainee.focus).name}</p>
+              {trainee.headline ? <p className="lead">{trainee.headline}</p> : null}
+              <p className="lead">{trainee.track} · focus on {moduleOf(trainee.focus).name}{trainee.location ? ` · ${trainee.location}` : ''}</p>
             </div>
             <div className="flex wrap">
-              <button className="btn btn--ghost btn--sm" type="button" disabled title="Links appear after consent">LinkedIn · after consent</button>
+              {trainee.linkedin ? <a className="btn btn--ghost btn--sm" href={trainee.linkedin} rel="noopener noreferrer nofollow" target="_blank">LinkedIn</a> : <button className="btn btn--ghost btn--sm" type="button" disabled title="Links appear after consent">LinkedIn · after consent</button>}
+              {trainee.githubUrl ? <a className="btn btn--ghost btn--sm" href={trainee.githubUrl} rel="noopener noreferrer nofollow" target="_blank">GitHub</a> : null}
+              {trainee.portfolio ? <a className="btn btn--ghost btn--sm" href={trainee.portfolio} rel="noopener noreferrer nofollow" target="_blank">Portfolio</a> : null}
               <button className="btn btn--dark btn--sm" type="button" onClick={() => { void navigator.clipboard?.writeText(window.location.href); toast('Link copied', 'This copies the address only. No private fields are included.', 'info'); }}><Icon name="copy" className="i--sm" />Copy profile link</button>
             </div>
           </div>
@@ -96,9 +101,9 @@ export function TraineePage() {
           </div>
           <div className="split__b">
             <Tabs label="Profile sections" value={tab} onChange={setTab} tabs={[{ id: 'about', label: 'About' }, { id: 'progress', label: 'Progress' }, { id: 'work', label: 'Work' }]} />
-            {tab === 'about' ? <div style={{ marginTop: 24 }}><p>{trainee.bio}</p>{trainee.quote ? <blockquote style={{ marginTop: 20 }}>“{trainee.quote}”</blockquote> : null}<p className="muted" style={{ marginTop: 16 }}>Email, notes and external links are administrative fields and are not on this page.</p></div> : null}
-            {tab === 'progress' ? <p className="muted" style={{ marginTop: 24 }}>Week-by-week progress will be recorded by trainers. Nothing here is an assessment result.</p> : null}
-            {tab === 'work' ? <div style={{ marginTop: 24 }}>{related.length ? related.map((project) => <Link key={project.id} className="link" to={`/projects/${project.id}`}>{project.title}</Link>) : <p className="muted">No sample projects in this focus yet.</p>}</div> : null}
+            {tab === 'about' ? <div style={{ marginTop: 24 }}><p>{trainee.bio}</p>{trainee.quote ? <blockquote style={{ marginTop: 20 }}>“{trainee.quote}”</blockquote> : null}<p className="muted" style={{ marginTop: 16 }}>Email and private notes are not on this page. Links appear here after the trainee agrees and an administrator approves them.</p></div> : null}
+            {tab === 'progress' ? <TraineeProgress traineeId={trainee.id} /> : null}
+            {tab === 'work' ? <div style={{ marginTop: 24 }}><TraineePortfolio traineeId={trainee.id} />{related.length ? related.map((project) => <Link key={project.id} className="link" to={`/projects/${project.id}`}>{project.title}</Link>) : <p className="muted">No sample projects in this focus yet.</p>}</div> : null}
           </div>
         </div>
       </section>

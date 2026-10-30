@@ -12,7 +12,8 @@ export type Permission =
   | 'settings.manage'
   | 'account.manage'
   | 'portal.access'
-  | 'portal.write';
+  | 'portal.write'
+  | 'progress.read';
 
 export type PublicationStatus = 'draft' | 'in_review' | 'scheduled' | 'published';
 
@@ -73,7 +74,12 @@ export interface Trainee {
   quote: string;
   linkedin: string | null;
   portfolio: string | null;
+  headline?: string;
+  location?: string;
+  githubUrl?: string | null;
   photoUrl: string | null;
+  photoConsent?: boolean;
+  publicLinks?: boolean;
   consentReceived: boolean;
   listing: Listing;
   publicationStatus: PublicationStatus;
@@ -82,7 +88,12 @@ export interface Trainee {
   lessonIds?: string[];
 }
 
-export type PublicTrainee = Omit<Trainee, 'email' | 'internalNotes' | 'linkedin' | 'portfolio' | 'consentReceived' | 'lessonIds'>;
+export type PublicTrainee = Omit<Trainee, 'email' | 'internalNotes' | 'linkedin' | 'portfolio' | 'githubUrl' | 'consentReceived' | 'lessonIds' | 'photoConsent' | 'publicLinks'> & {
+  /** Present after the trainee agrees and an administrator approves the links. */
+  linkedin?: string;
+  githubUrl?: string;
+  portfolio?: string;
+};
 
 export interface Project {
   id: string;

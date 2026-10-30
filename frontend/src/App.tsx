@@ -19,6 +19,7 @@ const StatesPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({
 const TimelineEditorPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.TimelineEditorPage })));
 const UsersPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.UsersPage })));
 const PendingRegistrationsPage = lazy(() => import('@/pages/admin/TraineeAccessPages').then((m) => ({ default: m.PendingRegistrationsPage })));
+const ReviewQueuePage = lazy(() => import('@/pages/admin/ReviewQueuePage').then((m) => ({ default: m.ReviewQueuePage })));
 const TraineeAccountsPage = lazy(() => import('@/pages/admin/TraineeAccessPages').then((m) => ({ default: m.TraineeAccountsPage })));
 const SignupPage = lazy(() => import('@/pages/portal/PortalPages').then((m) => ({ default: m.SignupPage })));
 const VerifyEmailPage = lazy(() => import('@/pages/portal/PortalPages').then((m) => ({ default: m.VerifyEmailPage })));
@@ -26,6 +27,7 @@ const TraineeLoginPage = lazy(() => import('@/pages/portal/PortalPages').then((m
 const TraineeForgotPage = lazy(() => import('@/pages/portal/PortalPages').then((m) => ({ default: m.TraineeForgotPage })));
 const TraineeResetPage = lazy(() => import('@/pages/portal/PortalPages').then((m) => ({ default: m.TraineeResetPage })));
 const PortalHomePage = lazy(() => import('@/pages/portal/PortalPages').then((m) => ({ default: m.PortalHomePage })));
+const TrainerProgressPage = lazy(() => import('@/pages/trainer/TrainerProgressPage').then((m) => ({ default: m.TrainerProgressPage })));
 const ClassEditor = lazy(() => import('@/pages/admin/Editors').then((m) => ({ default: m.ClassEditor })));
 const EventEditor = lazy(() => import('@/pages/admin/Editors').then((m) => ({ default: m.EventEditor })));
 const ProjectEditor = lazy(() => import('@/pages/admin/Editors').then((m) => ({ default: m.ProjectEditor })));
@@ -99,6 +101,7 @@ export function App() {
       <Route path="/forgot-password" element={<Waiting><TraineeForgotPage /></Waiting>} />
       <Route path="/portal/reset-password" element={<Waiting><TraineeResetPage /></Waiting>} />
       <Route path="/portal" element={<RequireAccess permission="portal.access"><Waiting><PortalHomePage /></Waiting></RequireAccess>} />
+      <Route path="/trainer" element={<RequireAccess permission="progress.read"><Waiting><TrainerProgressPage /></Waiting></RequireAccess>} />
       <Route path="/admin/login" element={<Waiting><LoginPage /></Waiting>} />
       <Route path="/admin/forgot-password" element={<Waiting><ForgotPasswordPage /></Waiting>} />
       <Route path="/admin/reset-password" element={<Waiting><ResetPasswordPage /></Waiting>} />
@@ -111,6 +114,7 @@ export function App() {
         <Route path="classes/new" element={<Waiting><ClassEditor /></Waiting>} />
         <Route path="classes/:id" element={<Waiting><ClassEditor /></Waiting>} />
         <Route path="trainees" element={<Waiting><TraineeListPage /></Waiting>} />
+        <Route path="review" element={<Waiting><ReviewQueuePage /></Waiting>} />
         <Route path="trainees/new" element={<Waiting><TraineeEditor /></Waiting>} />
         <Route path="trainees/:id" element={<Waiting><TraineeEditor /></Waiting>} />
         <Route path="projects" element={<Waiting><ProjectListPage /></Waiting>} />
