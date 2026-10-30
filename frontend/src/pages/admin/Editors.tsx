@@ -11,6 +11,8 @@ import type { BootcampEvent, Lesson, Project, PublicationStatus, Trainee } from 
 import { isApiError } from '@/domain/types';
 import { classFieldErrors, eventFieldErrors, projectFieldErrors, traineeFieldErrors, withConsentField, withPhaseOnWeek } from '@/domain/adminFields';
 import { useAsync } from '@/hooks/useAsync';
+import { TraineeCvPanel } from './TraineeCvPanel';
+import { TraineePrivacyPanel } from './TraineePrivacyPanel';
 import { ProfilePhotoField, useProfilePhoto } from './ProfilePhotoField';
 import { selectedIds, useAllPages, useMediaOptions, useModules, withCurrent } from './options';
 
@@ -236,6 +238,7 @@ function TraineeForm({ initial }: { initial: Trainee | null }) {
     } finally { setPending(false); }
   };
   return (
+    <>
     <form ref={formRef} onSubmit={(event) => { event.preventDefault(); void save(event.currentTarget, false); }} onChange={(event) => { setDirty(true); const id = eventTargetId(event.target); if (id === 'displayName' && event.target instanceof HTMLInputElement) setDisplayName(event.target.value); if (!id || !formRef.current) return; const problems = traineeFieldErrors(read(formRef.current), modeRef.current); admin.clearFixed(id, problems[id]); if (id === 'consentReceived') admin.clearFixed('publicationStatus', problems.publicationStatus); }} noValidate>
       <div className="a-head"><div><h1>{initial ? initial.displayName : 'New trainee'}</h1><p>Do not enter a real person’s name. Samples only until consent exists.</p></div>{initial ? <Link className="btn btn--ghost btn--sm" to={isApiPublic(initial) ? `/trainees/${initial.id}` : `/admin/trainees/${initial.id}`}>Preview</Link> : null}</div>
       <FormLegend />
@@ -271,6 +274,9 @@ function TraineeForm({ initial }: { initial: Trainee | null }) {
       </div>
       {writable ? <SaveBar dirty={dirty} pending={pending} onCancel="/admin/trainees" label="Save profile" extra={<BusyButton pending={pending} busyLabel="Publishing" onClick={() => { if (formRef.current) void save(formRef.current, true); }}>Publish</BusyButton>} /> : null}
     </form>
+    {initial?.id ? <TraineeCvPanel traineeId={initial.id} /> : null}
+    {initial?.id && auth.role === 'administrator' ? <TraineePrivacyPanel traineeId={initial.id} displayName={initial.displayName} /> : null}
+    </>
   );
 }
 

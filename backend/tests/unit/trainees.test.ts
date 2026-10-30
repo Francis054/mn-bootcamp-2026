@@ -50,6 +50,7 @@ const profile: TraineeRecord = {
   statusLabel: 'In training',
   internalNotes: 'Development fixture. Do not replace with a real person without written consent.',
   lessonIds: [],
+  slug: null,
   updatedAt: '2026-10-24T00:00:00.000Z',
 };
 
@@ -124,6 +125,7 @@ describe('trainee rules', () => {
     expect(Object.keys(visible).sort()).toEqual(
       [
         'bio',
+        'contactAvailable',
         'displayName',
         'focus',
         'headline',

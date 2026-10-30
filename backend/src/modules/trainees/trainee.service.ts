@@ -15,6 +15,7 @@ import { ApiError } from '../../shared/errors/api-error.js';
 import { postgresCode, postgresConstraint } from '../../shared/persistence/postgres-error.js';
 import { hueFromEmail, initialsFrom } from '../users/profile.js';
 import type { TraineeListQuery, TraineeSort } from './list-query.js';
+import { matchesDirectory, type DirectoryQuery } from '../reach/directory.js';
 import { toPublicTrainee, type PublicTrainee, type TraineeRecord } from './records.js';
 import { storeProfilePhoto } from './profile-photo.js';
 import type { TraineeCreateDto, TraineePatchDto } from './trainee.dto.js';
@@ -40,21 +41,30 @@ export class TraineeService {
     private readonly now: () => Date = () => new Date(),
   ) {}
 
-  async listPublic(): Promise<PublicTrainee[]> {
+  async listPublic(
+    query: DirectoryQuery = { q: '', track: '', focus: '', skill: '' },
+  ): Promise<PublicTrainee[]> {
     const rows = await this.trainees.findAll();
     return rows
       .map((row) => this.toRecord(row))
       .filter(isPublicTrainee)
       .sort((left, right) => left.displayName.localeCompare(right.displayName))
-      .map(toPublicTrainee);
+      .map(toPublicTrainee)
+      .filter((row) => matchesDirectory(row, query));
   }
 
-  async getPublic(id: string): Promise<PublicTrainee> {
-    const row = await this.trainees.findById(id);
-    if (!row) throw new ApiError('not_found', 'That page is not available.');
-    const trainee = this.toRecord(row);
-    if (!isPublicTrainee(trainee)) throw new ApiError('not_found', 'That page is not available.');
-    return toPublicTrainee(trainee);
+  async getPublic(slugOrId: string): Promise<PublicTrainee> {
+    const row = await this.requirePublic(slugOrId);
+    return toPublicTrainee(this.toRecord(row));
+  }
+
+  /** A published, consented profile. The caller must not copy `email` into a public response. */
+  async requirePublic(slugOrId: string): Promise<TraineeEntity> {
+    const direct = slugOrId ? await this.trainees.findById(slugOrId) : null;
+    const row = direct ?? (slugOrId ? await this.trainees.findBySlug(slugOrId) : null);
+    if (!row || !isPublicTrainee(row))
+      throw new ApiError('not_found', 'That page is not available.');
+    return row;
   }
 
   async listAdmin(query: TraineeListQuery): Promise<Page<TraineeRecord>> {
@@ -219,8 +229,10 @@ export class TraineeService {
     if (patch.lessonIds !== undefined) await this.trainees.replaceLessons(saved.id, lessonIds);
     const verb: CurriculumVerb = decision.withdrawing && wasPublished ? 'unpublished' : 'updated';
     await this.writeAudit(actor, verb, saved.id);
-    if (profileText(saved) !== beforeText) await this.writePortalAudit(actor, 'portal.profile.admin_updated', saved.id);
-    if (saved.photoUrl !== beforePhoto) await this.writePortalAudit(actor, 'portal.photo.changed', saved.id);
+    if (profileText(saved) !== beforeText)
+      await this.writePortalAudit(actor, 'portal.profile.admin_updated', saved.id);
+    if (saved.photoUrl !== beforePhoto)
+      await this.writePortalAudit(actor, 'portal.photo.changed', saved.id);
     if (saved.consentReceived !== beforeProfileConsent) {
       await this.recordConsent(saved.id, 'public_profile', saved.consentReceived, actor);
     }
@@ -310,7 +322,9 @@ export class TraineeService {
     }
   }
 
-  private async insert(trainee: Parameters<TraineeRepository['insert']>[0]): Promise<TraineeEntity> {
+  private async insert(
+    trainee: Parameters<TraineeRepository['insert']>[0],
+  ): Promise<TraineeEntity> {
     try {
       return await this.trainees.insert(trainee);
     } catch (error) {
@@ -369,6 +383,7 @@ export class TraineeService {
       statusLabel: row.statusLabel,
       internalNotes: row.internalNotes,
       lessonIds,
+      slug: row.slug,
       updatedAt: isoTimestamp(row.updatedAt),
     };
   }

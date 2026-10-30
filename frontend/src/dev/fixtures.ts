@@ -169,6 +169,7 @@ export function buildTrainees(): Trainee[] {
       linkedin: '',
       portfolio: '',
       photoUrl: null,
+      contactConsent: index === 0,
       consentReceived: false,
       listing: 'sample',
       publicationStatus: 'published',

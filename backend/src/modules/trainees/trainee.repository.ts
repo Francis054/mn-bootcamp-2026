@@ -35,6 +35,15 @@ export class TraineeRepository extends BaseRepository<TraineeEntity> {
     return this.repository.findOne({ where: { email } });
   }
 
+  findBySlug(slug: string): Promise<TraineeEntity | null> {
+    const value = slug.trim().toLowerCase();
+    if (!value) return Promise.resolve(null);
+    return this.repository
+      .createQueryBuilder('trainee')
+      .where('lower(trainee.slug) = :slug', { slug: value })
+      .getOne();
+  }
+
   countByModule(focus: string): Promise<number> {
     return this.repository.count({ where: { focus } });
   }

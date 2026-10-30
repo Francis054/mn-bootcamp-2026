@@ -45,6 +45,20 @@ const publicBody = {
   trainers: [],
 };
 
+function cvRouterStub(): never {
+  const pass = (_req: unknown, _res: unknown, next: (error?: unknown) => void) => {
+    next();
+  };
+  return { uploadLimit: pass, downloadLimit: pass } as never;
+}
+
+function reachStub(): never {
+  const pass = (_req: unknown, _res: unknown, next: (error?: unknown) => void) => {
+    next();
+  };
+  return { publicLimit: pass } as never;
+}
+
 function appFor(role: 'editor' | 'viewer' | null) {
   const sessions = {
     authenticate: (token: string) => {
@@ -64,7 +78,8 @@ function appFor(role: 'editor' | 'viewer' | null) {
   } as unknown as SessionService;
   const timetable = {
     publicTimetable: () => Promise.resolve(publicBody),
-    adminTimetable: () => Promise.resolve({ ...publicBody, sourceNote: '', warnings: [], sessions: [], trainers: [] }),
+    adminTimetable: () =>
+      Promise.resolve({ ...publicBody, sourceNote: '', warnings: [], sessions: [], trainers: [] }),
     listSessions: () => Promise.resolve([]),
     createSession: () => Promise.resolve({ id: 'sess-new' }),
     updateWeek: () => Promise.resolve({ id: 'week-01' }),
@@ -95,6 +110,9 @@ function appFor(role: 'editor' | 'viewer' | null) {
       {} as never,
       50 * 1024 * 1024,
       {} as never,
+      cvRouterStub(),
+      reachStub(),
+      {} as never,
     ),
   );
   app.use(errorHandler(pino({ level: 'silent' }), { nodeEnv: 'test' } as never));
@@ -108,10 +126,14 @@ describe('timetable API', () => {
     expect(programme.startsOn).toBe('2026-10-05');
     expect(programme.endsOn).toBe('2026-12-25');
     const blocks = readRecord(response.body).blocks;
-    expect(Array.isArray(blocks) && readRecord(blocks[0]).name).toBe('Foundations & Secure Systems');
+    expect(Array.isArray(blocks) && readRecord(blocks[0]).name).toBe(
+      'Foundations & Secure Systems',
+    );
     const week = await request(appFor(null)).get('/api/v1/public/weeks/1').expect(200);
     const deliverables = readRecord(week.body).deliverables;
-    expect(Array.isArray(deliverables) && readRecord(deliverables[0]).title).toBe('Personal learning plan');
+    expect(Array.isArray(deliverables) && readRecord(deliverables[0]).title).toBe(
+      'Personal learning plan',
+    );
     await request(appFor(null)).get('/api/v1/public/weeks/99').expect(404);
   });
 
@@ -120,7 +142,14 @@ describe('timetable API', () => {
     await request(appFor('viewer'))
       .post('/api/v1/admin/sessions')
       .set('Cookie', 'mn_session=viewer')
-      .send({ weekId: 'week-01', date: '2026-10-06', type: 'theory', activity: 'Technical theory', topic: 'CIA', trainerIds: [] })
+      .send({
+        weekId: 'week-01',
+        date: '2026-10-06',
+        type: 'theory',
+        activity: 'Technical theory',
+        topic: 'CIA',
+        trainerIds: [],
+      })
       .expect(403);
     const invalid = await request(appFor('editor'))
       .post('/api/v1/admin/sessions')

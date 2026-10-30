@@ -6,6 +6,8 @@ import type { Listing } from '../curriculum/publication.js';
 import { ApiError } from '../../shared/errors/api-error.js';
 import { initialsFrom } from '../users/profile.js';
 import type { UserRepository } from '../users/user.repository.js';
+import type { EmailProvider } from '../mail/email-provider.js';
+import { deliverReview } from '../mail/review-mail.js';
 import type { StorageProvider } from '../storage/storage-provider.js';
 import {
   CONSENT_POLICY_VERSION,
@@ -77,6 +79,8 @@ export class PortalProfileService {
     private readonly audit: AuditRepository,
     private readonly storage: StorageProvider,
     private readonly maxBytes: number,
+    private readonly mail: EmailProvider,
+    private readonly portalUrl: string,
     private readonly now: () => Date = () => new Date(),
   ) {}
 
@@ -187,7 +191,11 @@ export class PortalProfileService {
     await this.auditPortal(actor, 'portal.profile.admin_updated', row.id, 'trainee');
     if (photoErrors.photo && photoErrors.photo.photoStorageKey !== previousKey) {
       await this.auditPhoto(actor, row.id);
-      if (previousKey && previousKey !== row.photoStorageKey && previousKey !== next.photoStorageKey) {
+      if (
+        previousKey &&
+        previousKey !== row.photoStorageKey &&
+        previousKey !== next.photoStorageKey
+      ) {
         await this.removeStored(previousKey);
       }
     }
@@ -223,6 +231,7 @@ export class PortalProfileService {
     if (previousKey && previousKey !== next.photoStorageKey) await this.removeStored(previousKey);
     await this.auditPortal(actor, 'portal.profile.approved', row.id, 'trainee');
     if (previousKey !== next.photoStorageKey) await this.auditPhoto(actor, row.id);
+    await this.notify(row, 'profile', row.displayName, true, '');
     return this.queueItem(row);
   }
 
@@ -239,7 +248,26 @@ export class PortalProfileService {
     row.profileReviewedBy = actor.userId;
     await this.save(row);
     await this.auditPortal(actor, 'portal.profile.rejected', row.id, 'trainee');
+    await this.notify(row, 'profile', row.displayName, false, row.profileRejectionReason);
     return this.queueItem(row);
+  }
+
+  private notify(
+    row: TraineeEntity,
+    item: string,
+    title: string,
+    approved: boolean,
+    reason: string,
+  ): Promise<boolean> {
+    return deliverReview(this.mail, {
+      to: row.email,
+      traineeId: row.id,
+      item,
+      title,
+      approved,
+      reason,
+      portalUrl: this.portalUrl,
+    });
   }
 
   private async own(userId: string): Promise<TraineeEntity> {
