@@ -112,6 +112,7 @@ function appFor(role: 'editor' | 'viewer' | null) {
       {} as never,
       cvRouterStub(),
       reachStub(),
+      {} as never,
     ),
   );
   app.use(errorHandler(pino({ level: 'silent' }), { nodeEnv: 'test' } as never));

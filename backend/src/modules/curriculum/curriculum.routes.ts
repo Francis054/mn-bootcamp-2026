@@ -61,6 +61,8 @@ import { mountAdminCv, mountCvReview, mountPublicCv } from '../documents/cv.rout
 import type { CvService } from '../documents/cv.service.js';
 import { mountAdminReach, mountPublicReach } from '../reach/reach.routes.js';
 import type { ReachService } from '../reach/reach.service.js';
+import { mountPublicJourney } from '../journey/journey.routes.js';
+import type { JourneyService } from '../journey/journey.service.js';
 
 export function curriculumRouter(
   catalogue: CatalogueService,
@@ -85,6 +87,7 @@ export function curriculumRouter(
   progress: ProgressService,
   cvs: CvService,
   reach: ReachService,
+  journey: JourneyService,
 ): Router {
   const router = Router();
 
@@ -158,6 +161,7 @@ export function curriculumRouter(
   mountPublicProgress(router, progress);
   mountPublicCv(router, cvs);
   mountPublicReach(router, reach);
+  mountPublicJourney(router, journey);
   mountTrainerProgress(router, sessions, progress);
   mountPortal(
     router,
@@ -169,6 +173,7 @@ export function curriculumRouter(
     videoMaxBytes,
     progress,
     cvs,
+    journey,
   );
 
   const admin = Router();

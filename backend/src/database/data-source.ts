@@ -29,6 +29,8 @@ import { TraineePortfolio1794355200000 } from './migrations/1794355200000-Traine
 import { TraineeProgress1794441600000 } from './migrations/1794441600000-TraineeProgress.js';
 import { TraineeDocuments1794528000000 } from './migrations/1794528000000-TraineeDocuments.js';
 import { EmployerReach1794614400000 } from './migrations/1794614400000-EmployerReach.js';
+import { TraineeMilestones1794700800000 } from './migrations/1794700800000-TraineeMilestones.js';
+import { TraineeMilestoneEntity } from '../modules/journey/trainee-milestone.entity.js';
 import { ContactRequestEntity } from '../modules/reach/contact-request.entity.js';
 import { CvRequestEntity } from '../modules/reach/cv-request.entity.js';
 import { TraineeDocumentEntity } from '../modules/documents/trainee-document.entity.js';
@@ -101,6 +103,7 @@ export function createDataSource(
       EnquiryEntity,
       ContactRequestEntity,
       CvRequestEntity,
+      TraineeMilestoneEntity,
       ProgrammeEntity,
       BlockEntity,
       WeekEntity,
@@ -133,6 +136,7 @@ export function createDataSource(
       TraineeProgress1794441600000,
       TraineeDocuments1794528000000,
       EmployerReach1794614400000,
+      TraineeMilestones1794700800000,
     ],
     migrationsTableName: 'schema_migrations',
     ssl: sslConfigForDriver(env.databaseSsl, env.databaseSslCa),

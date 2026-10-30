@@ -56,6 +56,10 @@ Errors use `{ "error": { "code", "message", "fieldErrors"? } }`. `code` is `vali
 | POST, DELETE | `/api/v1/portal/events/{id}/certificate` |
 | GET | `/api/v1/public/trainees/{id}/skills` |
 | GET | `/api/v1/public/trainees/{id}/events` |
+| GET | `/api/v1/public/trainees/{slug}/journey` |
+| GET | `/api/v1/portal/journey` |
+| POST | `/api/v1/portal/journey/milestones` |
+| PATCH, DELETE | `/api/v1/portal/journey/milestones/{id}` |
 | GET | `/api/v1/admin/review-queue/skills` |
 | PATCH, DELETE | `/api/v1/admin/review-queue/skills/{id}` |
 | POST | `/api/v1/admin/review-queue/skills/{id}/approve` |
@@ -103,6 +107,7 @@ These return published rows only. A hidden listing is omitted. Trainee profiles 
 | GET | `/api/v1/public/classes/{id}` |
 | GET | `/api/v1/public/trainees` |
 | GET | `/api/v1/public/trainees/{id}` |
+| GET | `/api/v1/public/trainees/{slug}/journey` |
 | GET | `/api/v1/public/projects` |
 | GET | `/api/v1/public/projects/{id}` |
 | GET | `/api/v1/public/events` |

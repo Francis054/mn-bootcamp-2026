@@ -58,6 +58,8 @@ import { DocumentRepository } from '../modules/documents/document.repository.js'
 import { CvService } from '../modules/documents/cv.service.js';
 import { ReachRepository } from '../modules/reach/reach.repository.js';
 import { ReachService } from '../modules/reach/reach.service.js';
+import { JourneyRepository } from '../modules/journey/journey.repository.js';
+import { JourneyService } from '../modules/journey/journey.service.js';
 import { ProjectEntity } from '../modules/projects/project.entity.js';
 import { liveRepositoryVisibility } from '../modules/projects/project-url.js';
 import { ProjectRepository } from '../modules/projects/project.repository.js';
@@ -125,6 +127,7 @@ export class AppContainer {
     progress: ProgressService,
     cvs: CvService,
     reach: ReachService,
+    journey: JourneyService,
   ) {
     this.health = new HealthService(dataSource, logger);
     this.users = users;
@@ -156,6 +159,7 @@ export class AppContainer {
       progress,
       cvs,
       reach,
+      journey,
     );
   }
 
@@ -359,6 +363,16 @@ export class AppContainer {
       storage,
       env.uploadMaxBytes,
     );
+    const journey = new JourneyService(
+      new JourneyRepository(dataSource),
+      traineeRepository,
+      userRepository,
+      portfolioRepository,
+      new ProgressRepository(dataSource),
+      projectRepository,
+      timetableRepository,
+      audit,
+    );
     const reach = new ReachService(
       new ReachRepository(dataSource),
       traineeService,
@@ -397,6 +411,7 @@ export class AppContainer {
       progress,
       cvs,
       reach,
+      journey,
     );
   }
 

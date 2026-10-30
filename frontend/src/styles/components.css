@@ -234,6 +234,9 @@ a.card:hover .go{background:var(--mn-lime);transform:rotate(-45deg)}
 .portal-brand small{display:block;color:#c9d7cc}
 .portal-bar__actions{display:flex;align-items:center;gap:12px}
 .portal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:28px}
+.portal-nav{display:flex;gap:18px;margin-bottom:20px}
+.portal-nav a{font-weight:600;text-decoration:none}
+.portal-nav a[aria-current="page"]{border-bottom:2px solid var(--mn-lime)}
 .portal-card{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:20px}
 .portal-card h2{font-size:22px;margin-bottom:8px}
 .portal-profile{margin-top:24px}

@@ -41,6 +41,9 @@ const PORTAL_AUDIT_ACTIONS = [
   'contact.blocked',
   'cv.request.created',
   'cv.request.sent',
+  'portal.milestone.created',
+  'portal.milestone.updated',
+  'portal.milestone.deleted',
 ] as const;
 
 const ACCOUNT_AUDIT_ACTIONS = [
