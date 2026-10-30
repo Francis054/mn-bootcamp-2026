@@ -80,6 +80,17 @@ Supabase free backup retention was not confirmed for this note. Look at the proj
 
 `.github/workflows/keep-alive.yml` runs that script on the cron `*/14 * * * *` (every 14 minutes, inside Render’s 15-minute idle window) and when someone starts it by hand. The URL comes from the GitHub Actions variable `KEEPALIVE_URL`, not from a secret, because the address is public. The workflow’s only permission is `contents: read`.
 
+## Checks on a pull request
+
+`.github/workflows/ci.yml` runs on every pull request to `main`. It does not deploy and it does not touch the hosted database.
+
+- Backend, in `backend/`: `npm ci`, typecheck, lint, unit tests, production build, then integration tests.
+- Frontend, in `frontend/`: `npm ci`, typecheck, lint, unit tests, production build.
+- Integration tests use a Postgres 16 service and `TEST_DATABASE_URL` ending in `mn_bootcamp_test`. They do not start Docker.
+- npm caches the lockfiles. The two jobs run at the same time. Playwright is not part of this workflow.
+
+After the pull request is merged, run `npm run migration:run` from `backend/` before serving. Do not run `npm run seed` on the hosted database.
+
 GitHub runs a scheduled workflow only from the repository’s default branch, and only if the workflow file is on that branch (https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule, checked 24 October 2026). The workflow and the script are on `main`, and `main` is the default branch, so the schedule runs once `KEEPALIVE_URL` is set. Do not change the default branch.
 
 The same GitHub page says a schedule can start late when Actions is busy, especially at the start of each hour, and a queued run can be dropped. A cold start is still possible now and then. A free pinger outside GitHub, every 5 minutes, is a more reliable backup. cron-job.org and UptimeRobot are two that can GET the same health URL. On a public repository, GitHub also turns a schedule off after 60 days with no repository activity.

@@ -1,12 +1,12 @@
 import type { Permission, Role } from './types';
 
 /** Central permission map. UI checks are for experience only.
- *  The development adapter re-checks these on every mutation.
- *  A future backend must enforce them independently.
+ *  The development adapter re-checks these on every admin call.
+ *  The API enforces the same map. `content.read` is the admin shell.
  */
 export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
-  trainee: ['content.read', 'media.upload', 'account.manage'],
-  trainer: ['content.read', 'media.upload', 'account.manage'],
+  trainee: ['portal.access', 'portal.write', 'account.manage'],
+  trainer: ['account.manage'],
   viewer: ['content.read', 'account.manage'],
   editor: ['content.read', 'content.write', 'media.upload', 'media.write', 'account.manage'],
   administrator: [

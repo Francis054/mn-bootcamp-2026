@@ -34,7 +34,17 @@ Stored passwords need at least 12 characters, a letter, and a number. They canno
 
 `npm run admin:create` reads the mailbox from an argument, `--email`, or `ADMIN_EMAIL`. It reads the password from `ADMIN_BOOTSTRAP_PASSWORD` or from a hidden prompt. It refuses `--password` so the password does not land in shell history. It prints `Administrator account is ready.` or `Administrator password updated.` It does not print the mailbox or the password. Do not put `ADMIN_BOOTSTRAP_PASSWORD` in git, and do not leave it in the Render environment after the command finishes.
 
-Roles: trainee and trainer (`content.read`, `media.upload`, `account.manage`), viewer (`content.read`, `account.manage`), editor (viewer plus `content.write`, `media.upload`, and `media.write`), administrator (editor plus `users.read`, `users.manage`, `settings.manage`). A trainee or trainer can upload a photo. An editor confirms consent, then publishes. An administrator can confirm consent and publish in one step. There is no separate publish permission. The server checks the role. The React gate is only a convenience. Consent rules stay: a trainee profile cannot be published without recorded consent, and a photo PATCH still cannot verify consent and publish together.
+Roles and permissions. The same map is in `backend/src/modules/auth/permissions.ts` and `frontend/src/domain/permissions.ts`. `content.read` is the gate for the whole `/api/v1/admin` router. A trainee or a trainer does not have it, so they cannot open that router or read another trainee's email, notes, consent, or drafts. The React admin shell uses the same check.
+
+| Role | Permissions |
+| --- | --- |
+| Trainee | `portal.access`, `portal.write`, `account.manage` |
+| Trainer | `account.manage` |
+| Viewer | `content.read`, `account.manage` |
+| Editor | viewer, plus `content.write`, `media.upload`, `media.write` |
+| Administrator | editor, plus `users.read`, `users.manage`, `settings.manage` |
+
+`portal.access` and `portal.write` are reserved for the trainee's own area. No portal route uses them yet. `account.manage` is the person's own password. The only password route today is `POST /api/v1/admin/account/password`, which also requires `content.read`, so a trainee or trainer cannot call it. The public reset flow still works. Gallery upload is `media.upload` and sits on the admin router, so only an editor or an administrator can upload. An editor confirms consent, then publishes. An administrator can confirm consent and publish in one step. There is no separate publish permission. The server checks the role. The React gate is only a convenience. Consent rules stay: a trainee profile cannot be published without recorded consent, and a photo PATCH still cannot verify consent and publish together.
 
 ## Mail and photos
 

@@ -24,6 +24,7 @@ import { WorkPhotos1793750400000 } from './migrations/1793750400000-WorkPhotos.j
 import { PublicRls1794096000000 } from './migrations/1794096000000-PublicRls.js';
 import { SiteImages1794009600000 } from './migrations/1794009600000-SiteImages.js';
 import { CommunityLogo1794096000000 } from './migrations/1794096000000-CommunityLogo.js';
+import { AuditActionPattern1794182400000 } from './migrations/1794182400000-AuditActionPattern.js';
 import { TraineePhoto1793836800000 } from './migrations/1793836800000-TraineePhoto.js';
 import { RolesAndOptionalLinks1793577600000 } from './migrations/1793577600000-RolesAndOptionalLinks.js';
 import { Auth1792868400000 } from './migrations/1792868400000-Auth.js';
@@ -103,6 +104,7 @@ export function createDataSource(
       SiteImages1794009600000,
       PublicRls1794096000000,
       CommunityLogo1794096000000,
+      AuditActionPattern1794182400000,
     ],
     migrationsTableName: 'schema_migrations',
     ssl: sslConfigForDriver(env.databaseSsl, env.databaseSslCa),

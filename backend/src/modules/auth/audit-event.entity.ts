@@ -55,8 +55,16 @@ export const AUDIT_ACTIONS: readonly AuditAction[] = [
   ),
 ];
 
+/**
+ * POSIX pattern on `audit_events.action`. The database accepts any name of
+ * this shape. This list is the real allow-list, checked before a row is written.
+ * Do not change the pattern here without a new migration.
+ */
+export const AUDIT_ACTION_PATTERN_SOURCE = '^[a-z_]+(\\.[a-z_]+)+$';
+export const AUDIT_ACTION_PATTERN = new RegExp(AUDIT_ACTION_PATTERN_SOURCE);
+
 export function isAuditAction(value: string): value is AuditAction {
-  return (AUDIT_ACTIONS as readonly string[]).includes(value);
+  return AUDIT_ACTION_PATTERN.test(value) && (AUDIT_ACTIONS as readonly string[]).includes(value);
 }
 
 export function curriculumAuditAction(kind: CurriculumKind, verb: CurriculumVerb): AuditAction {
