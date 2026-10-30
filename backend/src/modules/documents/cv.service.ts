@@ -8,6 +8,8 @@ import { CONSENT_POLICY_VERSION, CONSENT_WORDING } from '../trainees/consent-pol
 import type { TraineeRepository } from '../trainees/trainee.repository.js';
 import { isPublicTrainee } from '../trainees/visibility.js';
 import type { UserRepository } from '../users/user.repository.js';
+import type { EmailProvider } from '../mail/email-provider.js';
+import { deliverReview } from '../mail/review-mail.js';
 import type { DocumentStorage } from './document-storage.js';
 import type { DocumentRepository, CvRow } from './document.repository.js';
 import { readCvLink, signCvLink } from './cv-link.js';
@@ -72,6 +74,7 @@ export class CvService {
     windowMs: number,
     private readonly requestLinkTtlMs: number,
     private readonly siteUrl: string,
+    private readonly mail: EmailProvider,
     private readonly now: () => Date = () => new Date(),
   ) {
     this.uploadLimit = cvRateLimit({
@@ -221,6 +224,7 @@ export class CvService {
       subjectType: 'cv',
       subjectId: row.id,
     });
+    await this.notify(row.traineeId, true, '');
     const next = await this.documents.byId(this.documents.manager(), row.id);
     if (!next) throw new ApiError('not_found', 'That CV is not available.');
     return { ...toView(next), traineeId: next.traineeId, traineeName: next.traineeName };
@@ -247,6 +251,7 @@ export class CvService {
       subjectType: 'cv',
       subjectId: row.id,
     });
+    await this.notify(row.traineeId, false, reason);
     const next = await this.documents.byId(this.documents.manager(), row.id);
     if (!next) throw new ApiError('not_found', 'That CV is not available.');
     return { ...toView(next), traineeId: next.traineeId, traineeName: next.traineeName };
@@ -434,6 +439,20 @@ export class CvService {
     if (!row || row.reviewStatus !== 'pending')
       throw new ApiError('not_found', 'That CV is not waiting for review.');
     return row;
+  }
+
+  private async notify(traineeId: string, approved: boolean, reason: string): Promise<void> {
+    const trainee = await this.trainees.findById(traineeId);
+    if (!trainee) return;
+    await deliverReview(this.mail, {
+      to: trainee.email,
+      traineeId,
+      item: 'CV',
+      title: 'CV',
+      approved,
+      reason,
+      portalUrl: `${this.siteUrl.replace(/\/$/, '')}/portal`,
+    });
   }
 
   private async ownTrainee(userId: string) {

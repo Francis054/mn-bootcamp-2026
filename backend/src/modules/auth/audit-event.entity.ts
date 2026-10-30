@@ -41,6 +41,16 @@ const PORTAL_AUDIT_ACTIONS = [
   'contact.blocked',
   'cv.request.created',
   'cv.request.sent',
+  'portal.milestone.created',
+  'portal.milestone.updated',
+  'portal.milestone.deleted',
+] as const;
+
+const PRIVACY_AUDIT_ACTIONS = [
+  'mail.outbox.resent',
+  'trainee.data.exported',
+  'trainee.data.removed',
+  'trainee.removal.retried',
 ] as const;
 
 const ACCOUNT_AUDIT_ACTIONS = [
@@ -87,12 +97,14 @@ export type AuditAction =
   | (typeof AUTH_AUDIT_ACTIONS)[number]
   | (typeof ACCOUNT_AUDIT_ACTIONS)[number]
   | (typeof PORTAL_AUDIT_ACTIONS)[number]
+  | (typeof PRIVACY_AUDIT_ACTIONS)[number]
   | CurriculumAuditAction;
 
 export const AUDIT_ACTIONS: readonly AuditAction[] = [
   ...AUTH_AUDIT_ACTIONS,
   ...ACCOUNT_AUDIT_ACTIONS,
   ...PORTAL_AUDIT_ACTIONS,
+  ...PRIVACY_AUDIT_ACTIONS,
   ...CURRICULUM_KINDS.flatMap((kind) =>
     CURRICULUM_VERBS.map((verb): CurriculumAuditAction => `curriculum.${kind}.${verb}`),
   ),

@@ -17,6 +17,7 @@ import {
   verificationLetter,
   type Letter,
 } from '../mail/letters.js';
+import { deliverReview } from '../mail/review-mail.js';
 import type { TraineeRepository } from '../trainees/trainee.repository.js';
 import type { PublicUser } from '../users/public-user.js';
 import { isRole, type Role } from '../users/role.js';
@@ -82,7 +83,15 @@ export class AccountService {
     await this.assertResetOpen(email, ip, input.now);
     const user = await this.users.findByEmail(email);
     if (user) {
-      await this.issueToken(user.id, 'reset', user.email, user.role, RESET_TTL_MS, input.now, resetLetter);
+      await this.issueToken(
+        user.id,
+        'reset',
+        user.email,
+        user.role,
+        RESET_TTL_MS,
+        input.now,
+        resetLetter,
+      );
     }
     await this.audits.record({
       action: 'auth.password.reset.requested',
@@ -308,13 +317,28 @@ export class AccountService {
   async sendExistingAccountNotice(email: string, role: Role): Promise<boolean> {
     const path = role === 'trainee' ? '/forgot-password' : '/admin/forgot-password';
     const letter = existingAccountLetter(`${this.frontendUrl}${path}`);
-    const result = await this.mail.send({
-      to: email,
-      subject: letter.subject,
-      text: letter.text,
-      html: letter.html,
+    return this.mailTo(email, letter, 'existing_account', role);
+  }
+
+  /** Review outcome. The trainee id is attached when this address is on the roster. */
+  async sendReview(input: {
+    to: string;
+    item: string;
+    title: string;
+    approved: boolean;
+    reason: string;
+    path: string;
+  }): Promise<boolean> {
+    const trainee = await this.trainees.findByEmail(input.to);
+    return deliverReview(this.mail, {
+      to: input.to,
+      traineeId: trainee?.id ?? null,
+      item: input.item,
+      title: input.title,
+      approved: input.approved,
+      reason: input.reason,
+      portalUrl: `${this.frontendUrl}${input.path}`,
     });
-    return result.delivered;
   }
 
   private async issueToken(
@@ -340,11 +364,20 @@ export class AccountService {
       expiresAt: new Date(now.getTime() + ttlMs),
     });
     const letter = compose(this.linkFor(purpose, role, raw));
+    const kind =
+      purpose === 'reset' ? 'password_reset' : purpose === 'invite' ? 'invitation' : 'verification';
+    return this.mailTo(to, letter, kind, role);
+  }
+
+  private async mailTo(to: string, letter: Letter, kind: string, role: Role): Promise<boolean> {
+    const trainee = role === 'trainee' ? await this.trainees.findByEmail(to) : null;
     const result = await this.mail.send({
       to,
       subject: letter.subject,
       text: letter.text,
       html: letter.html,
+      kind,
+      ...(trainee ? { traineeId: trainee.id } : {}),
     });
     return result.delivered;
   }

@@ -4,6 +4,7 @@ import { ApiError } from '../../shared/errors/api-error.js';
 import { companyField, honeypotFilled } from '../enquiries/enquiry.rules.js';
 import type { AuditRepository } from '../auth/audit.repository.js';
 import type { EmailProvider } from '../mail/email-provider.js';
+import { contactRelayLetter, cvLinkLetter, cvNoticeLetter } from '../mail/letters.js';
 import type { CvService } from '../documents/cv.service.js';
 import type { DocumentRepository } from '../documents/document.repository.js';
 import { cvRequestAllowed, HIDDEN_CV, publicCvFrom } from '../documents/cv-rules.js';
@@ -111,7 +112,7 @@ export class ReachService {
       return { saved: true, delivered: false, message: QUIET };
     }
     await this.guardContact(fields.email, row.id, input.ip);
-    const status = await this.forwardContact(row.email, row.displayName, fields);
+    const status = await this.forwardContact(row.id, row.email, row.displayName, fields);
     const id = await this.reach.insertContact({
       traineeId: row.id,
       fromName: fields.name,
@@ -173,7 +174,7 @@ export class ReachService {
       ipHash: this.hashIp(input.ip),
     });
     if (sent.delivered) {
-      await this.notifyTraineeOfCv(row.email, fields);
+      await this.notifyTraineeOfCv(row.id, row.email, fields);
     }
     await this.audit.record({
       action: 'cv.request.created',
@@ -262,27 +263,30 @@ export class ReachService {
   }
 
   private async forwardContact(
+    traineeId: string,
     traineeEmail: string,
     traineeName: string,
     fields: { name: string; email: string; organisation: string; message: string },
   ): Promise<'new' | 'forwarded' | 'failed'> {
-    if (!this.mail.configured || !traineeEmail) return 'new';
-    const org = fields.organisation ? ` from ${fields.organisation}` : '';
+    if (!traineeEmail) return 'new';
+    const letter = contactRelayLetter({
+      traineeName,
+      senderName: fields.name,
+      organisation: fields.organisation,
+      senderEmail: fields.email,
+      message: fields.message,
+    });
     try {
       const result = await this.mail.send({
         to: traineeEmail,
         replyTo: fields.email,
-        subject: 'A message through the bootcamp site',
-        text: [
-          `${fields.name}${org} sent a message about ${traineeName} through the public profile.`,
-          `Their address is ${fields.email}. The profile address was not shown to them.`,
-          '',
-          fields.message,
-          '',
-          'Reply to this message to answer them. Do not copy a private address into a public page.',
-        ].join('\n'),
+        subject: letter.subject,
+        text: letter.text,
+        html: letter.html,
+        kind: 'contact_relay',
+        traineeId,
       });
-      return deliveryState(true, result.delivered);
+      return deliveryState(this.mail.configured, result.delivered);
     } catch {
       return 'failed';
     }
@@ -293,27 +297,21 @@ export class ReachService {
     to: string,
     traineeName: string,
   ): Promise<{ delivered: boolean }> {
-    if (!this.mail.configured) return { delivered: false };
     let link: { url: string; expiresAt: string };
     try {
       link = await this.cvs.mintRequestLink(traineeId);
     } catch {
       return { delivered: false };
     }
+    const letter = cvLinkLetter({ traineeName, url: link.url, expiresAt: link.expiresAt });
     try {
       const result = await this.mail.send({
         to,
-        subject: 'CV download link',
-        text: [
-          `${traineeName} is sharing a CV through the Maxim Nyansa Bootcamp site.`,
-          'The link works for a limited time and then stops.',
-          'It does not include the trainee’s email address.',
-          '',
-          link.url,
-          '',
-          `The link stops at ${link.expiresAt}.`,
-          'If you did not ask for this, you can ignore this message.',
-        ].join('\n'),
+        subject: letter.subject,
+        text: letter.text,
+        html: letter.html,
+        kind: 'cv_link',
+        traineeId,
       });
       return { delivered: result.delivered };
     } catch {
@@ -322,23 +320,25 @@ export class ReachService {
   }
 
   private async notifyTraineeOfCv(
+    traineeId: string,
     traineeEmail: string,
     fields: { name: string; email: string; organisation: string; message: string },
   ): Promise<void> {
-    if (!this.mail.configured || !traineeEmail) return;
-    const org = fields.organisation ? ` (${fields.organisation})` : '';
+    if (!traineeEmail) return;
+    const letter = cvNoticeLetter({
+      senderName: fields.name,
+      organisation: fields.organisation,
+      senderEmail: fields.email,
+      message: fields.message,
+    });
     try {
       await this.mail.send({
         to: traineeEmail,
-        subject: 'Someone asked for your CV',
-        text: [
-          `${fields.name}${org} asked for your CV through the bootcamp site.`,
-          `Their address is ${fields.email}. This note does not include the download link.`,
-          '',
-          fields.message,
-          '',
-          'You can change who can receive your CV from your portal.',
-        ].join('\n'),
+        subject: letter.subject,
+        text: letter.text,
+        html: letter.html,
+        kind: 'cv_notice',
+        traineeId,
       });
     } catch {
       // The requester already has the outcome. A missed notice is not a failure of the request.

@@ -56,6 +56,10 @@ Errors use `{ "error": { "code", "message", "fieldErrors"? } }`. `code` is `vali
 | POST, DELETE | `/api/v1/portal/events/{id}/certificate` |
 | GET | `/api/v1/public/trainees/{id}/skills` |
 | GET | `/api/v1/public/trainees/{id}/events` |
+| GET | `/api/v1/public/trainees/{slug}/journey` |
+| GET | `/api/v1/portal/journey` |
+| POST | `/api/v1/portal/journey/milestones` |
+| PATCH, DELETE | `/api/v1/portal/journey/milestones/{id}` |
 | GET | `/api/v1/admin/review-queue/skills` |
 | PATCH, DELETE | `/api/v1/admin/review-queue/skills/{id}` |
 | POST | `/api/v1/admin/review-queue/skills/{id}/approve` |
@@ -78,6 +82,12 @@ Errors use `{ "error": { "code", "message", "fieldErrors"? } }`. `code` is `vali
 | POST | `/api/v1/admin/trainee-accounts/{id}/enable` |
 | POST | `/api/v1/admin/trainee-accounts/{id}/resend-invite` |
 | POST | `/api/v1/admin/account/password` |
+| GET | `/api/v1/admin/email-outbox/failed` |
+| POST | `/api/v1/admin/email-outbox/{id}/resend` |
+| GET | `/api/v1/admin/trainees/{id}/export` |
+| POST | `/api/v1/admin/trainees/{id}/erase` |
+| GET | `/api/v1/admin/trainee-removals` |
+| POST | `/api/v1/admin/trainee-removals/{id}/retry` |
 
 `GET /api/v1/health` returns 200 when the database answers and 503 when it does not. The body is `{ status, database, uptimeSeconds }` with `status` of `ok` or `degraded` and `database` of `up` or `down`.
 
@@ -103,6 +113,7 @@ These return published rows only. A hidden listing is omitted. Trainee profiles 
 | GET | `/api/v1/public/classes/{id}` |
 | GET | `/api/v1/public/trainees` |
 | GET | `/api/v1/public/trainees/{id}` |
+| GET | `/api/v1/public/trainees/{slug}/journey` |
 | GET | `/api/v1/public/projects` |
 | GET | `/api/v1/public/projects/{id}` |
 | GET | `/api/v1/public/events` |

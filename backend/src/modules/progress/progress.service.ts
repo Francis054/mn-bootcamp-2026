@@ -10,6 +10,8 @@ import type { TraineeEntity } from '../trainees/trainee.entity.js';
 import type { TraineeRepository } from '../trainees/trainee.repository.js';
 import { isPublicTrainee } from '../trainees/visibility.js';
 import type { TimetableRepository } from '../timetable/timetable.repository.js';
+import type { EmailProvider } from '../mail/email-provider.js';
+import { deliverReview } from '../mail/review-mail.js';
 import type { StorageProvider } from '../storage/storage-provider.js';
 import type { UserRepository } from '../users/user.repository.js';
 import {
@@ -110,6 +112,8 @@ export class ProgressService {
     private readonly auditLog: AuditRepository,
     private readonly storage: StorageProvider,
     private readonly maxImageBytes: number,
+    private readonly mail: EmailProvider,
+    private readonly portalUrl: string,
     private readonly now: () => Date = () => new Date(),
   ) {}
 
@@ -122,7 +126,8 @@ export class ProgressService {
     const trainee = await this.ownTrainee(userId);
     const content = await this.readSkill(trainee.id, body, 'create', emptySkill());
     const existing = await this.progress.listSkills(trainee.id);
-    if (existing.length >= MAX_SKILLS) throw new ApiError('validation', 'You can keep at most 20 skills.');
+    if (existing.length >= MAX_SKILLS)
+      throw new ApiError('validation', 'You can keep at most 20 skills.');
     const sortOrder = existing.reduce((max, row) => Math.max(max, row.sortOrder), -1) + 1;
     const row = this.progress.createSkill({
       traineeId: trainee.id,
@@ -162,7 +167,9 @@ export class ProgressService {
     const { trainee, row } = await this.ownSkill(userId, skillId);
     if (!row.hasPending) this.writeSkillPending(row, this.skillLive(row));
     if (!this.skillPending(row).name) {
-      throw new ApiError('validation', 'Check the highlighted fields.', { name: 'Enter the skill.' });
+      throw new ApiError('validation', 'Check the highlighted fields.', {
+        name: 'Enter the skill.',
+      });
     }
     const decision = submitOwned(statusOf(row), trainee.consentReceived, 'skill');
     if (!decision.ok) throw new ApiError('validation', decision.message);
@@ -181,7 +188,8 @@ export class ProgressService {
     const trainee = await this.ownTrainee(userId);
     const content = this.readEvent(body, 'create', emptyEvent());
     const existing = await this.progress.listEvents(trainee.id);
-    if (existing.length >= MAX_EVENTS) throw new ApiError('validation', 'You can keep at most 30 events.');
+    if (existing.length >= MAX_EVENTS)
+      throw new ApiError('validation', 'You can keep at most 30 events.');
     const sortOrder = existing.reduce((max, row) => Math.max(max, row.sortOrder), -1) + 1;
     const row = this.progress.createEvent({
       traineeId: trainee.id,
@@ -226,7 +234,9 @@ export class ProgressService {
     const { trainee, row } = await this.ownEvent(userId, eventId);
     if (!row.hasPending) this.writeEventPending(row, this.eventLive(row));
     if (!this.eventPending(row).title) {
-      throw new ApiError('validation', 'Check the highlighted fields.', { title: 'Enter the event title.' });
+      throw new ApiError('validation', 'Check the highlighted fields.', {
+        title: 'Enter the event title.',
+      });
     }
     const decision = submitOwned(statusOf(row), trainee.consentReceived, 'event');
     if (!decision.ok) throw new ApiError('validation', decision.message);
@@ -312,6 +322,7 @@ export class ProgressService {
     await this.progress.saveSkill(row);
     await this.syncCardSkills(row.traineeId);
     await this.audit(actor, 'portal.skill.approved', row.id, 'trainee_skill');
+    await this.notify(row.traineeId, 'skill', row.name, true, '');
     return this.skillReview(row);
   }
 
@@ -319,13 +330,15 @@ export class ProgressService {
     const row = await this.requirePendingSkill(skillId);
     const reason = isRecord(body) && typeof body.reason === 'string' ? body.reason : '';
     const decision = rejectOwned(statusOf(row), reason, 'skill');
-    if (!decision.ok) throw new ApiError('validation', decision.message, { reason: decision.message });
+    if (!decision.ok)
+      throw new ApiError('validation', decision.message, { reason: decision.message });
     row.reviewStatus = 'rejected';
     row.rejectionReason = decision.reason;
     row.reviewedAt = this.now();
     row.reviewedBy = actor.userId;
     await this.progress.saveSkill(row);
     await this.audit(actor, 'portal.skill.rejected', row.id, 'trainee_skill');
+    await this.notify(row.traineeId, 'skill', row.name, false, row.rejectionReason);
     return this.skillReview(row);
   }
 
@@ -358,6 +371,7 @@ export class ProgressService {
     await this.progress.saveEvent(row);
     if (previous && previous !== row.certificateStorageKey) await this.deleteStored([previous]);
     await this.audit(actor, 'portal.event.approved', row.id, 'trainee_event');
+    await this.notify(row.traineeId, 'event', row.title, true, '');
     return this.eventReview(row);
   }
 
@@ -365,13 +379,15 @@ export class ProgressService {
     const row = await this.requirePendingEvent(eventId);
     const reason = isRecord(body) && typeof body.reason === 'string' ? body.reason : '';
     const decision = rejectOwned(statusOf(row), reason, 'event');
-    if (!decision.ok) throw new ApiError('validation', decision.message, { reason: decision.message });
+    if (!decision.ok)
+      throw new ApiError('validation', decision.message, { reason: decision.message });
     row.reviewStatus = 'rejected';
     row.rejectionReason = decision.reason;
     row.reviewedAt = this.now();
     row.reviewedBy = actor.userId;
     await this.progress.saveEvent(row);
     await this.audit(actor, 'portal.event.rejected', row.id, 'trainee_event');
+    await this.notify(row.traineeId, 'event', row.title, false, row.rejectionReason);
     return this.eventReview(row);
   }
 
@@ -384,7 +400,8 @@ export class ProgressService {
     const trainee = await this.requireTrainee(traineeId);
     const content = await this.readSkill(trainee.id, body, 'create', emptySkill());
     const existing = await this.progress.listSkills(trainee.id);
-    if (existing.length >= MAX_SKILLS) throw new ApiError('validation', 'A trainee can keep at most 20 skills.');
+    if (existing.length >= MAX_SKILLS)
+      throw new ApiError('validation', 'A trainee can keep at most 20 skills.');
     const sortOrder = existing.reduce((max, row) => Math.max(max, row.sortOrder), -1) + 1;
     const row = this.progress.createSkill({
       traineeId: trainee.id,
@@ -409,7 +426,12 @@ export class ProgressService {
     return this.skillView(saved);
   }
 
-  async editSkillForTrainee(traineeId: string, skillId: string, body: unknown, actor: Actor): Promise<SkillView> {
+  async editSkillForTrainee(
+    traineeId: string,
+    skillId: string,
+    body: unknown,
+    actor: Actor,
+  ): Promise<SkillView> {
     const row = await this.skillForTrainee(traineeId, skillId);
     const content = await this.readSkill(row.traineeId, body, 'patch', this.skillLive(row));
     row.name = content.name;
@@ -427,7 +449,11 @@ export class ProgressService {
     return this.skillView(row);
   }
 
-  async deleteSkillForTrainee(traineeId: string, skillId: string, actor: Actor): Promise<{ id: string }> {
+  async deleteSkillForTrainee(
+    traineeId: string,
+    skillId: string,
+    actor: Actor,
+  ): Promise<{ id: string }> {
     const row = await this.skillForTrainee(traineeId, skillId);
     await this.progress.deleteSkill(row.id);
     await this.syncCardSkills(row.traineeId, true);
@@ -451,7 +477,8 @@ export class ProgressService {
     const trainee = await this.requireTrainee(traineeId);
     const content = this.readEvent(body, 'create', emptyEvent());
     const existing = await this.progress.listEvents(trainee.id);
-    if (existing.length >= MAX_EVENTS) throw new ApiError('validation', 'A trainee can keep at most 30 events.');
+    if (existing.length >= MAX_EVENTS)
+      throw new ApiError('validation', 'A trainee can keep at most 30 events.');
     const sortOrder = existing.reduce((max, row) => Math.max(max, row.sortOrder), -1) + 1;
     const row = this.progress.createEvent({
       traineeId: trainee.id,
@@ -480,7 +507,12 @@ export class ProgressService {
     return this.eventView(saved);
   }
 
-  async editEventForTrainee(traineeId: string, eventId: string, body: unknown, actor: Actor): Promise<EventView> {
+  async editEventForTrainee(
+    traineeId: string,
+    eventId: string,
+    body: unknown,
+    actor: Actor,
+  ): Promise<EventView> {
     const row = await this.eventForTrainee(traineeId, eventId);
     const content = this.readEvent(body, 'patch', this.eventLive(row));
     const orphan = row.pendingCertificateStorageKey;
@@ -499,7 +531,11 @@ export class ProgressService {
     return this.eventView(row);
   }
 
-  async deleteEventForTrainee(traineeId: string, eventId: string, actor: Actor): Promise<{ id: string }> {
+  async deleteEventForTrainee(
+    traineeId: string,
+    eventId: string,
+    actor: Actor,
+  ): Promise<{ id: string }> {
     const row = await this.eventForTrainee(traineeId, eventId);
     const keys = certificateKeys(row);
     await this.progress.deleteEvent(row.id);
@@ -515,14 +551,27 @@ export class ProgressService {
     return this.deleteEventForTrainee(row.traineeId, row.id, actor);
   }
 
-  async addCertificateForTrainee(traineeId: string, eventId: string, bytes: Buffer, actor: Actor): Promise<EventView> {
+  async addCertificateForTrainee(
+    traineeId: string,
+    eventId: string,
+    bytes: Buffer,
+    actor: Actor,
+  ): Promise<EventView> {
     const row = await this.eventForTrainee(traineeId, eventId);
     const stored = await this.storeCertificate(bytes);
-    const previous = [...new Set([row.certificateStorageKey, row.pendingCertificateStorageKey].filter((key): key is string => Boolean(key)))];
+    const previous = [
+      ...new Set(
+        [row.certificateStorageKey, row.pendingCertificateStorageKey].filter((key): key is string =>
+          Boolean(key),
+        ),
+      ),
+    ];
     row.certificateUrl = stored.photoUrl;
     row.certificateStorageKey = stored.storageKey;
     row.pendingCertificateUrl = row.hasPending ? stored.photoUrl : row.pendingCertificateUrl;
-    row.pendingCertificateStorageKey = row.hasPending ? stored.storageKey : row.pendingCertificateStorageKey;
+    row.pendingCertificateStorageKey = row.hasPending
+      ? stored.storageKey
+      : row.pendingCertificateStorageKey;
     await this.progress.saveEvent(row);
     await this.deleteStored(previous.filter((key) => key !== stored.storageKey));
     await this.audit(actor, 'portal.event.admin_updated', row.id, 'trainee_event');
@@ -534,7 +583,9 @@ export class ProgressService {
     if (!trainer) throw new ApiError('forbidden', UNLINKED);
     const skills = await this.progress.listAllSkills();
     const events = await this.progress.listAllEvents();
-    const ids = [...new Set([...skills.map((row) => row.traineeId), ...events.map((row) => row.traineeId)])];
+    const ids = [
+      ...new Set([...skills.map((row) => row.traineeId), ...events.map((row) => row.traineeId)]),
+    ];
     const result: TrainerTraineeView[] = [];
     for (const id of ids) {
       const trainee = await this.trainees.findById(id);
@@ -552,7 +603,9 @@ export class ProgressService {
 
   async listPublicSkills(traineeId: string): Promise<PublicSkill[]> {
     const trainee = await this.publicTrainee(traineeId);
-    const rows = (await this.progress.listSkills(trainee.id)).filter((row) => row.name.trim().length > 0);
+    const rows = (await this.progress.listSkills(trainee.id)).filter(
+      (row) => row.name.trim().length > 0,
+    );
     const result: PublicSkill[] = [];
     for (const row of rows) {
       result.push({
@@ -624,9 +677,11 @@ export class ProgressService {
 
   private async ownTrainee(userId: string): Promise<TraineeEntity> {
     const user = await this.users.findById(userId);
-    if (!user?.traineeId) throw new ApiError('not_found', 'Your login is not linked to a trainee record yet.');
+    if (!user?.traineeId)
+      throw new ApiError('not_found', 'Your login is not linked to a trainee record yet.');
     const trainee = await this.trainees.findById(user.traineeId);
-    if (!trainee) throw new ApiError('not_found', 'Your login is not linked to a trainee record yet.');
+    if (!trainee)
+      throw new ApiError('not_found', 'Your login is not linked to a trainee record yet.');
     return trainee;
   }
 
@@ -638,17 +693,24 @@ export class ProgressService {
 
   private async publicTrainee(traineeId: string): Promise<TraineeEntity> {
     const trainee = await this.trainees.findById(traineeId);
-    if (!trainee || !isPublicTrainee(trainee)) throw new ApiError('not_found', 'That page is not available.');
+    if (!trainee || !isPublicTrainee(trainee))
+      throw new ApiError('not_found', 'That page is not available.');
     return trainee;
   }
 
-  private async ownSkill(userId: string, skillId: string): Promise<{ trainee: TraineeEntity; row: TraineeSkillEntity }> {
+  private async ownSkill(
+    userId: string,
+    skillId: string,
+  ): Promise<{ trainee: TraineeEntity; row: TraineeSkillEntity }> {
     const trainee = await this.ownTrainee(userId);
     const row = await this.findOwnSkill(trainee.id, skillId);
     return { trainee, row };
   }
 
-  private async ownEvent(userId: string, eventId: string): Promise<{ trainee: TraineeEntity; row: TraineeEventEntity }> {
+  private async ownEvent(
+    userId: string,
+    eventId: string,
+  ): Promise<{ trainee: TraineeEntity; row: TraineeEventEntity }> {
     const trainee = await this.ownTrainee(userId);
     const row = await this.findOwnEvent(trainee.id, eventId);
     return { trainee, row };
@@ -681,20 +743,24 @@ export class ProgressService {
   private async requirePendingSkill(skillId: string): Promise<TraineeSkillEntity> {
     if (!UUID.test(skillId)) throw new ApiError('not_found', NOT_WAITING_SKILL);
     const row = await this.progress.findSkill(skillId);
-    if (!row || statusOf(row) !== 'pending' || !row.hasPending) throw new ApiError('not_found', NOT_WAITING_SKILL);
+    if (!row || statusOf(row) !== 'pending' || !row.hasPending)
+      throw new ApiError('not_found', NOT_WAITING_SKILL);
     return row;
   }
 
   private async requirePendingEvent(eventId: string): Promise<TraineeEventEntity> {
     if (!UUID.test(eventId)) throw new ApiError('not_found', NOT_WAITING_EVENT);
     const row = await this.progress.findEvent(eventId);
-    if (!row || statusOf(row) !== 'pending' || !row.hasPending) throw new ApiError('not_found', NOT_WAITING_EVENT);
+    if (!row || statusOf(row) !== 'pending' || !row.hasPending)
+      throw new ApiError('not_found', NOT_WAITING_EVENT);
     return row;
   }
 
   private async uniqueSlug(traineeId: string, base: string, exceptId?: string): Promise<string> {
     const taken = new Set(
-      (await this.progress.listSkills(traineeId)).filter((row) => row.id !== exceptId).map((row) => row.slug),
+      (await this.progress.listSkills(traineeId))
+        .filter((row) => row.id !== exceptId)
+        .map((row) => row.slug),
     );
     if (!taken.has(base)) return base;
     for (let index = 2; index < 100; index += 1) {
@@ -702,7 +768,9 @@ export class ProgressService {
       const next = `${base.slice(0, 60 - suffix.length)}${suffix}`;
       if (!taken.has(next)) return next;
     }
-    throw new ApiError('validation', 'Check the highlighted fields.', { name: 'Choose a different skill name.' });
+    throw new ApiError('validation', 'Check the highlighted fields.', {
+      name: 'Choose a different skill name.',
+    });
   }
 
   private async syncCardSkills(traineeId: string, allowEmpty = false): Promise<void> {
@@ -814,12 +882,17 @@ export class ProgressService {
       status: statusOf(row),
       rejectionReason: row.rejectionReason,
       submittedAt: row.submittedAt ? isoTimestamp(row.submittedAt) : null,
-      draft: { ...draft, certificateUrl: row.hasPending ? row.pendingCertificateUrl : row.certificateUrl },
+      draft: {
+        ...draft,
+        certificateUrl: row.hasPending ? row.pendingCertificateUrl : row.certificateUrl,
+      },
       live: { ...live, certificateUrl: row.certificateUrl },
     };
   }
 
-  private reviewHead(trainee: TraineeEntity): Pick<SkillReviewItem, 'traineeId' | 'email' | 'traineeName' | 'consents'> {
+  private reviewHead(
+    trainee: TraineeEntity,
+  ): Pick<SkillReviewItem, 'traineeId' | 'email' | 'traineeName' | 'consents'> {
     return {
       traineeId: trainee.id,
       email: trainee.email,
@@ -850,6 +923,26 @@ export class ProgressService {
     }
   }
 
+  private async notify(
+    traineeId: string,
+    item: string,
+    title: string,
+    approved: boolean,
+    reason: string,
+  ): Promise<void> {
+    const trainee = await this.trainees.findById(traineeId);
+    if (!trainee) return;
+    await deliverReview(this.mail, {
+      to: trainee.email,
+      traineeId,
+      item,
+      title,
+      approved,
+      reason,
+      portalUrl: this.portalUrl,
+    });
+  }
+
   private async deleteStored(keys: string[]): Promise<void> {
     for (const key of keys) {
       try {
@@ -860,7 +953,12 @@ export class ProgressService {
     }
   }
 
-  private audit(actor: Actor, action: AuditAction, subjectId: string, subjectType: string): Promise<void> {
+  private audit(
+    actor: Actor,
+    action: AuditAction,
+    subjectId: string,
+    subjectType: string,
+  ): Promise<void> {
     return this.auditLog.record({
       action,
       actorUserId: actor.userId,
@@ -877,7 +975,13 @@ function statusOf(row: { reviewStatus: string }): ReviewStatus {
 }
 
 function certificateKeys(row: TraineeEventEntity): string[] {
-  return [...new Set([row.certificateStorageKey, row.pendingCertificateStorageKey].filter((key): key is string => Boolean(key)))];
+  return [
+    ...new Set(
+      [row.certificateStorageKey, row.pendingCertificateStorageKey].filter((key): key is string =>
+        Boolean(key),
+      ),
+    ),
+  ];
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

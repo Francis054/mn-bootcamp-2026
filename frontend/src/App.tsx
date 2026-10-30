@@ -12,6 +12,7 @@ const AccountPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => (
 const ContentEditorPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.ContentEditorPage })));
 const EnquiriesPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.EnquiriesPage })));
 const ContactRequestsPage = lazy(() => import('@/pages/admin/ContactRequestsPage').then((m) => ({ default: m.ContactRequestsPage })));
+const FailedEmailsPage = lazy(() => import('@/pages/admin/FailedEmailsPage').then((m) => ({ default: m.FailedEmailsPage })));
 const MediaPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.MediaPage })));
 const WorkPhotosPage = lazy(() => import('@/pages/admin/WorkPhotosPage').then((m) => ({ default: m.WorkPhotosPage })));
 const SiteImagesPage = lazy(() => import('@/pages/admin/SiteImagesPage').then((m) => ({ default: m.SiteImagesPage })));
@@ -28,6 +29,7 @@ const TraineeLoginPage = lazy(() => import('@/pages/portal/PortalPages').then((m
 const TraineeForgotPage = lazy(() => import('@/pages/portal/PortalPages').then((m) => ({ default: m.TraineeForgotPage })));
 const TraineeResetPage = lazy(() => import('@/pages/portal/PortalPages').then((m) => ({ default: m.TraineeResetPage })));
 const PortalHomePage = lazy(() => import('@/pages/portal/PortalPages').then((m) => ({ default: m.PortalHomePage })));
+const PortalJourneyPage = lazy(() => import('@/pages/portal/JourneyPage').then((m) => ({ default: m.PortalJourneyPage })));
 const TrainerProgressPage = lazy(() => import('@/pages/trainer/TrainerProgressPage').then((m) => ({ default: m.TrainerProgressPage })));
 const ClassEditor = lazy(() => import('@/pages/admin/Editors').then((m) => ({ default: m.ClassEditor })));
 const EventEditor = lazy(() => import('@/pages/admin/Editors').then((m) => ({ default: m.EventEditor })));
@@ -101,6 +103,7 @@ export function App() {
       <Route path="/login" element={<Waiting><TraineeLoginPage /></Waiting>} />
       <Route path="/forgot-password" element={<Waiting><TraineeForgotPage /></Waiting>} />
       <Route path="/portal/reset-password" element={<Waiting><TraineeResetPage /></Waiting>} />
+      <Route path="/portal/journey" element={<RequireAccess permission="portal.access"><Waiting><PortalJourneyPage /></Waiting></RequireAccess>} />
       <Route path="/portal" element={<RequireAccess permission="portal.access"><Waiting><PortalHomePage /></Waiting></RequireAccess>} />
       <Route path="/trainer" element={<RequireAccess permission="progress.read"><Waiting><TrainerProgressPage /></Waiting></RequireAccess>} />
       <Route path="/admin/login" element={<Waiting><LoginPage /></Waiting>} />
@@ -137,6 +140,7 @@ export function App() {
         <Route path="trainee-accounts" element={<Waiting><RequireAccess permission="users.manage"><TraineeAccountsPage /></RequireAccess></Waiting>} />
         <Route path="enquiries" element={<Waiting><RequireAccess permission="users.manage"><EnquiriesPage /></RequireAccess></Waiting>} />
         <Route path="contact-requests" element={<Waiting><ContactRequestsPage /></Waiting>} />
+        <Route path="failed-emails" element={<Waiting><FailedEmailsPage /></Waiting>} />
         <Route path="settings" element={<Waiting><RequireAccess permission="settings.manage"><SettingsPage /></RequireAccess></Waiting>} />
       </Route>
     </Routes>

@@ -358,6 +358,16 @@ Success is `{ id, delivered, message }`. `message` is a status sentence, not the
 
 The audit row stores the action and the enquiry id. It does not store the mailbox, the token, or the message.
 
+## Trainee journey
+
+The journey is computed when it is read. There is no journey table. It joins the timetable (blocks, weeks, and that week’s deliverables), the trainee’s labs, published projects, events attended, achieved skills, and account milestones such as signed up, email confirmed, profile approved, and profile published. A trainee can also add a milestone and mark it private or public. Those rows live in `trainee_milestones`.
+
+`GET /public/trainees/:slug/journey` is public only when the profile is published and consent is on. The same rule as the public profile applies, including a lookup by roster id or slug. The body lists public items only. Draft labs, unapproved skills and events, unpublished projects, and private milestones are left out. The response has no email address and no CV. A missing or private profile is `404` with `That page is not available.`
+
+`GET /portal/journey` needs `portal.access`. The trainee comes from the session. It includes the private items as well. Creating, editing, and deleting a milestone needs `portal.write` and `X-CSRF-Token`. Another trainee’s milestone is `404`.
+
+A milestone needs a title (`Enter a title.`), a date (`Pick a date.`), and a choice of private or public (`Choose private or public.`). The note is optional.
+
 ## Not in this milestone
 
 These paths from the frontend contract are not implemented. They still answer `404` with code `not_found`:

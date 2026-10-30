@@ -21,6 +21,7 @@ import { collect, emailAddress, minLength, required } from '@/domain/validate';
 import { usePublicContent } from '@/hooks/useContent';
 import { downloadCalendar, EventRow, moduleOf, PageIntro, PublicGate, SampleMark, TraineeArt } from './helpers';
 import { PublicWorkPhotos } from './WorkPhotos';
+import { TraineeJourney } from './TraineeJourney';
 import { TraineePortfolio } from './TraineePortfolio';
 import { TraineeProgress } from './TraineeProgress';
 
@@ -117,8 +118,9 @@ export function TraineePage() {
             <div style={{ marginTop: 24 }}><span className="label">Skills in progress</span><div className="flex wrap" style={{ gap: 8, marginTop: 12 }}>{(trainee.skills ?? []).map((skill) => <span className="tag" key={skill}>{skill}</span>)}</div></div>
           </div>
           <div className="split__b">
-            <Tabs label="Profile sections" value={tab} onChange={setTab} tabs={[{ id: 'about', label: 'About' }, { id: 'progress', label: 'Progress' }, { id: 'work', label: 'Work' }, { id: 'contact', label: 'Contact' }]} />
+            <Tabs label="Profile sections" value={tab} onChange={setTab} tabs={[{ id: 'about', label: 'About' }, { id: 'journey', label: 'Journey' }, { id: 'progress', label: 'Progress' }, { id: 'work', label: 'Work' }, { id: 'contact', label: 'Contact' }]} />
             {tab === 'about' ? <div style={{ marginTop: 24 }}><p>{trainee.bio}</p>{trainee.quote ? <blockquote style={{ marginTop: 20 }}>“{trainee.quote}”</blockquote> : null}<p className="muted" style={{ marginTop: 16 }}>Email and private notes are not on this page. Links appear here after the trainee agrees and an administrator approves them.</p></div> : null}
+            {tab === 'journey' ? <TraineeJourney traineeId={trainee.slug || trainee.id} /> : null}
             {tab === 'progress' ? <TraineeProgress traineeId={trainee.id} /> : null}
             {tab === 'work' ? <div style={{ marginTop: 24 }}><TraineePortfolio traineeId={trainee.id} />{related.length ? related.map((project) => <Link key={project.id} className="link" to={`/projects/${project.id}`}>{project.title}</Link>) : <p className="muted">No sample projects in this focus yet.</p>}</div> : null}
             {tab === 'contact' ? <div style={{ marginTop: 24 }}>{trainee.contactAvailable ? <ContactPanel traineeId={trainee.slug || trainee.id} /> : <p className="muted">This trainee has not agreed to messages through the site. Their email address is not shown.</p>}</div> : null}
