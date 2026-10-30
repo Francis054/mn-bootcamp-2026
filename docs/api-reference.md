@@ -30,6 +30,46 @@ Errors use `{ "error": { "code", "message", "fieldErrors"? } }`. `code` is `vali
 | PATCH | `/api/v1/admin/review-queue/{traineeId}` |
 | POST | `/api/v1/admin/review-queue/{traineeId}/approve` |
 | POST | `/api/v1/admin/review-queue/{traineeId}/reject` |
+| GET, POST | `/api/v1/portal/portfolio` |
+| POST | `/api/v1/portal/portfolio/reorder` |
+| GET, PATCH, DELETE | `/api/v1/portal/portfolio/{id}` |
+| POST | `/api/v1/portal/portfolio/{id}/submit` |
+| POST | `/api/v1/portal/portfolio/{id}/images` |
+| DELETE | `/api/v1/portal/portfolio/{id}/images/{mediaId}` |
+| POST | `/api/v1/portal/portfolio/{id}/videos` |
+| POST | `/api/v1/portal/portfolio/{id}/videos/grant` |
+| POST | `/api/v1/portal/portfolio/{id}/videos/file` |
+| POST | `/api/v1/portal/portfolio/{id}/videos/complete` |
+| DELETE | `/api/v1/portal/portfolio/{id}/videos/{mediaId}` |
+| POST | `/api/v1/portal/portfolio/{id}/media/reorder` |
+| GET | `/api/v1/public/trainees/{id}/portfolio` |
+| GET | `/api/v1/admin/review-queue/items` |
+| PATCH, DELETE | `/api/v1/admin/review-queue/items/{id}` |
+| POST | `/api/v1/admin/review-queue/items/{id}/approve` |
+| POST | `/api/v1/admin/review-queue/items/{id}/reject` |
+| GET, POST | `/api/v1/portal/skills` |
+| PATCH, DELETE | `/api/v1/portal/skills/{id}` |
+| POST | `/api/v1/portal/skills/{id}/submit` |
+| GET, POST | `/api/v1/portal/events` |
+| PATCH, DELETE | `/api/v1/portal/events/{id}` |
+| POST | `/api/v1/portal/events/{id}/submit` |
+| POST, DELETE | `/api/v1/portal/events/{id}/certificate` |
+| GET | `/api/v1/public/trainees/{id}/skills` |
+| GET | `/api/v1/public/trainees/{id}/events` |
+| GET | `/api/v1/admin/review-queue/skills` |
+| PATCH, DELETE | `/api/v1/admin/review-queue/skills/{id}` |
+| POST | `/api/v1/admin/review-queue/skills/{id}/approve` |
+| POST | `/api/v1/admin/review-queue/skills/{id}/reject` |
+| GET | `/api/v1/admin/review-queue/events` |
+| PATCH, DELETE | `/api/v1/admin/review-queue/events/{id}` |
+| POST | `/api/v1/admin/review-queue/events/{id}/approve` |
+| POST | `/api/v1/admin/review-queue/events/{id}/reject` |
+| GET, POST | `/api/v1/admin/trainees/{traineeId}/skills` |
+| PATCH, DELETE | `/api/v1/admin/trainees/{traineeId}/skills/{id}` |
+| GET, POST | `/api/v1/admin/trainees/{traineeId}/events` |
+| PATCH, DELETE | `/api/v1/admin/trainees/{traineeId}/events/{id}` |
+| POST | `/api/v1/admin/trainees/{traineeId}/events/{id}/certificate` |
+| GET | `/api/v1/progress/trainees` |
 | GET | `/api/v1/admin/pending-registrations` |
 | POST | `/api/v1/admin/pending-registrations/{id}/approve` |
 | POST | `/api/v1/admin/pending-registrations/{id}/reject` |

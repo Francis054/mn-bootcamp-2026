@@ -18,6 +18,7 @@ export function testEnv(overrides: Partial<AppEnv> = {}): AppEnv {
     loginLockMs: 60_000,
     loginIpFailureLimit: 30,
     uploadMaxBytes: 5 * 1024 * 1024,
+    videoUploadMaxBytes: 50 * 1024 * 1024,
     traineeSignupMode: 'roster',
     devMailLog: false,
     ...overrides,

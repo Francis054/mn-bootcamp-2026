@@ -49,6 +49,10 @@ export function LoginPage() {
         navigate('/portal');
         return;
       }
+      if (result.user?.role === 'trainer') {
+        navigate('/trainer');
+        return;
+      }
       navigate(next && next.startsWith('/admin') ? next : '/admin');
     } catch (error) {
       setFormError(isApiError(error) ? error.message : 'Sign-in failed.');

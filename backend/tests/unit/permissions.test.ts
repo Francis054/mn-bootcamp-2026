@@ -29,6 +29,9 @@ describe('roles and permissions', () => {
     expect(can('trainer', 'media.upload')).toBe(false);
     expect(can('trainer', 'portal.access')).toBe(false);
     expect(can('trainer', 'account.manage')).toBe(true);
+    expect(can('trainer', 'progress.read')).toBe(true);
+    expect(can('trainee', 'progress.read')).toBe(false);
+    expect(can('administrator', 'progress.read')).toBe(false);
     expect(roleAtLeast('administrator', 'editor')).toBe(true);
     expect(roleAtLeast('trainee', 'viewer')).toBe(false);
   });

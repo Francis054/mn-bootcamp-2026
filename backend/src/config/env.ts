@@ -35,8 +35,10 @@ export interface AppEnv {
   loginFailureLimit: number;
   loginLockMs: number;
   loginIpFailureLimit: number;
-  /** Largest accepted upload. Defaults to 5 MB. */
+  /** Largest accepted image upload. Defaults to 5 MB. */
   uploadMaxBytes: number;
+  /** Largest accepted video upload. Defaults to 50 MB. The file is not buffered when Cloudinary is configured. */
+  videoUploadMaxBytes: number;
   cloudinaryCloudName?: string;
   cloudinaryApiKey?: string;
   cloudinaryApiSecret?: string;
@@ -130,6 +132,7 @@ export function loadEnv(
     problems,
   );
   const uploadMaxBytes = readUploadMax(source.UPLOAD_MAX_BYTES, problems);
+  const videoUploadMaxBytes = readVideoMax(source.VIDEO_UPLOAD_MAX_BYTES, problems);
   const cloudinaryCloudName = readOptional(source.CLOUDINARY_CLOUD_NAME);
   const cloudinaryApiKey = readOptional(source.CLOUDINARY_API_KEY);
   const cloudinaryApiSecret = readOptional(source.CLOUDINARY_API_SECRET);
@@ -173,6 +176,7 @@ export function loadEnv(
     loginLockMs,
     loginIpFailureLimit,
     uploadMaxBytes,
+    videoUploadMaxBytes,
     traineeSignupMode,
     devMailLog,
   };
@@ -403,6 +407,8 @@ function readPositiveInt(
 
 const UPLOAD_MAX_DEFAULT = 5 * 1024 * 1024;
 const UPLOAD_MAX_CEILING = 10 * 1024 * 1024;
+const VIDEO_MAX_DEFAULT = 50 * 1024 * 1024;
+const VIDEO_MAX_CEILING = 200 * 1024 * 1024;
 
 function readUploadMax(raw: string | undefined, problems: string[]): number {
   if (raw === undefined || raw.trim() === '') return UPLOAD_MAX_DEFAULT;
@@ -414,6 +420,20 @@ function readUploadMax(raw: string | undefined, problems: string[]): number {
   if (value < 1 || value > UPLOAD_MAX_CEILING) {
     problems.push('UPLOAD_MAX_BYTES must be a whole number from 1 to 10485760.');
     return UPLOAD_MAX_DEFAULT;
+  }
+  return value;
+}
+
+function readVideoMax(raw: string | undefined, problems: string[]): number {
+  if (raw === undefined || raw.trim() === '') return VIDEO_MAX_DEFAULT;
+  if (!/^[0-9]+$/.test(raw.trim())) {
+    problems.push('VIDEO_UPLOAD_MAX_BYTES must be a whole number from 1 to 209715200.');
+    return VIDEO_MAX_DEFAULT;
+  }
+  const value = Number(raw.trim());
+  if (value < 1 || value > VIDEO_MAX_CEILING) {
+    problems.push('VIDEO_UPLOAD_MAX_BYTES must be a whole number from 1 to 209715200.');
+    return VIDEO_MAX_DEFAULT;
   }
   return value;
 }

@@ -100,7 +100,7 @@ describe('trainee portal screens', () => {
     await user.click(screen.getByRole('button', { name: /sign in/i }));
     expect(await screen.findByRole('heading', { name: /hello, sample trainee 02/i })).toBeInTheDocument();
     expect(screen.getByText(/email is confirmed/i)).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Projects' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Portfolio' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'CV' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /log out/i }));
     expect(await screen.findByRole('heading', { name: /trainee sign in/i })).toBeInTheDocument();

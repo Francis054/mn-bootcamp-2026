@@ -33,6 +33,7 @@ describe('loadEnv', () => {
     expect(env.loginFailureLimit).toBe(5);
     expect(env.loginLockMs).toBe(60_000);
     expect(env.loginIpFailureLimit).toBe(30);
+    expect(env.videoUploadMaxBytes).toBe(50 * 1024 * 1024);
     expect(env.sessionSecret).toBeUndefined();
   });
 
@@ -237,6 +238,14 @@ describe('loadEnv', () => {
       );
       expect(message).not.toContain('super-secret-db-password');
     }
+  });
+
+  it('caps a video upload at 200 MB and defaults to 50 MB', () => {
+    expect(() =>
+      loadEnv(productionSource({ VIDEO_UPLOAD_MAX_BYTES: '209715201' }), { loadDotenv: false }),
+    ).toThrow(/VIDEO_UPLOAD_MAX_BYTES/);
+    const set = loadEnv(productionSource({ VIDEO_UPLOAD_MAX_BYTES: '1048576' }), { loadDotenv: false });
+    expect(set.videoUploadMaxBytes).toBe(1_048_576);
   });
 
   it('leaves mail unset until both values are present, and does not repeat a partial value', () => {

@@ -51,7 +51,7 @@ test('trainee signup, verification, portal, and the admin queue', async ({ page 
   await page.getByRole('button', { name: /sign in/i }).click();
   await expect(page.getByRole('heading', { name: /hello, roster person/i })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Your profile' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Projects' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Portfolio' })).toBeVisible();
   await page.getByRole('textbox', { name: 'Headline', exact: true }).fill('Aspiring SOC analyst');
   await page.getByRole('textbox', { name: 'Short bio', exact: true }).fill('I am learning detection and response.');
   await page.getByRole('textbox', { name: 'Location', exact: true }).fill('Accra');

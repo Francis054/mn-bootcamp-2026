@@ -15,6 +15,8 @@ import { isApiError, type SessionUser } from '@/domain/types';
 import { CONSENT_WORDING, githubProblem, linkedinProblem, type PortalProfile, type ProfileFields } from '@/domain/portalProfile';
 import { collect, emailAddress, minLength, newPassword, required } from '@/domain/validate';
 import { clearSession, rememberSignedIn } from '@/dev/session';
+import { PortfolioEditor } from '@/pages/portal/PortfolioEditor';
+import { ProgressEditor } from '@/pages/portal/ProgressEditor';
 
 const ACCEPTED = 'If this email is on the cohort list, we sent a link. If you do not see it, request another from the verification page.';
 
@@ -275,6 +277,10 @@ export function TraineeLoginPage() {
         navigate(next && next.startsWith('/portal') ? next : '/portal');
         return;
       }
+      if (result.user?.role === 'trainer') {
+        navigate('/trainer');
+        return;
+      }
       navigate('/admin');
     } catch (error) {
       setFormError(isApiError(error) ? error.message : 'Sign-in failed.');
@@ -463,9 +469,9 @@ export function PortalHomePage() {
               <h1>Hello, {name}.</h1>
               <p className="muted">Your email is {verified ? 'confirmed' : 'not confirmed yet'}.{me?.traineeId ? ` Roster id ${me.traineeId}.` : ''}</p>
               <ProfileEditor />
+              <PortfolioEditor />
+              <ProgressEditor />
               <div className="portal-grid">
-                <section className="portal-card"><h2>Projects</h2><p>Coming next. Labs and case studies will be listed here.</p></section>
-                <section className="portal-card"><h2>Labs</h2><p>Coming next. Completed labs will be recorded here.</p></section>
                 <section className="portal-card"><h2>CV</h2><p>Coming next. Your CV stays private until you choose otherwise.</p></section>
               </div>
               {!me ? <EmptyState icon="users" title="Nothing to show yet" text="Sign in again if this stays empty." /> : null}
