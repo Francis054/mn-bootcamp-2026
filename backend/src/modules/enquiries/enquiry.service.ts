@@ -5,6 +5,7 @@ import type { LoginThrottleRepository } from '../auth/login-throttle.repository.
 import { readSettings } from '../content/content.rules.js';
 import type { ContentRepository } from '../content/content.repository.js';
 import type { EmailProvider } from '../mail/email-provider.js';
+import { enquiryLetter } from '../mail/letters.js';
 import type { EnquiryEntity } from './enquiry.entity.js';
 import type { EnquiryRepository } from './enquiry.repository.js';
 import {
@@ -158,14 +159,16 @@ export class EnquiryService {
   }
 
   private async notify(row: EnquiryEntity): Promise<boolean> {
-    if (!this.mail.configured) return false;
     const to = await this.contactAddress();
     if (!to) return false;
+    const letter = enquiryLetter(row.topic, row.message);
     try {
       const result = await this.mail.send({
         to,
-        subject: 'New enquiry',
-        text: `A new enquiry was saved.\n\nTopic: ${row.topic}\n\n${row.message}\n`,
+        subject: letter.subject,
+        text: letter.text,
+        html: letter.html,
+        kind: 'enquiry',
       });
       return result.delivered;
     } catch {

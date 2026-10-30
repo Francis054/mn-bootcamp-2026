@@ -8,8 +8,10 @@ import type { DocumentStorage, StoredDocument } from './document-storage.js';
 export class MemoryDocumentStorage implements DocumentStorage {
   readonly name = 'memory' as const;
   readonly objects = new Map<string, Buffer>();
+  /** Tests set this so a removal can show a failed CV delete and then retry it. */
+  failDeletes = false;
 
-  put(input: { bytes: Buffer }): Promise<StoredDocument> {
+  put(input: { bytes: Buffer; contentType?: string }): Promise<StoredDocument> {
     const key = `${randomUUID()}.pdf`;
     this.objects.set(key, Buffer.from(input.bytes));
     return Promise.resolve({ key });
@@ -22,6 +24,9 @@ export class MemoryDocumentStorage implements DocumentStorage {
   }
 
   delete(key: string): Promise<void> {
+    if (this.failDeletes) {
+      return Promise.reject(new Error('The CV could not be removed.'));
+    }
     this.objects.delete(key);
     return Promise.resolve();
   }

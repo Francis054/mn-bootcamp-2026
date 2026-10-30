@@ -195,6 +195,7 @@ describe('admin access by role', () => {
     await database.undoLastMigration();
     await database.undoLastMigration();
     await database.undoLastMigration();
+    await database.undoLastMigration();
     try {
       const names: unknown = await database.query(
         'SELECT name FROM schema_migrations ORDER BY id DESC LIMIT 1',
@@ -212,7 +213,7 @@ describe('admin access by role', () => {
     const applied: unknown = await database.query(
       'SELECT name FROM schema_migrations ORDER BY id DESC LIMIT 1',
     );
-    expect(JSON.stringify(applied)).toContain('TraineeMilestones1794700800000');
+    expect(JSON.stringify(applied)).toContain('EmailOutboxAndRemoval1794787200000');
   });
 });
 

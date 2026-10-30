@@ -82,6 +82,12 @@ Errors use `{ "error": { "code", "message", "fieldErrors"? } }`. `code` is `vali
 | POST | `/api/v1/admin/trainee-accounts/{id}/enable` |
 | POST | `/api/v1/admin/trainee-accounts/{id}/resend-invite` |
 | POST | `/api/v1/admin/account/password` |
+| GET | `/api/v1/admin/email-outbox/failed` |
+| POST | `/api/v1/admin/email-outbox/{id}/resend` |
+| GET | `/api/v1/admin/trainees/{id}/export` |
+| POST | `/api/v1/admin/trainees/{id}/erase` |
+| GET | `/api/v1/admin/trainee-removals` |
+| POST | `/api/v1/admin/trainee-removals/{id}/retry` |
 
 `GET /api/v1/health` returns 200 when the database answers and 503 when it does not. The body is `{ status, database, uptimeSeconds }` with `status` of `ok` or `degraded` and `database` of `up` or `down`.
 

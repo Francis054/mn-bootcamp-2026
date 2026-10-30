@@ -12,6 +12,7 @@ import { isApiError } from '@/domain/types';
 import { classFieldErrors, eventFieldErrors, projectFieldErrors, traineeFieldErrors, withConsentField, withPhaseOnWeek } from '@/domain/adminFields';
 import { useAsync } from '@/hooks/useAsync';
 import { TraineeCvPanel } from './TraineeCvPanel';
+import { TraineePrivacyPanel } from './TraineePrivacyPanel';
 import { ProfilePhotoField, useProfilePhoto } from './ProfilePhotoField';
 import { selectedIds, useAllPages, useMediaOptions, useModules, withCurrent } from './options';
 
@@ -274,6 +275,7 @@ function TraineeForm({ initial }: { initial: Trainee | null }) {
       {writable ? <SaveBar dirty={dirty} pending={pending} onCancel="/admin/trainees" label="Save profile" extra={<BusyButton pending={pending} busyLabel="Publishing" onClick={() => { if (formRef.current) void save(formRef.current, true); }}>Publish</BusyButton>} /> : null}
     </form>
     {initial?.id ? <TraineeCvPanel traineeId={initial.id} /> : null}
+    {initial?.id && auth.role === 'administrator' ? <TraineePrivacyPanel traineeId={initial.id} displayName={initial.displayName} /> : null}
     </>
   );
 }

@@ -8,13 +8,15 @@ Until a sending domain is verified, Resend's shared `resend.dev` sender delivers
 
 ## What the API does when a send fails
 
-The provider is called through a small wrapper (`ObservedMail`). A refusal or a network error is logged with the provider name and the subject. The log does not include the mailbox, the API key, or the token. The wrapper returns `{ delivered: false }` instead of dropping the error.
+Every message is written to `email_outbox` first, then sent with Resend. The row stores the address, subject, plain text, and HTML needed to try again. It does not store the API key. A failure is logged with the kind and the attempt count. The log does not include the mailbox, the API key, or the token. The caller still gets `{ delivered: false }`.
+
+The same process retries a failed row. The waits are 1 minute, 5 minutes, 15 minutes, and 60 minutes, and then it stops after 5 attempts. A free Render web service has no separate worker, so the retry timer runs inside the API process. An administrator can also press Resend on Failed emails. That resets the attempt count. There is no job that deletes old messages.
 
 Public signup, resend, and password-reset replies stay the same whether or not a message was accepted, so the form cannot be used to list cohort emails. The verification page always offers another link. An administrator approving a signup, or resending an invite, gets `delivered: false` and a sentence that says the account exists and the email was not sent.
 
-A later change can replace `ObservedMail` with an outbox table and a retry loop. Callers already treat `delivered: false` as "try again". There is no outbox table in this change.
+Each message uses one green and white HTML shell and a plain-text copy of the same words. That covers signup confirmation, password reset, review outcomes, the employer contact relay, CV links, and the other messages this API sends.
 
-Employer contact and CV requests use the same rule. The public response says the note was saved. `delivered` is true only when Resend accepted the message. If `RESEND_API_KEY` or `EMAIL_FROM` is missing, the row stays in `contact_requests` or `cv_requests` and nothing is sent. Staff can read those rows in the admin area. The public site does not link there. A contact message is sent to the trainee with Reply-To set to the sender, so a reply does not require the site to reveal the trainee's address. A CV request emails the sender a short download link. The trainee's address is not in that message.
+Employer contact and CV requests use the same rule. The public response says the note was saved. `delivered` is true only when Resend accepted the message. If `RESEND_API_KEY` or `EMAIL_FROM` is missing, the contact or CV request is still saved and the email is queued as not sent. Staff can read those rows in the admin area and resend from Failed emails after mail is configured. The public site does not link there. A contact message is sent to the trainee with Reply-To set to the sender, so a reply does not require the site to reveal the trainee's address. A CV request emails the sender a short download link. The trainee's address is not in that message.
 
 Development and the test suite use the in-memory provider. Nothing is sent to Resend. `DEV_MAIL_LOG=true` records that a development message was accepted. It is refused when `NODE_ENV=production`.
 
@@ -29,7 +31,7 @@ Add these on the domain (or a subdomain such as `mail.maximnyansa.com`) that wil
 
 Verification can take a few minutes or a few hours. In the Resend dashboard, open Domains and wait until the domain is verified before setting `EMAIL_FROM` to an address on it.
 
-The free Resend plan allows 100 emails a day and 3,000 a month, and a small number of domains. A cohort signup plus resends can reach the daily cap. The API does not queue past that cap. A failed send is the `delivered: false` case above.
+The free Resend plan allows 100 emails a day and 3,000 a month, and a small number of domains. A cohort signup plus resends can reach the daily cap. A message that hits the cap stays in `email_outbox` and is retried until the attempt limit. An administrator can resend it after that from Failed emails.
 
 ## Signup mode
 
