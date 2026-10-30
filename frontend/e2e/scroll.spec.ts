@@ -7,19 +7,28 @@ async function bootDone(page: Page) {
   await expect(page.locator('#boot')).toHaveCount(0);
 }
 
-async function revealHeader(page: Page) {
-  await page.evaluate(() => {
+async function nudgeScroll(page: Page, top: number) {
+  await page.evaluate((next) => {
     // A gesture ends the navigation settle, which otherwise keeps the new page at the top.
+    // The settle can start after the first gesture, so callers repeat this until the offset sticks.
     window.dispatchEvent(new WheelEvent('wheel', { deltaY: 40 }));
     const max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-    window.scrollTo(0, Math.max(max, 900));
-  });
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(640);
+    window.scrollTo(0, Math.min(Math.max(max, 0), next));
+  }, top);
+}
+
+async function revealHeader(page: Page) {
+  await expect.poll(async () => {
+    await nudgeScroll(page, 9000);
+    return page.evaluate(() => window.scrollY);
+  }).toBeGreaterThan(640);
   await expect(page.locator('header.site-header')).not.toHaveClass(/is-hidden/);
   await expect.poll(() => page.evaluate(() => Math.round(document.querySelector('header.site-header')?.getBoundingClientRect().top ?? -1))).toBe(0);
   // Leave the page offset, not pinned to the bottom, so the next click starts away from the top.
-  await page.evaluate(() => window.scrollTo(0, 480));
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(200);
+  await expect.poll(async () => {
+    await nudgeScroll(page, 480);
+    return page.evaluate(() => window.scrollY);
+  }).toBeGreaterThan(200);
 }
 
 async function expectTop(page: Page) {
@@ -53,8 +62,13 @@ test('public navigation starts at the top', async ({ page }) => {
   expect(hrefs.filter((href) => href === '/admin' || href.startsWith('/admin/'))).toEqual([]);
 
   const primary = page.getByRole('navigation', { name: 'Primary' });
+  await fromBottomOfHome(page);
+  await primary.getByRole('button', { name: 'Trainees', exact: true }).click();
+  await primary.getByRole('menuitem', { name: /meet the trainees/i }).click();
+  await expect(page).toHaveURL(/\/trainees$/);
+  await expectTop(page);
+
   const visits: Array<{ name: string | RegExp; url: RegExp; exact?: boolean }> = [
-    { name: 'Trainees', url: /\/trainees$/, exact: true },
     { name: 'Events', url: /\/events$/, exact: true },
     { name: 'Gallery', url: /\/gallery$/, exact: true },
     { name: '10 Years', url: /\/anniversary$/ },
@@ -123,7 +137,7 @@ test('mobile menu navigation starts at the top', async ({ page }) => {
   await bootDone(page);
   await expect(page.getByRole('heading', { name: /secure the future/i })).toBeVisible();
 
-  const links = ['Home', 'Overview', 'Schedule', 'Three-month journey', 'Class archive', 'Projects & labs', 'Trainees', 'Events', 'Gallery', '10 Years', 'About'];
+  const links = ['Home', 'Overview', 'Schedule', 'Three-month journey', 'Class archive', 'Projects & labs', 'Meet the trainees', 'Events', 'Gallery', '10 Years', 'About'];
   for (const name of links) {
     if (name !== 'Home') {
       await page.locator('header a.lockup').click();

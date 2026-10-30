@@ -173,7 +173,9 @@ describe('ScrollToTop', () => {
     expect(screen.getByRole('button', { name: /open menu/i })).toHaveAttribute('aria-expanded', 'false');
     await user.click(screen.getByRole('button', { name: /open menu/i }));
     expect(document.body.style.overflow).toBe('hidden');
-    await user.click(within(screen.getByRole('navigation', { name: 'Primary' })).getByRole('link', { name: 'Trainees' }));
+    const primary = screen.getByRole('navigation', { name: 'Primary' });
+    await user.click(within(primary).getByRole('button', { name: 'Trainees' }));
+    await user.click(within(primary).getByRole('menuitem', { name: /meet the trainees/i }));
     expect(await screen.findByRole('heading', { name: 'Trainees' })).toBeInTheDocument();
     expect(document.body.style.overflow).toBe('');
     expect(screen.getByRole('button', { name: /open menu/i })).toHaveAttribute('aria-expanded', 'false');

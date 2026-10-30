@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
@@ -23,12 +23,15 @@ function renderAt(path: string) {
 }
 
 describe('trainee portal screens', () => {
-  it('offers trainee sign-in from the public header and the mobile menu', async () => {
+  it('offers trainee sign-in and sign-up from the trainees menu', async () => {
+    const user = userEvent.setup();
     renderAt('/');
     expect(await screen.findByRole('heading', { name: /secure the future/i })).toBeInTheDocument();
-    const links = screen.getAllByRole('link', { name: 'Trainee sign in / Create account' });
-    expect(links.length).toBeGreaterThanOrEqual(2);
-    expect(links.every((link) => link.getAttribute('href') === '/login')).toBe(true);
+    expect(screen.queryByRole('link', { name: 'Trainee sign in / Create account' })).not.toBeInTheDocument();
+    const primary = screen.getByRole('navigation', { name: 'Primary' });
+    await user.click(within(primary).getByRole('button', { name: 'Trainees' }));
+    expect(within(primary).getByRole('menuitem', { name: /sign in/i })).toHaveAttribute('href', '/login');
+    expect(within(primary).getByRole('menuitem', { name: /sign up/i })).toHaveAttribute('href', '/signup');
     const hrefs = [...document.querySelectorAll('a')].map((anchor) => anchor.getAttribute('href') ?? '');
     expect(hrefs.filter((href) => href === '/admin' || href.startsWith('/admin/'))).toEqual([]);
   });

@@ -17,9 +17,25 @@ async function clientGo(page: import('@playwright/test').Page, path: string) {
 
 test('trainee signup, verification, portal, and the admin queue', async ({ page }, info) => {
   const suffix = info.project.name;
-  await page.goto('/signup');
-  await expect(page.getByRole('heading', { name: /create your account/i })).toBeVisible();
+  await page.goto('/');
   await page.locator('.boot-screen').waitFor({ state: 'detached' });
+  await expect(page.getByRole('heading', { name: /secure the future/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Trainee sign in / Create account' })).toHaveCount(0);
+  if (info.project.name === 'mobile') {
+    await page.getByRole('button', { name: /open menu/i }).click();
+    const mobile = page.getByRole('dialog', { name: 'Menu' });
+    await expect(mobile.getByRole('link', { name: 'Sign in', exact: true })).toHaveAttribute('href', '/login');
+    await expect(mobile.getByRole('link', { name: 'Sign up', exact: true })).toHaveAttribute('href', '/signup');
+    await mobile.getByRole('link', { name: 'Sign up', exact: true }).click();
+  } else {
+    const primary = page.getByRole('navigation', { name: 'Primary' });
+    await primary.getByRole('button', { name: 'Trainees', exact: true }).click();
+    const menu = page.getByRole('menu', { name: 'Trainees' });
+    await expect(menu.getByRole('menuitem', { name: /sign in/i })).toHaveAttribute('href', '/login');
+    await expect(menu.getByRole('menuitem', { name: /sign up/i })).toHaveAttribute('href', '/signup');
+    await menu.getByRole('menuitem', { name: /sign up/i }).click();
+  }
+  await expect(page.getByRole('heading', { name: /create your account/i })).toBeVisible();
   await shot(page, `trainee-signup-${suffix}`);
 
   await page.getByLabel('Name').fill('Sample Person');
