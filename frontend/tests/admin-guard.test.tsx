@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from '@/auth/AuthProvider';
@@ -54,9 +54,13 @@ function signInAsFixtureAdmin() {
 }
 
 describe('admin shell guard', () => {
-  afterEach(() => {
-    act(() => {
+  afterEach(async () => {
+    // The users page is the first lazy load of the admin system pages. That
+    // import pings Suspense again on the next timer, including after unmount.
+    await act(async () => {
       clearSession();
+      cleanup();
+      await new Promise((resolve) => setTimeout(resolve, 0));
     });
   });
 

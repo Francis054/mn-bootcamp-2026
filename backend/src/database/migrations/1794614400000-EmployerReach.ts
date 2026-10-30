@@ -54,6 +54,8 @@ export class EmployerReach1794614400000 implements MigrationInterface {
     await queryRunner.query(
       `CREATE INDEX "cv_requests_email_created_idx" ON "cv_requests" ("from_email", "created_at")`,
     );
+    await queryRunner.query(`ALTER TABLE "contact_requests" ENABLE ROW LEVEL SECURITY`);
+    await queryRunner.query(`ALTER TABLE "cv_requests" ENABLE ROW LEVEL SECURITY`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

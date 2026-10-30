@@ -90,6 +90,7 @@ export class TraineeProfile1794268800000 implements MigrationInterface {
         "consent_recorded_by", COALESCE("consent_received_at", now())
       FROM "trainees" WHERE "photo_consent" = true
     `);
+    await queryRunner.query(`ALTER TABLE "trainee_consents" ENABLE ROW LEVEL SECURITY`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

@@ -21,8 +21,10 @@ import { connectionUrlForDriver, sslConfigForDriver } from './ssl.js';
 import { Accounts1793404800000 } from './migrations/1793404800000-Accounts.js';
 import { CatalogueLinks1793664000000 } from './migrations/1793664000000-CatalogueLinks.js';
 import { WorkPhotos1793750400000 } from './migrations/1793750400000-WorkPhotos.js';
+import { PublicRls1794096000000 } from './migrations/1794096000000-PublicRls.js';
 import { SiteImages1794009600000 } from './migrations/1794009600000-SiteImages.js';
-import { AuditActionPattern1794096000000 } from './migrations/1794096000000-AuditActionPattern.js';
+import { CommunityLogo1794096000000 } from './migrations/1794096000000-CommunityLogo.js';
+import { AuditActionPattern1794182400000 } from './migrations/1794182400000-AuditActionPattern.js';
 import { TraineeAuth1794182400000 } from './migrations/1794182400000-TraineeAuth.js';
 import { TraineeProfile1794268800000 } from './migrations/1794268800000-TraineeProfile.js';
 import { TraineePortfolio1794355200000 } from './migrations/1794355200000-TraineePortfolio.js';
@@ -132,7 +134,9 @@ export function createDataSource(
       TraineePhoto1793836800000,
       Timetable1793923200000,
       SiteImages1794009600000,
-      AuditActionPattern1794096000000,
+      PublicRls1794096000000,
+      CommunityLogo1794096000000,
+      AuditActionPattern1794182400000,
       TraineeAuth1794182400000,
       TraineeProfile1794268800000,
       TraineePortfolio1794355200000,

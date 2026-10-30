@@ -200,7 +200,7 @@ describe('admin access by role', () => {
       const names: unknown = await database.query(
         'SELECT name FROM schema_migrations ORDER BY id DESC LIMIT 1',
       );
-      expect(JSON.stringify(names)).toContain('SiteImages1794009600000');
+      expect(JSON.stringify(names)).toContain('CommunityLogo1794096000000');
       await expect(insertAudit(database, 'curriculum.future_kind.created')).rejects.toThrow(
         /audit_events_action_check/,
       );

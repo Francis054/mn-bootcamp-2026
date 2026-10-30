@@ -288,6 +288,12 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
       Close the terminal when it finishes so the URL is not left on screen.
       The command prints migration results. It does not print the URL or
       the certificate.
+      If this migration has not reached the hosted database yet, the same
+      lock can be pasted into the Supabase SQL editor first. The statements
+      and the checks are in docs/security.md, under "Supabase Data API".
+      npm run migration:run afterwards still records the migration, and it
+      is safe to run those statements twice. Do not revert that migration
+      on the hosted database.
 
 6. Create the website as a Static Site on the same Render account.
    a. Repository Francis054/mn-bootcamp-2026, branch main.

@@ -26,6 +26,7 @@ export class TraineeMilestones1794700800000 implements MigrationInterface {
     await queryRunner.query(
       `CREATE INDEX "trainee_milestones_trainee_date_idx" ON "trainee_milestones" ("trainee_id", "occurred_on")`,
     );
+    await queryRunner.query(`ALTER TABLE "trainee_milestones" ENABLE ROW LEVEL SECURITY`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

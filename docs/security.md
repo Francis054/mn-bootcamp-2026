@@ -56,3 +56,102 @@ Resend is used only when both `RESEND_API_KEY` and `EMAIL_FROM` are set. In prod
 ## Logs
 
 The logger redacts cookies, authorization headers, `DATABASE_URL`, `DATABASE_SSL_CA`, `SESSION_SECRET`, `ADMIN_BOOTSTRAP_PASSWORD`, and password fields. Do not add those values to a log line, a health response, or an error message.
+
+## Supabase Data API
+
+The website and the API do not use `supabase-js`, the anon key, or the Data API. TypeORM connects with `DATABASE_URL`. On project `mn-bootcamp-2026` (ref `psxzqwztgjkqnnncxddc`) that user is `postgres.psxzqwztgjkqnnncxddc` on the session pooler, which is the `postgres` role. Supabase documents that role as having `bypassrls` (see the security-definer section of their [row level security guide](https://supabase.com/docs/guides/database/postgres/row-level-security)). The same role runs `npm run migration:run`, so it owns the tables.
+
+Migration `PublicRls1794096000000` enables row level security on every ordinary table and partitioned table in `public`, including `schema_migrations`. It does not set `FORCE ROW LEVEL SECURITY`. The table owner bypasses row level security when force is unset, including a role that is not a superuser and does not have `bypassrls`. `anon` and `authenticated` do not bypass it. No policies are added, so those roles receive no rows. The migration also revokes every table and sequence privilege in `public` from `anon` and `authenticated`, and clears the default privileges that would grant a later table to them. `REVOKE ALL ON ALL TABLES` covers views in `public` as well. `service_role` is unchanged. Supabase documents that role as bypassing row level security. Nothing in this repository uses it. Do not put that key in the website.
+
+A table created by a later migration is not granted to `anon` or `authenticated`, because the default privileges are cleared for `postgres`. Enable row level security in that later migration as well. Supabase does not allow `postgres` to create the event trigger that would do it automatically.
+
+The Security Advisor may then report `rls_enabled_no_policy` at info level for each table. That is the locked state. Do not add a policy whose expression is `true`. That would publish the table on the Data API again.
+
+Passwords are Argon2id hashes in `users.password_hash`. The login cookie and the reset or invite token are stored only as hashes (`sessions.id`, `access_tokens.token_hash`). Mailboxes on `users`, `trainees`, and `enquiries` are columns the product uses. The public trainee response leaves the mailbox off. `login_throttles.subject_key` stores the prefix `email:` plus the mailbox for sign-in failures, and `ip:` plus the client address. Password-reset throttles store a SHA-256 digest instead. This migration does not rewrite those rows.
+
+Production deploys from `main`. The free Render service may not run migrations. Until `schema_migrations` contains `PublicRls1794096000000`, paste the block below into the Supabase SQL editor. It is the migration, and it is safe to run more than once. Pasting it does not insert the migration row. The next `npm run migration:run` records the row and runs the same statements again.
+
+```sql
+DO $lock_public$
+DECLARE
+  public_table text;
+  target_role text;
+  grantor_role text;
+BEGIN
+  FOR public_table IN
+    SELECT c.relname
+    FROM pg_catalog.pg_class AS c
+    JOIN pg_catalog.pg_namespace AS n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public'
+      AND c.relkind IN ('r', 'p')
+    ORDER BY c.relname
+  LOOP
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', public_table);
+  END LOOP;
+
+  FOR target_role IN
+    SELECT r.rolname
+    FROM pg_catalog.pg_roles AS r
+    WHERE r.rolname IN ('anon', 'authenticated')
+    ORDER BY r.rolname
+  LOOP
+    EXECUTE format(
+      'REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM %I',
+      target_role
+    );
+    EXECUTE format(
+      'REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM %I',
+      target_role
+    );
+  END LOOP;
+
+  FOR grantor_role IN
+    SELECT r.rolname
+    FROM pg_catalog.pg_roles AS r
+    WHERE r.rolname IN (CURRENT_USER, 'postgres')
+      AND (
+        r.rolname = CURRENT_USER
+        OR pg_catalog.pg_has_role(CURRENT_USER, r.rolname, 'MEMBER')
+      )
+    ORDER BY r.rolname
+  LOOP
+    FOR target_role IN
+      SELECT r.rolname
+      FROM pg_catalog.pg_roles AS r
+      WHERE r.rolname IN ('anon', 'authenticated')
+      ORDER BY r.rolname
+    LOOP
+      EXECUTE format(
+        'ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA public REVOKE ALL PRIVILEGES ON TABLES FROM %I',
+        grantor_role,
+        target_role
+      );
+      EXECUTE format(
+        'ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA public REVOKE ALL PRIVILEGES ON SEQUENCES FROM %I',
+        grantor_role,
+        target_role
+      );
+    END LOOP;
+  END LOOP;
+END
+$lock_public$;
+```
+
+Confirm it. Every ordinary table should show `rls_on = true`, and the privilege query should return no rows.
+
+```sql
+SELECT c.relname AS table_name, c.relrowsecurity AS rls_on, c.relforcerowsecurity AS forced
+FROM pg_catalog.pg_class AS c
+JOIN pg_catalog.pg_namespace AS n ON n.oid = c.relnamespace
+WHERE n.nspname = 'public'
+  AND c.relkind = 'r'
+ORDER BY c.relname;
+
+SELECT table_name, grantee, privilege_type
+FROM information_schema.role_table_grants
+WHERE table_schema = 'public'
+  AND grantee IN ('anon', 'authenticated')
+ORDER BY table_name, grantee, privilege_type;
+```
+
+Then open Database → Security Advisor and choose Rerun. `rls_disabled_in_public` and `sensitive_columns_exposed` should be gone. `rls_enabled_no_policy` may remain as info. Leave it.

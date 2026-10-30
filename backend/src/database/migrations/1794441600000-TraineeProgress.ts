@@ -89,6 +89,8 @@ export class TraineeProgress1794441600000 implements MigrationInterface {
     await queryRunner.query(
       `CREATE UNIQUE INDEX "trainers_user_id_uq" ON "trainers" ("user_id") WHERE "user_id" IS NOT NULL`,
     );
+    await queryRunner.query(`ALTER TABLE "trainee_skills" ENABLE ROW LEVEL SECURITY`);
+    await queryRunner.query(`ALTER TABLE "trainee_events" ENABLE ROW LEVEL SECURITY`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

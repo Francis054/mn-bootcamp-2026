@@ -4,6 +4,7 @@ import { type AppEnv, loadEnv } from '../../src/config/env.js';
 import { createDataSource } from '../../src/database/data-source.js';
 import { connectionUrlForDriver } from '../../src/database/ssl.js';
 import { testEnv } from '../support/app-env.js';
+import { MIGRATION_NAMES } from '../support/migrations.js';
 
 const require = createRequire(import.meta.url);
 const CA = '-----BEGIN CERTIFICATE-----\nMIIBTESTCERTIFICATEBODYX\n-----END CERTIFICATE-----';
@@ -36,6 +37,11 @@ describe('createDataSource', () => {
     expect(dataSource.options.synchronize).toBe(false);
     expect(dataSource.options.migrationsTableName).toBe('schema_migrations');
     expect(dataSource.options.type).toBe('postgres');
+    const migrations = dataSource.options.migrations;
+    if (!Array.isArray(migrations)) throw new Error('Expected a migration list.');
+    expect(
+      migrations.map((migration) => (typeof migration === 'function' ? migration.name : '')),
+    ).toEqual([...MIGRATION_NAMES]);
   });
 
   it('drops sslmode when SSL is off so the driver cannot turn it back on', () => {

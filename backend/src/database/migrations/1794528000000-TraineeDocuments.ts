@@ -59,6 +59,7 @@ export class TraineeDocuments1794528000000 implements MigrationInterface {
       ALTER TABLE "trainee_consents" ADD CONSTRAINT "trainee_consents_scope_check"
       CHECK ("scope" IN ('public_profile', 'public_photo', 'contact_relay', 'cv_public', 'cv_on_request'))
     `);
+    await queryRunner.query(`ALTER TABLE "trainee_documents" ENABLE ROW LEVEL SECURITY`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

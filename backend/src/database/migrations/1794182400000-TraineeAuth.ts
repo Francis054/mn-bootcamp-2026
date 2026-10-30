@@ -62,6 +62,9 @@ export class TraineeAuth1794182400000 implements MigrationInterface {
     await queryRunner.query(
       `CREATE INDEX "pending_registrations_status_idx" ON "pending_registrations" ("status")`,
     );
+    await queryRunner.query(
+      `ALTER TABLE "pending_registrations" ENABLE ROW LEVEL SECURITY`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

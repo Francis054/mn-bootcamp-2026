@@ -86,6 +86,9 @@ export class EmailOutboxAndRemoval1794787200000 implements MigrationInterface {
     await queryRunner.query(
       `CREATE INDEX "trainee_removal_items_removal_idx" ON "trainee_removal_items" ("removal_id")`,
     );
+    await queryRunner.query(`ALTER TABLE "email_outbox" ENABLE ROW LEVEL SECURITY`);
+    await queryRunner.query(`ALTER TABLE "trainee_removals" ENABLE ROW LEVEL SECURITY`);
+    await queryRunner.query(`ALTER TABLE "trainee_removal_items" ENABLE ROW LEVEL SECURITY`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

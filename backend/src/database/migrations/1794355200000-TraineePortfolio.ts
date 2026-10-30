@@ -95,6 +95,9 @@ export class TraineePortfolio1794355200000 implements MigrationInterface {
     await queryRunner.query(
       `CREATE INDEX "portfolio_video_grants_item_idx" ON "portfolio_video_grants" ("item_id")`,
     );
+    await queryRunner.query(`ALTER TABLE "portfolio_items" ENABLE ROW LEVEL SECURITY`);
+    await queryRunner.query(`ALTER TABLE "portfolio_media" ENABLE ROW LEVEL SECURITY`);
+    await queryRunner.query(`ALTER TABLE "portfolio_video_grants" ENABLE ROW LEVEL SECURITY`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
