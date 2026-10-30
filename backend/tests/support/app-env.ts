@@ -24,6 +24,7 @@ export function testEnv(overrides: Partial<AppEnv> = {}): AppEnv {
     cvDownloadMax: 10_000,
     cvRateWindowMs: 60_000,
     cvLinkTtlMs: 5 * 60 * 1000,
+    cvRequestLinkTtlMs: 24 * 60 * 60 * 1000,
     traineeSignupMode: 'roster',
     devMailLog: false,
     ...overrides,

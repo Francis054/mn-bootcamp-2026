@@ -6,11 +6,13 @@ export function toPublicLesson(lesson: Lesson): PublicLesson {
 }
 
 export function toPublicTrainee(trainee: Trainee): PublicTrainee {
-  const base = stripKeys(trainee, ['email', 'internalNotes', 'linkedin', 'portfolio', 'githubUrl', 'consentReceived', 'lessonIds', 'photoConsent', 'publicLinks']);
+  const base = stripKeys(trainee, ['email', 'internalNotes', 'linkedin', 'portfolio', 'githubUrl', 'consentReceived', 'lessonIds', 'photoConsent', 'publicLinks', 'contactConsent', 'slug']);
   const showPhoto = trainee.photoConsent !== false;
   return {
     ...base,
     photoUrl: showPhoto ? trainee.photoUrl : null,
+    contactAvailable: trainee.contactConsent === true,
+    ...(trainee.slug ? { slug: trainee.slug } : {}),
     ...(trainee.publicLinks && trainee.linkedin ? { linkedin: trainee.linkedin } : {}),
     ...(trainee.publicLinks && trainee.githubUrl ? { githubUrl: trainee.githubUrl } : {}),
     ...(trainee.publicLinks && trainee.portfolio ? { portfolio: trainee.portfolio } : {}),

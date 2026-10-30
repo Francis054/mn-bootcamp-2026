@@ -52,6 +52,13 @@ function cvRouterStub(): never {
   return { uploadLimit: pass, downloadLimit: pass } as never;
 }
 
+function reachStub(): never {
+  const pass = (_req: unknown, _res: unknown, next: (error?: unknown) => void) => {
+    next();
+  };
+  return { publicLimit: pass } as never;
+}
+
 function appFor(role: 'editor' | 'viewer' | null) {
   const sessions = {
     authenticate: (token: string) => {
@@ -104,6 +111,7 @@ function appFor(role: 'editor' | 'viewer' | null) {
       50 * 1024 * 1024,
       {} as never,
       cvRouterStub(),
+      reachStub(),
     ),
   );
   app.use(errorHandler(pino({ level: 'silent' }), { nodeEnv: 'test' } as never));

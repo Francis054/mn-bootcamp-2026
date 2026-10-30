@@ -117,7 +117,7 @@ export function isCacheablePublicGet(method: string, path: string): boolean {
   if (method !== 'GET') return false;
   const pathname = path.split('?')[0] ?? path;
   if (pathname.endsWith('/portfolio')) return false;
-  if (/\/cv(\/|$)/.test(pathname) || pathname.includes('/cv-link')) return false;
+  if (/\/cv(\/|$)/.test(pathname) || pathname.includes('/cv-link') || pathname.endsWith('/profile.pdf')) return false;
   return pathname.startsWith('/api/v1/public/');
 }
 

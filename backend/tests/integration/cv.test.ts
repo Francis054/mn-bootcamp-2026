@@ -162,12 +162,14 @@ describe('trainee CVs', () => {
     expect(readRecord(onRequest.body).cv).toEqual({ available: true, mode: 'on_request' });
     await request(app).post(`/api/v1/public/trainees/${traineeId}/cv-link`).expect(404);
 
-    await request(app)
+    const widened = await request(app)
       .patch('/api/v1/portal/cv')
       .set('Cookie', traineeA.cookie)
       .set('X-CSRF-Token', traineeA.csrf)
       .send({ visibility: 'public' })
       .expect(200);
+    expect(readRecord(widened.body).reviewStatus).toBe('approved');
+    expect(readRecord(widened.body).visibility).toBe('public');
     const offered = await request(app).get(`/api/v1/public/trainees/${traineeId}`).expect(200);
     expect(readRecord(offered.body).cv).toEqual({ available: true, mode: 'public' });
     expect(JSON.stringify(offered.body)).not.toContain('/public/cv/');

@@ -222,7 +222,9 @@ There is no public registration. There is no `POST /auth/session/expire`.
 
 ## Trainee CVs
 
-One current PDF per trainee, at most 5 MB and 10 pages. A replacement deletes the previous file. A new file waits for review. The public trainee payload adds `cv` with `available` and `mode` only. It never includes a file address. A public download works only when the profile is public, the CV is approved, and the trainee chose public. The link lasts five minutes and the PDF is sent as an attachment. Asking for an on-request CV is not part of this API yet.
+One current PDF per trainee, at most 5 MB and 10 pages. A replacement deletes the previous file. A new file waits for review. Editors and administrators can both approve it. The public trainee payload adds `cv` with `available` and `mode` only. It never includes a file address. A public download works only when the profile is public, the CV is approved, and the trainee chose public. The link lasts five minutes and the PDF is sent as an attachment. Changing an approved CV from on request to public does not send it back for review.
+
+`POST /api/v1/public/trainees/{id}/cv-request` accepts a request when the CV is approved and on request. The body is `name`, `email`, `message`, an optional `organisation`, and a honeypot `company` that must be empty. The response is `{ saved, delivered, message }`. It never includes the trainee email or a download link. When email is configured, the sender receives a link to `GET /api/v1/public/cv/{token}`. That link lasts one day (`CV_REQUEST_LINK_TTL_MS`) and the API reads the file from the private `trainee-cvs` bucket. When email is not configured, the request is still saved and staff can try again from the admin list. The public site does not show an admin link.
 
 | Method | Path | Who |
 | --- | --- | --- |
@@ -238,3 +240,18 @@ One current PDF per trainee, at most 5 MB and 10 pages. A replacement deletes th
 | POST, DELETE | `/api/v1/admin/trainees/{traineeId}/cv` | Administrator |
 
 `POST` upload is `multipart/form-data` with `file` and an optional `visibility` of `private`, `on_request`, or `public`. These responses are not cached.
+
+## Directory, profile PDF, and employer contact
+
+`GET /api/v1/public/trainees` accepts `q`, `track`, `focus`, and `skill`. A row is included only when it is published, not hidden, and has profile consent. Search matches the public text. It does not match email. Each row has `contactAvailable`. That is not an email address.
+
+| Method | Path | Who |
+| --- | --- | --- |
+| GET | `/api/v1/public/trainees/{id}/profile.pdf` | Anyone, for a public profile. No email and no CV. Not cached. |
+| POST | `/api/v1/public/trainees/{id}/contact` | Anyone, only when `contactAvailable` is true |
+| GET | `/api/v1/admin/contact-requests` | Staff who can read the admin area |
+| POST | `/api/v1/admin/contact-requests/{id}/block` | Editor or administrator |
+| GET | `/api/v1/admin/cv-requests` | Staff who can read the admin area |
+| POST | `/api/v1/admin/cv-requests/{id}/send` | Editor or administrator |
+
+The contact form stores the message and, when Resend is configured, emails the trainee with Reply-To set to the sender. The HTTP response never includes the trainee email. If Resend is not configured, the message is saved with status `new` and `delivered` is false. A filled `company` field is not stored. The same address can send 3 messages an hour, and one trainee can receive 10 a day. `{id}` may be the trainee id or the public slug.

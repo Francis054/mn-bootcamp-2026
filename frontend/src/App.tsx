@@ -11,6 +11,7 @@ const AboutEditorPage = lazy(() => import('@/pages/admin/SystemPages').then((m) 
 const AccountPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.AccountPage })));
 const ContentEditorPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.ContentEditorPage })));
 const EnquiriesPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.EnquiriesPage })));
+const ContactRequestsPage = lazy(() => import('@/pages/admin/ContactRequestsPage').then((m) => ({ default: m.ContactRequestsPage })));
 const MediaPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.MediaPage })));
 const WorkPhotosPage = lazy(() => import('@/pages/admin/WorkPhotosPage').then((m) => ({ default: m.WorkPhotosPage })));
 const SiteImagesPage = lazy(() => import('@/pages/admin/SiteImagesPage').then((m) => ({ default: m.SiteImagesPage })));
@@ -135,6 +136,7 @@ export function App() {
         <Route path="pending-registrations" element={<Waiting><RequireAccess permission="users.manage"><PendingRegistrationsPage /></RequireAccess></Waiting>} />
         <Route path="trainee-accounts" element={<Waiting><RequireAccess permission="users.manage"><TraineeAccountsPage /></RequireAccess></Waiting>} />
         <Route path="enquiries" element={<Waiting><RequireAccess permission="users.manage"><EnquiriesPage /></RequireAccess></Waiting>} />
+        <Route path="contact-requests" element={<Waiting><ContactRequestsPage /></Waiting>} />
         <Route path="settings" element={<Waiting><RequireAccess permission="settings.manage"><SettingsPage /></RequireAccess></Waiting>} />
       </Route>
     </Routes>

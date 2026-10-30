@@ -81,6 +81,9 @@ export interface Trainee {
   githubUrl?: string | null;
   photoUrl: string | null;
   photoConsent?: boolean;
+  /** The trainee agreed employers may write through the site. The public page uses contactAvailable instead. */
+  contactConsent?: boolean;
+  slug?: string | null;
   publicLinks?: boolean;
   consentReceived: boolean;
   listing: Listing;
@@ -90,13 +93,16 @@ export interface Trainee {
   lessonIds?: string[];
 }
 
-export type PublicTrainee = Omit<Trainee, 'email' | 'internalNotes' | 'linkedin' | 'portfolio' | 'githubUrl' | 'consentReceived' | 'lessonIds' | 'photoConsent' | 'publicLinks'> & {
+export type PublicTrainee = Omit<Trainee, 'email' | 'internalNotes' | 'linkedin' | 'portfolio' | 'githubUrl' | 'consentReceived' | 'lessonIds' | 'photoConsent' | 'publicLinks' | 'contactConsent' | 'slug'> & {
   /** Present after the trainee agrees and an administrator approves the links. */
   linkedin?: string;
   githubUrl?: string;
   portfolio?: string;
   /** Whether a CV can be downloaded or requested. Never a file address. */
   cv?: PublicCv;
+  /** The contact form is shown only when this is true. It is not an email address. */
+  contactAvailable?: boolean;
+  slug?: string;
 };
 
 export interface Project {

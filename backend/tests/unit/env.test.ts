@@ -39,6 +39,7 @@ describe('loadEnv', () => {
     expect(env.cvDownloadMax).toBe(30);
     expect(env.cvRateWindowMs).toBe(900_000);
     expect(env.cvLinkTtlMs).toBe(300_000);
+    expect(env.cvRequestLinkTtlMs).toBe(86_400_000);
     expect(env.supabaseUrl).toBeUndefined();
     expect(env.supabaseServiceRoleKey).toBeUndefined();
     expect(env.sessionSecret).toBeUndefined();

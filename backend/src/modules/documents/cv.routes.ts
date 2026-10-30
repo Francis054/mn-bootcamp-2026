@@ -117,8 +117,8 @@ export function mountCvReview(admin: Router, cvs: CvService): void {
 }
 
 /**
- * Editors can see a CV and approve it. Downloading, replacing, and removing stay
- * with administrators. Whether editors should approve is still an open question.
+ * Editors and administrators can both approve a CV. Downloading, replacing, and
+ * removing the file stay with administrators.
  */
 export function mountAdminCv(admin: Router, cvs: CvService): void {
   admin.get('/trainees/:traineeId/cv', (req, res, next) => {

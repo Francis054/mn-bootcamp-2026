@@ -20,10 +20,7 @@ export interface CvDetails {
 
 export const HIDDEN_CV: PublicCv = { available: false, mode: null };
 
-/**
- * PR 5b will offer a request when this is true.
- * This screen does not collect that request.
- */
+/** The public profile offers a request form when this is true. */
 export function cvRequestAllowed(cv: PublicCv): boolean {
   return cv.available && cv.mode === "on_request";
 }

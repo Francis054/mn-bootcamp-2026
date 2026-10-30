@@ -16,6 +16,8 @@ import { portalProfileRoute, resetPortalProfileDev } from './portal-profile';
 import { portfolioRoute, resetPortfolioDev } from './portfolio';
 import { progressRoute, resetProgressDev } from './progress';
 import { cvRoute, publicCvFor, resetCvDev } from './cv';
+import { reachRoute, resetReachDev } from './reach';
+import { filterDirectory } from '@/domain/directory';
 import { getState, updateState } from './store';
 import { isAdminTimetablePath, isPublicTimetablePath, NOT_HANDLED, resetTimetableStore, timetableRoute } from './timetable-store';
 
@@ -37,6 +39,7 @@ export function resetDevTransport(): void {
   resetPortfolioDev();
   resetProgressDev();
   resetCvDev();
+  resetReachDev();
 }
 
 function takeArmed(): void {
@@ -150,6 +153,8 @@ export async function devTransport<T>(req: ApiRequest): Promise<T> {
   if (progress !== undefined) return progress as T;
   const cv = await cvRoute(method, path, req.body);
   if (cv !== undefined) return cv as T;
+  const reach = reachRoute(method, path, formFields(req.body));
+  if (reach !== undefined) return reach as T;
   if (method === 'POST' && path === '/admin/trainees/photo') {
     return (await storeTraineePhoto(req.body)) as T;
   }
@@ -226,7 +231,13 @@ async function route(method: string, path: string, query: ListQuery & Record<str
   if (method === 'GET' && path === '/public/classes') return getState().lessons.filter(isPubliclyListable).map(toPublicLesson);
   if (method === 'GET' && path.startsWith('/public/classes/')) return publicOne(getState().lessons, path.split('/')[3] ?? '', toPublicLesson);
   if (method === 'GET' && path === '/public/trainees') {
-    return getState().trainees.filter(isPubliclyListable).map((row) => ({ ...toPublicTrainee(row), cv: publicCvFor(row.id) }));
+    const rows = getState().trainees.filter(isPubliclyListable).map((row) => ({ ...toPublicTrainee(row), cv: publicCvFor(row.id) }));
+    return filterDirectory(rows, {
+      q: String(query.q ?? ''),
+      track: String(query.track ?? ''),
+      focus: String(query.focus ?? ''),
+      skill: String(query.skill ?? ''),
+    });
   }
   if (method === 'GET' && /^\/public\/trainees\/[^/]+$/.test(path)) {
     const traineeId = decodeURIComponent(path.split('/')[3] ?? '');

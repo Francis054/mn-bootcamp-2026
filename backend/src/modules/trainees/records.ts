@@ -43,6 +43,7 @@ export interface TraineeRecord {
   statusLabel: string;
   internalNotes: string;
   lessonIds: string[];
+  slug: string | null;
   updatedAt: string;
 }
 
@@ -66,6 +67,9 @@ export interface PublicTrainee {
   listing: Listing;
   publicationStatus: PublicationStatus;
   statusLabel: string;
+  /** True when the trainee agreed that employers may write through the site. The address stays off this object. */
+  contactAvailable: boolean;
+  slug?: string;
 }
 
 export function toPublicTrainee(row: TraineeRecord): PublicTrainee {
@@ -88,5 +92,7 @@ export function toPublicTrainee(row: TraineeRecord): PublicTrainee {
     listing: row.listing,
     publicationStatus: row.publicationStatus,
     statusLabel: row.statusLabel,
+    contactAvailable: row.contactConsent,
+    ...(row.slug ? { slug: row.slug } : {}),
   };
 }

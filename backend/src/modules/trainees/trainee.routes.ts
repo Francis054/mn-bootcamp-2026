@@ -9,6 +9,7 @@ import { readMediaUpload } from '../gallery/upload.js';
 import type { StorageProvider } from '../storage/storage-provider.js';
 import { readMemoryUpload } from './profile-photo.js';
 import { TraineeCreateDto, TraineePatchDto } from './trainee.dto.js';
+import { readDirectoryQuery } from '../reach/directory.js';
 import { readTraineeListQuery } from './list-query.js';
 import type { TraineeService } from './trainee.service.js';
 import { withPublicCv } from '../documents/cv.routes.js';
@@ -29,10 +30,14 @@ export function mountPublicTraineePhotos(router: Router, storage: StorageProvide
   });
 }
 
-export function mountPublicTrainees(router: Router, trainees: TraineeService, cvs: CvService): void {
-  router.get('/public/trainees', (_req, res, next) => {
+export function mountPublicTrainees(
+  router: Router,
+  trainees: TraineeService,
+  cvs: CvService,
+): void {
+  router.get('/public/trainees', (req, res, next) => {
     trainees
-      .listPublic()
+      .listPublic(readDirectoryQuery(req.query))
       .then((rows) => withPublicCv(cvs, rows))
       .then((rows) => res.json(rows))
       .catch(next);

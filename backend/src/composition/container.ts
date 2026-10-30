@@ -56,6 +56,8 @@ import { createDocumentStorage } from '../modules/documents/create-document-stor
 import type { DocumentStorage } from '../modules/documents/document-storage.js';
 import { DocumentRepository } from '../modules/documents/document.repository.js';
 import { CvService } from '../modules/documents/cv.service.js';
+import { ReachRepository } from '../modules/reach/reach.repository.js';
+import { ReachService } from '../modules/reach/reach.service.js';
 import { ProjectEntity } from '../modules/projects/project.entity.js';
 import { liveRepositoryVisibility } from '../modules/projects/project-url.js';
 import { ProjectRepository } from '../modules/projects/project.repository.js';
@@ -122,6 +124,7 @@ export class AppContainer {
     portfolio: PortfolioService,
     progress: ProgressService,
     cvs: CvService,
+    reach: ReachService,
   ) {
     this.health = new HealthService(dataSource, logger);
     this.users = users;
@@ -152,6 +155,7 @@ export class AppContainer {
       env.videoUploadMaxBytes,
       progress,
       cvs,
+      reach,
     );
   }
 
@@ -242,8 +246,9 @@ export class AppContainer {
     );
     const storage = createStorage(env);
     const documents = createDocumentStorage(env);
+    const documentRepository = new DocumentRepository(dataSource);
     const cvs = new CvService(
-      new DocumentRepository(dataSource),
+      documentRepository,
       userRepository,
       traineeRepository,
       audit,
@@ -253,6 +258,8 @@ export class AppContainer {
       env.cvUploadMax,
       env.cvDownloadMax,
       env.cvRateWindowMs,
+      env.cvRequestLinkTtlMs,
+      env.frontendUrl,
     );
     const consentRepository = new TraineeConsentRepository(
       dataSource.getRepository(TraineeConsentEntity),
@@ -352,6 +359,16 @@ export class AppContainer {
       storage,
       env.uploadMaxBytes,
     );
+    const reach = new ReachService(
+      new ReachRepository(dataSource),
+      traineeService,
+      documentRepository,
+      cvs,
+      outbound,
+      audit,
+      env.sessionSecret,
+      env.frontendUrl,
+    );
     return new AppContainer(
       env,
       logger,
@@ -379,6 +396,7 @@ export class AppContainer {
       portfolio,
       progress,
       cvs,
+      reach,
     );
   }
 

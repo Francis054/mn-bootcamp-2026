@@ -37,6 +37,10 @@ const PORTAL_AUDIT_ACTIONS = [
   'portal.cv.approved',
   'portal.cv.rejected',
   'portal.cv.visibility',
+  'contact.created',
+  'contact.blocked',
+  'cv.request.created',
+  'cv.request.sent',
 ] as const;
 
 const ACCOUNT_AUDIT_ACTIONS = [

@@ -5,6 +5,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export interface SignedCvLink {
   documentId: string;
   expired: boolean;
+  /** Missing on older public links. A request link is emailed for an on-request CV. */
+  purpose: 'public' | 'request';
 }
 
 /**
@@ -16,11 +18,14 @@ export function signCvLink(input: {
   documentId: string;
   nowMs: number;
   ttlMs: number;
+  purpose?: 'public' | 'request';
 }): string {
-  const payload = Buffer.from(
-    JSON.stringify({ id: input.documentId, exp: input.nowMs + input.ttlMs }),
-    'utf8',
-  ).toString('base64url');
+  const body: { id: string; exp: number; purpose?: 'request' } = {
+    id: input.documentId,
+    exp: input.nowMs + input.ttlMs,
+  };
+  if (input.purpose === 'request') body.purpose = 'request';
+  const payload = Buffer.from(JSON.stringify(body), 'utf8').toString('base64url');
   const signature = createHmac('sha256', input.secret).update(payload).digest('base64url');
   return `${payload}.${signature}`;
 }
@@ -44,7 +49,12 @@ export function readCvLink(token: string, secret: string, nowMs: number): Signed
   if (!isRecord(parsed) || typeof parsed.id !== 'string' || typeof parsed.exp !== 'number')
     return null;
   if (!UUID.test(parsed.id) || !Number.isFinite(parsed.exp)) return null;
-  return { documentId: parsed.id, expired: nowMs >= parsed.exp };
+  if (parsed.purpose !== undefined && parsed.purpose !== 'request') return null;
+  return {
+    documentId: parsed.id,
+    expired: nowMs >= parsed.exp,
+    purpose: parsed.purpose === 'request' ? 'request' : 'public',
+  };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

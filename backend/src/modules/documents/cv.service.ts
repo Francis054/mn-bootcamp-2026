@@ -70,6 +70,8 @@ export class CvService {
     uploadMax: number,
     downloadMax: number,
     windowMs: number,
+    private readonly requestLinkTtlMs: number,
+    private readonly siteUrl: string,
     private readonly now: () => Date = () => new Date(),
   ) {
     this.uploadLimit = cvRateLimit({
@@ -149,13 +151,45 @@ export class CvService {
     };
   }
 
+  /**
+   * A short link for an approved on-request CV. The caller emails it.
+   * Switching that CV to public does not send it back for review, and this link still works.
+   */
+  async mintRequestLink(traineeId: string): Promise<{ url: string; expiresAt: string }> {
+    const secret = this.requireSecret();
+    const trainee = await this.trainees.findById(traineeId);
+    if (!trainee || !isPublicTrainee(trainee))
+      throw new ApiError('not_found', 'That CV is not available.');
+    const row = await this.documents.current(this.documents.manager(), trainee.id);
+    const mode = row ? publicCvFrom(row.visibility, row.reviewStatus).mode : null;
+    if (!row || (mode !== 'on_request' && mode !== 'public')) {
+      throw new ApiError('not_found', 'That CV is not available.');
+    }
+    const issuedAt = this.now().getTime();
+    const token = signCvLink({
+      secret,
+      documentId: row.id,
+      nowMs: issuedAt,
+      ttlMs: this.requestLinkTtlMs,
+      purpose: 'request',
+    });
+    const base = this.siteUrl.replace(/\/$/, '');
+    return {
+      url: `${base}/api/v1/public/cv/${token}`,
+      expiresAt: new Date(issuedAt + this.requestLinkTtlMs).toISOString(),
+    };
+  }
+
   async readPublicToken(token: string): Promise<CvFile> {
     const secret = this.requireSecret();
     const link = readCvLink(token, secret, this.now().getTime());
     if (!link) throw new ApiError('not_found', 'That download link is not valid.');
     if (link.expired) throw new ApiError('not_found', 'This download link has expired.');
     const row = await this.documents.byId(this.documents.manager(), link.documentId);
-    if (!row || publicCvFrom(row.visibility, row.reviewStatus).mode !== 'public') {
+    const mode = row ? publicCvFrom(row.visibility, row.reviewStatus).mode : null;
+    const allowed =
+      link.purpose === 'request' ? mode === 'on_request' || mode === 'public' : mode === 'public';
+    if (!row || !allowed) {
       throw new ApiError('not_found', 'That CV is not available.');
     }
     const trainee = await this.trainees.findById(row.traineeId);
@@ -329,6 +363,7 @@ export class CvService {
       if (!locked) throw new ApiError('not_found', 'That trainee was not found.');
       const current = await this.documents.current(manager, traineeId);
       if (!current) throw new ApiError('not_found', 'There is no CV to update.');
+      // An approved file stays approved. On request to public does not wait for another review.
       await this.documents.setVisibility(manager, current.id, visibility);
       return current.id;
     });

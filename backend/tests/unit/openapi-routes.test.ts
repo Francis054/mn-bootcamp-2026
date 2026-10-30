@@ -30,6 +30,13 @@ function cvRouterStub(): never {
   return { uploadLimit: pass, downloadLimit: pass } as never;
 }
 
+function reachStub(): never {
+  const pass = (_req: unknown, _res: unknown, next: (error?: unknown) => void) => {
+    next();
+  };
+  return { publicLimit: pass } as never;
+}
+
 function registeredOperations(): string[] {
   const health = healthRouter(
     new HealthService({ query: () => Promise.resolve([{ ok: 1 }]) }, pino({ level: 'silent' })),
@@ -57,6 +64,7 @@ function registeredOperations(): string[] {
     50 * 1024 * 1024,
     {} as never,
     cvRouterStub(),
+    reachStub(),
   );
   const operations = [
     ...walk(health, '/api/v1/health'),

@@ -14,6 +14,8 @@ Public signup, resend, and password-reset replies stay the same whether or not a
 
 A later change can replace `ObservedMail` with an outbox table and a retry loop. Callers already treat `delivered: false` as "try again". There is no outbox table in this change.
 
+Employer contact and CV requests use the same rule. The public response says the note was saved. `delivered` is true only when Resend accepted the message. If `RESEND_API_KEY` or `EMAIL_FROM` is missing, the row stays in `contact_requests` or `cv_requests` and nothing is sent. Staff can read those rows in the admin area. The public site does not link there. A contact message is sent to the trainee with Reply-To set to the sender, so a reply does not require the site to reveal the trainee's address. A CV request emails the sender a short download link. The trainee's address is not in that message.
+
 Development and the test suite use the in-memory provider. Nothing is sent to Resend. `DEV_MAIL_LOG=true` records that a development message was accepted. It is refused when `NODE_ENV=production`.
 
 ## DNS records

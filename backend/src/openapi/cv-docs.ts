@@ -25,7 +25,8 @@ const pdf = {
 /**
  * Trainee CVs. The file stays in a private bucket. Public responses say only whether a CV
  * can be downloaded or requested. They never include a file address.
- * Asking for an on-request CV is a later change and is not registered here.
+ * An on-request CV is asked for at POST /public/trainees/{id}/cv-request.
+ * Editors and administrators can both approve a CV. Moving an approved CV from on request to public does not send it back for review.
  */
 export const cvPaths = {
   '/api/v1/portal/cv': {
