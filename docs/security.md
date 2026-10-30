@@ -36,7 +36,7 @@ Stored passwords need at least 12 characters, a letter, and a number. They canno
 
 `npm run admin:create` reads the mailbox from an argument, `--email`, or `ADMIN_EMAIL`. It reads the password from `ADMIN_BOOTSTRAP_PASSWORD` or from a hidden prompt. It refuses `--password` so the password does not land in shell history. It prints `Administrator account is ready.` or `Administrator password updated.` It does not print the mailbox or the password. Do not put `ADMIN_BOOTSTRAP_PASSWORD` in git, and do not leave it in the Render environment after the command finishes.
 
-Roles and permissions. The same map is in `backend/src/modules/auth/permissions.ts` and `frontend/src/domain/permissions.ts`. `content.read` is the gate for the whole `/api/v1/admin` router. A trainee or a trainer does not have it, so they cannot open that router or read another trainee's email, notes, consent, or drafts. The React admin shell uses the same check.
+Roles and permissions. The same map is in `backend/src/modules/auth/permissions.ts` and `frontend/src/domain/permissions.ts`. `content.read` is the gate for the whole `/api/v1/admin` router. A trainee or a trainer does not have it, so they cannot open that router or read another trainee's email, notes, consent, or drafts. The React admin shell uses the same check. `progress.read` is only on the trainer role. It opens `GET /api/v1/progress/trainees` when that login is linked on a timetable trainer row (`trainers.user_id`). The response has display names, skills, and events. It does not include email addresses, and it does not allow edits.
 
 | Role | Permissions |
 | --- | --- |

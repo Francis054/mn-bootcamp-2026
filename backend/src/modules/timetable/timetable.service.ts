@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import type { AuditRepository } from '../auth/audit.repository.js';
+import type { UserRepository } from '../users/user.repository.js';
 import { curriculumAuditAction } from '../auth/audit-event.entity.js';
 import type { Actor } from '../curriculum/actor.js';
 import { accraToday } from '../curriculum/schedule.js';
@@ -63,6 +64,7 @@ export class TimetableService {
   constructor(
     private readonly repository: TimetableRepository,
     private readonly audit: AuditRepository,
+    private readonly users: UserRepository,
     private readonly today: () => string = accraToday,
   ) {}
 
@@ -338,6 +340,26 @@ export class TimetableService {
       trainer.kind = trainerKind(displayName);
     }
     if (dto.proposed !== undefined) trainer.proposed = dto.proposed;
+    if (dto.loginEmail !== undefined) {
+      const email = (dto.loginEmail ?? '').trim().toLowerCase();
+      if (!email) {
+        trainer.userId = null;
+      } else {
+        const user = await this.users.findByEmail(email);
+        if (!user || user.role !== 'trainer') {
+          throw new ApiError('validation', 'Check the highlighted fields.', {
+            loginEmail: 'Enter the email of a trainer login.',
+          });
+        }
+        const taken = await this.repository.findTrainerByUserId(user.id);
+        if (taken && taken.id !== trainer.id) {
+          throw new ApiError('validation', 'Check the highlighted fields.', {
+            loginEmail: 'That login is already linked to another trainer.',
+          });
+        }
+        trainer.userId = user.id;
+      }
+    }
     try {
       const saved = await this.repository.saveTrainer(trainer);
       await this.touch(actor, 'updated', id);

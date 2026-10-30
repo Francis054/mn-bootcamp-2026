@@ -16,6 +16,7 @@ import { CONSENT_WORDING, githubProblem, linkedinProblem, type PortalProfile, ty
 import { collect, emailAddress, minLength, newPassword, required } from '@/domain/validate';
 import { clearSession, rememberSignedIn } from '@/dev/session';
 import { PortfolioEditor } from '@/pages/portal/PortfolioEditor';
+import { ProgressEditor } from '@/pages/portal/ProgressEditor';
 
 const ACCEPTED = 'If this email is on the cohort list, we sent a link. If you do not see it, request another from the verification page.';
 
@@ -276,6 +277,10 @@ export function TraineeLoginPage() {
         navigate(next && next.startsWith('/portal') ? next : '/portal');
         return;
       }
+      if (result.user?.role === 'trainer') {
+        navigate('/trainer');
+        return;
+      }
       navigate('/admin');
     } catch (error) {
       setFormError(isApiError(error) ? error.message : 'Sign-in failed.');
@@ -465,6 +470,7 @@ export function PortalHomePage() {
               <p className="muted">Your email is {verified ? 'confirmed' : 'not confirmed yet'}.{me?.traineeId ? ` Roster id ${me.traineeId}.` : ''}</p>
               <ProfileEditor />
               <PortfolioEditor />
+              <ProgressEditor />
               <div className="portal-grid">
                 <section className="portal-card"><h2>CV</h2><p>Coming next. Your CV stays private until you choose otherwise.</p></section>
               </div>

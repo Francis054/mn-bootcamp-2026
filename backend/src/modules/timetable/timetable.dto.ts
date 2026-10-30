@@ -183,4 +183,10 @@ export class TrainerPatchDto {
   @IsOptional()
   @IsBoolean()
   proposed?: boolean;
+
+  /** Empty clears the link. A value must be the email of a trainer login. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(320)
+  loginEmail?: string | null;
 }

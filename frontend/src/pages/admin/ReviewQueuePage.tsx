@@ -6,6 +6,8 @@ import { usePageMeta } from '@/components/SiteChrome';
 import { isApiError } from '@/domain/types';
 import type { ProfileFields, ReviewStatus } from '@/domain/portalProfile';
 import { KIND_LABEL, type PortfolioContent, type PortfolioReviewShape } from '@/domain/portfolio';
+import type { EventContent, ProgressReview, SkillContent } from '@/domain/progress';
+import { EventReviewList, SkillReviewList } from '@/pages/admin/ProgressReview';
 import { useAsync } from '@/hooks/useAsync';
 import { useAuth } from '@/auth/AuthProvider';
 
@@ -30,6 +32,8 @@ export function ReviewQueuePage() {
   const [edits, setEdits] = useState<Record<string, ProfileFields>>({});
   const record = useAsync(`review:${nonce}`, () => api<ReviewItem[]>({ method: 'GET', path: '/admin/review-queue' }));
   const items = useAsync(`review-items:${nonce}`, () => api<PortfolioReviewShape[]>({ method: 'GET', path: '/admin/review-queue/items' }));
+  const skills = useAsync(`review-skills:${nonce}`, () => api<Array<ProgressReview<SkillContent> & { id: string }>>({ method: 'GET', path: '/admin/review-queue/skills' }));
+  const events = useAsync(`review-events:${nonce}`, () => api<Array<ProgressReview<EventContent>>>({ method: 'GET', path: '/admin/review-queue/events' }));
   usePageMeta('Review queue');
   const reload = () => setNonce((value) => value + 1);
   const approve = async (item: ReviewItem) => {
@@ -67,11 +71,13 @@ export function ReviewQueuePage() {
   };
   return (
     <>
-      <div className="a-head"><div><h1>Review queue</h1><p>Profiles and portfolio items a trainee submitted. The last approved version stays on the public site until you approve the new one.</p></div></div>
-      {record.loading || items.loading ? <LoadingRows /> : null}
+      <div className="a-head"><div><h1>Review queue</h1><p>Profiles, portfolio items, skills, and events a trainee submitted. The last approved version stays on the public site until you approve the new one.</p></div></div>
+      {record.loading || items.loading || skills.loading || events.loading ? <LoadingRows /> : null}
       {record.error ? <ErrorState title="Could not load the review queue" text={record.error.message} /> : null}
       {items.error ? <ErrorState title="Could not load portfolio items" text={items.error.message} /> : null}
-      {!record.loading && !items.loading && record.data && !record.data.length && items.data && !items.data.length ? <EmptyState icon="users" title="Nothing is waiting" text="When a trainee submits a profile or a portfolio item, it is listed here." /> : null}
+      {skills.error ? <ErrorState title="Could not load skills" text={skills.error.message} /> : null}
+      {events.error ? <ErrorState title="Could not load events" text={events.error.message} /> : null}
+      {!record.loading && !items.loading && !skills.loading && !events.loading && record.data && !record.data.length && items.data && !items.data.length && skills.data && !skills.data.length && events.data && !events.data.length ? <EmptyState icon="users" title="Nothing is waiting" text="When a trainee submits a profile, a portfolio item, a skill, or an event, it is listed here." /> : null}
       <div className="review-list">
         {record.data?.map((item) => {
           const draft = edits[item.traineeId] ?? item.draft;
@@ -105,6 +111,8 @@ export function ReviewQueuePage() {
           );
         })}
       </div>
+      <SkillReviewList rows={skills.data ?? []} writable={writable} busy={busy} setBusy={setBusy} reload={reload} toast={toast} />
+      <EventReviewList rows={events.data ?? []} writable={writable} busy={busy} setBusy={setBusy} reload={reload} toast={toast} />
       <PortfolioReviewList
         rows={items.data ?? []}
         writable={writable}

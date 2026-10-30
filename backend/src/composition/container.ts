@@ -62,6 +62,8 @@ import { TraineeConsentRepository } from '../modules/trainees/trainee-consent.re
 import { CloudinaryStorage } from '../modules/storage/cloudinary-storage.js';
 import { PortfolioRepository } from '../modules/portfolio/portfolio.repository.js';
 import { PortfolioService } from '../modules/portfolio/portfolio.service.js';
+import { ProgressRepository } from '../modules/progress/progress.repository.js';
+import { ProgressService } from '../modules/progress/progress.service.js';
 import { PortalProfileService } from '../modules/trainees/portal-profile.service.js';
 import { TraineeRepository } from '../modules/trainees/trainee.repository.js';
 import { TraineeService } from '../modules/trainees/trainee.service.js';
@@ -112,6 +114,7 @@ export class AppContainer {
     signup: SignupService,
     profiles: PortalProfileService,
     portfolio: PortfolioService,
+    progress: ProgressService,
   ) {
     this.health = new HealthService(dataSource, logger);
     this.users = users;
@@ -139,6 +142,7 @@ export class AppContainer {
       profiles,
       portfolio,
       env.videoUploadMaxBytes,
+      progress,
     );
   }
 
@@ -280,7 +284,8 @@ export class AppContainer {
       storage,
       env.uploadMaxBytes,
     );
-    const timetable = new TimetableService(new TimetableRepository(dataSource), audit);
+    const timetableRepository = new TimetableRepository(dataSource);
+    const timetable = new TimetableService(timetableRepository, audit, userRepository);
     const signup = new SignupService(
       users,
       userRepository,
@@ -304,8 +309,9 @@ export class AppContainer {
       storage,
       env.uploadMaxBytes,
     );
+    const portfolioRepository = new PortfolioRepository(dataSource);
     const portfolio = new PortfolioService(
-      new PortfolioRepository(dataSource),
+      portfolioRepository,
       userRepository,
       traineeRepository,
       audit,
@@ -313,6 +319,16 @@ export class AppContainer {
       storage instanceof CloudinaryStorage ? storage : null,
       env.uploadMaxBytes,
       env.videoUploadMaxBytes,
+    );
+    const progress = new ProgressService(
+      new ProgressRepository(dataSource),
+      userRepository,
+      traineeRepository,
+      portfolioRepository,
+      timetableRepository,
+      audit,
+      storage,
+      env.uploadMaxBytes,
     );
     return new AppContainer(
       env,
@@ -338,6 +354,7 @@ export class AppContainer {
       signup,
       profiles,
       portfolio,
+      progress,
     );
   }
 

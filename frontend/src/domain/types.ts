@@ -12,7 +12,8 @@ export type Permission =
   | 'settings.manage'
   | 'account.manage'
   | 'portal.access'
-  | 'portal.write';
+  | 'portal.write'
+  | 'progress.read';
 
 export type PublicationStatus = 'draft' | 'in_review' | 'scheduled' | 'published';
 

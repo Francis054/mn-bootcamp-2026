@@ -34,6 +34,18 @@ interface DevItem {
   pendingMedia: PortfolioMedia[] | null;
 }
 
+export function portfolioOwned(traineeId: string, id: string): boolean {
+  const row = items.get(id);
+  return Boolean(row && row.traineeId === traineeId);
+}
+
+/** Approved title only. A draft title is not evidence on the public profile. */
+export function portfolioEvidence(traineeId: string, id: string): { id: string; title: string; kind: string } | null {
+  const row = items.get(id);
+  if (!row || row.traineeId !== traineeId || !row.live.title.trim()) return null;
+  return { id: row.id, title: row.live.title, kind: row.live.kind };
+}
+
 export function resetPortfolioDev(): void {
   items.clear();
 }
