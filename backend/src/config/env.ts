@@ -54,6 +54,8 @@ export interface AppEnv {
   cvRateWindowMs: number;
   /** Lifetime of a public CV download link. Five minutes unless the host sets another value. */
   cvLinkTtlMs: number;
+  /** Lifetime of an emailed on-request CV link. One day unless the host sets another value. */
+  cvRequestLinkTtlMs: number;
   resendApiKey?: string;
   emailFrom?: string;
   /** Closed signup. Only `roster` is implemented. */
@@ -192,6 +194,14 @@ export function loadEnv(
     'CV_LINK_TTL_MS',
     problems,
   );
+  const cvRequestLinkTtlMs = readBoundedInt(
+    source.CV_REQUEST_LINK_TTL_MS,
+    86_400_000,
+    60_000,
+    604_800_000,
+    'CV_REQUEST_LINK_TTL_MS',
+    problems,
+  );
   const resendApiKey = readOptional(source.RESEND_API_KEY);
   const emailFrom = readOptional(source.EMAIL_FROM);
   const resendCount = [resendApiKey, emailFrom].filter((value) => value !== undefined).length;
@@ -230,6 +240,7 @@ export function loadEnv(
     cvDownloadMax,
     cvRateWindowMs,
     cvLinkTtlMs,
+    cvRequestLinkTtlMs,
     traineeSignupMode,
     devMailLog,
   };

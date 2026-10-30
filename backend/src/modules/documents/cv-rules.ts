@@ -12,10 +12,7 @@ export interface PublicCv {
 
 export const HIDDEN_CV: PublicCv = { available: false, mode: null };
 
-/**
- * PR 5b will accept a request on this path when `cvRequestAllowed` is true.
- * This PR does not mount that route.
- */
+/** Employers ask here when `cvRequestAllowed` is true. The file stays in the private bucket. */
 export const CV_REQUEST_PATH = '/api/v1/public/trainees/:id/cv-request';
 
 export function cvRequestAllowed(cv: PublicCv): boolean {

@@ -59,6 +59,13 @@ import { mountReviewQueue } from '../trainees/portal-profile.routes.js';
 import type { PortalProfileService } from '../trainees/portal-profile.service.js';
 import { mountAdminCv, mountCvReview, mountPublicCv } from '../documents/cv.routes.js';
 import type { CvService } from '../documents/cv.service.js';
+import { mountAdminReach, mountPublicReach } from '../reach/reach.routes.js';
+import type { ReachService } from '../reach/reach.service.js';
+import { mountPublicJourney } from '../journey/journey.routes.js';
+import type { JourneyService } from '../journey/journey.service.js';
+import type { OutboxMail } from '../mail/outbox-mail.js';
+import { mountPrivacyAdmin } from '../privacy/privacy.routes.js';
+import type { TraineePrivacyService } from '../privacy/trainee-privacy.service.js';
 
 export function curriculumRouter(
   catalogue: CatalogueService,
@@ -82,6 +89,10 @@ export function curriculumRouter(
   videoMaxBytes: number,
   progress: ProgressService,
   cvs: CvService,
+  reach: ReachService,
+  journey: JourneyService,
+  outbox?: OutboxMail,
+  privacy?: TraineePrivacyService,
 ): Router {
   const router = Router();
 
@@ -154,8 +165,21 @@ export function curriculumRouter(
   mountPublicPortfolio(router, portfolio);
   mountPublicProgress(router, progress);
   mountPublicCv(router, cvs);
+  mountPublicReach(router, reach);
+  mountPublicJourney(router, journey);
   mountTrainerProgress(router, sessions, progress);
-  mountPortal(router, signup, sessions, profiles, portfolio, maxBytes, videoMaxBytes, progress, cvs);
+  mountPortal(
+    router,
+    signup,
+    sessions,
+    profiles,
+    portfolio,
+    maxBytes,
+    videoMaxBytes,
+    progress,
+    cvs,
+    journey,
+  );
 
   const admin = Router();
   // Staff only. A trainee or trainer session stops here, before any admin read.
@@ -179,7 +203,9 @@ export function curriculumRouter(
   mountAdminProgress(admin, progress, maxBytes);
   mountCvReview(admin, cvs);
   mountAdminCv(admin, cvs);
+  mountAdminReach(admin, reach);
   mountAdminTimetable(admin, timetable);
+  mountPrivacyAdmin(admin, outbox, privacy);
   router.use('/admin', admin);
   return router;
 }

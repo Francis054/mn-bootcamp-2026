@@ -347,6 +347,8 @@ details.faq .faq-body{padding:0 0 var(--s-5);color:var(--ink-2);max-width:70ch;a
 
 /* Journey timeline page */
 .jt{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:var(--grid-gap)}
+.journey-filters .tabs{flex-wrap:wrap;overflow:visible}
+.journey-filters .tab{padding:10px 12px}
 .jt__side{grid-column:1 / span 4}
 .jt__main{grid-column:6 / span 7}
 .tl__phase{font-family:var(--font-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--forest-600);margin:0 0 var(--s-5) 64px;padding-top:var(--s-2)}
@@ -357,8 +359,9 @@ a.tl__card:hover{box-shadow:var(--shadow-2);transform:translateX(4px)}
 .tl__item--milestone .tl__card{background:var(--forest-800);color:#fff;border-color:var(--forest-800)}
 .tl__item--milestone .tl__dot{border-color:var(--gold)}
 .tl__item--milestone.is-reached .tl__dot{background:var(--gold);border-color:var(--gold)}
-.tl__date{font-family:var(--font-mono);font-size:12px;color:var(--ink-3)}
-.tl__item--milestone .tl__date{color:var(--gold)}
+.tl__date,.tl__kind{font-family:var(--font-mono);font-size:12px;color:var(--ink-3)}
+.tl__item--private .tl__card{border-style:dashed}
+.tl__item--milestone .tl__date,.tl__item--milestone .tl__kind{color:var(--gold)}
 @media (max-width:900px){.jt__side,.jt__main{grid-column:1 / -1}.jt__side .sticky{position:static}}
 
 /* Rail (horizontal timeline) */

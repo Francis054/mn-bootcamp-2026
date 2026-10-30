@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '@/api/client';
 import { useAuth } from '@/auth/AuthProvider';
 import { OfficialLogo } from '@/components/Brand';
@@ -420,9 +420,55 @@ interface PortalMe {
   traineeId: string | null;
 }
 
-export function PortalHomePage() {
+export function PortalFrame({ children }: { children: ReactNode }) {
   const auth = useAuth();
   const navigate = useNavigate();
+  const [me, setMe] = useState<PortalMe | null>(null);
+  const [error, setError] = useState('');
+  const name = me?.user.displayName || auth.displayName || 'Trainee';
+  useEffect(() => {
+    let cancel = false;
+    api<PortalMe>({ method: 'GET', path: '/portal/me' })
+      .then((result) => {
+        if (!cancel) setMe(result);
+      })
+      .catch((err: unknown) => {
+        if (!cancel) setError(isApiError(err) ? err.message : 'The portal could not be loaded.');
+      });
+    return () => {
+      cancel = true;
+    };
+  }, []);
+  const signOut = async () => {
+    await api({ method: 'POST', path: '/auth/logout' });
+    clearSession();
+    navigate('/login');
+  };
+  return (
+    <div className="portal-shell">
+      <a className="skip-link" href="#main">Skip to content</a>
+      <header className="portal-bar">
+        <Link className="portal-brand" to="/portal"><ShellMark /><span><b>Trainee portal</b><small>2026 cohort</small></span></Link>
+        <div className="portal-bar__actions">
+          <span>{name}</span>
+          <button className="btn btn--sm" type="button" onClick={() => void signOut()}>Log out</button>
+        </div>
+      </header>
+      <main id="main" className="section">
+        <div className="container">
+          <nav className="portal-nav" aria-label="Portal sections">
+            <NavLink to="/portal" end>Profile</NavLink>
+            <NavLink to="/portal/journey">Journey</NavLink>
+          </nav>
+          {error ? <ErrorState title="The portal could not be opened" text={error} /> : children}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export function PortalHomePage() {
+  const auth = useAuth();
   const [me, setMe] = useState<PortalMe | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -443,42 +489,25 @@ export function PortalHomePage() {
       cancel = true;
     };
   }, []);
-  const signOut = async () => {
-    await api({ method: 'POST', path: '/auth/logout' });
-    clearSession();
-    navigate('/login');
-  };
   const name = me?.user.displayName || auth.displayName || 'Trainee';
   const verified = me?.user.emailVerified !== false;
   return (
-    <div className="portal-shell">
-      <a className="skip-link" href="#main">Skip to content</a>
-      <header className="portal-bar">
-        <Link className="portal-brand" to="/portal"><ShellMark /><span><b>Trainee portal</b><small>2026 cohort</small></span></Link>
-        <div className="portal-bar__actions">
-          <span>{name}</span>
-          <button className="btn btn--sm" type="button" onClick={() => void signOut()}>Log out</button>
-        </div>
-      </header>
-      <main id="main" className="section">
-        <div className="container">
-          {loading ? <p role="status"><Loader variant="inline" label="Loading the portal" /> Loading your portal.</p> : null}
-          {error ? <ErrorState title="The portal could not be opened" text={error} /> : null}
-          {!loading && !error ? (
-            <>
-              <p className="eyebrow">Signed in</p>
-              <h1>Hello, {name}.</h1>
-              <p className="muted">Your email is {verified ? 'confirmed' : 'not confirmed yet'}.{me?.traineeId ? ` Roster id ${me.traineeId}.` : ''}</p>
-              <ProfileEditor />
-              <PortfolioEditor />
-              <ProgressEditor />
-              <CvEditor />
-              {!me ? <EmptyState icon="users" title="Nothing to show yet" text="Sign in again if this stays empty." /> : null}
-            </>
-          ) : null}
-        </div>
-      </main>
-    </div>
+    <PortalFrame>
+      {loading ? <p role="status"><Loader variant="inline" label="Loading the portal" /> Loading your portal.</p> : null}
+      {error ? <ErrorState title="The portal could not be opened" text={error} /> : null}
+      {!loading && !error ? (
+        <>
+          <p className="eyebrow">Signed in</p>
+          <h1>Hello, {name}.</h1>
+          <p className="muted">Your email is {verified ? 'confirmed' : 'not confirmed yet'}.{me?.traineeId ? ` Roster id ${me.traineeId}.` : ''}</p>
+          <ProfileEditor />
+          <PortfolioEditor />
+          <ProgressEditor />
+          <CvEditor />
+          {!me ? <EmptyState icon="users" title="Nothing to show yet" text="Sign in again if this stays empty." /> : null}
+        </>
+      ) : null}
+    </PortalFrame>
   );
 }
 

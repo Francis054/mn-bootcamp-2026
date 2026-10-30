@@ -11,7 +11,7 @@ export const traineePaths = {
       operationId: 'listPublicTrainees',
       summary: 'Published trainee profiles that have consent',
       description:
-        'A row is returned only when publicationStatus is published, listing is not hidden, and consentReceived is true. The response omits email, linkedin, portfolio, internalNotes, consentReceived, the consent timestamps, and photoStorageKey. photoUrl is included and is null until a photo is saved. Sample seed rows are published but have no consent, so they are not in this list.',
+        'A row is returned only when publicationStatus is published, listing is not hidden, and consentReceived is true. Query q, track, focus, and skill narrow that public list. Search does not match email. The response omits email, internalNotes, consent bookkeeping, and photoStorageKey. contactAvailable is true only when the trainee agreed to employer contact. Sample seed rows are published but have no consent, so they are not in this list.',
       responses: {
         '200': {
           description: 'Public profiles, ordered by display name.',
@@ -180,7 +180,7 @@ export const traineeSchemas = {
   PublicTrainee: {
     type: 'object',
     description:
-      'A trainee without email, linkedin, portfolio, internalNotes, photoStorageKey, consentReceived, or consent bookkeeping. photoUrl is null until a photo is saved. cv says only whether a CV can be downloaded or requested. It is never a file address.',
+      'A trainee without email, linkedin unless links were approved, portfolio, internalNotes, photoStorageKey, or consent bookkeeping. contactAvailable says whether the contact form is shown. It is not an email address. cv says only whether a CV can be downloaded or requested. It is never a file address.',
     required: [
       'id',
       'displayName',
@@ -195,6 +195,7 @@ export const traineeSchemas = {
       'listing',
       'publicationStatus',
       'statusLabel',
+      'contactAvailable',
     ],
     properties: {
       id: { type: 'string' },
@@ -210,6 +211,10 @@ export const traineeSchemas = {
       listing: { type: 'string' },
       publicationStatus: { type: 'string' },
       statusLabel: { type: 'string' },
+      contactAvailable: { type: 'boolean' },
+      slug: { type: 'string' },
+      headline: { type: 'string' },
+      location: { type: 'string' },
       cv: { $ref: '#/components/schemas/PublicCv' },
     },
   },

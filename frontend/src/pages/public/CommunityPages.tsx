@@ -14,11 +14,14 @@ import { ALBUM_LABEL, MODULES } from '@/dev/fixtures';
 import { usesMockApi } from '@/config/runtime';
 import { APP_TODAY, parseUtcDate } from '@/domain/format';
 import { cvRequestAllowed, isSafeCvDownloadPath, readPublicCv } from '@/domain/cv';
+import { DIRECTORY_TRACKS, directorySkills, filterDirectory } from '@/domain/directory';
+import { ContactPanel, CvRequestPanel, ProfilePdfLink } from './EmployerReach';
 import { isApiError } from '@/domain/types';
 import { collect, emailAddress, minLength, required } from '@/domain/validate';
 import { usePublicContent } from '@/hooks/useContent';
 import { downloadCalendar, EventRow, moduleOf, PageIntro, PublicGate, SampleMark, TraineeArt } from './helpers';
 import { PublicWorkPhotos } from './WorkPhotos';
+import { TraineeJourney } from './TraineeJourney';
 import { TraineePortfolio } from './TraineePortfolio';
 import { TraineeProgress } from './TraineeProgress';
 
@@ -27,11 +30,12 @@ export { ProjectPage } from './ProjectPage';
 export function TraineesPage() {
   const { trainees, loading, error } = usePublicContent();
   const [focus, setFocus] = useState('all');
+  const [track, setTrack] = useState('');
+  const [skill, setSkill] = useState('');
   const [query, setQuery] = useState('');
-  const rows = trainees.filter((trainee) => {
-    const text = `${trainee.displayName} ${(trainee.skills ?? []).join(' ')} ${trainee.track}`.toLowerCase();
-    return (focus === 'all' || trainee.focus === focus) && text.includes(query.trim().toLowerCase());
-  });
+  const skills = useMemo(() => directorySkills(trainees), [trainees]);
+  const rows = filterDirectory(trainees, { q: query, track, focus: focus === 'all' ? '' : focus, skill });
+  const reset = () => { setFocus('all'); setTrack(''); setSkill(''); setQuery(''); };
   return (
     <PublicGate loading={loading} error={error}>
     <>
@@ -39,7 +43,17 @@ export function TraineesPage() {
       <section className="section" style={{ paddingTop: 'var(--s-7)' }}>
         <div className="container">
           <div className="toolbar">
-            <div className="input-icon"><Icon name="search" className="i--sm" /><input className="input" type="search" placeholder="Search sample names or skills" aria-label="Search trainees" value={query} onChange={(event) => setQuery(event.target.value)} /></div>
+            <div className="input-icon"><Icon name="search" className="i--sm" /><input className="input" type="search" placeholder="Search names, skills, or tracks" aria-label="Search trainees" value={query} onChange={(event) => setQuery(event.target.value)} /></div>
+            <label className="sr-only" htmlFor="trainee-track">Track</label>
+            <select className="select" id="trainee-track" value={track} onChange={(event) => setTrack(event.target.value)}>
+              <option value="">All tracks</option>
+              {DIRECTORY_TRACKS.map((item) => <option key={item} value={item}>{item}</option>)}
+            </select>
+            <label className="sr-only" htmlFor="trainee-skill">Skill</label>
+            <select className="select" id="trainee-skill" value={skill} onChange={(event) => setSkill(event.target.value)}>
+              <option value="">All skills</option>
+              {skills.map((item) => <option key={item} value={item}>{item}</option>)}
+            </select>
             <Tabs label="Filter by focus" value={focus} onChange={setFocus} tabs={[{ id: 'all', label: 'All focuses' }, ...MODULES.map((module) => ({ id: module.id, label: module.short }))]} />
             <span className="result-count" aria-live="polite">{rows.length} profiles</span>
           </div>
@@ -52,7 +66,7 @@ export function TraineesPage() {
                   </Link>
                 ))}
               </div>
-            ) : <EmptyState icon="users" title="No profiles match" text="Try another focus or clear the search." action={<button className="btn btn--ghost btn--sm" type="button" onClick={() => { setFocus('all'); setQuery(''); }}>Reset</button>} />}
+            ) : <EmptyState icon="users" title="No profiles match" text="Try another track, skill, or focus, or clear the search." action={<button className="btn btn--ghost btn--sm" type="button" onClick={reset}>Reset</button>} />}
         </div>
       </section>
     </>
@@ -63,7 +77,7 @@ export function TraineesPage() {
 export function TraineePage() {
   const { id = '' } = useParams();
   const { trainees, projects, loading, error } = usePublicContent();
-  const trainee = trainees.find((item) => item.id === id);
+  const trainee = trainees.find((item) => item.id === id || item.slug === id);
   const [tab, setTab] = useState('about');
   const toast = useToast();
   usePageMeta(trainee?.displayName ?? 'Trainee');
@@ -90,8 +104,10 @@ export function TraineePage() {
               {trainee.githubUrl ? <a className="btn btn--ghost btn--sm" href={trainee.githubUrl} rel="noopener noreferrer nofollow" target="_blank">GitHub</a> : null}
               {trainee.portfolio ? <a className="btn btn--ghost btn--sm" href={trainee.portfolio} rel="noopener noreferrer nofollow" target="_blank">Portfolio</a> : null}
               <button className="btn btn--dark btn--sm" type="button" onClick={() => { void navigator.clipboard?.writeText(window.location.href); toast('Link copied', 'This copies the address only. No private fields are included.', 'info'); }}><Icon name="copy" className="i--sm" />Copy profile link</button>
-              <CvOffer traineeId={trainee.id} cv={readPublicCv(trainee.cv)} toast={toast} />
+              <ProfilePdfLink traineeId={trainee.slug || trainee.id} />
+              <CvOffer traineeId={trainee.slug || trainee.id} cv={readPublicCv(trainee.cv)} toast={toast} />
             </div>
+            {cvRequestAllowed(readPublicCv(trainee.cv)) ? <CvRequestPanel traineeId={trainee.slug || trainee.id} /> : null}
           </div>
         </div>
       </section>
@@ -102,10 +118,12 @@ export function TraineePage() {
             <div style={{ marginTop: 24 }}><span className="label">Skills in progress</span><div className="flex wrap" style={{ gap: 8, marginTop: 12 }}>{(trainee.skills ?? []).map((skill) => <span className="tag" key={skill}>{skill}</span>)}</div></div>
           </div>
           <div className="split__b">
-            <Tabs label="Profile sections" value={tab} onChange={setTab} tabs={[{ id: 'about', label: 'About' }, { id: 'progress', label: 'Progress' }, { id: 'work', label: 'Work' }]} />
+            <Tabs label="Profile sections" value={tab} onChange={setTab} tabs={[{ id: 'about', label: 'About' }, { id: 'journey', label: 'Journey' }, { id: 'progress', label: 'Progress' }, { id: 'work', label: 'Work' }, { id: 'contact', label: 'Contact' }]} />
             {tab === 'about' ? <div style={{ marginTop: 24 }}><p>{trainee.bio}</p>{trainee.quote ? <blockquote style={{ marginTop: 20 }}>“{trainee.quote}”</blockquote> : null}<p className="muted" style={{ marginTop: 16 }}>Email and private notes are not on this page. Links appear here after the trainee agrees and an administrator approves them.</p></div> : null}
+            {tab === 'journey' ? <TraineeJourney traineeId={trainee.slug || trainee.id} /> : null}
             {tab === 'progress' ? <TraineeProgress traineeId={trainee.id} /> : null}
             {tab === 'work' ? <div style={{ marginTop: 24 }}><TraineePortfolio traineeId={trainee.id} />{related.length ? related.map((project) => <Link key={project.id} className="link" to={`/projects/${project.id}`}>{project.title}</Link>) : <p className="muted">No sample projects in this focus yet.</p>}</div> : null}
+            {tab === 'contact' ? <div style={{ marginTop: 24 }}>{trainee.contactAvailable ? <ContactPanel traineeId={trainee.slug || trainee.id} /> : <p className="muted">This trainee has not agreed to messages through the site. Their email address is not shown.</p>}</div> : null}
           </div>
         </div>
       </section>
@@ -147,10 +165,6 @@ function CvOffer({
         Download CV
       </button>
     );
-  }
-  // The request form is PR 5b. This only shows that a request would be allowed.
-  if (cvRequestAllowed(cv)) {
-    return <p className="muted">This trainee can share a CV when someone asks. Asking through the site comes later.</p>;
   }
   return null;
 }

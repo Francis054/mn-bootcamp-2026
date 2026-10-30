@@ -11,7 +11,7 @@ export function isPublicGetPath(method: string, path: string): boolean {
 
 /** CV metadata, signed links, and PDF bytes stay out of the public cache. */
 export function isUncachedCvPath(path: string): boolean {
-  return /\/cv(\/|$)/.test(path) || path.includes('/cv-link');
+  return /\/cv(\/|$)/.test(path) || path.includes('/cv-link') || path.endsWith('/profile.pdf');
 }
 
 export function isPrivateApiPath(path: string): boolean {
