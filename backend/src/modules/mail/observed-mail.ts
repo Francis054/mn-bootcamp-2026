@@ -2,9 +2,9 @@ import type { AppLogger } from '../../shared/logging/logger.js';
 import type { EmailProvider, MailResult, OutboundMail } from './email-provider.js';
 
 /**
- * Sends through the configured provider and records a failure instead of
- * dropping it. A later outbox can replace this class and keep the same
- * `send` method. Callers must treat `delivered: false` as "try again".
+ * Logs a provider failure without the mailbox or the API key.
+ * The outbox in front of this class keeps the message and retries it.
+ * Callers must treat `delivered: false` as "not accepted yet".
  */
 export class ObservedMail implements EmailProvider {
   readonly name: EmailProvider['name'];

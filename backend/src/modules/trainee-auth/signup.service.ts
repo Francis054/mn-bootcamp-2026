@@ -242,6 +242,14 @@ export class SignupService {
       clip(input.ip, 64),
       clip(input.requestId, 80),
     );
+    await this.accounts.sendReview({
+      to: row.email,
+      item: 'signup request',
+      title: row.displayName,
+      approved: false,
+      reason: '',
+      path: '/signup',
+    });
     return toPending(saved);
   }
 

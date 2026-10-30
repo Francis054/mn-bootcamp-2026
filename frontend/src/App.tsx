@@ -12,6 +12,7 @@ const AccountPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => (
 const ContentEditorPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.ContentEditorPage })));
 const EnquiriesPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.EnquiriesPage })));
 const ContactRequestsPage = lazy(() => import('@/pages/admin/ContactRequestsPage').then((m) => ({ default: m.ContactRequestsPage })));
+const FailedEmailsPage = lazy(() => import('@/pages/admin/FailedEmailsPage').then((m) => ({ default: m.FailedEmailsPage })));
 const MediaPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.MediaPage })));
 const WorkPhotosPage = lazy(() => import('@/pages/admin/WorkPhotosPage').then((m) => ({ default: m.WorkPhotosPage })));
 const SiteImagesPage = lazy(() => import('@/pages/admin/SiteImagesPage').then((m) => ({ default: m.SiteImagesPage })));
@@ -139,6 +140,7 @@ export function App() {
         <Route path="trainee-accounts" element={<Waiting><RequireAccess permission="users.manage"><TraineeAccountsPage /></RequireAccess></Waiting>} />
         <Route path="enquiries" element={<Waiting><RequireAccess permission="users.manage"><EnquiriesPage /></RequireAccess></Waiting>} />
         <Route path="contact-requests" element={<Waiting><ContactRequestsPage /></Waiting>} />
+        <Route path="failed-emails" element={<Waiting><FailedEmailsPage /></Waiting>} />
         <Route path="settings" element={<Waiting><RequireAccess permission="settings.manage"><SettingsPage /></RequireAccess></Waiting>} />
       </Route>
     </Routes>

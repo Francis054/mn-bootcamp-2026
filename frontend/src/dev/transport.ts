@@ -18,6 +18,7 @@ import { progressRoute, resetProgressDev } from './progress';
 import { cvRoute, publicCvFor, resetCvDev } from './cv';
 import { reachRoute, resetReachDev } from './reach';
 import { journeyRoute, resetJourneyDev } from './journey';
+import { privacyRoute, resetPrivacyDev } from './privacy';
 import { filterDirectory } from '@/domain/directory';
 import { getState, updateState } from './store';
 import { isAdminTimetablePath, isPublicTimetablePath, NOT_HANDLED, resetTimetableStore, timetableRoute } from './timetable-store';
@@ -42,6 +43,7 @@ export function resetDevTransport(): void {
   resetCvDev();
   resetReachDev();
   resetJourneyDev();
+  resetPrivacyDev();
 }
 
 function takeArmed(): void {
@@ -159,6 +161,8 @@ export async function devTransport<T>(req: ApiRequest): Promise<T> {
   if (reach !== undefined) return reach as T;
   const journey = await journeyRoute(method, path, req.body);
   if (journey !== undefined) return journey as T;
+  const privacy = privacyRoute(method, path, formFields(req.body));
+  if (privacy !== undefined) return privacy as T;
   if (method === 'POST' && path === '/admin/trainees/photo') {
     return (await storeTraineePhoto(req.body)) as T;
   }
