@@ -155,3 +155,5 @@ ORDER BY table_name, grantee, privilege_type;
 ```
 
 Then open Database → Security Advisor and choose Rerun. `rls_disabled_in_public` and `sensitive_columns_exposed` should be gone. `rls_enabled_no_policy` may remain as info. Leave it.
+
+The same check is `node scripts/check-public-rls.mjs` from `backend/`, with `DATABASE_URL` set in that shell only. On the hosted project add `--require-roles`. Exit 0 means every ordinary table has row level security on, `PublicRls1794096000000` is in `schema_migrations`, and `anon` and `authenticated` hold no table or sequence privilege. The script prints counts. It does not print `DATABASE_URL`. `FORCE ROW LEVEL SECURITY` stays unset on purpose. Do not add a policy whose expression is `true` to clear the advisor info row.

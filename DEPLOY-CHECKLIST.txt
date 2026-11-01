@@ -294,6 +294,14 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
       npm run migration:run afterwards still records the migration, and it
       is safe to run those statements twice. Do not revert that migration
       on the hosted database.
+      Still in that private terminal, run:
+        node scripts/check-public-rls.mjs --require-roles
+      You want exit 0. Every public table has row level security on,
+      PublicRls1794096000000 is recorded, and anon and authenticated hold
+      no table or sequence privilege. The script prints counts. It does
+      not print DATABASE_URL. FORCE ROW LEVEL SECURITY stays off on purpose:
+      the API connects as the table owner. Do not add a policy of true.
+      Close the terminal when it finishes.
 
 6. Create the website as a Static Site on the same Render account.
    a. Repository Francis054/mn-bootcamp-2026, branch main.

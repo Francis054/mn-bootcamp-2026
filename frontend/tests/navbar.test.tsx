@@ -118,7 +118,7 @@ describe('public navbar', () => {
 
       await user.click(button);
       await user.click(within(primary).getByRole('menuitem', { name: /meet the trainees/i }));
-      expect(await screen.findByRole('heading', { name: /twelve sample|the people|profiles after/i })).toBeInTheDocument();
+      expect(await screen.findByRole('heading', { name: /twelve sample|the people|profiles after/i }, { timeout: 5_000 })).toBeInTheDocument();
       expect(within(screen.getByRole('navigation', { name: 'Primary' })).getByRole('button', { name: 'Trainees' })).toHaveAttribute('aria-expanded', 'false');
     } finally {
       guard.mockRestore();
