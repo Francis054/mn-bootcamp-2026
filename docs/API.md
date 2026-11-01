@@ -48,7 +48,7 @@ Success `200`:
 
 Wrong password and unknown mailbox both return `401` and the message `The email or password is not correct.` The server does not name fixture addresses.
 
-Five failures for one mailbox, or too many from one address, return `429` and `Too many sign-in attempts. Wait a minute and try again.` A correct password during the lock gets the same `429`.
+Five failures for one mailbox, or too many from one address, return `429` and `Too many sign-in attempts. Wait and try again.` A correct password during the lock gets the same `429`. The default lock is 15 minutes (`LOGIN_LOCK_MS`). The sentence does not name the mailbox or the duration.
 
 ### `POST /auth/logout`
 
@@ -320,7 +320,7 @@ Password changes, resets, and invitations store a hash. The stored password uses
 }
 ```
 
-There is no `developmentResetPath`. A missing mailbox and a real mailbox return that same JSON. A badly formed address is `422`. Too many requests is `429` with `Too many requests. Wait a minute and try again.` That `429` also does not say whether the mailbox exists.
+There is no `developmentResetPath`. A missing mailbox and a real mailbox return that same JSON. A badly formed address is `422`. Too many requests is `429` with `Too many requests. Wait and try again.` That `429` also does not say whether the mailbox exists. The default lock is 15 minutes.
 
 `POST /auth/password-reset/complete` body `{ token, password, confirm }`. This accepts a reset link and an invitation link. Success:
 

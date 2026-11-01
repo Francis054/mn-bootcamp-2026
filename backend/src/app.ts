@@ -48,7 +48,7 @@ export function createApp(deps: AppDependencies): Express {
   for (const extra of deps.extraRouters ?? []) {
     app.use(extra);
   }
-  mountOpenApi(app);
+  mountOpenApi(app, deps.env.nodeEnv);
   app.use(notFound());
   app.use(errorHandler(deps.logger, deps.env));
   return app;

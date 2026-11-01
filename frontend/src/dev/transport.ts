@@ -386,7 +386,7 @@ async function route(method: string, path: string, query: ListQuery & Record<str
     const user = requireUser('account.manage');
     return user;
   }
-  if (method === 'POST' && path === '/admin/account/password') {
+  if (method === 'POST' && (path === '/admin/account/password' || path === '/account/password')) {
     requireUser('account.manage');
     const next = String(body.next ?? '');
     const confirm = String(body.confirm ?? '');
@@ -415,13 +415,13 @@ function login(body: Record<string, unknown>) {
     developmentAck: ack ? null : 'Confirm that you understand this is the development adapter.',
   }));
   const locked = failures.get(email);
-  if (locked && locked.lockedUntil > Date.now()) fail('rate_limited', 'Too many sign-in attempts. Wait a minute and try again.', 429);
+  if (locked && locked.lockedUntil > Date.now()) fail('rate_limited', 'Too many sign-in attempts. Wait and try again.', 429);
   const user = getState().users.find((item) => item.email === email);
   if (!user || user.disabled) {
     const row = failures.get(email) ?? { count: 0, lockedUntil: 0 };
     row.count += 1;
     if (row.count >= 5) {
-      row.lockedUntil = Date.now() + 60_000;
+      row.lockedUntil = Date.now() + 15 * 60_000;
       row.count = 0;
     }
     failures.set(email, row);

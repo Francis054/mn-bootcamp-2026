@@ -17,6 +17,9 @@ import { setEnvForTests } from '@/config/runtime';
 import { clearSession } from '@/dev/session';
 import { resetState } from '@/dev/store';
 import { resetDevTransport } from '@/dev/transport';
+import { setAppTodayForTests, SAMPLE_TODAY } from '@/domain/format';
+
+setAppTodayForTests(SAMPLE_TODAY);
 
 Object.defineProperty(window, 'matchMedia', { writable: true, value: (query: string) => ({ matches: query.includes('prefers-reduced-motion'), media: query, onchange: null, addEventListener: () => undefined, removeEventListener: () => undefined, addListener: () => undefined, removeListener: () => undefined, dispatchEvent: () => false }) });
 
@@ -29,6 +32,7 @@ afterEach(() => {
   cleanup();
   resetState();
   resetDevTransport();
+  setAppTodayForTests(SAMPLE_TODAY);
   clearSession();
   resetPublicCacheForTests();
   resetPublicLoadForTests();
