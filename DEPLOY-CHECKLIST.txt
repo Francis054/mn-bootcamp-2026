@@ -265,6 +265,13 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
 
 5. Create the tables. Do not run npm run seed. That command is sample data for
    your own computer only.
+   Before you migrate the hosted database, open the Supabase project, then
+   Database, then Backups. Confirm a backup exists, or take one if that page
+   offers it. Free-plan retention was not confirmed in this repository, so
+   read the retention on that page. A Render rollback does not undo a
+   migration. Do not run npm run migration:revert on the hosted database.
+   Reverting PublicRls turns row level security off and grants anon and
+   authenticated every privilege on public again.
    Render's docs say the Pre-Deploy Command box is for paid web services
    (https://render.com/docs/deploys, checked 24 October 2026).
    a. If your Free service still shows a Pre-Deploy Command box, set it to:
