@@ -340,7 +340,33 @@ export function SiteFooter() {
 export function PageTransition() {
   const navigate = useNavigate();
   const location = useLocation();
-  useEffect(() => { document.body.classList.add('page-enter'); }, [location.pathname]);
+  const entrancePlayed = useRef(false);
+  useEffect(() => {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced || entrancePlayed.current) {
+      document.body.classList.remove('page-enter');
+      return;
+    }
+    const main = document.getElementById('main');
+    let finished = false;
+    const finish = (event?: AnimationEvent) => {
+      if (finished) return;
+      if (event && (event.target !== main || event.animationName !== 'pageIn')) return;
+      finished = true;
+      entrancePlayed.current = true;
+      document.body.classList.remove('page-enter');
+    };
+    document.body.classList.add('page-enter');
+    main?.addEventListener('animationend', finish);
+    // Fill-mode `both` would leave an identity transform on main, which makes
+    // position:fixed descendants stick to the document. Drop the class when
+    // the entrance ends so the computed transform is none.
+    const timer = window.setTimeout(() => finish(), 800);
+    return () => {
+      window.clearTimeout(timer);
+      main?.removeEventListener('animationend', finish);
+    };
+  }, [location.pathname]);
   useEffect(() => {
     const onClick = (event: MouseEvent) => {
       if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
