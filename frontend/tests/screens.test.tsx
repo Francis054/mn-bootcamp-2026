@@ -38,7 +38,7 @@ describe('public routes', () => {
     expect(await screen.findByRole('heading', { name: /secure the future/i })).toBeInTheDocument();
     expect(screen.getByText('5 Oct 2026')).toBeInTheDocument();
     expect(screen.getByText('Free')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /the 2026 white hat/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /not every hacker wears a black hat/i })).toBeInTheDocument();
     const hat = screen.getByRole('img', { name: /white fedora with maxim nyansa/i });
     expect(hat).toHaveAttribute('src', '/assets/gear/bootcamp-hat.png');
     expect(hat).toHaveAttribute('width', '1467');
