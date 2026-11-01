@@ -155,3 +155,11 @@ ORDER BY table_name, grantee, privilege_type;
 ```
 
 Then open Database → Security Advisor and choose Rerun. `rls_disabled_in_public` and `sensitive_columns_exposed` should be gone. `rls_enabled_no_policy` may remain as info. Leave it.
+
+## Dependency audit
+
+`npm audit --omit=dev` is clean in `frontend/` and `backend/`. The production dependency trees have no known advisories. Checked 1 November 2026.
+
+The frontend test runner is Vitest 5. Vitest 3 pulled a critical `tinypool` advisory and a critical Vitest advisory. Both are dev dependencies, and Vitest 5 no longer depends on `tinypool`. Do not treat a dev-tool advisory as a production incident.
+
+What remains is moderate and only in dev dependencies. `npm audit` suggests fixing them by moving ESLint back to 4, `typescript-eslint` back to 8.14, or Testcontainers back to 10. Those are downgrades, not fixes, and this repo does not take them. ESLint 9 and 10 still depend on a `minimatch` range the advisory calls vulnerable. Testcontainers 12 still pulls `archiver`. Re-check `npm audit` when those packages publish a compatible release. Until then, leave them. They are not in the production install.
