@@ -25,9 +25,18 @@ async function revealHeader(page: Page) {
   await expect(page.locator('header.site-header')).not.toHaveClass(/is-hidden/);
   await expect.poll(() => page.evaluate(() => Math.round(document.querySelector('header.site-header')?.getBoundingClientRect().top ?? -1))).toBe(0);
   // Leave the page offset, not pinned to the bottom, so the next click starts away from the top.
+  // A settle that starts after the nudge can put the page back at 0. Count the offset only
+  // after it is still past 200 on the next read.
+  let held = 0;
   await expect.poll(async () => {
-    await nudgeScroll(page, 480);
-    return page.evaluate(() => window.scrollY);
+    let y = await page.evaluate(() => window.scrollY);
+    if (y <= 200) {
+      held = 0;
+      await nudgeScroll(page, 480);
+      y = await page.evaluate(() => window.scrollY);
+    }
+    held = y > 200 ? held + 1 : 0;
+    return held >= 2 ? y : 0;
   }).toBeGreaterThan(200);
 }
 

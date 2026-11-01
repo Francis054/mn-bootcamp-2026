@@ -72,7 +72,9 @@ These are the published limits as checked on 24 October 2026. They are not a pro
 - Cloudinary’s free plan includes 25 credits a month. One credit is 1,000 transformations, or 1 GB of storage, or 1 GB of image bandwidth. On the free plan, video bandwidth is also 1 GB per credit. Transformations and bandwidth use a rolling 30 days, not a calendar month. Sources: https://cloudinary.com/pricing and https://cloudinary.com/documentation/billing_and_plans
 - Resend’s free plan is 100 emails per UTC day and 3,000 per month. Received mail counts too, and each To, Cc, or Bcc recipient counts as one email. Sources: https://resend.com/pricing and https://resend.com/docs/knowledge-base/account-quotas-and-limits
 
-Supabase free backup retention was not confirmed for this note. Look at the project’s Backups page before you rely on one.
+## Before a migration
+
+Take a backup, or confirm one exists, before `npm run migration:run` on the hosted database. In the Supabase dashboard open Database → Backups. Free-plan retention was not confirmed for this note, so read the retention shown on that page and do not assume a restore point is there. A Render rollback on the free web service goes back only to one of the two most recent previous deploys, and it does not undo a migration that already ran. Do not run `npm run migration:revert` on the hosted database. Reverting `PublicRls1794096000000` turns row level security off and grants `anon` and `authenticated` every privilege on `public` again.
 
 ## Staying awake
 
