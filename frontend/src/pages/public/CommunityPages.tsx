@@ -12,7 +12,7 @@ import { TenMark } from '@/components/TenMark';
 import { usePageMeta } from '@/components/SiteChrome';
 import { ALBUM_LABEL, MODULES } from '@/dev/fixtures';
 import { usesMockApi } from '@/config/runtime';
-import { APP_TODAY, parseUtcDate } from '@/domain/format';
+import { appToday, parseUtcDate } from '@/domain/format';
 import { cvRequestAllowed, isSafeCvDownloadPath, readPublicCv } from '@/domain/cv';
 import { DIRECTORY_TRACKS, directorySkills, filterDirectory } from '@/domain/directory';
 import { ContactPanel, CvRequestPanel, ProfilePdfLink } from './EmployerReach';
@@ -213,7 +213,7 @@ export function EventsPage() {
   const { events, loading, error } = usePublicContent();
   const [filter, setFilter] = useState('all');
   const rows = events.filter((event) => {
-    const past = !event.dateTbc && parseUtcDate(event.date) < APP_TODAY;
+    const past = !event.dateTbc && parseUtcDate(event.date) < appToday();
     if (filter === 'upcoming') return event.dateTbc || !past;
     if (filter === 'past') return past;
     if (filter === 'Anniversary' || filter === 'Milestone') return event.kind === filter;

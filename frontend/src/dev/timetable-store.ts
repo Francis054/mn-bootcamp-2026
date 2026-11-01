@@ -1,4 +1,4 @@
-import { APP_TODAY } from '@/domain/format';
+import { appToday } from '@/domain/format';
 import {
   SESSION_TYPES,
   TRAINER_STATUSES,
@@ -89,7 +89,7 @@ function dayName(iso: string): string {
 }
 
 function devToday(): string {
-  return APP_TODAY.toISOString().slice(0, 10);
+  return appToday().toISOString().slice(0, 10);
 }
 
 function currentWeekNumber(weeks: MutableWeek[], today: string): number {
