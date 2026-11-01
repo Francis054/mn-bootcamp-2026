@@ -53,6 +53,34 @@ export const accountPaths = {
       },
     },
   },
+  '/api/v1/account/password': {
+    post: {
+      operationId: 'changeOwnPassword',
+      summary: 'Change the signed-in password',
+      description:
+        'Requires account.manage, the session cookie, and X-CSRF-Token. It does not require content.read, so a trainee or trainer can call it. The current password is checked again. Other sessions for this account are signed out. This session stays.',
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': { schema: { $ref: '#/components/schemas/PasswordChange' } },
+        },
+      },
+      responses: {
+        '200': {
+          description: 'The password was changed.',
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/PasswordChangeResult' } },
+          },
+        },
+        '401': { description: 'Sign in to continue.', content: errorRef },
+        '403': { description: 'The security token does not match, or this role cannot change a password.', content: errorRef },
+        '422': {
+          description: 'The current password or the new one was rejected.',
+          content: errorRef,
+        },
+      },
+    },
+  },
   '/api/v1/admin/account/password': {
     post: {
       operationId: 'changePassword',

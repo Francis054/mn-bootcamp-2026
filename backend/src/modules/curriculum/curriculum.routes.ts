@@ -1,5 +1,5 @@
 import { Router, type Request } from 'express';
-import { mountAccountAdmin, mountPublicEnquiries } from '../accounts/account.routes.js';
+import { mountAccountAdmin, mountOwnPassword, mountPublicEnquiries } from '../accounts/account.routes.js';
 import type { AccountService } from '../accounts/account.service.js';
 import type { SessionService } from '../auth/session.service.js';
 import type { EnquiryService } from '../enquiries/enquiry.service.js';
@@ -180,6 +180,7 @@ export function curriculumRouter(
     cvs,
     journey,
   );
+  mountOwnPassword(router, sessions, accounts);
 
   const admin = Router();
   // Staff only. A trainee or trainer session stops here, before any admin read.

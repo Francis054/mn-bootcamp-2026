@@ -44,7 +44,7 @@ export function mountPublicReach(router: Router, reach: ReachService): void {
 }
 
 export function mountAdminReach(admin: Router, reach: ReachService): void {
-  admin.get('/contact-requests', (_req, res, next) => {
+  admin.get('/contact-requests', requirePermission('content.write'), (_req, res, next) => {
     reach
       .listContacts()
       .then((rows) => {
@@ -69,7 +69,7 @@ export function mountAdminReach(admin: Router, reach: ReachService): void {
         .catch(next);
     },
   );
-  admin.get('/cv-requests', (_req, res, next) => {
+  admin.get('/cv-requests', requirePermission('content.write'), (_req, res, next) => {
     reach
       .listCvRequests()
       .then((rows) => {
