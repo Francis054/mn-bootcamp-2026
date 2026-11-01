@@ -37,7 +37,22 @@ const publicBody = {
           deliverables: [{ id: 'del-01-01', sortOrder: 1, title: 'Personal learning plan' }],
           professionalismTrainers: [],
           cybersecurityTrainers: [],
-          sessions: [],
+          sessions: [
+            {
+              id: 'session-1',
+              date: '2026-10-05',
+              day: 'Monday',
+              sortOrder: 1,
+              type: 'class',
+              activity: 'Lecture',
+              topic: 'A long topic that should not be sent with the home-page outline.',
+              notes: 'Notes that stay on the full timetable only.',
+              startTime: '09:00',
+              endTime: '10:00',
+              trainerStatus: 'confirmed',
+              trainers: [],
+            },
+          ],
         },
       ],
     },
@@ -129,6 +144,15 @@ describe('timetable API', () => {
     expect(Array.isArray(blocks) && readRecord(blocks[0]).name).toBe(
       'Foundations & Secure Systems',
     );
+    const outline = await request(appFor(null)).get('/api/v1/public/timetable?outline=1').expect(200);
+    const outlineBlocks = readRecord(outline.body).blocks;
+    if (!Array.isArray(outlineBlocks)) throw new Error('Expected outline blocks.');
+    const firstBlock = readRecord(outlineBlocks[0]);
+    if (!Array.isArray(firstBlock.weeks)) throw new Error('Expected outline weeks.');
+    const outlineWeek = readRecord(firstBlock.weeks[0]);
+    expect(outlineWeek.title).toBe('Foundations and professional orientation');
+    expect(outlineWeek.sessions).toEqual([]);
+    expect(JSON.stringify(outline.body).length).toBeLessThan(JSON.stringify(response.body).length);
     const week = await request(appFor(null)).get('/api/v1/public/weeks/1').expect(200);
     const deliverables = readRecord(week.body).deliverables;
     expect(Array.isArray(deliverables) && readRecord(deliverables[0]).title).toBe(

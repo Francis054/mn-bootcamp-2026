@@ -118,10 +118,13 @@
 .row-link h3{font-size:clamp(20px,2vw,26px);letter-spacing:-.025em}
 .row-link .go{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;transition:all var(--d-base) var(--ease-out)}
 .row-link:hover .go{background:var(--mn-lime);border-color:var(--mn-lime);transform:rotate(-45deg)}
-.row-peek{position:fixed;width:240px;aspect-ratio:4/3;border-radius:var(--r-md);overflow:hidden;pointer-events:none;z-index:60;opacity:0;transform:translate(-50%,-50%) scale(.85);transition:opacity var(--d-base),transform var(--d-base) var(--ease-out);box-shadow:var(--shadow-3)}
-.row-peek.is-on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.row-peek{position:fixed;left:0;top:0;width:240px;aspect-ratio:4/3;pointer-events:none;z-index:60;opacity:0;transition:opacity var(--d-base)}
+.row-peek.is-on{opacity:1}
+.row-peek__frame{width:100%;height:100%;border-radius:var(--r-md);overflow:hidden;box-shadow:var(--shadow-3);transform:scale(.85);transition:transform var(--d-base) var(--ease-out)}
+.row-peek.is-on .row-peek__frame{transform:scale(1)}
 .row-peek img{width:100%;height:100%;object-fit:cover}
 @media (max-width:900px){.row-link{grid-template-columns:72px 1fr 44px;gap:var(--s-4)}.row-link .row-mod,.row-link .row-status{display:none}.row-link .wk b{font-size:30px}.row-peek{display:none}}
+@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce){.row-peek{display:none}}
 
 /* ---------- Status pills for lessons ---------- */
 .st{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase}

@@ -1,9 +1,24 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
+import type { Plugin } from 'vite';
+import { withContentSecurityPolicy } from './src/csp';
+
+function productionCsp(): Plugin {
+  return {
+    name: 'production-csp',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html, ctx) {
+        if (ctx.server) return html;
+        return withContentSecurityPolicy(html);
+      },
+    },
+  };
+}
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), productionCsp()],
   resolve: {
     alias: { '@': path.resolve(__dirname, 'src') },
   },

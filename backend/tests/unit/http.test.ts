@@ -182,9 +182,9 @@ describe('HTTP pipeline', () => {
     expect(written).not.toContain('super-secret-token');
   });
 
-  it('serves the OpenAPI document and stores the cookie policy on the app', async () => {
-    const { app } = appWith({ nodeEnv: 'production' });
-    const spec = await request(app).get('/api/docs/openapi.json').expect(200);
+  it('serves the OpenAPI document outside production and stores the cookie policy on the app', async () => {
+    const { app: development } = appWith();
+    const spec = await request(development).get('/api/docs/openapi.json').expect(200);
     const document = readRecord(spec.body);
     const paths = readRecord(document.paths);
     const healthPath = readRecord(paths['/api/v1/health']);
@@ -222,8 +222,15 @@ describe('HTTP pipeline', () => {
     const components = readRecord(document.components);
     const schemas = readRecord(components.schemas);
     expect(schemas.ErrorBody).toBeDefined();
-    const docs = await request(app).get('/api/docs/').expect(200);
+    const docs = await request(development).get('/api/docs/').expect(200);
     expect(docs.text).toContain('Swagger');
+
+    const { app } = appWith({ nodeEnv: 'production' });
+    await request(app).get('/api/docs/').expect(404);
+    await request(app).get('/api/docs/openapi.json').expect(404);
+    const csp = String((await request(app).get('/api/v1/health')).headers['content-security-policy']);
+    expect(csp).toContain("default-src 'self'");
+    expect(csp).not.toContain('unsafe-inline');
     expect(app.locals.cookiePolicy.session).toEqual({
       httpOnly: true,
       secure: true,
