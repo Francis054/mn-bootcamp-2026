@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EnvError, loadEnv } from '../../src/config/env.js';
+import { DEFAULT_LOGIN_LOCK_MS, EnvError, loadEnv } from '../../src/config/env.js';
 
 const SECRET = 'super-secret-session-value-not-for-logs';
 const DATABASE = 'postgres://app:super-secret-db-password@db.internal:5432/mn_bootcamp';
@@ -31,7 +31,8 @@ describe('loadEnv', () => {
     expect(env.sessionIdleTtlMs).toBe(1_800_000);
     expect(env.sessionAbsoluteTtlMs).toBe(43_200_000);
     expect(env.loginFailureLimit).toBe(5);
-    expect(env.loginLockMs).toBe(60_000);
+    expect(env.loginLockMs).toBe(DEFAULT_LOGIN_LOCK_MS);
+    expect(env.loginLockMs).toBe(15 * 60_000);
     expect(env.loginIpFailureLimit).toBe(30);
     expect(env.videoUploadMaxBytes).toBe(50 * 1024 * 1024);
     expect(env.cvBucket).toBe('trainee-cvs');

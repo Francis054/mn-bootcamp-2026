@@ -160,8 +160,9 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
      Example: 5
 
    LOGIN_LOCK_MS
-     What: how long that lock lasts, in milliseconds.
-     Example: 60000
+     What: how long that lock lasts, in milliseconds. The row is in the database,
+       so a restart does not clear it. Leave the box empty for 15 minutes.
+     Example: 900000
 
    LOGIN_IP_FAILURE_LIMIT
      What: failed sign-ins from one address before a lock.
