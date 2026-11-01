@@ -29,7 +29,6 @@ export function BootcampGear() {
             <p className="gear__creed">Think ethically. Hack responsibly. Defend relentlessly.</p>
           </Reveal>
           <Reveal as="figure" className="gear__figure" reveal="fade" i={1}>
-            <p className="gear__plate"><span>Fig. 01</span><span>Cohort mark</span></p>
             <picture>
               <source type="image/webp" srcSet="/assets/gear/bootcamp-hat-800.webp 800w, /assets/gear/bootcamp-hat.webp 1467w" sizes="(max-width: 900px) 92vw, 640px" />
               <img src="/assets/gear/bootcamp-hat.png" width={1467} height={843} alt="White fedora with MAXIM NYANSA stitched on the crown and CYBERSECURITY 2026 on the black band." loading="lazy" decoding="async" />
