@@ -17,7 +17,7 @@ import { moduleOf, PublicGate, SampleMark, TraineeArt } from './helpers';
 
 export function HomePage() {
   const content = usePublicContent();
-  const timetable = useTimetable();
+  const timetable = useTimetable({ outline: true });
   const { projects, trainees, events, media } = content;
   const homepage = content.homepage;
   usePageMeta('Home');

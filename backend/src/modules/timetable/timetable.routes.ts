@@ -14,10 +14,23 @@ import type { TimetableService } from './timetable.service.js';
 import { readWorkbookUpload } from './upload.js';
 
 export function mountPublicTimetable(router: Router, timetable: TimetableService): void {
-  router.get('/public/timetable', (_req, res, next) => {
+  router.get('/public/timetable', (req, res, next) => {
+    const outline = req.query.outline === '1';
     timetable
       .publicTimetable()
-      .then((body) => res.json(body))
+      .then((body) => {
+        if (!outline) {
+          res.json(body);
+          return;
+        }
+        res.json({
+          ...body,
+          blocks: body.blocks.map((block) => ({
+            ...block,
+            weeks: block.weeks.map((week) => ({ ...week, sessions: [] })),
+          })),
+        });
+      })
       .catch(next);
   });
   router.get('/public/blocks', (_req, res, next) => {
