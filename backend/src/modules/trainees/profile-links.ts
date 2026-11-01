@@ -1,5 +1,6 @@
 import { projectUrlProblem } from '../projects/project-url.js';
 import { displayNameMessage, plainTextMessage } from './trainee.rules.js';
+import { unknownKeyErrors } from '../../shared/validation/unknown-keys.js';
 
 export const LINKEDIN_LINK = 'Use a https://www.linkedin.com link.';
 export const GITHUB_LINK = 'Use a https://github.com link.';
@@ -30,7 +31,18 @@ export function readProfilePatch(body: unknown): {
   errors: Record<string, string>;
 } {
   if (!isRecord(body)) return { value: {}, errors: { form: 'Check the highlighted fields.' } };
-  const errors: Record<string, string> = {};
+  const errors: Record<string, string> = {
+    ...unknownKeyErrors(body, [
+      'displayName',
+      'headline',
+      'bio',
+      'location',
+      'linkedin',
+      'githubUrl',
+      'portfolio',
+      'traineeId',
+    ]),
+  };
   const value: ProfilePatch = {};
   if ('displayName' in body) {
     const message = displayNameMessage(body.displayName);
