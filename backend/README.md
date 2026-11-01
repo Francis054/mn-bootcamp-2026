@@ -31,7 +31,7 @@ Open `.env` and set values there. Do not put those values in git, in a pull requ
 | `SESSION_IDLE_TTL_MS`      | How long a session can sit unused. `1800000` (30 minutes) when empty.                                                                                                                   |
 | `SESSION_ABSOLUTE_TTL_MS`  | How long a session may exist at all. `43200000` (12 hours) when empty.                                                                                                                  |
 | `LOGIN_FAILURE_LIMIT`      | Failed sign-ins for one mailbox before a lock. `5` when empty.                                                                                                                          |
-| `LOGIN_LOCK_MS`            | How long that lock lasts. `60000` when empty.                                                                                                                                           |
+| `LOGIN_LOCK_MS`            | How long that lock lasts. `900000` (15 minutes) when empty. The lock is stored in `login_throttles`.                                                                                     |
 | `LOGIN_IP_FAILURE_LIMIT`   | Failed sign-ins from one address before a lock. `30` when empty, so a classroom does not get locked by one mailbox.                                                                     |
 | `ADMIN_EMAIL`              | Read only by `npm run admin:create`. Not read by the running server. Leave it empty in the example.                                                                                     |
 | `ADMIN_BOOTSTRAP_PASSWORD` | Read only by that command, or type the password at its hidden prompt. Never put it on the command line. The command does not print it.                                                  |
@@ -113,6 +113,8 @@ npm run migration:revert  # undo the last migration
 ```
 
 Run those against the database in `DATABASE_URL`. They do not choose a database by themselves.
+
+`node scripts/check-public-rls.mjs` reads that same `DATABASE_URL` and prints whether every public table has row level security on, whether `PublicRls1794096000000` is recorded, and whether `anon` or `authenticated` still has a table or sequence grant. It does not print the URL. Add `--require-roles` on the hosted Supabase project, where those two roles must exist. Exit 0 is the locked state. `FORCE ROW LEVEL SECURITY` is reported and is left unset on purpose.
 
 `src/shared/persistence/base-repository.ts` is the pattern the account and session repositories extend. A repository is given a TypeORM repository. It does not open a connection.
 

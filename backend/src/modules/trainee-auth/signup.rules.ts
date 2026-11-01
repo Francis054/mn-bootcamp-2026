@@ -1,5 +1,6 @@
 import { passwordProblem } from '../auth/password-policy.js';
 import { emailProblem } from '../accounts/account.rules.js';
+import { unknownKeyErrors } from '../../shared/validation/unknown-keys.js';
 import type { Role } from '../users/role.js';
 
 /** Same sentence for an address on the roster and one that is not. */
@@ -61,7 +62,9 @@ export function signupDecision(traineeOnRoster: boolean, user: RosterUser | null
 
 export function parseSignup(body: unknown): SignupParse {
   if (!isRecord(body)) return { ok: false, problems: { form: 'Check the highlighted fields.' } };
-  const problems: Record<string, string> = {};
+  const problems: Record<string, string> = {
+    ...unknownKeyErrors(body, ['email', 'password', 'confirm', 'displayName', 'acceptTerms', 'company']),
+  };
   const email = typeof body.email === 'string' ? body.email : '';
   const emailIssue = emailProblem(email);
   if (emailIssue) problems.email = emailIssue;
@@ -85,6 +88,8 @@ export function parseSignup(body: unknown): SignupParse {
 
 export function parseResend(body: unknown): { ok: true; email: string } | { ok: false; problems: Record<string, string> } {
   if (!isRecord(body)) return { ok: false, problems: { email: 'Enter your email address.' } };
+  const unknown = unknownKeyErrors(body, ['email']);
+  if (Object.keys(unknown).length > 0) return { ok: false, problems: unknown };
   const email = typeof body.email === 'string' ? body.email : '';
   const issue = emailProblem(email);
   if (issue) return { ok: false, problems: { email: issue } };
