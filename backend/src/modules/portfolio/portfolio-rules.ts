@@ -1,5 +1,6 @@
 import { projectUrlProblem } from '../projects/project-url.js';
 import type { ReviewStatus } from '../trainees/profile-review.js';
+import { unknownKeyErrors } from '../../shared/validation/unknown-keys.js';
 
 export const PORTFOLIO_KINDS = ['project', 'lab', 'case_study'] as const;
 export type PortfolioKind = (typeof PORTFOLIO_KINDS)[number];
@@ -51,7 +52,18 @@ export function readItemWrite(
   body: unknown,
   mode: 'create' | 'patch',
 ): { value: Partial<ItemContent>; errors: Record<string, string> } {
-  const errors: Record<string, string> = {};
+  const errors: Record<string, string> = {
+    ...unknownKeyErrors(body, [
+      'kind',
+      'title',
+      'summary',
+      'skills',
+      'startedOn',
+      'completedOn',
+      'repositoryUrl',
+      'demoUrl',
+    ]),
+  };
   const value: Partial<ItemContent> = {};
   if (!isRecord(body)) {
     errors.form = 'Check the highlighted fields.';
