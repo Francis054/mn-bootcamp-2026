@@ -386,7 +386,7 @@ async function route(method: string, path: string, query: ListQuery & Record<str
     const user = requireUser('account.manage');
     return user;
   }
-  if (method === 'POST' && path === '/admin/account/password') {
+  if (method === 'POST' && (path === '/admin/account/password' || path === '/account/password')) {
     requireUser('account.manage');
     const next = String(body.next ?? '');
     const confirm = String(body.confirm ?? '');

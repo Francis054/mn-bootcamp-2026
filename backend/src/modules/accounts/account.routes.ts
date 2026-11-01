@@ -1,6 +1,7 @@
-import { Router, type Request } from 'express';
+import { Router, type NextFunction, type Request, type Response } from 'express';
 import { ApiError } from '../../shared/errors/api-error.js';
-import { requirePermission } from '../auth/require-auth.js';
+import { requireAuth, requirePermission } from '../auth/require-auth.js';
+import type { SessionService } from '../auth/session.service.js';
 import type { EnquiryService } from '../enquiries/enquiry.service.js';
 import { readText } from './account.rules.js';
 import type { AccountService } from './account.service.js';
@@ -21,32 +22,26 @@ export function mountPublicEnquiries(router: Router, enquiries: EnquiryService):
   });
 }
 
+export function mountOwnPassword(
+  router: Router,
+  sessions: SessionService,
+  accounts: AccountService,
+): void {
+  const own = Router();
+  own.use(requireAuth(sessions), requirePermission('account.manage'));
+  own.post('/password', (req, res, next) => {
+    changePassword(accounts, req, res, next);
+  });
+  router.use('/account', own);
+}
+
 export function mountAccountAdmin(
   admin: Router,
   accounts: AccountService,
   enquiries: EnquiryService,
 ): void {
   admin.post('/account/password', requirePermission('account.manage'), (req, res, next) => {
-    const user = req.user;
-    const sessionId = req.sessionId;
-    if (!user || !sessionId) {
-      next(new ApiError('unauthenticated', 'Sign in to continue.'));
-      return;
-    }
-    accounts
-      .changePassword({
-        userId: user.id,
-        sessionId,
-        current: readText(req.body, 'current'),
-        next: readText(req.body, 'next'),
-        confirm: readText(req.body, 'confirm'),
-        ip: req.ip ?? 'unknown',
-        requestId: req.id,
-      })
-      .then((result) => {
-        res.status(200).json(result);
-      })
-      .catch(next);
+    changePassword(accounts, req, res, next);
   });
 
   admin.get('/users', requirePermission('users.read'), (_req, res, next) => {
@@ -146,6 +141,34 @@ export function mountAccountAdmin(
       })
       .catch(next);
   });
+}
+
+function changePassword(
+  accounts: AccountService,
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void {
+  const user = req.user;
+  const sessionId = req.sessionId;
+  if (!user || !sessionId) {
+    next(new ApiError('unauthenticated', 'Sign in to continue.'));
+    return;
+  }
+  accounts
+    .changePassword({
+      userId: user.id,
+      sessionId,
+      current: readText(req.body, 'current'),
+      next: readText(req.body, 'next'),
+      confirm: readText(req.body, 'confirm'),
+      ip: req.ip ?? 'unknown',
+      requestId: req.id,
+    })
+    .then((result) => {
+      res.status(200).json(result);
+    })
+    .catch(next);
 }
 
 function param(req: Request): string {
