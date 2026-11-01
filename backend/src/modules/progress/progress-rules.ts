@@ -1,5 +1,6 @@
 import { projectUrlProblem } from '../projects/project-url.js';
 import { REJECT_NEEDS_REASON, REJECT_REASON_LIMIT, type ReviewStatus } from '../trainees/profile-review.js';
+import { unknownKeyErrors } from '../../shared/validation/unknown-keys.js';
 
 export const SKILL_LEVELS = [1, 2, 3, 4] as const;
 export type SkillLevel = (typeof SKILL_LEVELS)[number];
@@ -62,7 +63,9 @@ export function readSkillWrite(
   current: SkillContent,
 ): { value: SkillContent; errors: Record<string, string> } {
   const record = isRecord(body) ? body : {};
-  const errors: Record<string, string> = {};
+  const errors: Record<string, string> = {
+    ...unknownKeyErrors(body, ['name', 'level', 'evidenceItemId']),
+  };
   let name = current.name;
   if ('name' in record || mode === 'create') {
     name = typeof record.name === 'string' ? record.name.trim() : mode === 'create' ? '' : current.name;
@@ -92,7 +95,9 @@ export function readEventWrite(
   current: EventContent,
 ): { value: EventContent; errors: Record<string, string> } {
   const record = isRecord(body) ? body : {};
-  const errors: Record<string, string> = {};
+  const errors: Record<string, string> = {
+    ...unknownKeyErrors(body, ['title', 'eventDate', 'organiser', 'link']),
+  };
   let title = current.title;
   if ('title' in record || mode === 'create') {
     title = typeof record.title === 'string' ? record.title.trim() : mode === 'create' ? '' : current.title;

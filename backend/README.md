@@ -114,6 +114,8 @@ npm run migration:revert  # undo the last migration
 
 Run those against the database in `DATABASE_URL`. They do not choose a database by themselves.
 
+`node scripts/check-public-rls.mjs` reads that same `DATABASE_URL` and prints whether every public table has row level security on, whether `PublicRls1794096000000` is recorded, and whether `anon` or `authenticated` still has a table or sequence grant. It does not print the URL. Add `--require-roles` on the hosted Supabase project, where those two roles must exist. Exit 0 is the locked state. `FORCE ROW LEVEL SECURITY` is reported and is left unset on purpose.
+
 `src/shared/persistence/base-repository.ts` is the pattern the account and session repositories extend. A repository is given a TypeORM repository. It does not open a connection.
 
 ## Keep the free service awake

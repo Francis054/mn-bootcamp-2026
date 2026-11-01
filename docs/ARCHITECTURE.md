@@ -17,11 +17,11 @@ Home hero photos are `figure.hm-1`, `figure.hm-2` and `figure.hm-3`, and the lim
 
 | Variable | Development | Production build |
 | --- | --- | --- |
-| `VITE_API_MODE` | `development-adapter` | `development-adapter` |
-| `VITE_AUTH_MODE` | `development` | `disabled` |
-| `VITE_API_BASE_URL` | empty | empty |
+| `VITE_USE_MOCK_API` | unset, or `true` for the in-browser adapter | unset. The live API is used |
+| `VITE_AUTH_MODE` | `development` unless set to `disabled` | unset. `disabled` refuses a mock session |
+| `VITE_API_BASE_URL` | empty. The dev server proxies `/api/v1` | empty. The site and the API share one host |
 
-`VITE_AUTH_MODE=disabled` refuses to create a session. A hardcoded password is not accepted as production authentication. Development sign-in matches a fixture email, checks that the password is at least 8 characters, requires an acknowledgement checkbox, and then discards the password.
+`VITE_USE_MOCK_API=true` is the only switch that loads the in-browser fixture store. A production build leaves it unset.
 
 ## Roles
 
@@ -49,9 +49,9 @@ Verified facts come from `docs/research.md`. Anything else is labelled sample or
 
 ## Known limits
 
-- No persistence, media storage, mail, or audit log.
-- Password change and invitations always return pending and `delivered: false`.
-- Enquiry messages stay in memory with `delivered: false`.
-- Calendar files for confirmed dates are built in the browser. They are not an API.
-- The platform is not production-ready until a real backend is connected and authentication, authorization, persistence, media, deployment and end-to-end behaviour have been verified.
+The API in `backend/` is Express and TypeORM, not a frontend-only prototype. Sessions are opaque cookies. Passwords are Argon2id. Public pages read published rows. The in-browser development adapter is used only when `VITE_USE_MOCK_API=true`.
+
+- “This week” and “past” use the real clock (`appToday` in `frontend/src/domain/format.ts`). Unit tests pin that clock to 24 October 2026.
+- Calendar files for confirmed dates are still built in the browser.
 - Two prototype colours were darkened in `frontend/src/styles/app.css` (the muted statement clause and the TBC chip) so they meet WCAG AA. Layout, type and the green-and-white identity are unchanged.
+- Render deploys `main`. `dev` can be ahead of `main`. Free Render may not run migrations. See `docs/deployment.md`.
