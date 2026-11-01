@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { AuditRepository } from '../../src/modules/auth/audit.repository.js';
 import type { Actor } from '../../src/modules/curriculum/actor.js';
+import { readImage } from '../../src/modules/gallery/image-bytes.js';
 import { MemoryStorage } from '../../src/modules/storage/memory-storage.js';
 import type { ProjectRepository } from '../../src/modules/projects/project.repository.js';
 import type { TraineeRepository } from '../../src/modules/trainees/trainee.repository.js';
@@ -86,6 +87,23 @@ describe('work photo service', () => {
       'curriculum.work_photo.unpublished',
       'curriculum.work_photo.deleted',
     ]);
+  });
+
+  it('stores a JPEG without the EXIF GPS text', async () => {
+    const { service, storage } = fixture();
+    const app1 = Buffer.concat([
+      Buffer.from([0xff, 0xe1, 0x00, 0x12]),
+      Buffer.from('EXIF\0GPSLatitude', 'ascii'),
+    ]);
+    const sof = Buffer.from([0xff, 0xc0, 0x00, 0x0b, 0x08, 0x00, 0x01, 0x00, 0x01, 0x01, 0x01, 0x11, 0x00]);
+    const jpeg = Buffer.concat([Buffer.from([0xff, 0xd8]), app1, sof, Buffer.from([0xff, 0xd9])]);
+    await service.createUpload(
+      { traineeId: '1', projectId: '', alt: 'A desk in the lab.', caption: '', bytes: jpeg },
+      ACTOR,
+    );
+    const stored = [...storage.objects.values()][0];
+    expect(stored?.toString('ascii')).not.toContain('GPSLatitude');
+    expect(readImage(stored ?? Buffer.alloc(0))?.mime).toBe('image/jpeg');
   });
 
   it('refuses a file that is not an image, a photo that is too large, and the wrong project', async () => {

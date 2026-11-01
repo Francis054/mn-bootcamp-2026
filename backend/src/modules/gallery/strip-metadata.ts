@@ -1,3 +1,5 @@
+import { readImage } from './image-bytes.js';
+
 const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
 /**
@@ -10,6 +12,12 @@ export function stripImageMetadata(bytes: Buffer): Buffer {
   if (bytes.length >= 8 && bytes.subarray(0, 8).equals(PNG_SIGNATURE)) return stripPng(bytes);
   if (isWebp(bytes)) return stripWebp(bytes);
   return bytes;
+}
+
+/** Bytes to store. If stripping would make the file unreadable, the original is kept. */
+export function preparedImageBytes(bytes: Buffer): Buffer {
+  const stripped = stripImageMetadata(bytes);
+  return readImage(stripped) ? stripped : bytes;
 }
 
 function isJpeg(bytes: Buffer): boolean {
