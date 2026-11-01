@@ -154,6 +154,38 @@ describe('admin access by role', () => {
     }
   });
 
+  it('lets a trainee change their own password without opening the admin router', async () => {
+    const app = appFor(useContainer());
+    const trainee = await signIn(app, emailFor('trainee'));
+    await request(app)
+      .post('/api/v1/admin/account/password')
+      .set('Cookie', trainee.cookie)
+      .set('X-CSRF-Token', trainee.csrf)
+      .send({ current: PASSWORD, next: 'Correct-horse-2', confirm: 'Correct-horse-2' })
+      .expect(403);
+    const wrong = await request(app)
+      .post('/api/v1/account/password')
+      .set('Cookie', trainee.cookie)
+      .set('X-CSRF-Token', trainee.csrf)
+      .send({ current: 'Wrong-password-1', next: 'Correct-horse-2', confirm: 'Correct-horse-2' })
+      .expect(422);
+    expect(field(wrong.body, 'current')).toBe('The current password is not correct.');
+    const changed = await request(app)
+      .post('/api/v1/account/password')
+      .set('Cookie', trainee.cookie)
+      .set('X-CSRF-Token', trainee.csrf)
+      .send({ current: PASSWORD, next: 'Correct-horse-2', confirm: 'Correct-horse-2' })
+      .expect(200);
+    expect(readRecord(changed.body).changed).toBe(true);
+    const again = await signIn(app, emailFor('trainee'), 'Correct-horse-2');
+    await request(app)
+      .post('/api/v1/account/password')
+      .set('Cookie', again.cookie)
+      .set('X-CSRF-Token', again.csrf)
+      .send({ current: 'Correct-horse-2', next: PASSWORD, confirm: PASSWORD })
+      .expect(200);
+  });
+
   it('lets an editor and an administrator upload media and refuses everyone else', async () => {
     const app = appFor(useContainer());
     await request(app).post('/api/v1/admin/media').send({ alt: ALT }).expect(401);
@@ -320,10 +352,10 @@ interface Layer {
   route?: { path: string; methods: Record<string, boolean> };
 }
 
-async function signIn(app: ReturnType<typeof appFor>, email: string) {
+async function signIn(app: ReturnType<typeof appFor>, email: string, password = PASSWORD) {
   const response = await request(app)
     .post('/api/v1/auth/login')
-    .send({ email, password: PASSWORD })
+    .send({ email, password })
     .expect(200);
   const cookies = cookiesFrom(response);
   const session = cookies.mn_session;

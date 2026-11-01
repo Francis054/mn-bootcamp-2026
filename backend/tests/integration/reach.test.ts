@@ -31,6 +31,12 @@ describe('directory, profile PDF, contact, and CV requests', () => {
       displayName: 'Reach Editor',
     });
     await container.users.createUser({
+      email: 'viewer.reach@example.test',
+      password: PASSWORD,
+      role: 'viewer',
+      displayName: 'Reach Viewer',
+    });
+    await container.users.createUser({
       email: 'reach.trainee@example.test',
       password: PASSWORD,
       role: 'trainee',
@@ -150,6 +156,13 @@ describe('directory, profile PDF, contact, and CV requests', () => {
     const note = mail.sent.find((item) => item.to === SECRET_EMAIL);
     expect(note?.replyTo).toBe('employer@example.test');
     expect(note?.text).not.toContain(SECRET_EMAIL);
+
+    const viewer = await signIn(app, 'viewer.reach@example.test');
+    await request(app)
+      .get('/api/v1/admin/contact-requests')
+      .set('Cookie', viewer.cookie)
+      .expect(403);
+    await request(app).get('/api/v1/admin/cv-requests').set('Cookie', viewer.cookie).expect(403);
 
     const inbox = await request(app)
       .get('/api/v1/admin/contact-requests')
