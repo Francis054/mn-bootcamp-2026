@@ -1,5 +1,5 @@
-/** Same sentence for a known mailbox and an unknown one. */
-export const TOO_MANY_REQUESTS = 'Too many requests. Wait a minute and try again.';
+/** Same sentence for a known mailbox and an unknown one. It does not name a duration. */
+export const TOO_MANY_REQUESTS = 'Too many requests. Wait and try again.';
 
 export interface ThrottleState {
   failureCount: number;
@@ -13,7 +13,7 @@ export function isThrottleLocked(state: ThrottleState | null, now: Date): boolea
 
 /**
  * Count one more failure. The `limit`-th failure locks the subject and
- * resets the counter, matching the development adapter's one-minute lock.
+ * resets the counter. The default window is 15 minutes. The development adapter uses the same window.
  */
 export function nextFailure(
   state: ThrottleState | null,

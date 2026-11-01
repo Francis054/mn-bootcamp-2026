@@ -12,6 +12,9 @@ export type NodeEnv = 'development' | 'test' | 'production';
 
 export type LogLevel = 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'silent';
 
+/** Mailbox and address lock when `LOGIN_LOCK_MS` is empty. Fifteen minutes. */
+export const DEFAULT_LOGIN_LOCK_MS = 15 * 60_000;
+
 /**
  * Values the process is allowed to see. Session secret is optional until
  * production, where boot refuses to start without it. Nothing in this object
@@ -138,7 +141,12 @@ export function loadEnv(
     'LOGIN_FAILURE_LIMIT',
     problems,
   );
-  const loginLockMs = readPositiveInt(source.LOGIN_LOCK_MS, 60_000, 'LOGIN_LOCK_MS', problems);
+  const loginLockMs = readPositiveInt(
+    source.LOGIN_LOCK_MS,
+    DEFAULT_LOGIN_LOCK_MS,
+    'LOGIN_LOCK_MS',
+    problems,
+  );
   const loginIpFailureLimit = readPositiveInt(
     source.LOGIN_IP_FAILURE_LIMIT,
     30,

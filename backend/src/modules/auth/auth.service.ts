@@ -10,7 +10,7 @@ import type { SessionService } from './session.service.js';
 import { newSecretToken } from './tokens.js';
 
 export const BAD_LOGIN = 'The email or password is not correct.';
-export const LOCKED_LOGIN = 'Too many sign-in attempts. Wait a minute and try again.';
+export const LOCKED_LOGIN = 'Too many sign-in attempts. Wait and try again.';
 
 export interface LoginSuccess {
   user: PublicUser;
