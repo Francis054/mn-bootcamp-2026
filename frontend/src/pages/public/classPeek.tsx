@@ -1,4 +1,4 @@
-import { useEffect, useRef, type MouseEvent as ReactMouseEvent } from 'react';
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 
 /** Hide the floating preview for touch, coarse pointers, and reduced motion. */
@@ -38,6 +38,7 @@ export function useClassPeek(photos: readonly PeekPhoto[]) {
   const point = useRef<{ x: number; y: number; index: number } | null>(null);
   const shownSrc = useRef('');
   const photosRef = useRef(photos);
+  const [mounted, setMounted] = useState(false);
   photosRef.current = photos;
 
   useEffect(() => {
@@ -51,6 +52,10 @@ export function useClassPeek(photos: readonly PeekPhoto[]) {
     const next = point.current;
     const node = nodeRef.current;
     const image = imageRef.current;
+    if (next && (!node || !image)) {
+      frame.current = window.requestAnimationFrame(paint);
+      return;
+    }
     if (!next || !node || !image || !peekTracksPointer()) {
       node?.classList.remove('is-on');
       return;
@@ -70,6 +75,7 @@ export function useClassPeek(photos: readonly PeekPhoto[]) {
 
   const movePeek = (index: number) => (event: ReactMouseEvent) => {
     if (!peekTracksPointer()) return;
+    if (!mounted) setMounted(true);
     point.current = { x: event.clientX, y: event.clientY, index };
     if (frame.current) return;
     frame.current = window.requestAnimationFrame(paint);
@@ -82,7 +88,7 @@ export function useClassPeek(photos: readonly PeekPhoto[]) {
 
   const first = photos[0];
   const preview =
-    typeof document === 'undefined'
+    !mounted || typeof document === 'undefined'
       ? null
       : createPortal(
           <div className="row-peek" ref={nodeRef} aria-hidden="true">

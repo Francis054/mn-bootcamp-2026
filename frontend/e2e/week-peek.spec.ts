@@ -46,10 +46,17 @@ test('a narrow screen keeps the week rows and hides the preview', async ({ page 
   await page.locator('#classes-title').scrollIntoViewIfNeeded();
   await expect.poll(() => page.evaluate(() => getComputedStyle(document.querySelector('main')!).transform)).toBe('none');
   await expect(page.locator('.row-link').first()).toBeVisible();
-  const metrics = await page.evaluate(() => ({
-    peek: getComputedStyle(document.querySelector('.row-peek')!).display,
-    overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-  }));
+  const row = page.locator('.row-link').first();
+  const box = await row.boundingBox();
+  expect(box).not.toBeNull();
+  await page.mouse.move(box!.x + 20, box!.y + 12);
+  const metrics = await page.evaluate(() => {
+    const peek = document.querySelector('.row-peek');
+    return {
+      peek: peek ? getComputedStyle(peek).display : 'none',
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    };
+  });
   expect(metrics.peek).toBe('none');
   expect(metrics.overflow).toBeLessThanOrEqual(1);
 });
@@ -62,10 +69,13 @@ test.describe('reduced motion', () => {
     await page.goto('/');
     await bootDone(page);
     await page.locator('#classes-title').scrollIntoViewIfNeeded();
-    await expect.poll(() => page.evaluate(() => ({
-      transform: getComputedStyle(document.querySelector('main')!).transform,
-      peek: getComputedStyle(document.querySelector('.row-peek')!).display,
-      entered: document.body.classList.contains('page-enter'),
-    }))).toEqual({ transform: 'none', peek: 'none', entered: false });
+    await expect.poll(() => page.evaluate(() => {
+      const peek = document.querySelector('.row-peek');
+      return {
+        transform: getComputedStyle(document.querySelector('main')!).transform,
+        peek: peek ? getComputedStyle(peek).display : 'none',
+        entered: document.body.classList.contains('page-enter'),
+      };
+    })).toEqual({ transform: 'none', peek: 'none', entered: false });
   });
 });
