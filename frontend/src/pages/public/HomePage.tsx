@@ -11,9 +11,7 @@ import { usesMockApi } from '@/config/runtime';
 import { currentWeek, formatDate, parseUtcDate } from '@/domain/format';
 import { outlineLines, weeksOf } from '@/domain/timetable';
 import { usePublicContent } from '@/hooks/useContent';
-import { useSiteImage } from '@/hooks/useSiteImages';
 import { useTimetable } from '@/hooks/useTimetable';
-import { useClassPeek } from './classPeek';
 import { moduleOf, PublicGate, SampleMark, TraineeArt } from './helpers';
 
 export function HomePage() {
@@ -31,13 +29,6 @@ export function HomePage() {
   const endsOn = timetable.data?.programme?.endsOn ?? '2026-12-25';
   const featureProject = projects[0];
   const sideProjects = [projects[2], projects[5]].filter((item) => item !== undefined);
-  const peekPhotos = [
-    useSiteImage('home-class-peek-1'),
-    useSiteImage('home-class-peek-2'),
-    useSiteImage('home-class-peek-3'),
-    useSiteImage('home-class-peek-4'),
-  ];
-  const { movePeek, hidePeek, preview } = useClassPeek(peekPhotos);
   return (
     <PublicGate loading={content.loading} error={content.error} errorTitle="The published site could not be loaded">
     {homepage ? <>
@@ -139,8 +130,8 @@ export function HomePage() {
           </div>
           <div className="rows">
             {featuredWeeks.length ? null : <EmptyState icon="calendar" title="The timetable is not loaded yet" text="Week titles appear here from the published schedule." />}
-            {featuredWeeks.map((item, index) => (
-              <Link className="row-link" key={item.id} to={`/schedule?week=${item.number}`} onMouseEnter={movePeek(index)} onMouseMove={movePeek(index)} onMouseLeave={hidePeek}>
+            {featuredWeeks.map((item) => (
+              <Link className="row-link" key={item.id} to={`/schedule?week=${item.number}`}>
                 <span className="wk">Week<b>{String(item.number).padStart(2, '0')}</b></span>
                 <div><h3>{item.title}</h3><p className="muted">{outlineLines(item.cybersecurity)[0]}</p></div>
                 <span className="row-mod tag">{item.deliverables[0]?.title ?? 'Weekly deliverable'}</span>
@@ -264,7 +255,6 @@ export function HomePage() {
           </Reveal>
         </div>
       </section>
-      {preview}
     </> : (
       <section className="section"><div className="container"><h1>The homepage is not published yet.</h1><p>Published homepage copy will appear here.</p></div></section>
     )}

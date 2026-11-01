@@ -52,6 +52,8 @@ describe('bootcamp gear campaign', () => {
     }
     expect(text).not.toMatch(/A fedora for the cohort/i);
     expect(text).not.toMatch(/The 2026 white hat/i);
+    expect(text).not.toMatch(/fig\. 01/i);
+    expect(text).not.toMatch(/cohort mark/i);
 
     for (const name of ['THE WHITE HAT. THE RIGHT MINDSET.', 'LEARN', 'INNOVATE', 'CONNECT', 'EXPLORE', 'DIFFERENT BACKGROUNDS. ONE MISSION.', "THE JOURNEY DOESN'T END HERE."]) {
       expect(screen.getByRole('heading', { level: 3, name })).toBeInTheDocument();
