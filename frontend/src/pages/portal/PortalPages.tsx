@@ -501,6 +501,7 @@ export function PortalHomePage() {
           <h1>Hello, {name}.</h1>
           <p className="muted">Your email is {verified ? 'confirmed' : 'not confirmed yet'}.{me?.traineeId ? ` Roster id ${me.traineeId}.` : ''}</p>
           <ProfileEditor />
+          <PasswordCard />
           <PortfolioEditor />
           <ProgressEditor />
           <CvEditor />
@@ -517,6 +518,56 @@ const STATUS_LABEL: Record<PortalProfile['status'], string> = {
   approved: 'Approved',
   rejected: 'Rejected',
 };
+
+function PasswordCard() {
+  const [current, setCurrent] = useState('');
+  const [next, setNext] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [notice, setNotice] = useState('');
+  const [error, setError] = useState('');
+  const [pending, setPending] = useState(false);
+  const save = async (event: FormEvent) => {
+    event.preventDefault();
+    setNotice('');
+    setError('');
+    setPending(true);
+    try {
+      const result = await api<{ message: string }>({
+        method: 'POST',
+        path: '/account/password',
+        body: { current, next, confirm },
+      });
+      setNotice(result.message);
+      setCurrent('');
+      setNext('');
+      setConfirm('');
+    } catch (caught) {
+      setError(isApiError(caught) ? caught.message : 'The password could not be changed.');
+    } finally {
+      setPending(false);
+    }
+  };
+  return (
+    <section className="portal-card" aria-labelledby="password-title">
+      <h2 id="password-title">Password</h2>
+      <p className="muted">Use at least 12 characters, with a letter and a number.</p>
+      {notice ? <p role="status">{notice}</p> : null}
+      {error ? <p role="alert">{error}</p> : null}
+      <form className="portal-form" onSubmit={(event) => void save(event)}>
+        <Field id="password-current" label="Current password">
+          <input className="input" id="password-current" type="password" autoComplete="current-password" value={current} onChange={(event) => setCurrent(event.target.value)} />
+        </Field>
+        <Field id="password-next" label="New password">
+          <input className="input" id="password-next" type="password" autoComplete="new-password" value={next} onChange={(event) => setNext(event.target.value)} />
+        </Field>
+        <Field id="password-confirm" label="Confirm new password">
+          <input className="input" id="password-confirm" type="password" autoComplete="new-password" value={confirm} onChange={(event) => setConfirm(event.target.value)} />
+        </Field>
+        <button className="btn btn--dark" type="submit" disabled={pending}>Change password</button>
+      </form>
+    </section>
+  );
+}
 
 function ProfileEditor() {
   const [profile, setProfile] = useState<PortalProfile | null>(null);

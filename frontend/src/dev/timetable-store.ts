@@ -1,4 +1,4 @@
-import { APP_TODAY } from '@/domain/format';
+import { appToday } from '@/domain/format';
 import {
   SESSION_TYPES,
   TRAINER_STATUSES,
@@ -89,7 +89,7 @@ function dayName(iso: string): string {
 }
 
 function devToday(): string {
-  return APP_TODAY.toISOString().slice(0, 10);
+  return appToday().toISOString().slice(0, 10);
 }
 
 function currentWeekNumber(weeks: MutableWeek[], today: string): number {
@@ -392,7 +392,17 @@ export async function timetableRoute(
   body: Record<string, unknown>,
 ): Promise<unknown> {
   const store = await ensure();
-  if (method === 'GET' && path === '/public/timetable') return publicBody(store);
+  if (method === 'GET' && path === '/public/timetable') {
+    const body = publicBody(store);
+    if (query.outline !== '1') return body;
+    return {
+      ...body,
+      blocks: body.blocks.map((block) => ({
+        ...block,
+        weeks: block.weeks.map((week) => ({ ...week, sessions: [] })),
+      })),
+    };
+  }
   if (method === 'GET' && path === '/public/blocks') return publicBody(store).blocks;
   if (method === 'GET' && path === '/public/weeks') return publicBody(store).blocks.flatMap((block) => block.weeks);
   if (method === 'GET' && path.startsWith('/public/weeks/')) {

@@ -42,7 +42,7 @@ Roles and permissions. The same map is in `backend/src/modules/auth/permissions.
 | Role | Permissions |
 | --- | --- |
 | Trainee | `portal.access`, `portal.write`, `account.manage` |
-| Trainer | `account.manage` |
+| Trainer | `account.manage`, `progress.read` |
 | Viewer | `content.read`, `account.manage` |
 | Editor | viewer, plus `content.write`, `media.upload`, `media.write` |
 | Administrator | editor, plus `users.read`, `users.manage`, `settings.manage` |

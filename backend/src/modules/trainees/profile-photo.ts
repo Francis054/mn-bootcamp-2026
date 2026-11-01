@@ -1,7 +1,7 @@
 import { ApiError } from '../../shared/errors/api-error.js';
 import { readImage } from '../gallery/image-bytes.js';
+import { preparedImageBytes } from '../gallery/strip-metadata.js';
 import { sniffVideo } from '../portfolio/video-bytes.js';
-import { stripImageMetadata } from '../gallery/strip-metadata.js';
 import { imageSizeMessage } from '../gallery/media.rules.js';
 import { MemoryStorage } from '../storage/memory-storage.js';
 import type { StorageProvider } from '../storage/storage-provider.js';
@@ -34,9 +34,8 @@ export async function storeProfilePhoto(
       photoUrl: 'Use a JPEG, PNG, or WebP image.',
     });
   }
-  const stripped = stripImageMetadata(bytes);
-  const checked = readImage(stripped);
-  const payload = checked ? stripped : bytes;
+  const payload = preparedImageBytes(bytes);
+  const checked = readImage(payload);
   const mime = checked?.mime ?? image.mime;
   try {
     const stored = await storage.put({ bytes: payload, mime });
