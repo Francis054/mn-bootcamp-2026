@@ -5,6 +5,7 @@ import type { Actor } from '../curriculum/actor.js';
 import { isoTimestamp } from '../curriculum/actor.js';
 import { isPublicRecord } from '../curriculum/publication.js';
 import { readImage } from '../gallery/image-bytes.js';
+import { preparedImageBytes } from '../gallery/strip-metadata.js';
 import type { ProjectRepository } from '../projects/project.repository.js';
 import { isMemoryStorage } from '../storage/memory-storage.js';
 import type { StorageProvider } from '../storage/storage-provider.js';
@@ -83,8 +84,10 @@ export class WorkPhotoService {
     if (projectId !== '') await this.assertProject(projectId, traineeId);
 
     let stored: { key: string; publicUrl: string };
+    const payload = preparedImageBytes(input.bytes);
+    const storedImage = readImage(payload) ?? image;
     try {
-      stored = await this.storage.put({ bytes: input.bytes, mime: image.mime });
+      stored = await this.storage.put({ bytes: payload, mime: storedImage.mime });
     } catch (error) {
       throw storageFailure(error);
     }
@@ -96,8 +99,8 @@ export class WorkPhotoService {
         traineeId,
         projectId: projectId === '' ? null : projectId,
         src: stored.publicUrl,
-        width: image.width,
-        height: image.height,
+        width: storedImage.width,
+        height: storedImage.height,
         alt,
         caption: input.caption.trim() || alt,
         publicationStatus: 'draft',

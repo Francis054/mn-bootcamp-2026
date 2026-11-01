@@ -23,7 +23,9 @@ describe('community badge', () => {
         <Lockup />
       </MemoryRouter>,
     );
-    const link = screen.getByRole('link', { name: /2026 cybersecurity bootcamp/i });
+    const link = screen.getByRole('link', { name: /cybersecurity/i });
+    expect(link).toHaveAccessibleName(/Cybersecurity/);
+    expect(link).toHaveAccessibleName(/Bootcamp · 2026/);
     expect(link.querySelector('img[src="/assets/logo/community-badge.webp"]')).not.toBeNull();
     expect(link.querySelector('.hood-mark')).toBeNull();
     expect(link.querySelector('img[src="/assets/logo/maxim-nyansa-foundation-logo.png"]')).not.toBeNull();
