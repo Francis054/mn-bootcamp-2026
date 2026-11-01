@@ -12,6 +12,7 @@ import {
 import { ApiError } from '../../shared/errors/api-error.js';
 import type { StorageProvider } from '../storage/storage-provider.js';
 import { readImage } from './image-bytes.js';
+import { preparedImageBytes } from './strip-metadata.js';
 import type { MediaCreateDto, MediaPatchDto, MediaPublishDto } from './media.dto.js';
 import type { MediaConsent, MediaEntity } from './media.entity.js';
 import type { MediaRepository } from './media.repository.js';
@@ -108,9 +109,11 @@ export class MediaService {
       throw new ApiError('validation', 'Check the highlighted fields.', problems);
     }
     const alt = input.alt.trim();
+    const payload = preparedImageBytes(input.bytes);
+    const storedImage = readImage(payload) ?? image;
     let stored: { key: string; publicUrl: string };
     try {
-      stored = await this.storage.put({ bytes: input.bytes, mime: image.mime });
+      stored = await this.storage.put({ bytes: payload, mime: storedImage.mime });
     } catch (error) {
       throw storageFailure(error);
     }
@@ -118,8 +121,8 @@ export class MediaService {
       id: randomUUID(),
       file: 'upload',
       src: stored.publicUrl,
-      width: image.width,
-      height: image.height,
+      width: storedImage.width,
+      height: storedImage.height,
       caption: input.caption.trim() || alt,
       alt,
       album: albumOr(input.album, 'community'),
