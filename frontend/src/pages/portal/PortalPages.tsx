@@ -19,9 +19,17 @@ import { CvEditor } from '@/pages/portal/CvEditor';
 import { PortfolioEditor } from '@/pages/portal/PortfolioEditor';
 import { ProgressEditor } from '@/pages/portal/ProgressEditor';
 
-const ACCEPTED = 'If this email is on the cohort list, we sent a link. If you do not see it, request another from the verification page.';
-
 const verifyJobs = new Map<string, Promise<{ verified: boolean; message: string }>>();
+
+function AccountNotice({ title, text }: { title: string; text: string }) {
+  return (
+    <div className="account-wait" role="status">
+      <p className="eyebrow">Trainee account</p>
+      <h2>{title}</h2>
+      <p>{text}</p>
+    </div>
+  );
+}
 
 function verifyOnce(token: string): Promise<{ verified: boolean; message: string }> {
   const existing = verifyJobs.get(token);
@@ -67,12 +75,10 @@ function AuthSplit({ title, children, art }: { title: string; children: ReactNod
 }
 
 export function SignupPage() {
-  const mock = usesMockApi();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState('');
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState('');
-  const [devLink, setDevLink] = useState<string | null>(null);
   usePageMeta('Create a trainee account');
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -94,7 +100,7 @@ export function SignupPage() {
     if (Object.keys(fieldErrors).length) return;
     setPending(true);
     try {
-      const result = await api<{ message: string; developmentVerifyPath?: string | null }>({
+      const result = await api<{ message: string }>({
         method: 'POST',
         path: '/public/trainee-signup',
         body: {
@@ -107,7 +113,6 @@ export function SignupPage() {
         },
       });
       setDone(result.message);
-      setDevLink(mock ? result.developmentVerifyPath ?? null : null);
     } catch (error) {
       setFormError(isApiError(error) ? error.message : 'The account could not be requested.');
       if (isApiError(error) && error.fieldErrors) setErrors(error.fieldErrors);
@@ -116,17 +121,15 @@ export function SignupPage() {
     }
   };
   return (
-    <AuthSplit title="Create your account" art="Your cohort login, after you confirm the email.">
+    <AuthSplit title="Create your account" art="An administrator approves the account. Then you can sign in.">
       {done ? (
         <div>
-          <p role="status">{done}</p>
-          {devLink ? <p style={{ marginTop: 12 }}><Link to={devLink}>Open the development confirmation link</Link></p> : null}
-          <p style={{ marginTop: 16 }}><Link to="/verify-email">Request another link</Link></p>
-          <p style={{ marginTop: 8 }}><Link to="/login">Trainee sign in</Link></p>
+          <AccountNotice title="Registration received" text={done} />
+          <p style={{ marginTop: 16 }}><Link className="btn btn--dark" to="/login">Trainee sign in</Link></p>
         </div>
       ) : (
         <form onSubmit={(event) => void submit(event)} noValidate>
-          <p className="muted" style={{ marginBottom: 16 }}>Use the email the bootcamp already has for you. If it is not on the cohort list, an administrator reviews the request. The reply is the same either way.</p>
+          <p className="muted" style={{ marginBottom: 16 }}>Use the email the bootcamp already has for you. An administrator approves the account before you can sign in. The reply is the same either way.</p>
           <ErrorSummary errors={formError ? { form: formError, ...errors } : errors} />
           <Field id="displayName" label="Name" error={errors.displayName} hint="Optional. You can leave this blank.">
             <input className="input" id="displayName" name="displayName" autoComplete="name" aria-invalid={Boolean(errors.displayName)} />
@@ -152,7 +155,7 @@ export function SignupPage() {
             {pending ? <Loader variant="inline" label="Sending" /> : null}
             Create account <span className="arrow"><Icon name="arrow-right" className="i--sm" /></span>
           </button>
-          <p style={{ marginTop: 8 }}><Link to="/login">Already confirmed? Trainee sign in</Link></p>
+          <p style={{ marginTop: 8 }}><Link to="/login">Already approved? Trainee sign in</Link></p>
         </form>
       )}
     </AuthSplit>
@@ -164,10 +167,7 @@ export function VerifyEmailPage() {
   const token = params.get('token') ?? '';
   const [state, setState] = useState<'idle' | 'loading' | 'done' | 'expired'>('idle');
   const [message, setMessage] = useState('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [pending, setPending] = useState(false);
-  const [resent, setResent] = useState('');
-  usePageMeta('Confirm email');
+  usePageMeta('Trainee account');
   useEffect(() => {
     if (!token) return;
     let cancel = false;
@@ -187,37 +187,9 @@ export function VerifyEmailPage() {
       cancel = true;
     };
   }, [token]);
-  const resend = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const email = String(new FormData(event.currentTarget).get('email') ?? '');
-    const fieldErrors = collect({ email: emailAddress(email) });
-    setErrors(fieldErrors);
-    if (Object.keys(fieldErrors).length) return;
-    setPending(true);
-    try {
-      const result = await api<{ message: string }>({ method: 'POST', path: '/public/trainee-signup/resend', body: { email } });
-      setResent(result.message || ACCEPTED);
-    } catch (error) {
-      setResent(isApiError(error) ? error.message : 'The link could not be requested.');
-    } finally {
-      setPending(false);
-    }
-  };
-  const form = (
-    <form onSubmit={(event) => void resend(event)} noValidate>
-      <Field id="email" label="Email" error={errors.email}>
-        <input className="input" id="email" name="email" type="email" autoComplete="username" aria-invalid={Boolean(errors.email)} required />
-      </Field>
-      <button className={`btn btn--dark${pending ? ' is-loading' : ''}`} type="submit" disabled={pending} aria-busy={pending || undefined}>
-        {pending ? <Loader variant="inline" label="Sending" /> : null}
-        Request another link
-      </button>
-      {resent ? <p role="status" style={{ marginTop: 12 }}>{resent}</p> : null}
-    </form>
-  );
   return (
-    <AuthSplit title="Confirm your email" art="The link works once. Ask for another if it has expired.">
-      {token && state === 'loading' ? <p role="status"><Loader variant="inline" label="Checking the link" /> Checking the confirmation link.</p> : null}
+    <AuthSplit title="Trainee account" art="An administrator approves the account. Then you can sign in.">
+      {token && state === 'loading' ? <p role="status"><Loader variant="inline" label="Checking the link" /> Checking the link.</p> : null}
       {state === 'done' ? (
         <div>
           <p role="status">{message}</p>
@@ -226,15 +198,14 @@ export function VerifyEmailPage() {
       ) : null}
       {state === 'expired' ? (
         <div>
-          <p role="alert">{message}</p>
-          <p className="muted">Request another link. The reply does not say whether the email is on the cohort list.</p>
-          {form}
+          <AccountNotice title="Waiting for approval" text="This link is missing, used, or expired. Your account becomes active once an administrator approves it. You can sign in after that." />
+          <p style={{ marginTop: 16 }}><Link className="btn btn--dark" to="/login">Trainee sign in</Link></p>
         </div>
       ) : null}
       {!token ? (
         <div>
-          <p className="muted">Paste is not required. Open the link in the email, or request another one here.</p>
-          {form}
+          <AccountNotice title="Waiting for approval" text="Your registration was received. The account is waiting for an administrator to approve it. You can sign in once it is approved." />
+          <p style={{ marginTop: 16 }}><Link className="btn btn--dark" to="/login">Trainee sign in</Link></p>
         </div>
       ) : null}
     </AuthSplit>
@@ -249,7 +220,7 @@ export function TraineeLoginPage() {
   const [formError, setFormError] = useState('');
   const [pending, setPending] = useState(false);
   const [show, setShow] = useState(false);
-  const unverified = formError.toLowerCase().includes('confirm your email');
+  const [notice, setNotice] = useState<{ title: string; text: string } | null>(null);
   usePageMeta('Trainee sign in');
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -264,6 +235,7 @@ export function TraineeLoginPage() {
     });
     setErrors(fieldErrors);
     setFormError('');
+    setNotice(null);
     if (Object.keys(fieldErrors).length) return;
     setPending(true);
     try {
@@ -284,14 +256,23 @@ export function TraineeLoginPage() {
       }
       navigate('/admin');
     } catch (error) {
-      setFormError(isApiError(error) ? error.message : 'Sign-in failed.');
-      if (isApiError(error) && error.fieldErrors) setErrors(error.fieldErrors);
+      if (isApiError(error) && error.code === 'TRAINEE_PENDING_APPROVAL') {
+        setNotice({ title: 'Waiting for approval', text: error.message });
+      } else if (isApiError(error) && error.code === 'TRAINEE_REGISTRATION_REJECTED') {
+        setNotice({ title: 'Registration was not approved', text: error.message });
+      } else if (isApiError(error) && error.code === 'TRAINEE_ACCOUNT_DEACTIVATED') {
+        setNotice({ title: 'Account deactivated', text: error.message });
+      } else {
+        setFormError(isApiError(error) ? error.message : 'Sign-in failed.');
+        if (isApiError(error) && error.fieldErrors) setErrors(error.fieldErrors);
+      }
     } finally {
       setPending(false);
     }
   };
   return (
-    <AuthSplit title="Trainee sign in" art="Confirm the email, then sign in to the portal.">
+    <AuthSplit title="Trainee sign in" art="Sign in after an administrator approves the account.">
+      {notice ? <AccountNotice title={notice.title} text={notice.text} /> : null}
       <form onSubmit={(event) => void submit(event)} noValidate>
         <ErrorSummary errors={formError ? { form: formError, ...errors } : errors} />
         <Field id="email" label="Email" error={errors.email}>
@@ -309,7 +290,6 @@ export function TraineeLoginPage() {
           {pending ? <Loader variant="inline" label="Signing in" /> : null}
           Sign in <span className="arrow"><Icon name="arrow-right" className="i--sm" /></span>
         </button>
-        {unverified ? <p style={{ marginTop: 12 }}><Link to="/verify-email">Request another confirmation link</Link></p> : null}
         <p style={{ marginTop: 12 }}><Link to="/forgot-password">Forgot password?</Link></p>
         <p style={{ marginTop: 8 }}><Link to="/signup">Sign up</Link></p>
       </form>
@@ -499,7 +479,7 @@ export function PortalHomePage() {
         <>
           <p className="eyebrow">Signed in</p>
           <h1>Hello, {name}.</h1>
-          <p className="muted">Your email is {verified ? 'confirmed' : 'not confirmed yet'}.{me?.traineeId ? ` Roster id ${me.traineeId}.` : ''}</p>
+          <p className="muted">{verified ? 'Your account is active.' : 'Waiting for an administrator to approve this account.'}{me?.traineeId ? ` Roster id ${me.traineeId}.` : ''}</p>
           <ProfileEditor />
           <PasswordCard />
           <PortfolioEditor />

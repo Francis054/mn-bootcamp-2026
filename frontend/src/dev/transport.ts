@@ -11,7 +11,14 @@ import { MODULES, mediaSrc } from './fixtures';
 import { SITE_IMAGE_SLOTS, isSiteImageKey, siteImageAltError, siteImageTaglineError, slotDefaults, slotTagline, toPublicSiteImage } from '@/domain/siteImages';
 import { readWorkPhotoDataUrl, workPhotoFieldErrors, workPhotoFileError } from '@/domain/workPhoto';
 import { clearSession, markSessionExpired, readActiveSession, setSession } from './session';
-import { resetTraineeAuthDev, traineeAuthRoute } from './trainee-auth';
+import {
+  ACCOUNT_DEACTIVATED_MESSAGE,
+  PENDING_APPROVAL_MESSAGE,
+  REGISTRATION_REJECTED_MESSAGE,
+  resetTraineeAuthDev,
+  traineeAuthRoute,
+  traineeSignInGate,
+} from './trainee-auth';
 import { portalProfileRoute, resetPortalProfileDev } from './portal-profile';
 import { portfolioRoute, resetPortfolioDev } from './portfolio';
 import { progressRoute, resetProgressDev } from './progress';
@@ -416,6 +423,20 @@ function login(body: Record<string, unknown>) {
   }));
   const locked = failures.get(email);
   if (locked && locked.lockedUntil > Date.now()) fail('rate_limited', 'Too many sign-in attempts. Wait and try again.', 429);
+  const gate = traineeSignInGate(email, password);
+  if (gate.kind === 'deny') {
+    const row = failures.get(email) ?? { count: 0, lockedUntil: 0 };
+    row.count += 1;
+    if (row.count >= 5) {
+      row.lockedUntil = Date.now() + 15 * 60_000;
+      row.count = 0;
+    }
+    failures.set(email, row);
+    fail('unauthenticated', 'The email or password is not correct.', 401);
+  }
+  if (gate.kind === 'pending') fail('TRAINEE_PENDING_APPROVAL', PENDING_APPROVAL_MESSAGE, 403);
+  if (gate.kind === 'rejected') fail('TRAINEE_REGISTRATION_REJECTED', REGISTRATION_REJECTED_MESSAGE, 403);
+  if (gate.kind === 'deactivated') fail('TRAINEE_ACCOUNT_DEACTIVATED', ACCOUNT_DEACTIVATED_MESSAGE, 403);
   const user = getState().users.find((item) => item.email === email);
   if (!user || user.disabled) {
     const row = failures.get(email) ?? { count: 0, lockedUntil: 0 };
@@ -428,7 +449,7 @@ function login(body: Record<string, unknown>) {
     fail('unauthenticated', user ? 'The email or password is not correct.' : 'No development fixture matches that email. Try viewer@example.test, editor@example.test or administrator@example.test.', 401);
   }
   if (user.role === 'trainee' && user.emailVerified === false) {
-    fail('forbidden', 'Confirm your email before you sign in. You can request another link.', 403);
+    fail('unauthenticated', 'The email or password is not correct.', 401);
   }
   failures.delete(email);
   const session = {

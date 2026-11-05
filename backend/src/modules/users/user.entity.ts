@@ -30,7 +30,7 @@ export class UserEntity {
   @Column({ name: 'password_hash', type: 'text' })
   passwordHash!: string;
 
-  /** Null until the person confirms the mailbox. Staff created before signup are backfilled. */
+  /** Null until an administrator approves the trainee. Staff created before signup are backfilled. */
   @Column({ name: 'email_verified_at', type: 'timestamptz', nullable: true })
   emailVerifiedAt!: Date | null;
 

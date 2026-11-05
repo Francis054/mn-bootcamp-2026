@@ -4,6 +4,7 @@ import { ObservedMail } from '../../src/modules/mail/observed-mail.js';
 import { UnconfiguredMail } from '../../src/modules/mail/unconfigured-mail.js';
 import type { EmailProvider, MailResult } from '../../src/modules/mail/email-provider.js';
 import { signupDecision } from '../../src/modules/trainee-auth/signup.rules.js';
+import { settleTraineeMail } from '../../src/modules/trainee-auth/signup.service.js';
 import { captureLogger } from '../support/logger.js';
 
 describe('signup eligibility', () => {
@@ -19,6 +20,19 @@ describe('signup eligibility', () => {
     expect(signupDecision(true, { role: 'editor', verified: false })).toEqual({
       kind: 'already-registered',
     });
+  });
+});
+
+describe('mail that must not block a trainee', () => {
+  it('returns false when sending throws and does not repeat the mailbox', async () => {
+    const captured = captureLogger();
+    const delivered = await settleTraineeMail(() => {
+      throw new Error('network down ada@example.test');
+    }, captured.logger);
+    expect(delivered).toBe(false);
+    const log = captured.lines().join('\n');
+    expect(log).toContain('Mail could not be sent');
+    expect(log).not.toContain('ada@example.test');
   });
 });
 

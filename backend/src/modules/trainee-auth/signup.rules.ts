@@ -7,7 +7,7 @@ import type { Role } from '../users/role.js';
 export const SIGNUP_ACCEPTED = {
   accepted: true,
   message:
-    'If this email is on the cohort list, we sent a link. If you do not see it, request another from the verification page.',
+    'Your registration was received. The account is waiting for an administrator to approve it. You can sign in once it is approved.',
 } as const;
 
 export const SIGNUP_LIMIT = 'Too many requests. Try again later.';
@@ -19,8 +19,16 @@ export const VERIFY_OK = {
 
 export const VERIFY_PROBLEM = 'This confirmation link is missing, used, or expired.';
 
-export const EMAIL_NOT_VERIFIED =
-  'Confirm your email before you sign in. You can request another link.';
+export const PENDING_APPROVAL_MESSAGE =
+  'Your account is waiting for an administrator to approve it. You can sign in once it is approved.';
+
+export const REGISTRATION_REJECTED_MESSAGE =
+  'This registration was not approved. You can submit it again from the sign-up page.';
+
+export const ACCOUNT_DEACTIVATED_MESSAGE =
+  'This trainee account is deactivated. An administrator can enable it.';
+
+export const APPROVED_READY_MESSAGE = 'The account is ready. The trainee can sign in.';
 
 const HOUR_MS = 60 * 60 * 1000;
 
@@ -47,7 +55,7 @@ export type RosterUser = { role: Role; verified: boolean };
 /**
  * What signup does after the password is accepted.
  * A staff mailbox and a verified trainee get the "already registered" mail.
- * An unverified trainee on the roster is replaced. Anyone else waits for an administrator.
+ * Every other registration waits for an administrator. No confirmation email is queued.
  */
 export type SignupDecision =
   | { kind: 'already-registered' }

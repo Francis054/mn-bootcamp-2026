@@ -12,7 +12,7 @@ Every message is written to `email_outbox` first, then sent with Resend. The row
 
 The same process retries a failed row. The waits are 1 minute, 5 minutes, 15 minutes, and 60 minutes, and then it stops after 5 attempts. A free Render web service has no separate worker, so the retry timer runs inside the API process. An administrator can also press Resend on Failed emails. That resets the attempt count. There is no job that deletes old messages.
 
-Public signup, resend, and password-reset replies stay the same whether or not a message was accepted, so the form cannot be used to list cohort emails. The verification page always offers another link. An administrator approving a signup, or resending an invite, gets `delivered: false` and a sentence that says the account exists and the email was not sent.
+Public signup, resend, and password-reset replies stay the same whether or not a message was accepted, so the form cannot be used to list cohort emails. Signup and approval do not queue a confirmation email. A mail failure does not block registration, approval, or sign-in. Password reset, review outcomes, and the other messages are unchanged. An administrator resending mail for an active trainee account gets `delivered: false` and a sentence that says the email was not sent. The trainee can still sign in after approval.
 
 Each message uses one green and white HTML shell and a plain-text copy of the same words. That covers signup confirmation, password reset, review outcomes, the employer contact relay, CV links, and the other messages this API sends.
 
@@ -35,6 +35,6 @@ The free Resend plan allows 100 emails a day and 3,000 a month, and a small numb
 
 ## Signup mode
 
-`TRAINEE_SIGNUP_MODE=roster` is the only supported value. Leave it unset and the process uses `roster`. An email that is already on the `trainees` table can create a login and must confirm it before sign-in. Any other email is stored for an administrator and does not get a login until that request is approved. The public response is the same in both cases.
+`TRAINEE_SIGNUP_MODE=roster` is the only supported value. Leave it unset and the process uses `roster`. Every registration waits for an administrator. No confirmation email is sent. Approval opens the trainee login, including an email that is already on the roster, and sets `email_verified_at` when it is empty. The trainee can sign in after that. The public response is the same whether or not the email is on the roster.
 
 Load the cohort into `trainees` (the existing admin trainee form, or a local import) before inviting people to `/signup`. Run `npm run migration:run` against the hosted database before the new process serves traffic. Do not run `npm run seed` on that database.

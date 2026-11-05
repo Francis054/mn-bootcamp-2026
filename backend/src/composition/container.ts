@@ -228,6 +228,9 @@ export class AppContainer {
       audit,
       { failureLimit: env.loginFailureLimit, lockMs: env.loginLockMs },
     );
+    const pendingRegistrations = new PendingRegistrationRepository(
+      dataSource.getRepository(PendingRegistrationEntity),
+    );
     const auth = new AuthService(
       users,
       sessions,
@@ -241,6 +244,7 @@ export class AppContainer {
         lockMs: env.loginLockMs,
       },
       env.sessionSecret,
+      pendingRegistrations,
     );
     const trackRepository = new TrackRepository(dataSource.getRepository(TrackEntity));
     const moduleRepository = new ModuleRepository(dataSource.getRepository(ModuleEntity));
@@ -341,7 +345,7 @@ export class AppContainer {
       traineeRepository,
       traineeService,
       moduleRepository,
-      new PendingRegistrationRepository(dataSource.getRepository(PendingRegistrationEntity)),
+      pendingRegistrations,
       new AccessTokenRepository(dataSource.getRepository(AccessTokenEntity)),
       throttles,
       audit,
@@ -349,6 +353,7 @@ export class AppContainer {
       accounts,
       env.sessionSecret,
       logger,
+      dataSource,
     );
     const profiles = new PortalProfileService(
       traineeRepository,

@@ -254,6 +254,9 @@ body.admin{background:var(--paper);font-size:15px}
 .login__art h2 em{font-style:normal;color:var(--mn-lime)}
 .pw-wrap{position:relative}
 .pw-wrap .icon-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%)}
+.account-wait{background:#fff;color:var(--forest-900);border:1.5px solid var(--mn-lime);border-left:6px solid var(--mn-lime);border-radius:var(--r-md);padding:18px 18px 16px;max-width:440px}
+.account-wait h2{font-size:22px;letter-spacing:-.03em;margin:4px 0 8px}
+.account-wait p:last-child{margin:0;color:var(--ink-2)}
 
 /* states */
 .state-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}

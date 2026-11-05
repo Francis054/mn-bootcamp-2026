@@ -8,7 +8,7 @@ export const portalPaths = {
       operationId: 'traineeSignup',
       summary: 'Ask for a trainee account',
       description:
-        'Roster mode. The response is the same whether or not the email is on the cohort list. A filled company field is ignored. The password is stored only as an Argon2id hash when an account or a pending request is saved. Rate limit: 3 per hour per email and 5 per hour per address.',
+        'The response is the same whether or not the email is on the cohort list. The registration waits for an administrator. No confirmation email is queued. A filled company field is ignored. The password is stored only as an Argon2id hash. Rate limit: 3 per hour per email and 5 per hour per address.',
       requestBody: {
         required: true,
         content: {
@@ -53,9 +53,9 @@ export const portalPaths = {
   '/api/v1/public/trainee-signup/resend': {
     post: {
       operationId: 'resendTraineeVerification',
-      summary: 'Ask for another confirmation email',
+      summary: 'Repeat the signup acknowledgement',
       description:
-        'The response is the same whether or not the mailbox has an unverified trainee account. Rate limit: 3 per hour per email and 10 per hour per address.',
+        'Does not send a confirmation email. The response is the same whether or not the mailbox is waiting for approval. Rate limit: 3 per hour per email and 10 per hour per address.',
       requestBody: {
         required: true,
         content: {
@@ -119,7 +119,7 @@ export const portalPaths = {
       operationId: 'approvePendingRegistration',
       summary: 'Approve a signup that was not on the roster',
       description:
-        'Creates a hidden trainee when none exists for that email, links a trainee login, and sends a confirmation email. delivered is false when mail was not accepted. The account still exists.',
+        'Creates a hidden trainee when none exists for that email, links a trainee login, and marks that login active in the same transaction. No confirmation email is sent. The trainee can sign in after this succeeds. A mail failure cannot block it.',
       parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
       responses: {
         '200': {
@@ -156,7 +156,7 @@ export const portalPaths = {
   '/api/v1/admin/trainee-accounts': {
     get: {
       operationId: 'listTraineeAccounts',
-      summary: 'Trainee logins with verification and suspend status',
+      summary: 'Trainee logins with approval and suspend status',
       description: 'Requires users.manage.',
       responses: {
         '200': {
@@ -176,7 +176,7 @@ export const portalPaths = {
     post: {
       operationId: 'disableTraineeAccount',
       summary: 'Suspend a trainee login',
-      description: 'Deletes that account’s sessions. Later sign-in uses the same message as a wrong password.',
+      description: 'Deletes that account’s sessions. A later sign-in with the right password returns TRAINEE_ACCOUNT_DEACTIVATED. A wrong password stays the same 401 as an unknown email.',
       parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
       responses: {
         '200': {
