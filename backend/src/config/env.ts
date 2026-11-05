@@ -1,5 +1,6 @@
 import { config as loadDotenv } from 'dotenv';
 import { fileURLToPath } from 'node:url';
+import { parseMailbox } from '../modules/mail/address.js';
 
 export class EnvError extends Error {
   constructor(message: string) {
@@ -59,7 +60,8 @@ export interface AppEnv {
   cvLinkTtlMs: number;
   /** Lifetime of an emailed on-request CV link. One day unless the host sets another value. */
   cvRequestLinkTtlMs: number;
-  resendApiKey?: string;
+  /** MailerSend API token. Absent unless `MAILERSEND_API_TOKEN` is set. Never log it. */
+  mailersendApiToken?: string;
   emailFrom?: string;
   /** Closed signup. Only `roster` is implemented. */
   traineeSignupMode: 'roster';
@@ -210,11 +212,18 @@ export function loadEnv(
     'CV_REQUEST_LINK_TTL_MS',
     problems,
   );
-  const resendApiKey = readOptional(source.RESEND_API_KEY);
-  const emailFrom = readOptional(source.EMAIL_FROM);
-  const resendCount = [resendApiKey, emailFrom].filter((value) => value !== undefined).length;
-  if (resendCount === 1) {
-    problems.push('RESEND_API_KEY and EMAIL_FROM must both be set, or both left blank.');
+  const mailersendApiToken = readOptional(source.MAILERSEND_API_TOKEN);
+  const emailFromRaw = readOptional(source.EMAIL_FROM);
+  const emailFrom =
+    emailFromRaw !== undefined && parseMailbox(emailFromRaw) ? emailFromRaw : undefined;
+  if (emailFromRaw !== undefined && emailFrom === undefined) {
+    problems.push('EMAIL_FROM must be a mailbox, or a name and a mailbox in angle brackets.');
+  }
+  const mailCount = [mailersendApiToken, emailFromRaw].filter(
+    (value) => value !== undefined,
+  ).length;
+  if (mailCount === 1) {
+    problems.push('MAILERSEND_API_TOKEN and EMAIL_FROM must both be set, or both left blank.');
   }
   const traineeSignupMode = readSignupMode(source.TRAINEE_SIGNUP_MODE, problems);
   const devMailLog = readBooleanDefault(source.DEV_MAIL_LOG, false, 'DEV_MAIL_LOG', problems);
@@ -259,7 +268,7 @@ export function loadEnv(
   if (cloudinaryApiSecret !== undefined) env.cloudinaryApiSecret = cloudinaryApiSecret;
   if (supabaseUrl !== undefined) env.supabaseUrl = supabaseUrl;
   if (supabaseServiceRoleKey !== undefined) env.supabaseServiceRoleKey = supabaseServiceRoleKey;
-  if (resendApiKey !== undefined) env.resendApiKey = resendApiKey;
+  if (mailersendApiToken !== undefined) env.mailersendApiToken = mailersendApiToken;
   if (emailFrom !== undefined) env.emailFrom = emailFrom;
   return env;
 }

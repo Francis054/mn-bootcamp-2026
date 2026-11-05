@@ -7,7 +7,6 @@ import {
 } from '../../src/modules/accounts/account.rules.js';
 import { createMail } from '../../src/modules/mail/create-mail.js';
 import { MemoryMail } from '../../src/modules/mail/memory-mail.js';
-import { ResendMail } from '../../src/modules/mail/resend-mail.js';
 import { UnconfiguredMail } from '../../src/modules/mail/unconfigured-mail.js';
 import { sessionTokenHash } from '../../src/modules/auth/tokens.js';
 import {
@@ -117,41 +116,16 @@ describe('mail providers', () => {
     });
   });
 
-  it('selects Resend only when both settings are present', () => {
-    const mail = createMail(testEnv({ resendApiKey: 'rk_test', emailFrom: 'desk@example.test' }));
-    expect(mail.name).toBe('resend');
-  });
-
-  it('posts to Resend without repeating the key or the refusal body', async () => {
-    const calls: { url: string; authorization: string }[] = [];
-    const fetchImpl: typeof fetch = (input, init) => {
-      const url =
-        typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
-      const headers = init?.headers;
-      const authorization =
-        headers && !Array.isArray(headers) && !(headers instanceof Headers)
-          ? (headers.Authorization ?? '')
-          : '';
-      calls.push({ url, authorization });
-      return Promise.resolve(new Response('provider-body-with-rk_secret', { status: 422 }));
-    };
-    const mail = new ResendMail({
-      apiKey: 'rk_secret',
-      from: 'desk@example.test',
-      fetchImpl,
-    });
-    let message = '';
-    try {
-      await mail.send({ to: 'ada@example.test', subject: 'Hello', text: 'Body' });
-    } catch (error) {
-      message = error instanceof Error ? error.message : '';
-    }
-    expect(message).toBe('The mail provider refused the message.');
-    expect(message).not.toContain('rk_secret');
-    expect(message).not.toContain('provider-body');
-    expect(calls[0]).toEqual({
-      url: 'https://api.resend.com/emails',
-      authorization: 'Bearer rk_secret',
-    });
+  it('requires MAILERSEND_API_TOKEN before it will send', () => {
+    expect(createMail(testEnv({ emailFrom: 'desk@example.test' })).name).toBe('memory');
+    expect(createMail(testEnv({ mailersendApiToken: 'mls_test' })).name).toBe('memory');
+    const production = createMail(
+      testEnv({ nodeEnv: 'production', mailersendApiToken: 'mls_test' }),
+    );
+    expect(production).toBeInstanceOf(UnconfiguredMail);
+    expect(
+      createMail(testEnv({ mailersendApiToken: 'mls_test', emailFrom: 'Desk <desk@example.test>' }))
+        .name,
+    ).toBe('mailersend');
   });
 });

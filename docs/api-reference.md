@@ -265,4 +265,4 @@ One current PDF per trainee, at most 5 MB and 10 pages. A replacement deletes th
 | GET | `/api/v1/admin/cv-requests` | Staff who can read the admin area |
 | POST | `/api/v1/admin/cv-requests/{id}/send` | Editor or administrator |
 
-The contact form stores the message and, when Resend is configured, emails the trainee with Reply-To set to the sender. The HTTP response never includes the trainee email. If Resend is not configured, the message is saved with status `new` and `delivered` is false. A filled `company` field is not stored. The same address can send 3 messages an hour, and one trainee can receive 10 a day. `{id}` may be the trainee id or the public slug.
+The contact form stores the message and, when MailerSend is configured, emails the trainee with Reply-To set to the sender. The HTTP response never includes the trainee email. If MailerSend is not configured, the message is saved with status `new` and `delivered` is false. A filled `company` field is not stored. The same address can send 3 messages an hour, and one trainee can receive 10 a day. `{id}` may be the trainee id or the public slug.

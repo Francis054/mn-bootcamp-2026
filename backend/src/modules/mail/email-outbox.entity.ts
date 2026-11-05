@@ -4,8 +4,8 @@ export const OUTBOX_STATUSES = ['queued', 'sending', 'sent', 'failed'] as const;
 export type OutboxStatus = (typeof OUTBOX_STATUSES)[number];
 
 /**
- * One queued message. The address, subject, and body are what Resend needs
- * for a retry. The row does not store the API key, the from address, or a
+ * One queued message. The address, subject, and body are what a retry needs.
+ * The row does not store the API token, the from address, or a
  * session token except where that token is already inside the message body.
  */
 @Entity({ name: 'email_outbox' })
