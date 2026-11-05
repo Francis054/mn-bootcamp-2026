@@ -1,3 +1,4 @@
+import type { DataSource, Repository } from 'typeorm';
 import { ApiError } from '../../shared/errors/api-error.js';
 import type { AppLogger } from '../../shared/logging/logger.js';
 import type { AccountService } from '../accounts/account.service.js';
@@ -12,12 +13,13 @@ import type { ModuleRepository } from '../curriculum/repositories.js';
 import type { TraineeRepository } from '../trainees/trainee.repository.js';
 import type { TraineeService } from '../trainees/trainee.service.js';
 import { displayNameFromEmail, hueFromEmail, initialsFrom } from '../users/profile.js';
-import type { UserEntity } from '../users/user.entity.js';
+import { UserEntity } from '../users/user.entity.js';
 import type { UserRepository } from '../users/user.repository.js';
 import type { UserService } from '../users/user.service.js';
-import type { PendingRegistrationEntity } from './pending-registration.entity.js';
+import { PendingRegistrationEntity } from './pending-registration.entity.js';
 import type { PendingRegistrationRepository } from './pending-registration.repository.js';
 import {
+  APPROVED_READY_MESSAGE,
   parseResend,
   parseSignup,
   RESEND_EMAIL_LIMIT,
@@ -69,8 +71,9 @@ export interface TraineeAccountRecord {
 }
 
 /**
- * Roster signup, email confirmation, and the administrator queue.
- * The public response does not say whether the mailbox is on the roster.
+ * Trainee signup and the administrator queue.
+ * A registration waits for approval. The public response does not say whether the mailbox is on the roster.
+ * Confirmation email is not queued. A mail failure does not block signup, approval, or sign-in.
  */
 export class SignupService {
   constructor(
@@ -87,6 +90,7 @@ export class SignupService {
     private readonly accounts: AccountService,
     private readonly secret: string | undefined,
     private readonly logger: AppLogger,
+    private readonly dataSource: DataSource,
   ) {}
 
   async signup(input: {
@@ -108,19 +112,23 @@ export class SignupService {
     const decision = signupDecision(Boolean(trainee), existing ? { role: existing.role, verified: existing.emailVerifiedAt instanceof Date } : null);
 
     if (decision.kind === 'already-registered' && existing) {
-      await this.accounts.sendExistingAccountNotice(existing.email, existing.role);
+      await settleTraineeMail(
+        () => this.accounts.sendExistingAccountNotice(existing.email, existing.role),
+        this.logger,
+      );
       await this.audit('auth.trainee.signup', null, 'user', existing.id, ip, requestId);
       return { ...SIGNUP_ACCEPTED };
     }
 
-    if (decision.kind === 'roster' && trainee) {
-      const user = await this.saveRosterUser(existing, parsed.fields, passwordHash, trainee.id);
-      const delivered = await this.accounts.sendVerificationEmail(user.id, user.email, input.now);
-      if (!delivered) {
-        this.logger.error({ subject: 'Confirm your Maxim Nyansa trainee account' }, 'Verification mail was not delivered');
-      }
-      await this.audit('auth.trainee.signup', null, 'user', user.id, ip, requestId);
-      return { ...SIGNUP_ACCEPTED };
+    if (existing && existing.role === 'trainee' && !(existing.emailVerifiedAt instanceof Date)) {
+      const displayName = (parsed.fields.displayName || existing.displayName).slice(0, 120);
+      await this.userRows.replaceUnverifiedLogin(existing.id, {
+        passwordHash,
+        displayName,
+        initials: initialsFrom(displayName).slice(0, 8),
+        hue: hueFromEmail(parsed.fields.email),
+        traineeId: existing.traineeId,
+      });
     }
 
     const row = await this.savePending(parsed.fields.email, parsed.fields.displayName, passwordHash);
@@ -153,18 +161,7 @@ export class SignupService {
     const parsed = parseResend(input.body);
     if (!parsed.ok) throw new ApiError('validation', CHECK, parsed.problems);
     const ip = clip(input.ip, 64);
-    const requestId = clip(input.requestId, 80);
     await this.consume(parsed.email, ip, input.now, 'verify-resend', RESEND_EMAIL_LIMIT, RESEND_IP_LIMIT);
-    const user = await this.users.findByEmail(parsed.email);
-    if (user && user.role === 'trainee' && !(user.emailVerifiedAt instanceof Date) && !user.disabledAt) {
-      const delivered = await this.accounts.sendVerificationEmail(user.id, user.email, input.now);
-      if (!delivered) {
-        this.logger.error({ subject: 'Confirm your Maxim Nyansa trainee account' }, 'Verification mail was not delivered');
-      }
-      await this.audit('auth.trainee.verify.resent', null, 'user', user.id, ip, requestId);
-    } else if (user && user.emailVerifiedAt instanceof Date) {
-      await this.accounts.sendExistingAccountNotice(user.email, user.role);
-    }
     return { ...SIGNUP_ACCEPTED };
   }
 
@@ -202,12 +199,23 @@ export class SignupService {
   }): Promise<{ delivered: boolean; message: string; userId: string; traineeId: string }> {
     const row = await this.requirePending(input.id);
     const traineeId = await this.traineeForApproval(row, input);
-    const user = await this.userForApproval(row, traineeId);
-    row.status = 'approved';
-    row.reviewedAt = input.now;
-    row.reviewedBy = input.actorId;
-    await this.pending.save(row);
-    const delivered = await this.accounts.sendVerificationEmail(user.id, user.email, input.now);
+    const user = await this.dataSource.transaction(async (manager) => {
+      const pendingRepo = manager.getRepository(PendingRegistrationEntity);
+      const current = await pendingRepo
+        .createQueryBuilder('request')
+        .setLock('pessimistic_write')
+        .where('request.id = :id', { id: row.id })
+        .getOne();
+      if (!current || current.status !== 'pending') {
+        throw new ApiError('not_found', 'Signup request not found.');
+      }
+      const saved = await activateTrainee(manager.getRepository(UserEntity), current, traineeId, input.now);
+      current.status = 'approved';
+      current.reviewedAt = input.now;
+      current.reviewedBy = input.actorId;
+      await pendingRepo.save(current);
+      return saved;
+    });
     await this.audit(
       'auth.trainee.approved',
       input.actorId,
@@ -216,16 +224,7 @@ export class SignupService {
       clip(input.ip, 64),
       clip(input.requestId, 80),
     );
-    if (delivered) {
-      return { delivered: true, message: 'The account is ready and a confirmation email was sent.', userId: user.id, traineeId };
-    }
-    this.logger.error({ subject: 'Confirm your Maxim Nyansa trainee account' }, 'Approval mail was not delivered');
-    return {
-      delivered: false,
-      message: 'The account is ready. The confirmation email was not sent. Resend it from trainee accounts.',
-      userId: user.id,
-      traineeId,
-    };
+    return { delivered: true, message: APPROVED_READY_MESSAGE, userId: user.id, traineeId };
   }
 
   async reject(input: { id: string; actorId: string; ip: string; requestId: string; now: Date }): Promise<PendingRegistrationRecord> {
@@ -242,14 +241,18 @@ export class SignupService {
       clip(input.ip, 64),
       clip(input.requestId, 80),
     );
-    await this.accounts.sendReview({
-      to: row.email,
-      item: 'signup request',
-      title: row.displayName,
-      approved: false,
-      reason: '',
-      path: '/signup',
-    });
+    await settleTraineeMail(
+      () =>
+        this.accounts.sendReview({
+          to: row.email,
+          item: 'signup request',
+          title: row.displayName,
+          approved: false,
+          reason: '',
+          path: '/signup',
+        }),
+      this.logger,
+    );
     return toPending(saved);
   }
 
@@ -304,55 +307,21 @@ export class SignupService {
     if (user.disabledAt) {
       throw new ApiError('validation', 'Enable the account before sending another email.');
     }
-    const delivered = user.emailVerifiedAt
-      ? await this.accounts.sendExistingAccountNotice(user.email, user.role)
-      : await this.accounts.sendVerificationEmail(user.id, user.email, input.now);
-    if (!user.emailVerifiedAt) {
-      await this.audit(
-        'auth.trainee.verify.resent',
-        input.actorId,
-        'user',
-        user.id,
-        clip(input.ip, 64),
-        clip(input.requestId, 80),
-      );
+    if (!(user.emailVerifiedAt instanceof Date)) {
+      return {
+        delivered: false,
+        message: 'Approve the signup first. The trainee can sign in after approval.',
+      };
     }
+    const delivered = await settleTraineeMail(
+      () => this.accounts.sendExistingAccountNotice(user.email, user.role),
+      this.logger,
+    );
     if (!delivered) {
       this.logger.error({ subject: 'Trainee account email' }, 'Trainee account email was not delivered');
       return { delivered: false, message: 'The email was not sent. Try again once mail is configured.' };
     }
     return { delivered: true, message: 'The email was sent.' };
-  }
-
-  private async saveRosterUser(
-    existing: UserEntity | null,
-    fields: { email: string; displayName: string },
-    passwordHash: string,
-    traineeId: string,
-  ): Promise<UserEntity> {
-    const displayName = (fields.displayName || displayNameFromEmail(fields.email)).slice(0, 120);
-    if (existing && existing.role === 'trainee' && !(existing.emailVerifiedAt instanceof Date)) {
-      await this.userRows.replaceUnverifiedLogin(existing.id, {
-        passwordHash,
-        displayName,
-        initials: initialsFrom(displayName).slice(0, 8),
-        hue: hueFromEmail(fields.email),
-        traineeId,
-      });
-      const next = await this.users.findById(existing.id);
-      if (!next) throw new ApiError('server', 'The account could not be saved.');
-      return next;
-    }
-    return this.userRows.insert({
-      email: fields.email,
-      displayName,
-      initials: initialsFrom(displayName).slice(0, 8),
-      hue: hueFromEmail(fields.email),
-      role: 'trainee',
-      passwordHash,
-      emailVerifiedAt: null,
-      traineeId,
-    });
   }
 
   private async savePending(email: string, displayName: string, passwordHash: string): Promise<PendingRegistrationEntity> {
@@ -410,43 +379,6 @@ export class SignupService {
       { userId: input.actorId, ip: clip(input.ip, 64), requestId: clip(input.requestId, 80) },
     );
     return created.id;
-  }
-
-  private async userForApproval(row: PendingRegistrationEntity, traineeId: string): Promise<UserEntity> {
-    const existing = await this.users.findByEmail(row.email);
-    if (existing && existing.role !== 'trainee') {
-      throw new ApiError('validation', 'That email already belongs to a staff account.');
-    }
-    if (existing && existing.emailVerifiedAt instanceof Date) {
-      throw new ApiError('validation', 'That person already has a confirmed account.');
-    }
-    const taken = await this.userRows.findByTraineeId(traineeId);
-    if (taken && taken.id !== existing?.id) {
-      throw new ApiError('validation', 'That trainee is already linked to another account.');
-    }
-    if (existing) {
-      await this.userRows.replaceUnverifiedLogin(existing.id, {
-        passwordHash: row.passwordHash,
-        displayName: (row.displayName.trim() || existing.displayName).slice(0, 120),
-        initials: initialsFrom(row.displayName.trim() || existing.displayName).slice(0, 8),
-        hue: existing.hue,
-        traineeId,
-      });
-      const next = await this.users.findById(existing.id);
-      if (!next) throw new ApiError('server', 'The account could not be saved.');
-      return next;
-    }
-    const displayName = (row.displayName.trim() || displayNameFromEmail(row.email)).slice(0, 120);
-    return this.userRows.insert({
-      email: row.email,
-      displayName,
-      initials: initialsFrom(displayName).slice(0, 8),
-      hue: hueFromEmail(row.email),
-      role: 'trainee',
-      passwordHash: row.passwordHash,
-      emailVerifiedAt: null,
-      traineeId,
-    });
   }
 
   private async requirePending(id: string): Promise<PendingRegistrationEntity> {
@@ -523,6 +455,74 @@ function toPending(row: PendingRegistrationEntity): PendingRegistrationRecord {
 
 function clip(value: string, max: number): string {
   return value.slice(0, max);
+}
+
+/** A mail failure is logged and ignored so signup, approval, and sign-in still finish. */
+export async function settleTraineeMail(
+  run: () => Promise<boolean>,
+  logger: AppLogger,
+): Promise<boolean> {
+  try {
+    return await run();
+  } catch (error) {
+    logger.error({ err: error instanceof Error ? error.name : 'Error' }, 'Mail could not be sent');
+    return false;
+  }
+}
+
+async function activateTrainee(
+  users: Repository<UserEntity>,
+  row: PendingRegistrationEntity,
+  traineeId: string,
+  now: Date,
+): Promise<UserEntity> {
+  const existing = await users.findOne({ where: { email: row.email } });
+  if (existing && existing.role !== 'trainee') {
+    throw new ApiError('validation', 'That email already belongs to a staff account.');
+  }
+  if (existing && existing.emailVerifiedAt instanceof Date) {
+    throw new ApiError('validation', 'That person already has an active account.');
+  }
+  const taken = await users.findOne({ where: { traineeId } });
+  if (taken && taken.id !== existing?.id) {
+    throw new ApiError('validation', 'That trainee is already linked to another account.');
+  }
+  const displayName = (row.displayName.trim() || existing?.displayName || displayNameFromEmail(row.email)).slice(0, 120);
+  if (existing) {
+    await users.update(
+      { id: existing.id },
+      {
+        passwordHash: row.passwordHash,
+        displayName,
+        initials: initialsFrom(displayName).slice(0, 8),
+        hue: existing.hue,
+        traineeId,
+      },
+    );
+    await users
+      .createQueryBuilder()
+      .update()
+      .set({ emailVerifiedAt: now })
+      .where('id = :id AND email_verified_at IS NULL', { id: existing.id })
+      .execute();
+    const next = await users.findOne({ where: { id: existing.id } });
+    if (!next) throw new ApiError('server', 'The account could not be saved.');
+    return next;
+  }
+  return users.save(
+    users.create({
+      email: row.email,
+      displayName,
+      initials: initialsFrom(displayName).slice(0, 8),
+      hue: hueFromEmail(row.email),
+      role: 'trainee',
+      passwordHash: row.passwordHash,
+      emailVerifiedAt: now,
+      traineeId,
+      disabledAt: null,
+      lastLoginAt: null,
+    }),
+  );
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

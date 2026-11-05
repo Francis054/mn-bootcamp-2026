@@ -6,6 +6,9 @@ export const ERROR_CODES = {
   rate_limited: 429,
   server: 500,
   pending: 501,
+  TRAINEE_PENDING_APPROVAL: 403,
+  TRAINEE_REGISTRATION_REJECTED: 403,
+  TRAINEE_ACCOUNT_DEACTIVATED: 403,
 } as const;
 
 export type ErrorCode = keyof typeof ERROR_CODES;

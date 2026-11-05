@@ -48,7 +48,7 @@ export function PendingRegistrationsPage() {
   };
   return (
     <>
-      <div className="a-head"><div><h1>Signup requests</h1><p>Emails that asked for an account and were not on the cohort roster. Approving creates a hidden trainee record and sends a confirmation email.</p></div></div>
+      <div className="a-head"><div><h1>Signup requests</h1><p>Registrations waiting for an administrator. Approving opens the trainee login. No confirmation email is sent. The trainee can sign in after approval.</p></div></div>
       {record.loading ? <LoadingRows /> : null}
       {record.error ? <ErrorState title="Could not load signup requests" text={record.error.message} /> : null}
       {!record.loading && record.data && !record.data.length ? <EmptyState icon="mail" title="No requests waiting" text="When someone signs up with an email that is not on the roster, it is listed here. The visitor is not told which emails are on the list." /> : null}
@@ -109,7 +109,7 @@ export function TraineeAccountsPage() {
               <tr key={row.id}>
                 <td><b>{row.displayName}</b><small>{row.traineeId ?? 'No roster link'}</small></td>
                 <td>{row.email}</td>
-                <td>{row.emailVerified ? 'Confirmed' : 'Not confirmed'}{row.disabled ? ' · Suspended' : ''}</td>
+                <td>{row.emailVerified ? 'Active' : 'Waiting for approval'}{row.disabled ? ' · Deactivated' : ''}</td>
                 <td>
                   {row.disabled ? (
                     <button className="btn btn--sm" type="button" disabled={busy.startsWith(row.id)} onClick={() => void post(row, 'enable', 'Account enabled')}>Enable</button>

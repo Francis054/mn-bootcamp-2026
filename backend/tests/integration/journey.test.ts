@@ -167,7 +167,7 @@ describe('trainee journey', () => {
     expect(titles).toContain('Published SOC lab');
     expect(titles).toContain('Open house talk');
     expect(titles).toContain('Signed up');
-    expect(titles).toContain('Email confirmed');
+    expect(titles).toContain('Account approved');
     expect(titles).toContain('Profile published');
     const week = asList(readRecord(pub.body).items).map(readRecord).find((item) => item.kind === 'week');
     expect(week?.kind).toBe('week');

@@ -334,7 +334,10 @@ export type ApiErrorCode =
   | 'not_found'
   | 'rate_limited'
   | 'server'
-  | 'pending';
+  | 'pending'
+  | 'TRAINEE_PENDING_APPROVAL'
+  | 'TRAINEE_REGISTRATION_REJECTED'
+  | 'TRAINEE_ACCOUNT_DEACTIVATED';
 
 export class ApiError extends Error {
   readonly code: ApiErrorCode;

@@ -83,7 +83,7 @@ export const openApiSpec = {
           },
           '403': {
             description:
-              'The password matched a trainee account whose email is not confirmed yet. A suspended account uses the same 401 as a wrong password.',
+              'The password matched a trainee who cannot sign in yet. TRAINEE_PENDING_APPROVAL means an administrator has not approved the registration. TRAINEE_REGISTRATION_REJECTED means the registration was rejected. TRAINEE_ACCOUNT_DEACTIVATED means an administrator deactivated the account. A wrong password stays 401 and does not use these codes.',
             content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorBody' } } },
           },
           '429': {
@@ -231,6 +231,9 @@ export const openApiSpec = {
                   'rate_limited',
                   'server',
                   'pending',
+                  'TRAINEE_PENDING_APPROVAL',
+                  'TRAINEE_REGISTRATION_REJECTED',
+                  'TRAINEE_ACCOUNT_DEACTIVATED',
                 ],
               },
               message: { type: 'string' },
