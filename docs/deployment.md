@@ -72,13 +72,26 @@ These are the published limits as checked on 24 October 2026. They are not a pro
 - Cloudinary’s free plan includes 25 credits a month. One credit is 1,000 transformations, or 1 GB of storage, or 1 GB of image bandwidth. On the free plan, video bandwidth is also 1 GB per credit. Transformations and bandwidth use a rolling 30 days, not a calendar month. Sources: https://cloudinary.com/pricing and https://cloudinary.com/documentation/billing_and_plans
 - Resend’s free plan is 100 emails per UTC day and 3,000 per month. Received mail counts too, and each To, Cc, or Bcc recipient counts as one email. Sources: https://resend.com/pricing and https://resend.com/docs/knowledge-base/account-quotas-and-limits
 
-Supabase free backup retention was not confirmed for this note. Look at the project’s Backups page before you rely on one.
+## Before a migration
+
+Take a backup, or confirm one exists, before `npm run migration:run` on the hosted database. In the Supabase dashboard open Database → Backups. Free-plan retention was not confirmed for this note, so read the retention shown on that page and do not assume a restore point is there. A Render rollback on the free web service goes back only to one of the two most recent previous deploys, and it does not undo a migration that already ran. Do not run `npm run migration:revert` on the hosted database. Reverting `PublicRls1794096000000` turns row level security off and grants `anon` and `authenticated` every privilege on `public` again.
 
 ## Staying awake
 
 `backend/scripts/keep-alive.mjs` is plain Node 22 with no dependencies. It sends one GET to `KEEPALIVE_URL` (the full public health URL, such as `https://YOUR-SITE.onrender.com/api/v1/health`), retries twice, and gives each try 60 seconds so a cold start can finish. It logs the status and the latency. The log line is the origin and the path. It does not print a query string, a password, or a token. If `KEEPALIVE_URL` is unset, it says so and exits 0, so the workflow can be merged before the site exists.
 
 `.github/workflows/keep-alive.yml` runs that script on the cron `*/14 * * * *` (every 14 minutes, inside Render’s 15-minute idle window) and when someone starts it by hand. The URL comes from the GitHub Actions variable `KEEPALIVE_URL`, not from a secret, because the address is public. The workflow’s only permission is `contents: read`.
+
+## Checks on a pull request
+
+`.github/workflows/ci.yml` runs on every pull request to `main`. It does not deploy and it does not touch the hosted database.
+
+- Backend, in `backend/`: `npm ci`, typecheck, lint, unit tests, production build, then integration tests.
+- Frontend, in `frontend/`: `npm ci`, typecheck, lint, unit tests, production build.
+- Integration tests use a Postgres 16 service and `TEST_DATABASE_URL` ending in `mn_bootcamp_test`. They do not start Docker.
+- npm caches the lockfiles. The backend and frontend jobs run at the same time. A third job runs Playwright against the in-browser fixture store. It does not use production credentials.
+
+After the pull request is merged, run `npm run migration:run` from `backend/` before serving. Then run `node scripts/check-public-rls.mjs --require-roles` against that same database. Exit 0 means row level security is on, the PublicRls migration is recorded, and `anon` and `authenticated` have no table grants. The script does not print `DATABASE_URL`. Migration 26 adds `email_outbox` and the trainee removal ledger. Do not run `npm run seed` on the hosted database. Before that deploy, create a private Storage bucket named `trainee-cvs` in the Supabase project (Storage, New bucket, leave Public switched off). Then add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to the Render API service only. `CV_BUCKET` can stay blank; it defaults to `trainee-cvs`. Do not add those values to the static site. A `VITE_` name would copy them into the public JavaScript. `VIDEO_UPLOAD_MAX_BYTES` is optional. Leave it blank for a 50 MB video limit. Trainee signup also needs `TRAINEE_SIGNUP_MODE=roster` (or leave it unset), `RESEND_API_KEY`, and `EMAIL_FROM` on a verified domain. Until the domain is verified, confirmation mail only reaches the Resend account owner. Employer contact and CV-request mail use the same Resend settings. If they are blank, those forms still save the request and the public response says email was not sent. `CV_REQUEST_LINK_TTL_MS` is optional. Leave it blank for a one-day download link. The DNS steps are in `docs/email.md`.
 
 GitHub runs a scheduled workflow only from the repository’s default branch, and only if the workflow file is on that branch (https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule, checked 24 October 2026). The workflow and the script are on `main`, and `main` is the default branch, so the schedule runs once `KEEPALIVE_URL` is set. Do not change the default branch.
 

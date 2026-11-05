@@ -320,7 +320,8 @@ describe('content singletons', () => {
       },
     });
     expect(code).toBe(0);
-    expect(stdout).toEqual(['Sample curriculum is ready.']);
+    // Every seed also prints the timetable import report. The last line is this seed.
+    expect(stdout.at(-1)).toBe('Sample curriculum is ready.');
     const eyebrow: unknown = await current.dataSource.query(
       `SELECT draft->>'eyebrow' AS eyebrow FROM content_singletons WHERE id = 'homepage'`,
     );

@@ -11,6 +11,8 @@ import type { BootcampEvent, Lesson, Project, PublicationStatus, Trainee } from 
 import { isApiError } from '@/domain/types';
 import { classFieldErrors, eventFieldErrors, projectFieldErrors, traineeFieldErrors, withConsentField, withPhaseOnWeek } from '@/domain/adminFields';
 import { useAsync } from '@/hooks/useAsync';
+import { TraineeCvPanel } from './TraineeCvPanel';
+import { TraineePrivacyPanel } from './TraineePrivacyPanel';
 import { ProfilePhotoField, useProfilePhoto } from './ProfilePhotoField';
 import { selectedIds, useAllPages, useMediaOptions, useModules, withCurrent } from './options';
 
@@ -177,6 +179,9 @@ function TraineeForm({ initial }: { initial: Trainee | null }) {
       focus: String(data.focus ?? ''),
       linkedin: String(data.linkedin ?? ''),
       portfolio: String(data.portfolio ?? ''),
+      headline: String(data.headline ?? ''),
+      location: String(data.location ?? ''),
+      github: String(data.githubUrl ?? ''),
       consentReceived: data.consentReceived === 'on',
       publicationStatus: String(data.publicationStatus ?? 'draft'),
     };
@@ -200,6 +205,9 @@ function TraineeForm({ initial }: { initial: Trainee | null }) {
       quote: String(data.quote ?? ''),
       linkedin: optionalLink(values.linkedin),
       portfolio: optionalLink(values.portfolio),
+      headline: values.headline.trim(),
+      location: values.location.trim(),
+      githubUrl: optionalLink(values.github),
       consentReceived: values.consentReceived,
       lessonIds: selectedIds(form, 'lessonIds'),
       listing,
@@ -230,6 +238,7 @@ function TraineeForm({ initial }: { initial: Trainee | null }) {
     } finally { setPending(false); }
   };
   return (
+    <>
     <form ref={formRef} onSubmit={(event) => { event.preventDefault(); void save(event.currentTarget, false); }} onChange={(event) => { setDirty(true); const id = eventTargetId(event.target); if (id === 'displayName' && event.target instanceof HTMLInputElement) setDisplayName(event.target.value); if (!id || !formRef.current) return; const problems = traineeFieldErrors(read(formRef.current), modeRef.current); admin.clearFixed(id, problems[id]); if (id === 'consentReceived') admin.clearFixed('publicationStatus', problems.publicationStatus); }} noValidate>
       <div className="a-head"><div><h1>{initial ? initial.displayName : 'New trainee'}</h1><p>Do not enter a real person’s name. Samples only until consent exists.</p></div>{initial ? <Link className="btn btn--ghost btn--sm" to={isApiPublic(initial) ? `/trainees/${initial.id}` : `/admin/trainees/${initial.id}`}>Preview</Link> : null}</div>
       <FormLegend />
@@ -250,6 +259,9 @@ function TraineeForm({ initial }: { initial: Trainee | null }) {
         <Field id="focus" label="Focus" required error={admin.errors.focus}><select className="select" id="focus" name="focus" defaultValue={initial?.focus ?? ''} disabled={!writable}><option value="">Choose…</option>{modules.map((module) => <option key={module.id} value={module.id}>{module.name}</option>)}</select></Field>
         <Field id="skills" label="Skills" required={false} className="span-2" hint="Comma separated."><input className="input" id="skills" name="skills" defaultValue={initial?.skills.join(', ') ?? ''} disabled={!writable} /></Field>
         <Field id="bio" label="Bio" required={false} className="span-2"><textarea className="textarea" id="bio" name="bio" defaultValue={initial?.bio ?? ''} disabled={!writable} /></Field>
+        <Field id="headline" label="Headline" required={false}><input className="input" id="headline" name="headline" defaultValue={initial?.headline ?? ''} disabled={!writable} /></Field>
+        <Field id="location" label="Location" required={false} hint="City or country."><input className="input" id="location" name="location" defaultValue={initial?.location ?? ''} disabled={!writable} /></Field>
+        <Field id="githubUrl" label="GitHub" required={false} error={admin.errors.githubUrl} hint="Leave blank, or use a full https:// link."><input className="input" id="githubUrl" name="githubUrl" defaultValue={initial?.githubUrl ?? ''} disabled={!writable} /></Field>
         <Field id="quote" label="Quote" required={false} className="span-2"><input className="input" id="quote" name="quote" defaultValue={initial?.quote ?? ''} disabled={!writable} /></Field>
         <Field id="linkedin" label="LinkedIn" required={false} error={admin.errors.linkedin} hint="Leave blank, or use a full http:// or https:// link."><input className="input" id="linkedin" name="linkedin" defaultValue={initial?.linkedin ?? ''} disabled={!writable} /></Field>
         <Field id="portfolio" label="Portfolio" required={false} error={admin.errors.portfolio} hint="Leave blank, or use a full http:// or https:// link."><input className="input" id="portfolio" name="portfolio" defaultValue={initial?.portfolio ?? ''} disabled={!writable} /></Field>
@@ -262,6 +274,9 @@ function TraineeForm({ initial }: { initial: Trainee | null }) {
       </div>
       {writable ? <SaveBar dirty={dirty} pending={pending} onCancel="/admin/trainees" label="Save profile" extra={<BusyButton pending={pending} busyLabel="Publishing" onClick={() => { if (formRef.current) void save(formRef.current, true); }}>Publish</BusyButton>} /> : null}
     </form>
+    {initial?.id ? <TraineeCvPanel traineeId={initial.id} /> : null}
+    {initial?.id && auth.role === 'administrator' ? <TraineePrivacyPanel traineeId={initial.id} displayName={initial.displayName} /> : null}
+    </>
   );
 }
 

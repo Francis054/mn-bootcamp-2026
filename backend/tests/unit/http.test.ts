@@ -182,9 +182,9 @@ describe('HTTP pipeline', () => {
     expect(written).not.toContain('super-secret-token');
   });
 
-  it('serves the OpenAPI document and stores the cookie policy on the app', async () => {
-    const { app } = appWith({ nodeEnv: 'production' });
-    const spec = await request(app).get('/api/docs/openapi.json').expect(200);
+  it('serves the OpenAPI document outside production and stores the cookie policy on the app', async () => {
+    const { app: development } = appWith();
+    const spec = await request(development).get('/api/docs/openapi.json').expect(200);
     const document = readRecord(spec.body);
     const paths = readRecord(document.paths);
     const healthPath = readRecord(paths['/api/v1/health']);
@@ -222,8 +222,15 @@ describe('HTTP pipeline', () => {
     const components = readRecord(document.components);
     const schemas = readRecord(components.schemas);
     expect(schemas.ErrorBody).toBeDefined();
-    const docs = await request(app).get('/api/docs/').expect(200);
+    const docs = await request(development).get('/api/docs/').expect(200);
     expect(docs.text).toContain('Swagger');
+
+    const { app } = appWith({ nodeEnv: 'production' });
+    await request(app).get('/api/docs/').expect(404);
+    await request(app).get('/api/docs/openapi.json').expect(404);
+    const csp = String((await request(app).get('/api/v1/health')).headers['content-security-policy']);
+    expect(csp).toContain("default-src 'self'");
+    expect(csp).not.toContain('unsafe-inline');
     expect(app.locals.cookiePolicy.session).toEqual({
       httpOnly: true,
       secure: true,
@@ -263,6 +270,17 @@ describe('HTTP pipeline', () => {
     expect(missing.headers['cache-control']).toBe(PRIVATE_CACHE_CONTROL);
     const fresh = await request(app).get('/api/v1/public/work-photos').expect(200);
     expect(fresh.headers['cache-control']).toBe('private, no-store');
+  });
+
+  it('does not cache a public CV download', async () => {
+    const curriculum = Router();
+    curriculum.get('/public/cv/:token', (_req, res) => {
+      res.status(200).type('application/pdf').send(Buffer.from('%PDF-1.7'));
+    });
+    const { app } = appWith({ curriculumRouter: curriculum });
+    const response = await request(app).get('/api/v1/public/cv/sample.token').expect(200);
+    expect(response.headers['cache-control']).toBe(PRIVATE_CACHE_CONTROL);
+    expect(String(response.headers['cache-control'])).not.toContain('public');
   });
 
   it('refuses to store admin, sign-in, and public writes', async () => {

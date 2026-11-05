@@ -7,6 +7,8 @@ import type { SessionRepository } from './session.repository.js';
 import { newSecretToken, sessionTokenHash } from './tokens.js';
 
 const TOUCH_AFTER_MS = 60_000;
+/** A trainee writing in the portal keeps the session for two idle hours. */
+const TRAINEE_IDLE_MS = 2 * 60 * 60 * 1000;
 
 export interface AuthenticatedSession {
   user: PublicUser;
@@ -41,18 +43,19 @@ export class SessionService {
     const id = sessionTokenHash(token, this.secret);
     const session = await this.sessions.findById(id);
     if (!session) return null;
-    const idleDeadline = session.lastSeenAt.getTime() + this.idleTtlMs;
+    const user = await this.users.findById(session.userId);
+    if (!user || user.disabledAt) {
+      await this.sessions.deleteById(id);
+      return null;
+    }
+    const idleMs = user.role === 'trainee' ? Math.max(this.idleTtlMs, TRAINEE_IDLE_MS) : this.idleTtlMs;
+    const idleDeadline = session.lastSeenAt.getTime() + idleMs;
     if (session.expiresAt.getTime() <= now.getTime() || idleDeadline <= now.getTime()) {
       await this.sessions.deleteById(id);
       return null;
     }
     if (now.getTime() - session.lastSeenAt.getTime() > TOUCH_AFTER_MS) {
       await this.sessions.touch(id, now);
-    }
-    const user = await this.users.findById(session.userId);
-    if (!user) {
-      await this.sessions.deleteById(id);
-      return null;
     }
     return { user: toPublicUser(user), sessionId: id, expiresAt: session.expiresAt.toISOString() };
   }

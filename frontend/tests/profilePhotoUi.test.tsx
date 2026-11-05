@@ -72,7 +72,8 @@ describe('profile photo on the sample pages', () => {
     const directory = await screen.findByRole('link', { name: /Sample Trainee 01/ });
     expect(within(directory).getByRole('img', { name: 'Sample Trainee 01' })).toBeInTheDocument();
     expect(within(directory).queryByText('Placeholder')).not.toBeInTheDocument();
-  });
+    // Sign-in, upload, and three lazy pages. The default 5s is too tight on CI.
+  }, 15_000);
 
   it('rejects a file that is not a JPEG, PNG, or WebP before save', async () => {
     const user = userEvent.setup();

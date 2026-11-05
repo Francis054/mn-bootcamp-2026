@@ -1,0 +1,430 @@
+/* Bootcamp gear — one campaign section. Scoped to `.gear`.
+   Scroll reveals reuse [data-reveal="fade"] (opacity only, transform: none).
+   Do not transform this section: a transform on an ancestor reintroduces the
+   page-enter containing-block bug fixed in PR #58. */
+
+.gear {
+  color: #e9f0ea;
+}
+
+.gear__hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: clamp(28px, 4vw, 72px);
+  align-items: center;
+}
+
+.gear__identity,
+.gear__figure,
+.gear__mindset,
+.gear__cohort,
+.gear__legacy,
+.gear__mindset-copy,
+.gear__spec,
+.gear__journey li {
+  min-width: 0;
+}
+
+.gear__title {
+  margin-top: 18px;
+  max-width: 11em;
+  color: #fff;
+  font-size: clamp(2rem, 3.7vw, 3.65rem);
+  font-weight: 600;
+  line-height: 0.96;
+  letter-spacing: -0.034em;
+  text-wrap: balance;
+}
+
+.gear__story {
+  margin-top: 22px;
+  padding-left: 16px;
+  border-left: 2px solid var(--mn-lime);
+  max-width: min(58ch, 100%);
+}
+
+.gear__story p + p {
+  margin-top: 14px;
+}
+
+.gear__triad {
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 1.5vw, 1.4rem);
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+}
+
+.gear__story p:not(.gear__triad) {
+  color: #e9f0ea;
+  font-size: 1.02rem;
+  line-height: 1.6;
+}
+
+.gear em {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--mn-lime);
+}
+
+.gear__creed {
+  margin-top: 22px;
+  max-width: min(36ch, 100%);
+  color: var(--mn-lime);
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 1.4vw, 1.25rem);
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.015em;
+}
+
+.gear__figure {
+  margin: 0;
+  position: relative;
+}
+
+.gear__figure::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: 6%;
+  right: 6%;
+  top: 22%;
+  bottom: 8%;
+  background: radial-gradient(ellipse at center, rgba(136, 204, 0, 0.16), transparent 68%);
+  pointer-events: none;
+}
+
+.gear__figure picture,
+.gear__figure img {
+  position: relative;
+  z-index: 1;
+}
+
+.gear__figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.gear__mindset {
+  margin-top: clamp(40px, 6vw, 80px);
+  padding-top: clamp(28px, 4vw, 40px);
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.gear__mindset-title {
+  margin: 0;
+  max-width: 100%;
+}
+
+.gear__signal {
+  display: block;
+  color: var(--mn-lime);
+  font-size: clamp(1.7rem, 5.4vw, 4.25rem);
+  font-weight: 600;
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+}
+
+.gear__mindset-rest {
+  display: block;
+  margin-top: 8px;
+  color: #fff;
+  font-size: clamp(1.05rem, 1.6vw, 1.35rem);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+}
+
+.gear__mindset-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: clamp(24px, 4vw, 56px);
+  margin-top: clamp(22px, 3vw, 36px);
+  align-items: start;
+}
+
+.gear__mindset-copy > p:first-child {
+  max-width: 36ch;
+  color: #e9f0ea;
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+.gear__duty {
+  margin-top: 14px;
+  max-width: 16ch;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 2vw, 1.85rem);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+
+.gear__virtues {
+  list-style: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px 20px;
+  margin: 22px 0 0;
+  padding: 0;
+}
+
+.gear__virtues li {
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  color: #e9f0ea;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.gear__spec {
+  margin: 0;
+  display: grid;
+  gap: 18px;
+  align-content: start;
+}
+
+.gear__spec div {
+  min-width: 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.gear__spec dt {
+  margin: 0;
+  color: var(--mn-lime);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.gear__spec dd {
+  margin: 8px 0 0;
+  color: #e9f0ea;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.gear__commit {
+  margin-top: clamp(22px, 3vw, 32px);
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  max-width: min(62ch, 100%);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 1.6vw, 1.4rem);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+}
+
+.gear__journey {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  margin: clamp(36px, 5vw, 72px) 0 0;
+  padding: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.gear__journey li {
+  padding: 18px 20px 4px 0;
+}
+
+.gear__journey li + li {
+  padding-left: 20px;
+  border-left: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.gear__step {
+  display: block;
+  color: var(--mn-lime);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  line-height: 1.4;
+}
+
+.gear__journey h3 {
+  margin: 8px 0;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+}
+
+.gear__journey p {
+  margin: 0;
+  color: #d7e3db;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.gear__cohort,
+.gear__legacy {
+  margin-top: clamp(36px, 5vw, 64px);
+  padding-top: clamp(22px, 3vw, 32px);
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.gear__cohort h3,
+.gear__legacy h3 {
+  margin: 0;
+  max-width: 16em;
+  color: #fff;
+  font-size: clamp(1.4rem, 2.4vw, 2rem);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.gear__prose,
+.gear__prose-lead {
+  max-width: min(68ch, 100%);
+}
+
+.gear__prose {
+  margin-top: 16px;
+}
+
+.gear__prose p,
+.gear__prose-lead {
+  color: #e9f0ea;
+  font-size: 1.02rem;
+  line-height: 1.6;
+}
+
+.gear__prose p + p {
+  margin-top: 12px;
+}
+
+.gear__prose-lead {
+  margin-top: 14px;
+}
+
+.gear__horizon {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px 28px;
+  margin-top: 22px;
+  max-width: 760px;
+}
+
+.gear__horizon p {
+  margin: 0;
+  padding-top: 10px;
+  border-top: 2px solid var(--mn-lime);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(1.02rem, 1.4vw, 1.2rem);
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+}
+
+.gear__oath {
+  margin: clamp(26px, 3vw, 36px) 0 0;
+  max-width: 100%;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 2.6vw, 2.15rem);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+
+.gear__oath span {
+  display: block;
+}
+
+.gear__oath span:first-child {
+  color: var(--mn-lime);
+}
+
+@media (max-width: 960px) {
+  .gear__journey {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .gear__journey li,
+  .gear__journey li + li {
+    padding: 16px 16px 14px 0;
+    border-left: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+  }
+
+  .gear__journey li:nth-child(even) {
+    padding-left: 16px;
+    border-left: 1px solid rgba(255, 255, 255, 0.16);
+  }
+
+  .gear__journey li:nth-child(-n + 2) {
+    border-top: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .gear__hero,
+  .gear__mindset-grid,
+  .gear__horizon {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .gear__title {
+    max-width: 12em;
+  }
+}
+
+@media (max-width: 640px) {
+  .gear.section {
+    padding-block: 56px;
+  }
+
+  .gear__virtues {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .gear__story {
+    padding-left: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .gear__journey {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .gear__journey li,
+  .gear__journey li + li,
+  .gear__journey li:nth-child(even),
+  .gear__journey li:nth-child(-n + 2) {
+    padding: 14px 0;
+    border-left: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+  }
+
+  .gear__journey li:first-child {
+    border-top: 0;
+    padding-top: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gear [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}

@@ -1,4 +1,4 @@
-import { APP_TODAY } from '@/domain/format';
+import { appToday } from '@/domain/format';
 import {
   SESSION_TYPES,
   TRAINER_STATUSES,
@@ -14,6 +14,7 @@ import {
   type TrainerStatus,
 } from '@/domain/timetable';
 import { ApiError } from '@/domain/types';
+import { getState } from './store';
 
 const DATE = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
 const CLOCK = /^([01][0-9]|2[0-3]):[0-5][0-9]$/;
@@ -88,7 +89,7 @@ function dayName(iso: string): string {
 }
 
 function devToday(): string {
-  return APP_TODAY.toISOString().slice(0, 10);
+  return appToday().toISOString().slice(0, 10);
 }
 
 function currentWeekNumber(weeks: MutableWeek[], today: string): number {
@@ -167,6 +168,11 @@ async function ensure(): Promise<State> {
   await loading;
   if (!state) throw new ApiError('server', 'The timetable snapshot did not load.', 500);
   return state;
+}
+
+export async function trainerIsLinked(userId: string): Promise<boolean> {
+  const store = await ensure();
+  return store.trainers.some((trainer) => trainer.userId === userId);
 }
 
 export function resetTimetableStore(): void {
@@ -386,7 +392,17 @@ export async function timetableRoute(
   body: Record<string, unknown>,
 ): Promise<unknown> {
   const store = await ensure();
-  if (method === 'GET' && path === '/public/timetable') return publicBody(store);
+  if (method === 'GET' && path === '/public/timetable') {
+    const body = publicBody(store);
+    if (query.outline !== '1') return body;
+    return {
+      ...body,
+      blocks: body.blocks.map((block) => ({
+        ...block,
+        weeks: block.weeks.map((week) => ({ ...week, sessions: [] })),
+      })),
+    };
+  }
   if (method === 'GET' && path === '/public/blocks') return publicBody(store).blocks;
   if (method === 'GET' && path === '/public/weeks') return publicBody(store).blocks.flatMap((block) => block.weeks);
   if (method === 'GET' && path.startsWith('/public/weeks/')) {
@@ -502,6 +518,17 @@ export async function timetableRoute(
       trainer.normalizedName = normalizeName(trainer.displayName);
     }
     if (typeof body.proposed === 'boolean') trainer.proposed = body.proposed;
+    if ('loginEmail' in body) {
+      const email = String(body.loginEmail ?? '').trim().toLowerCase();
+      if (!email) trainer.userId = null;
+      else {
+        const login = getState().users.find((user) => user.email === email && user.role === 'trainer');
+        if (!login) throw new ApiError('validation', 'Check the highlighted fields.', 422, { loginEmail: 'Enter the email of a trainer login.' });
+        const taken = store.trainers.find((item) => item.userId === login.id && item.id !== trainer.id);
+        if (taken) throw new ApiError('validation', 'Check the highlighted fields.', 422, { loginEmail: 'That login is already linked to another trainer.' });
+        trainer.userId = login.id;
+      }
+    }
     return { ...trainer };
   }
 

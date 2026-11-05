@@ -1,5 +1,5 @@
 import type { Repository } from 'typeorm';
-import type { AuditAction, AuditEventEntity } from './audit-event.entity.js';
+import { isAuditAction, type AuditAction, type AuditEventEntity } from './audit-event.entity.js';
 
 export interface AuditInput {
   action: AuditAction;
@@ -19,6 +19,9 @@ export class AuditRepository {
   constructor(private readonly repository: Repository<AuditEventEntity>) {}
 
   async record(input: AuditInput): Promise<void> {
+    if (!isAuditAction(input.action)) {
+      throw new Error('Unknown audit action.');
+    }
     const row = this.repository.create({
       action: input.action,
       actorUserId: input.actorUserId,

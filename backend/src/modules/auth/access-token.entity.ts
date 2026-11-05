@@ -1,6 +1,6 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-export type TokenPurpose = 'reset' | 'invite';
+export type TokenPurpose = 'reset' | 'invite' | 'verify_email' | 'email_change';
 
 /**
  * A single-use link. The database stores a hash of the random token.

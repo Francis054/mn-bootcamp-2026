@@ -15,6 +15,8 @@ export interface CreateUserInput {
   password: string;
   role: Role;
   displayName?: string;
+  /** Staff and test accounts are verified. An invitation leaves this false. */
+  verified?: boolean;
 }
 
 export function toPublicUser(user: UserEntity): PublicUser {
@@ -28,6 +30,8 @@ export function toPublicUser(user: UserEntity): PublicUser {
     initials: user.initials,
     hue: user.hue,
     role: user.role,
+    emailVerified: user.emailVerifiedAt instanceof Date,
+    traineeId: user.traineeId ?? null,
   };
 }
 
@@ -78,7 +82,7 @@ export class UserService {
     return 'updated';
   }
 
-  /** Used by tests and, later, by invitations. There is no public registration route. */
+  /** Used by tests and invitations. Public trainee signup uses its own path. */
   async createUser(input: CreateUserInput): Promise<PublicUser> {
     const email = normalizeEmail(input.email);
     assertEmail(email);
@@ -89,9 +93,14 @@ export class UserService {
       email,
       password: input.password,
       role: input.role,
+      ...(input.verified === false ? { verified: false } : {}),
       ...(input.displayName ? { displayName: input.displayName } : {}),
     });
     return toPublicUser(saved);
+  }
+
+  touchLastLogin(id: string, at: Date): Promise<void> {
+    return this.users.setLastLogin(id, at);
   }
 
   private async insert(input: CreateUserInput & { email: string }): Promise<UserEntity> {
@@ -110,6 +119,7 @@ export class UserService {
       hue: hueFromEmail(input.email),
       role: input.role,
       passwordHash,
+      emailVerifiedAt: input.verified === false ? null : new Date(),
     });
   }
 }

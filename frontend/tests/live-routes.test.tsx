@@ -32,6 +32,11 @@ const PUBLIC = [
   '/about',
   '/anniversary',
   '/contact',
+  '/signup',
+  '/verify-email',
+  '/login',
+  '/forgot-password',
+  '/portal/reset-password',
   '/this-page-does-not-exist',
 ];
 
@@ -46,6 +51,7 @@ const ADMIN = [
   '/admin/classes/timetable',
   '/admin/classes/new',
   '/admin/trainees',
+  '/admin/review',
   '/admin/projects',
   '/admin/events',
   '/admin/media',
@@ -57,6 +63,8 @@ const ADMIN = [
   '/admin/account',
   '/admin/states',
   '/admin/users',
+  '/admin/pending-registrations',
+  '/admin/trainee-accounts',
   '/admin/enquiries',
   '/admin/settings',
 ];

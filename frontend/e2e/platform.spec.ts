@@ -34,9 +34,11 @@ test('public home, classes and contact validation', async ({ page }, info) => {
   await shot(page, `home-${info.project.name}`);
   if (info.project.name === 'mobile') {
     await page.getByRole('button', { name: /open menu/i }).click();
-    await page.getByRole('dialog', { name: 'Menu' }).getByRole('link', { name: 'Trainees' }).click();
+    await page.getByRole('dialog', { name: 'Menu' }).getByRole('link', { name: 'Meet the trainees', exact: true }).click();
   } else {
-    await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Trainees' }).click();
+    const primary = page.getByRole('navigation', { name: 'Primary' });
+    await primary.getByRole('button', { name: 'Trainees', exact: true }).click();
+    await primary.getByRole('menuitem', { name: /meet the trainees/i }).click();
   }
   await expect(page).toHaveURL(/\/trainees$/);
   await page.goto('/classes');

@@ -39,6 +39,71 @@ export class TraineeEntity {
   @Column({ type: 'varchar', length: 500, nullable: true })
   portfolio!: string | null;
 
+  /** Short public line, for example "Aspiring SOC analyst". Empty until someone writes it. */
+  @Column({ type: 'varchar', length: 160, default: '' })
+  headline!: string;
+
+  /** City or country. Empty until someone writes it. */
+  @Column({ type: 'varchar', length: 120, default: '' })
+  location!: string;
+
+  @Column({ name: 'github_url', type: 'varchar', length: 500, nullable: true })
+  githubUrl!: string | null;
+
+  /** The trainee agreed the profile photo may be public. An administrator's photo sets this too. */
+  @Column({ name: 'photo_consent', type: 'boolean', default: false })
+  photoConsent!: boolean;
+
+  /** The trainee agreed employers may contact them through the site. The address stays hidden. */
+  @Column({ name: 'contact_consent', type: 'boolean', default: false })
+  contactConsent!: boolean;
+
+  /** Approved trainee links may appear on the public profile. Administrator links stay off it. */
+  @Column({ name: 'public_links', type: 'boolean', default: false })
+  publicLinks!: boolean;
+
+  @Column({ name: 'profile_review_status', type: 'varchar', length: 16, default: 'draft' })
+  profileReviewStatus!: string;
+
+  @Column({ name: 'profile_rejection_reason', type: 'varchar', length: 500, default: '' })
+  profileRejectionReason!: string;
+
+  @Column({ name: 'profile_submitted_at', type: 'timestamptz', nullable: true })
+  profileSubmittedAt!: Date | null;
+
+  @Column({ name: 'profile_reviewed_at', type: 'timestamptz', nullable: true })
+  profileReviewedAt!: Date | null;
+
+  @Column({ name: 'profile_reviewed_by', type: 'uuid', nullable: true })
+  profileReviewedBy!: string | null;
+
+  @Column({ name: 'pending_display_name', type: 'varchar', length: 120, nullable: true })
+  pendingDisplayName!: string | null;
+
+  @Column({ name: 'pending_headline', type: 'varchar', length: 160, nullable: true })
+  pendingHeadline!: string | null;
+
+  @Column({ name: 'pending_bio', type: 'text', nullable: true })
+  pendingBio!: string | null;
+
+  @Column({ name: 'pending_location', type: 'varchar', length: 120, nullable: true })
+  pendingLocation!: string | null;
+
+  @Column({ name: 'pending_linkedin', type: 'varchar', length: 500, nullable: true })
+  pendingLinkedin!: string | null;
+
+  @Column({ name: 'pending_github_url', type: 'varchar', length: 500, nullable: true })
+  pendingGithubUrl!: string | null;
+
+  @Column({ name: 'pending_portfolio', type: 'varchar', length: 500, nullable: true })
+  pendingPortfolio!: string | null;
+
+  @Column({ name: 'pending_photo_url', type: 'varchar', length: 1000, nullable: true })
+  pendingPhotoUrl!: string | null;
+
+  @Column({ name: 'pending_photo_storage_key', type: 'varchar', length: 200, nullable: true })
+  pendingPhotoStorageKey!: string | null;
+
   /** Public address of the profile photo. Null until an editor uploads one. */
   @Column({ name: 'photo_url', type: 'varchar', length: 1000, nullable: true })
   photoUrl!: string | null;
@@ -83,6 +148,13 @@ export class TraineeEntity {
 
   @Column({ name: 'internal_notes', type: 'text' })
   internalNotes!: string;
+
+  /** Shareable profile address. Empty until a later publish step sets it. */
+  @Column({ type: 'varchar', length: 80, unique: true, nullable: true })
+  slug!: string | null;
+
+  @Column({ name: 'cohort_year', type: 'smallint', default: 2026 })
+  cohortYear!: number;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;

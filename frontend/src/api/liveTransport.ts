@@ -45,7 +45,12 @@ export function statusToCode(status: number): ApiErrorCode {
 
 /** Login, reset, and the anonymous session probe must not bounce the visitor to the admin login. */
 export function skipsSessionExpiry(path: string): boolean {
-  return path.includes('/auth/login') || path.includes('/auth/password-reset/') || path.includes('/auth/session');
+  return (
+    path.includes('/auth/login') ||
+    path.includes('/auth/password-reset/') ||
+    path.includes('/auth/session') ||
+    path.includes('/public/trainee-signup')
+  );
 }
 
 export function buildApiUrl(path: string, query?: ApiRequest['query']): string {

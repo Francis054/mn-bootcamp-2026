@@ -118,10 +118,7 @@
 .row-link h3{font-size:clamp(20px,2vw,26px);letter-spacing:-.025em}
 .row-link .go{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;transition:all var(--d-base) var(--ease-out)}
 .row-link:hover .go{background:var(--mn-lime);border-color:var(--mn-lime);transform:rotate(-45deg)}
-.row-peek{position:fixed;width:240px;aspect-ratio:4/3;border-radius:var(--r-md);overflow:hidden;pointer-events:none;z-index:60;opacity:0;transform:translate(-50%,-50%) scale(.85);transition:opacity var(--d-base),transform var(--d-base) var(--ease-out);box-shadow:var(--shadow-3)}
-.row-peek.is-on{opacity:1;transform:translate(-50%,-50%) scale(1)}
-.row-peek img{width:100%;height:100%;object-fit:cover}
-@media (max-width:900px){.row-link{grid-template-columns:72px 1fr 44px;gap:var(--s-4)}.row-link .row-mod,.row-link .row-status{display:none}.row-link .wk b{font-size:30px}.row-peek{display:none}}
+@media (max-width:900px){.row-link{grid-template-columns:72px 1fr 44px;gap:var(--s-4)}.row-link .row-mod,.row-link .row-status{display:none}.row-link .wk b{font-size:30px}}
 
 /* ---------- Status pills for lessons ---------- */
 .st{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
@@ -347,6 +344,8 @@ details.faq .faq-body{padding:0 0 var(--s-5);color:var(--ink-2);max-width:70ch;a
 
 /* Journey timeline page */
 .jt{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:var(--grid-gap)}
+.journey-filters .tabs{flex-wrap:wrap;overflow:visible}
+.journey-filters .tab{padding:10px 12px}
 .jt__side{grid-column:1 / span 4}
 .jt__main{grid-column:6 / span 7}
 .tl__phase{font-family:var(--font-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--forest-600);margin:0 0 var(--s-5) 64px;padding-top:var(--s-2)}
@@ -357,8 +356,9 @@ a.tl__card:hover{box-shadow:var(--shadow-2);transform:translateX(4px)}
 .tl__item--milestone .tl__card{background:var(--forest-800);color:#fff;border-color:var(--forest-800)}
 .tl__item--milestone .tl__dot{border-color:var(--gold)}
 .tl__item--milestone.is-reached .tl__dot{background:var(--gold);border-color:var(--gold)}
-.tl__date{font-family:var(--font-mono);font-size:12px;color:var(--ink-3)}
-.tl__item--milestone .tl__date{color:var(--gold)}
+.tl__date,.tl__kind{font-family:var(--font-mono);font-size:12px;color:var(--ink-3)}
+.tl__item--private .tl__card{border-style:dashed}
+.tl__item--milestone .tl__date,.tl__item--milestone .tl__kind{color:var(--gold)}
 @media (max-width:900px){.jt__side,.jt__main{grid-column:1 / -1}.jt__side .sticky{position:static}}
 
 /* Rail (horizontal timeline) */
@@ -592,18 +592,4 @@ a.tl__card:hover{box-shadow:var(--shadow-2);transform:translateX(4px)}
 @media (max-width:900px){
   .week-sheet__head,.week-sheet__grid{grid-template-columns:1fr}
   .sess{grid-template-columns:1fr;gap:4px}
-}
-
-/* ---------- Bootcamp gear (home) ---------- */
-.gear{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:var(--grid-gap);align-items:center}
-.gear__copy{grid-column:1 / span 5;min-width:0}
-.gear__photo{grid-column:7 / span 6;margin:0;min-width:0}
-.gear__photo img{display:block;width:100%;height:auto}
-.gear__facts{list-style:none;padding:0;margin:var(--s-6) 0 0;display:flex;flex-direction:column;gap:var(--s-3)}
-.gear__facts li{display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--line-dark);padding-top:var(--s-3)}
-.gear__facts span{font-family:var(--font-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:rgba(233,240,234,.62)}
-.gear__facts b{font-family:var(--font-display);font-weight:600;letter-spacing:.04em;font-size:15px}
-@media (max-width:900px){
-  .gear__copy,.gear__photo{grid-column:1 / -1}
-  .gear__photo{margin-top:var(--s-6)}
 }

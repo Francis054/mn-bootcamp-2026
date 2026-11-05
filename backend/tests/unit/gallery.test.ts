@@ -5,6 +5,8 @@ import { readImage } from '../../src/modules/gallery/image-bytes.js';
 import { imageSizeMessage } from '../../src/modules/gallery/media.rules.js';
 import type { MediaEntity } from '../../src/modules/gallery/media.entity.js';
 import { MediaService, isPublicMedia } from '../../src/modules/gallery/media.service.js';
+import type { Actor } from '../../src/modules/curriculum/actor.js';
+import { preparedImageBytes } from '../../src/modules/gallery/strip-metadata.js';
 import { ApiError } from '../../src/shared/errors/api-error.js';
 import { buildSampleMedia } from '../../src/modules/gallery/sample-media.js';
 import { CloudinaryStorage, sign } from '../../src/modules/storage/cloudinary-storage.js';
@@ -103,6 +105,49 @@ describe('image storage', () => {
     expect(stored.publicUrl).toBe('https://cdn.example.test/a.png');
     expect(stored.key.startsWith('mn/')).toBe(true);
     expect(seen).toEqual(['https://api.cloudinary.com/v1_1/example-cloud/image/upload']);
+  });
+
+  it('signs a direct video upload without putting the secret in the URL', () => {
+    const storage = new CloudinaryStorage({
+      cloudName: 'example-cloud',
+      apiKey: 'key-value',
+      apiSecret: 'secret-value',
+    });
+    const signed = storage.signVideoUpload('mn-video-1', 10_000);
+    expect(signed.uploadUrl).toBe('https://api.cloudinary.com/v1_1/example-cloud/video/upload');
+    expect(signed.uploadUrl).not.toContain('secret-value');
+    expect(signed.fields.public_id).toBe('mn-video-1');
+    expect(signed.fields.api_key).toBe('key-value');
+    expect(signed.fields.signature).toBe(sign({ public_id: 'mn-video-1', timestamp: '10' }, 'secret-value'));
+    expect(JSON.stringify(signed.fields)).not.toContain('secret-value');
+  });
+
+  it('confirms a stored video from the admin API and does not put the secret in the URL', async () => {
+    const seen: string[] = [];
+    const storage = new CloudinaryStorage({
+      cloudName: 'example-cloud',
+      apiKey: 'key-value',
+      apiSecret: 'secret-value',
+      fetchImpl: (input) => {
+        seen.push(requestUrl(input));
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              secure_url: 'https://res.cloudinary.com/example-cloud/video/upload/mn-video-1.mp4',
+              bytes: 20,
+              format: 'mp4',
+              resource_type: 'video',
+            }),
+            { status: 200 },
+          ),
+        );
+      },
+    });
+    const described = await storage.describeVideo('mn-video-1');
+    expect(described?.format).toBe('mp4');
+    expect(described?.bytes).toBe(20);
+    expect(seen[0]).toBe('https://api.cloudinary.com/v1_1/example-cloud/resources/video/upload/mn-video-1');
+    expect(seen[0]).not.toContain('secret-value');
   });
 
   it('turns a refused storage response into a generic error', async () => {
@@ -256,4 +301,44 @@ function requestUrl(input: Parameters<typeof fetch>[0]): string {
   if (typeof input === 'string') return input;
   if (input instanceof URL) return input.href;
   return input.url;
+}
+
+describe('stored image bytes', () => {
+  it('drops JPEG EXIF before a gallery upload is stored', async () => {
+    const storage = new MemoryStorage();
+    const audit = { record: () => Promise.resolve() };
+    const media = {
+      findAll: () => Promise.resolve([]),
+      findById: () => Promise.resolve(null),
+      insert: (row: Omit<MediaEntity, 'createdAt' | 'updatedAt'>) =>
+        Promise.resolve({ ...row, createdAt: new Date(), updatedAt: new Date() }),
+      remove: () => Promise.resolve(),
+    };
+    const service = new MediaService(
+      media as never,
+      audit as never,
+      storage,
+      5_000_000,
+      () => new Date('2026-11-01T00:00:00Z'),
+    );
+    const actor: Actor = { userId: 'admin-1', role: 'administrator', ip: null, requestId: 'req-1' };
+    await service.createUpload(
+      { alt: 'A desk in the lab.', caption: '', album: 'community', bytes: exifJpeg() },
+      actor,
+    );
+    const stored = [...storage.objects.values()][0];
+    expect(stored).toBeDefined();
+    expect(stored?.toString('ascii')).not.toContain('GPSLatitude');
+    expect(readImage(stored ?? Buffer.alloc(0))?.mime).toBe('image/jpeg');
+    expect(preparedImageBytes(exifJpeg()).toString('ascii')).not.toContain('GPSLatitude');
+  });
+});
+
+function exifJpeg(): Buffer {
+  const app1 = Buffer.concat([
+    Buffer.from([0xff, 0xe1, 0x00, 0x12]),
+    Buffer.from('EXIF\0GPSLatitude', 'ascii'),
+  ]);
+  const sof = Buffer.from([0xff, 0xc0, 0x00, 0x0b, 0x08, 0x00, 0x01, 0x00, 0x01, 0x01, 0x01, 0x11, 0x00]);
+  return Buffer.concat([Buffer.from([0xff, 0xd8]), app1, sof, Buffer.from([0xff, 0xd9])]);
 }

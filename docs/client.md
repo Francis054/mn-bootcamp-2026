@@ -38,7 +38,7 @@ npm run build
 | Content | `GET` / `PUT` `/admin/home`, `/admin/about`, `/admin/settings`. `GET /admin/milestones` returns `{ milestones, publicationStatus }`. `PUT /admin/milestones` takes `{ milestones }`. `GET /admin/enquiries` lists contact-form messages for `users.manage`. |
 | Accounts | `GET /admin/users`, `PATCH /admin/users/:id` with `{ role }`, `POST /admin/users/invite` with `{ email, role }`, `POST /admin/account/password` with `{ current, next, confirm }` |
 
-Stored passwords use at least 12 characters. The login form still asks for at least 8, which is the login check.
+Stored passwords use at least 12 characters. The login form still asks for at least 8, which is the login check. Leave that check at 8 unless you decide that a shorter stored password should be refused at sign-in. The development fixture password `length-ok` is 9 characters.
 
 Admin search does not call `GET /admin/search`. It queries the four list endpoints and opens the matching admin editor. `POST /auth/session/expire` is only used by the mock adapter. A live session ends when the API returns 401 or the user signs out.
 

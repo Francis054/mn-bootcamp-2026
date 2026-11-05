@@ -168,7 +168,7 @@ describe('authentication', () => {
     expect(locked.body).toEqual({
       error: {
         code: 'rate_limited',
-        message: 'Too many sign-in attempts. Wait a minute and try again.',
+        message: 'Too many sign-in attempts. Wait and try again.',
       },
     });
   });

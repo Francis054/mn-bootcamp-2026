@@ -43,6 +43,9 @@ export function traineeFieldErrors(
     focus: string;
     linkedin: string;
     portfolio: string;
+    headline?: string;
+    location?: string;
+    github?: string;
     consentReceived: boolean;
     publicationStatus: string;
   },
@@ -58,6 +61,9 @@ export function traineeFieldErrors(
   if (!/^[a-z][a-z0-9-]{0,39}$/.test(input.focus.trim())) errors.focus = 'Choose a module.';
   assign(errors, 'linkedin', optionalHttp(input.linkedin));
   assign(errors, 'portfolio', optionalHttp(input.portfolio));
+  assign(errors, 'githubUrl', optionalHttp(input.github ?? ''));
+  if ((input.headline ?? '').trim().length > 160) errors.headline = 'Use at most 160 characters.';
+  if ((input.location ?? '').trim().length > 120) errors.location = 'Use at most 120 characters.';
   const publishing = mode === 'publish' || input.publicationStatus === 'published';
   if (publishing && !input.consentReceived) {
     errors.consentReceived = CONSENT;

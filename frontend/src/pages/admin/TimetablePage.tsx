@@ -141,6 +141,15 @@ export function TimetablePage() {
       toast('Could not update the trainer', isApiError(error) ? error.message : 'Request failed.', 'error');
     }
   };
+  const linkLogin = async (id: string, loginEmail: string) => {
+    try {
+      await api({ method: 'PATCH', path: `/admin/trainers/${id}`, body: { loginEmail } });
+      toast('Trainer login updated', loginEmail.trim() ? 'That login can now read trainee skills and events.' : 'The login link was cleared.');
+      refresh();
+    } catch (error) {
+      toast('Could not link the login', isApiError(error) ? error.message : 'Request failed.', 'error');
+    }
+  };
 
   if (record.loading && !data) return <LoadingRows />;
   if (record.error) return <ErrorState title="The timetable could not be loaded" text={record.error.message} onRetry={refresh} />;
@@ -294,6 +303,14 @@ export function TimetablePage() {
                   <li key={trainer.id}>
                     <div><b>{trainer.displayName}</b><br /><span className="muted">{trainer.kind === 'group' ? 'Group' : 'Person'}{trainer.userId ? '' : ' · no login'}</span></div>
                     {writable ? <label className="check"><input type="checkbox" checked={trainer.proposed} onChange={(event) => void toggleProposed(trainer.id, event.target.checked)} /> Proposed</label> : trainer.proposed ? <span className="badge">Proposed</span> : null}
+                    {writable && trainer.kind === 'person' ? (
+                      <form onSubmit={(event) => { event.preventDefault(); void linkLogin(trainer.id, String(new FormData(event.currentTarget).get('loginEmail') ?? '')); }}>
+                        <label className="field">Login email
+                          <input className="input" name="loginEmail" type="email" aria-label={`Login email for ${trainer.displayName}`} placeholder={trainer.userId ? 'Linked — leave blank to clear' : 'trainer@example.test'} />
+                        </label>
+                        <button className="btn btn--sm" type="submit">{trainer.userId ? 'Update login' : 'Link login'}</button>
+                      </form>
+                    ) : null}
                   </li>
                 ))}
               </ul>

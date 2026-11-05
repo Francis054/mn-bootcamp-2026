@@ -169,6 +169,7 @@ export function buildTrainees(): Trainee[] {
       linkedin: '',
       portfolio: '',
       photoUrl: null,
+      contactConsent: index === 0,
       consentReceived: false,
       listing: 'sample',
       publicationStatus: 'published',
@@ -330,6 +331,7 @@ export const DEV_USERS: DevUser[] = [
   { id: 'dev-viewer', email: 'viewer@example.test', displayName: 'Sample Viewer', initials: 'SV', hue: 190, role: 'viewer', lastActiveLabel: '3 days ago', fixture: true },
   { id: 'dev-editor', email: 'editor@example.test', displayName: 'Sample Editor', initials: 'SE', hue: 60, role: 'editor', lastActiveLabel: 'Yesterday', fixture: true },
   { id: 'dev-admin', email: 'administrator@example.test', displayName: 'Sample Administrator', initials: 'SA', hue: 140, role: 'administrator', lastActiveLabel: 'Now', fixture: true },
+  { id: 'dev-trainer', email: 'trainer@example.test', displayName: 'Sample Trainer', initials: 'ST', hue: 30, role: 'trainer', lastActiveLabel: 'Today', fixture: true },
 ];
 
 export const SETTINGS: SiteSettings = {

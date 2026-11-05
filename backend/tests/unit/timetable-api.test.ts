@@ -37,13 +37,42 @@ const publicBody = {
           deliverables: [{ id: 'del-01-01', sortOrder: 1, title: 'Personal learning plan' }],
           professionalismTrainers: [],
           cybersecurityTrainers: [],
-          sessions: [],
+          sessions: [
+            {
+              id: 'session-1',
+              date: '2026-10-05',
+              day: 'Monday',
+              sortOrder: 1,
+              type: 'class',
+              activity: 'Lecture',
+              topic: 'A long topic that should not be sent with the home-page outline.',
+              notes: 'Notes that stay on the full timetable only.',
+              startTime: '09:00',
+              endTime: '10:00',
+              trainerStatus: 'confirmed',
+              trainers: [],
+            },
+          ],
         },
       ],
     },
   ],
   trainers: [],
 };
+
+function cvRouterStub(): never {
+  const pass = (_req: unknown, _res: unknown, next: (error?: unknown) => void) => {
+    next();
+  };
+  return { uploadLimit: pass, downloadLimit: pass } as never;
+}
+
+function reachStub(): never {
+  const pass = (_req: unknown, _res: unknown, next: (error?: unknown) => void) => {
+    next();
+  };
+  return { publicLimit: pass } as never;
+}
 
 function appFor(role: 'editor' | 'viewer' | null) {
   const sessions = {
@@ -64,7 +93,8 @@ function appFor(role: 'editor' | 'viewer' | null) {
   } as unknown as SessionService;
   const timetable = {
     publicTimetable: () => Promise.resolve(publicBody),
-    adminTimetable: () => Promise.resolve({ ...publicBody, sourceNote: '', warnings: [], sessions: [], trainers: [] }),
+    adminTimetable: () =>
+      Promise.resolve({ ...publicBody, sourceNote: '', warnings: [], sessions: [], trainers: [] }),
     listSessions: () => Promise.resolve([]),
     createSession: () => Promise.resolve({ id: 'sess-new' }),
     updateWeek: () => Promise.resolve({ id: 'week-01' }),
@@ -90,6 +120,14 @@ function appFor(role: 'editor' | 'viewer' | null) {
       {} as never,
       {} as never,
       timetable,
+      {} as never,
+      {} as never,
+      {} as never,
+      50 * 1024 * 1024,
+      {} as never,
+      cvRouterStub(),
+      reachStub(),
+      {} as never,
     ),
   );
   app.use(errorHandler(pino({ level: 'silent' }), { nodeEnv: 'test' } as never));
@@ -103,10 +141,23 @@ describe('timetable API', () => {
     expect(programme.startsOn).toBe('2026-10-05');
     expect(programme.endsOn).toBe('2026-12-25');
     const blocks = readRecord(response.body).blocks;
-    expect(Array.isArray(blocks) && readRecord(blocks[0]).name).toBe('Foundations & Secure Systems');
+    expect(Array.isArray(blocks) && readRecord(blocks[0]).name).toBe(
+      'Foundations & Secure Systems',
+    );
+    const outline = await request(appFor(null)).get('/api/v1/public/timetable?outline=1').expect(200);
+    const outlineBlocks = readRecord(outline.body).blocks;
+    if (!Array.isArray(outlineBlocks)) throw new Error('Expected outline blocks.');
+    const firstBlock = readRecord(outlineBlocks[0]);
+    if (!Array.isArray(firstBlock.weeks)) throw new Error('Expected outline weeks.');
+    const outlineWeek = readRecord(firstBlock.weeks[0]);
+    expect(outlineWeek.title).toBe('Foundations and professional orientation');
+    expect(outlineWeek.sessions).toEqual([]);
+    expect(JSON.stringify(outline.body).length).toBeLessThan(JSON.stringify(response.body).length);
     const week = await request(appFor(null)).get('/api/v1/public/weeks/1').expect(200);
     const deliverables = readRecord(week.body).deliverables;
-    expect(Array.isArray(deliverables) && readRecord(deliverables[0]).title).toBe('Personal learning plan');
+    expect(Array.isArray(deliverables) && readRecord(deliverables[0]).title).toBe(
+      'Personal learning plan',
+    );
     await request(appFor(null)).get('/api/v1/public/weeks/99').expect(404);
   });
 
@@ -115,7 +166,14 @@ describe('timetable API', () => {
     await request(appFor('viewer'))
       .post('/api/v1/admin/sessions')
       .set('Cookie', 'mn_session=viewer')
-      .send({ weekId: 'week-01', date: '2026-10-06', type: 'theory', activity: 'Technical theory', topic: 'CIA', trainerIds: [] })
+      .send({
+        weekId: 'week-01',
+        date: '2026-10-06',
+        type: 'theory',
+        activity: 'Technical theory',
+        topic: 'CIA',
+        trainerIds: [],
+      })
       .expect(403);
     const invalid = await request(appFor('editor'))
       .post('/api/v1/admin/sessions')

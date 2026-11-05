@@ -21,13 +21,22 @@ export function applySecurity(app: Express, env: AppEnv): void {
   app.disable('x-powered-by');
   app.use(
     helmet({
-      // Swagger UI at /api/docs needs inline styles and scripts.
       contentSecurityPolicy: {
         directives: {
           ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-          'script-src': ["'self'", "'unsafe-inline'"],
-          'style-src': ["'self'", "'unsafe-inline'"],
-          'img-src': ["'self'", 'data:'],
+          // Swagger UI needs inline scripts and styles. It is not mounted in production.
+          'script-src':
+            env.nodeEnv === 'production' ? ["'self'"] : ["'self'", "'unsafe-inline'"],
+          'style-src':
+            env.nodeEnv === 'production' ? ["'self'"] : ["'self'", "'unsafe-inline'"],
+          'img-src': ["'self'", 'data:', 'blob:', 'https://res.cloudinary.com'],
+          'media-src': ["'self'", 'blob:', 'https://res.cloudinary.com'],
+          'frame-src': [
+            "'self'",
+            'https://www.youtube-nocookie.com',
+            'https://player.vimeo.com',
+            'https://www.loom.com',
+          ],
         },
       },
       crossOriginEmbedderPolicy: false,

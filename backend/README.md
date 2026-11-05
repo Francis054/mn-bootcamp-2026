@@ -31,7 +31,7 @@ Open `.env` and set values there. Do not put those values in git, in a pull requ
 | `SESSION_IDLE_TTL_MS`      | How long a session can sit unused. `1800000` (30 minutes) when empty.                                                                                                                   |
 | `SESSION_ABSOLUTE_TTL_MS`  | How long a session may exist at all. `43200000` (12 hours) when empty.                                                                                                                  |
 | `LOGIN_FAILURE_LIMIT`      | Failed sign-ins for one mailbox before a lock. `5` when empty.                                                                                                                          |
-| `LOGIN_LOCK_MS`            | How long that lock lasts. `60000` when empty.                                                                                                                                           |
+| `LOGIN_LOCK_MS`            | How long that lock lasts. `900000` (15 minutes) when empty. The lock is stored in `login_throttles`.                                                                                     |
 | `LOGIN_IP_FAILURE_LIMIT`   | Failed sign-ins from one address before a lock. `30` when empty, so a classroom does not get locked by one mailbox.                                                                     |
 | `ADMIN_EMAIL`              | Read only by `npm run admin:create`. Not read by the running server. Leave it empty in the example.                                                                                     |
 | `ADMIN_BOOTSTRAP_PASSWORD` | Read only by that command, or type the password at its hidden prompt. Never put it on the command line. The command does not print it.                                                  |
@@ -113,6 +113,8 @@ npm run migration:revert  # undo the last migration
 ```
 
 Run those against the database in `DATABASE_URL`. They do not choose a database by themselves.
+
+`node scripts/check-public-rls.mjs` reads that same `DATABASE_URL` and prints whether every public table has row level security on, whether `PublicRls1794096000000` is recorded, and whether `anon` or `authenticated` still has a table or sequence grant. It does not print the URL. Add `--require-roles` on the hosted Supabase project, where those two roles must exist. Exit 0 is the locked state. `FORCE ROW LEVEL SECURITY` is reported and is left unset on purpose.
 
 `src/shared/persistence/base-repository.ts` is the pattern the account and session repositories extend. A repository is given a TypeORM repository. It does not open a connection.
 
@@ -199,7 +201,7 @@ The API process is a free Render web service. Put `DATABASE_URL`, `SESSION_SECRE
 
 New photo uploads use Cloudinary when `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` are all set on the host. The cloud name for this project is `i5rrintk`. Leave those three lines blank in `.env.example`. Do not commit the key or the secret. Development and the tests keep uploads in memory, so the test suite does not call Cloudinary. If production starts without those three variables, the process still boots and an upload is refused. This milestone does not rewrite image bytes to remove EXIF. The plan does not ask for that.
 
-Mail uses Resend when `RESEND_API_KEY` and `EMAIL_FROM` are both set. Leave both lines blank in `.env.example`. Do not commit a key or a from address. Development and the tests keep messages in memory, so the test suite does not call Resend. If production starts with neither variable, the process still boots and a message is reported as not sent. Set both, or leave both blank. The plan leaves text messages unselected, so this API does not send SMS.
+Mail uses Resend when `RESEND_API_KEY` and `EMAIL_FROM` are both set. Leave both lines blank in `.env.example`. Do not commit a key or a from address. Development and the tests keep messages in memory, so the test suite does not call Resend. If production starts with neither variable, the process still boots. Every message is still queued in `email_outbox` and reported as not sent until both values are set. Set both, or leave both blank. Each message has an HTML part in the green and white shell and a plain-text part. A provider failure is stored on the row, retried with backoff up to 5 attempts, and returned as not delivered. An administrator can resend it. The retry timer runs in this process. `docs/email.md` lists the SPF, DKIM, and DMARC records the sending domain needs. Until that domain is verified, Resend only delivers to the account owner. `TRAINEE_SIGNUP_MODE=roster` is the only signup mode. `DEV_MAIL_LOG` is for local development and is refused in production. This API does not send SMS.
 
 A free Supabase project can pause after about a week with no traffic. A free Render service sleeps after a period with no requests. The first request after a pause can fail until the database wakes up. `/api/v1/health` only means the process and the database answered at that moment.
 
@@ -285,7 +287,7 @@ A JSON create starts as pending, draft, and hidden, with an empty src. A file up
 
 `POST /api/v1/admin/media/:id/withdraw-consent` sets consent to withdrawn, returns the workflow to draft, hides the listing, clears src, and deletes an uploaded object from storage. A static seed row has no uploaded object, so withdrawal only clears the metadata. If storage cannot delete the object, the photo is already off the public site and the key is kept so the request can be tried again. The audit row stores the action and the photo id. It does not store the alt text, the caption, the address, or the file bytes.
 
-Uploading uses `media.upload`. A trainee, a trainer, an editor, and an administrator can upload. Publishing, editing, and deleting use `media.write`. A viewer can read the admin list. A change needs the session cookie and the matching `X-CSRF-Token` header. There is no media bulk action.
+Uploading uses `media.upload` and the admin router, which also requires `content.read`. An editor and an administrator can upload. A trainee or a trainer cannot. Publishing, editing, and deleting use `media.write`. A viewer can read the admin list. A change needs the session cookie and the matching `X-CSRF-Token` header. There is no media bulk action.
 
 `npm run seed` also inserts three labelled placeholders: `sample-banner`, `sample-bench`, and `sample-mark`. They are drawings and banners, not photographs of people. Consent is pending and the workflow is draft, so the public gallery does not include them. Run the command again and it leaves an edited row alone.
 

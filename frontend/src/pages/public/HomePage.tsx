@@ -1,6 +1,6 @@
-import { useRef, type MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { Cover, HatMark, Photo, Reveal, SplitHeading } from '@/components/Brand';
+import { BootcampGear } from '@/components/BootcampGear';
 import { Icon } from '@/components/Icon';
 import { Netlines } from '@/components/Netlines';
 import { SiteImage } from '@/components/SiteImage';
@@ -11,13 +11,12 @@ import { usesMockApi } from '@/config/runtime';
 import { currentWeek, formatDate, parseUtcDate } from '@/domain/format';
 import { outlineLines, weeksOf } from '@/domain/timetable';
 import { usePublicContent } from '@/hooks/useContent';
-import { useSiteImage } from '@/hooks/useSiteImages';
 import { useTimetable } from '@/hooks/useTimetable';
 import { moduleOf, PublicGate, SampleMark, TraineeArt } from './helpers';
 
 export function HomePage() {
   const content = usePublicContent();
-  const timetable = useTimetable();
+  const timetable = useTimetable({ outline: true });
   const { projects, trainees, events, media } = content;
   const homepage = content.homepage;
   usePageMeta('Home');
@@ -30,26 +29,6 @@ export function HomePage() {
   const endsOn = timetable.data?.programme?.endsOn ?? '2026-12-25';
   const featureProject = projects[0];
   const sideProjects = [projects[2], projects[5]].filter((item) => item !== undefined);
-  const peek = useRef<HTMLDivElement>(null);
-  const peekPhotos = [
-    useSiteImage('home-class-peek-1'),
-    useSiteImage('home-class-peek-2'),
-    useSiteImage('home-class-peek-3'),
-    useSiteImage('home-class-peek-4'),
-  ];
-  const movePeek = (index: number) => (event: MouseEvent) => {
-    const node = peek.current;
-    const image = node?.querySelector('img');
-    const chosen = peekPhotos[index % peekPhotos.length];
-    if (!node || !image || !chosen) return;
-    const src = hoverSrc(chosen.src);
-    image.dataset.fallback = hoverSrc(chosen.fallbackSrc);
-    delete image.dataset.fell;
-    if (image.getAttribute('src') !== src) image.src = src;
-    node.classList.add('is-on');
-    node.style.left = `${event.clientX}px`;
-    node.style.top = `${event.clientY}px`;
-  };
   return (
     <PublicGate loading={content.loading} error={content.error} errorTitle="The published site could not be loaded">
     {homepage ? <>
@@ -151,8 +130,8 @@ export function HomePage() {
           </div>
           <div className="rows">
             {featuredWeeks.length ? null : <EmptyState icon="calendar" title="The timetable is not loaded yet" text="Week titles appear here from the published schedule." />}
-            {featuredWeeks.map((item, index) => (
-              <Link className="row-link" key={item.id} to={`/schedule?week=${item.number}`} onMouseEnter={movePeek(index)} onMouseMove={movePeek(index)} onMouseLeave={() => peek.current?.classList.remove('is-on')}>
+            {featuredWeeks.map((item) => (
+              <Link className="row-link" key={item.id} to={`/schedule?week=${item.number}`}>
                 <span className="wk">Week<b>{String(item.number).padStart(2, '0')}</b></span>
                 <div><h3>{item.title}</h3><p className="muted">{outlineLines(item.cybersecurity)[0]}</p></div>
                 <span className="row-mod tag">{item.deliverables[0]?.title ?? 'Weekly deliverable'}</span>
@@ -175,27 +154,7 @@ export function HomePage() {
           </div>
         </div>
       </section>
-      <section className="section section--dark" id="gear" aria-labelledby="gear-title">
-        <div className="container">
-          <div className="gear">
-            <div className="gear__copy">
-              <Reveal><span className="eyebrow">Bootcamp gear</span></Reveal>
-              <Reveal><h2 id="gear-title" className="h2">The 2026 white hat.</h2></Reveal>
-              <Reveal><p className="lead">A fedora for the cohort. The name is stitched across the crown, and the year sits on the black band.</p></Reveal>
-              <ul className="gear__facts">
-                <li><span>Crown</span><b>MAXIM NYANSA</b></li>
-                <li><span>Band</span><b>CYBERSECURITY 2026</b></li>
-              </ul>
-            </div>
-            <Reveal as="figure" className="gear__photo" reveal="scale">
-              <picture>
-                <source type="image/webp" srcSet="/assets/gear/bootcamp-hat-800.webp 800w, /assets/gear/bootcamp-hat.webp 1467w" sizes="(max-width: 900px) 92vw, 560px" />
-                <img src="/assets/gear/bootcamp-hat.png" width={1467} height={843} alt="White fedora with MAXIM NYANSA stitched on the crown and CYBERSECURITY 2026 on the black band." loading="lazy" decoding="async" />
-              </picture>
-            </Reveal>
-          </div>
-        </div>
-      </section>
+      <BootcampGear />
       <section className="section" aria-labelledby="tr-title">
         <div className="container">
           <div className="sec-head">
@@ -207,7 +166,7 @@ export function HomePage() {
             {trainees.slice(0, 6).map((trainee) => (
               <Link className="tcard" to={`/trainees/${trainee.id}`} key={trainee.id}>
                 <TraineeArt trainee={trainee} variant="card" />
-                <div className="tcard__body"><h3>{trainee.displayName}</h3><p>Focus: {moduleOf(trainee.focus).name}</p></div>
+                <div className="tcard__body"><h3>{trainee.displayName}</h3><p>{trainee.headline ? trainee.headline : `Focus: ${moduleOf(trainee.focus).name}`}</p>{trainee.location ? <p className="muted">{trainee.location}</p> : null}</div>
               </Link>
             ))}
           </div>
@@ -296,23 +255,11 @@ export function HomePage() {
           </Reveal>
         </div>
       </section>
-      <div className="row-peek" ref={peek} aria-hidden="true"><img alt="" width={800} height={600} src={hoverSrc(peekPhotos[0]?.src ?? '')} onError={(event) => {
-        const image = event.currentTarget;
-        const fallback = image.dataset.fallback;
-        if (!fallback || image.dataset.fell === '1') return;
-        image.dataset.fell = '1';
-        image.src = fallback;
-      }} /></div>
     </> : (
       <section className="section"><div className="container"><h1>The homepage is not published yet.</h1><p>Published homepage copy will appear here.</p></div></section>
     )}
     </PublicGate>
   );
-}
-
-/** The floating class preview is small, so a bundled pair uses the 800-wide file. */
-function hoverSrc(url: string): string {
-  return url.includes('-1600.webp') ? url.replace('-1600.webp', '-800.webp') : url;
 }
 
 function fridayOn(startsOn: string): string {

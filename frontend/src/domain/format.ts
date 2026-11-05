@@ -1,4 +1,17 @@
-export const APP_TODAY = new Date('2026-10-24T10:00:00Z');
+/** Sample clock used by unit tests so “this week” stays on 24 October 2026. */
+export const SAMPLE_TODAY = new Date('2026-10-24T10:00:00Z');
+
+let todayOverride: Date | null = null;
+
+/** Pin the site clock in tests. Pass null to use the real clock again. */
+export function setAppTodayForTests(value: Date | null): void {
+  todayOverride = value;
+}
+
+/** The instant used for “this week” and “past”. The site uses the real clock. */
+export function appToday(): Date {
+  return todayOverride ?? new Date();
+}
 export const BOOTCAMP_START = '2026-10-05';
 
 export function parseUtcDate(iso: string): Date {
@@ -16,7 +29,7 @@ export function weekStart(week: number): string {
   return date.toISOString().slice(0, 10);
 }
 
-export function scheduleFor(date: string, today: Date = APP_TODAY): 'done' | 'now' | 'upcoming' {
+export function scheduleFor(date: string, today: Date = appToday()): 'done' | 'now' | 'upcoming' {
   const start = parseUtcDate(date);
   const end = new Date(start);
   end.setUTCDate(end.getUTCDate() + 6);
@@ -25,7 +38,7 @@ export function scheduleFor(date: string, today: Date = APP_TODAY): 'done' | 'no
   return 'upcoming';
 }
 
-export function currentWeek(today: Date = APP_TODAY): number {
+export function currentWeek(today: Date = appToday()): number {
   const elapsed = today.getTime() - parseUtcDate(BOOTCAMP_START).getTime();
   return Math.min(12, Math.floor(elapsed / 604_800_000) + 1);
 }

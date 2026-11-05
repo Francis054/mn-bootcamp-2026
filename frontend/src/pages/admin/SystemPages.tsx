@@ -328,7 +328,7 @@ export function MediaPage() {
   };
   return (
     <>
-      <div className="a-head"><div><h1>Gallery and media</h1><p>Describe images without naming people. Trainees and trainers can upload. An editor confirms consent, then publishes. An administrator can confirm consent and publish together.</p></div></div>
+      <div className="a-head"><div><h1>Gallery and media</h1><p>Describe images without naming people. An editor or an administrator can upload. An editor confirms consent, then publishes. An administrator can confirm consent and publish together.</p></div></div>
       {canUpload ? (
         <form className="panel" onSubmit={(event) => void upload(event)} onChange={(event) => { const id = eventTargetId(event.target); if (id !== 'alt') return; const value = event.target instanceof HTMLInputElement ? event.target.value : ''; uploadForm.clearFixed('alt', mediaFieldErrors({ alt: value }, 'save', { verified: false, withdrawn: false, confirmed: false }).alt); }} style={{ marginBottom: 24 }} noValidate>
           <div className="panel__body form-grid">

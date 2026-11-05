@@ -7,7 +7,7 @@ import { Crumbs, usePageMeta } from '@/components/SiteChrome';
 import { ErrorState } from '@/components/feedback';
 import { Icon } from '@/components/Icon';
 import { MODULES } from '@/dev/fixtures';
-import { APP_TODAY, formatDate, parseUtcDate } from '@/domain/format';
+import { appToday, formatDate, parseUtcDate } from '@/domain/format';
 import type { ModuleId, ModuleInfo, PublicEvent, ScheduleStatus } from '@/domain/types';
 
 export function TraineeArt({
@@ -121,7 +121,7 @@ export function PageIntro({
 export function EventRow({ event, index = 0 }: { event: PublicEvent; index?: number }) {
   const day = event.dateTbc ? 'TBC' : String(parseUtcDate(event.date).getUTCDate()).padStart(2, '0');
   const month = event.dateTbc ? 'Oct 2026' : formatDate(event.date, { day: undefined, month: 'short', year: 'numeric' });
-  const past = !event.dateTbc && parseUtcDate(event.date) < APP_TODAY;
+  const past = !event.dateTbc && parseUtcDate(event.date) < appToday();
   return (
     <Reveal i={index}>
       <Link className="ev" to={`/events/${event.id}`}>
