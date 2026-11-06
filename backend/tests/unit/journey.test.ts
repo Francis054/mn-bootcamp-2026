@@ -172,7 +172,7 @@ describe('journey assembly', () => {
     expect(titles).toContain('Open house talk');
     expect(titles).toContain('Getting started');
     expect(titles).toContain('Signed up');
-    expect(titles).toContain('Email confirmed');
+    expect(titles).toContain('Account approved');
     expect(titles).toContain('Profile approved');
     expect(titles).toContain('Profile published');
     expect(titles).not.toContain('Draft lab secret');

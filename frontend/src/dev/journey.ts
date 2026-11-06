@@ -98,8 +98,8 @@ async function build(traineeId: string, audience: 'public' | 'portal'): Promise<
       items.push({
         id: 'account:email-confirmed',
         kind: 'account',
-        title: 'Email confirmed',
-        summary: 'The trainee confirmed their email.',
+        title: 'Account approved',
+        summary: 'An administrator approved the trainee account.',
         occurredOn: '2026-10-02',
         visibility: 'public',
         state: 'recorded',

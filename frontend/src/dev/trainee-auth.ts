@@ -8,8 +8,24 @@ import { readActiveSession } from './session';
 export const SIGNUP_ACCEPTED = {
   accepted: true,
   message:
-    'If this email is on the cohort list, we sent a link. If you do not see it, request another from the verification page.',
+    'Your registration was received. The account is waiting for an administrator to approve it. You can sign in once it is approved.',
 };
+
+export const PENDING_APPROVAL_MESSAGE =
+  'Your account is waiting for an administrator to approve it. You can sign in once it is approved.';
+
+export const REGISTRATION_REJECTED_MESSAGE =
+  'This registration was not approved. You can submit it again from the sign-up page.';
+
+export const ACCOUNT_DEACTIVATED_MESSAGE =
+  'This trainee account is deactivated. An administrator can enable it.';
+
+export type TraineeSignInGate =
+  | { kind: 'skip' }
+  | { kind: 'deny' }
+  | { kind: 'pending' }
+  | { kind: 'rejected' }
+  | { kind: 'deactivated' };
 
 interface PendingRow {
   id: string;
@@ -29,15 +45,32 @@ interface MailRow {
 }
 
 const pending: PendingRow[] = [];
+const passwords = new Map<string, string>();
 const tokens = new Map<string, { email: string; expiresAt: number }>();
 const sent: MailRow[] = [];
 const hits = new Map<string, { count: number; lockedUntil: number }>();
 
 export function resetTraineeAuthDev(): void {
   pending.splice(0, pending.length);
+  passwords.clear();
   tokens.clear();
   sent.splice(0, sent.length);
   hits.clear();
+}
+
+/** Password is checked before a pending, rejected, or deactivated message is returned. */
+export function traineeSignInGate(email: string, password: string): TraineeSignInGate {
+  const normalized = email.trim().toLowerCase();
+  const stored = passwords.get(normalized);
+  if (stored === undefined) return { kind: 'skip' };
+  if (stored !== password) return { kind: 'deny' };
+  const user = getState().users.find((row) => row.email === normalized && row.role === 'trainee');
+  if (user?.disabled) return { kind: 'deactivated' };
+  if (user && user.emailVerified === false) return { kind: 'pending' };
+  if (user) return { kind: 'skip' };
+  const request = pending.find((row) => row.email === normalized);
+  if (request?.status === 'rejected') return { kind: 'rejected' };
+  return { kind: 'pending' };
 }
 
 export function readDevMail(): readonly MailRow[] {
@@ -88,18 +121,12 @@ function signup(body: Record<string, unknown>) {
   consume(`signup:${normalized}`, 3);
   consume('signup-ip:dev', 5);
   if (String(body.company ?? '').trim()) return { ...SIGNUP_ACCEPTED };
-  const roster = getState().trainees.find((row) => row.email.toLowerCase() === normalized);
   const existing = getState().users.find((row) => row.email === normalized);
   if (existing && (existing.role !== 'trainee' || existing.emailVerified !== false)) {
     queueMail(normalized, 'You already have a Maxim Nyansa account', '/forgot-password');
-    return { ...SIGNUP_ACCEPTED, developmentVerifyPath: null };
+    return { ...SIGNUP_ACCEPTED };
   }
-  if (roster) {
-    const user = upsertTraineeUser(normalized, displayName || roster.displayName, roster.id, false);
-    const link = queueMail(normalized, 'Confirm your Maxim Nyansa trainee account', '/verify-email');
-    void user;
-    return { ...SIGNUP_ACCEPTED, developmentVerifyPath: link };
-  }
+  passwords.set(normalized, password);
   const current = pending.find((row) => row.email === normalized);
   if (current) {
     current.displayName = displayName;
@@ -115,7 +142,7 @@ function signup(body: Record<string, unknown>) {
       reviewedAt: null,
     });
   }
-  return { ...SIGNUP_ACCEPTED, developmentVerifyPath: null };
+  return { ...SIGNUP_ACCEPTED };
 }
 
 function verify(body: Record<string, unknown>) {
@@ -142,12 +169,7 @@ function resend(body: Record<string, unknown>) {
   const normalized = email.trim().toLowerCase();
   consume(`resend:${normalized}`, 3);
   consume('resend-ip:dev', 10);
-  const user = getState().users.find((row) => row.email === normalized);
-  let developmentVerifyPath: string | null = null;
-  if (user && user.role === 'trainee' && user.emailVerified === false && !user.disabled) {
-    developmentVerifyPath = queueMail(normalized, 'Confirm your Maxim Nyansa trainee account', '/verify-email');
-  }
-  return { ...SIGNUP_ACCEPTED, developmentVerifyPath };
+  return { ...SIGNUP_ACCEPTED };
 }
 
 function portalMe() {
@@ -202,16 +224,14 @@ function approve(id: string) {
     };
     updateState((state) => ({ ...state, trainees: [trainee, ...state.trainees] }));
   }
-  const user = upsertTraineeUser(row.email, row.displayName || 'New trainee', traineeId, false);
+  const user = upsertTraineeUser(row.email, row.displayName || roster?.displayName || 'New trainee', traineeId, true);
   row.status = 'approved';
   row.reviewedAt = new Date().toISOString();
-  const link = queueMail(row.email, 'Confirm your Maxim Nyansa trainee account', '/verify-email');
   return {
     delivered: true,
-    message: 'The account is ready and a confirmation email was sent.',
+    message: 'The account is ready. The trainee can sign in.',
     userId: user.id,
     traineeId,
-    developmentVerifyPath: link,
   };
 }
 
@@ -258,7 +278,10 @@ function resendInvite(id: string) {
   if (user.disabled) {
     throw new ApiError('validation', 'Enable the account before sending another email.', 422);
   }
-  queueMail(user.email, 'Confirm your Maxim Nyansa trainee account', user.emailVerified === false ? '/verify-email' : '/forgot-password');
+  if (user.emailVerified === false) {
+    return { delivered: false, message: 'Approve the signup first. The trainee can sign in after approval.' };
+  }
+  queueMail(user.email, 'You already have a Maxim Nyansa account', '/forgot-password');
   return { delivered: true, message: 'The email was sent.' };
 }
 

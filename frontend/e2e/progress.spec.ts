@@ -1,18 +1,12 @@
 import { expect, test } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
+import { approveSignup, clientGo } from './approve-signup';
 
 const PASSWORD = 'Correct-horse-1';
 
 async function shot(page: import('@playwright/test').Page, name: string) {
   await mkdir('/opt/cursor/artifacts/screenshots', { recursive: true });
   await page.screenshot({ path: `/opt/cursor/artifacts/screenshots/${name}.png`, fullPage: true });
-}
-
-async function clientGo(page: import('@playwright/test').Page, path: string) {
-  await page.evaluate((next) => {
-    window.history.pushState({}, '', next);
-    window.dispatchEvent(new PopStateEvent('popstate'));
-  }, path);
 }
 
 test('skills, events, review, and the public profile', async ({ page }, info) => {
@@ -26,8 +20,9 @@ test('skills, events, review, and the public profile', async ({ page }, info) =>
   await page.getByLabel('Confirm password').fill(PASSWORD);
   await page.getByRole('checkbox', { name: /creating a trainee account/i }).check();
   await page.getByRole('button', { name: /create account/i }).click();
-  await page.getByRole('link', { name: /development confirmation link/i }).click();
-  await page.getByRole('link', { name: /trainee sign in/i }).click();
+  await expect(page.getByRole('heading', { name: /registration received/i })).toBeVisible();
+  await approveSignup(page, 'trainee06@example.test');
+  await clientGo(page, '/login');
   await page.getByLabel('Email').fill('trainee06@example.test');
   await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
   await page.getByRole('checkbox').check();

@@ -345,7 +345,7 @@ export function accountItems(account: AccountSource, audience: 'public' | 'porta
     items.push(accountItem('signed-up', 'Signed up', 'The trainee account was created.', account.createdAt, 'public'));
   }
   if (account.emailVerifiedAt) {
-    items.push(accountItem('email-confirmed', 'Email confirmed', 'The trainee confirmed their email.', account.emailVerifiedAt, 'public'));
+    items.push(accountItem('email-confirmed', 'Account approved', 'An administrator approved the trainee account.', account.emailVerifiedAt, 'public'));
   }
   if (account.profileReviewStatus === 'approved' && account.profileReviewedAt) {
     items.push(accountItem('profile-approved', 'Profile approved', 'An administrator approved the public profile.', account.profileReviewedAt, 'public'));

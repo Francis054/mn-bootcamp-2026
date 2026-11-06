@@ -7,6 +7,7 @@ import { App } from '@/App';
 import { AuthProvider } from '@/auth/AuthProvider';
 import { ToastProvider } from '@/components/feedback';
 import { readJourney } from '@/domain/journey';
+import { clearSession, setSession } from '@/dev/session';
 import { getState, updateState } from '@/dev/store';
 
 const PASSWORD = 'Correct-horse-1';
@@ -75,12 +76,28 @@ describe('journey privacy', () => {
 
   it('keeps a private milestone off the public journey and names the missing fields', async () => {
     const user = userEvent.setup();
-    const signup = await api<{ developmentVerifyPath: string }>({
+    await api({
       method: 'POST',
       path: '/public/trainee-signup',
       body: { email: 'trainee03@example.test', password: PASSWORD, confirm: PASSWORD, acceptTerms: true },
     });
-    await api({ method: 'POST', path: '/public/trainee-signup/verify', body: { token: new URL(`http://localhost${signup.developmentVerifyPath}`).searchParams.get('token') } });
+    setSession({
+      mode: 'development',
+      user: {
+        id: 'dev-admin',
+        email: 'administrator@example.test',
+        displayName: 'Sample Administrator',
+        initials: 'SA',
+        hue: 140,
+        role: 'administrator',
+      },
+      expiresAt: Date.now() + 60_000,
+    });
+    const pending = await api<Array<{ id: string; email: string }>>({ method: 'GET', path: '/admin/pending-registrations' });
+    const row = pending.find((item) => item.email === 'trainee03@example.test');
+    if (!row) throw new Error('pending row missing');
+    await api({ method: 'POST', path: `/admin/pending-registrations/${row.id}/approve` });
+    clearSession();
     await api({ method: 'POST', path: '/auth/login', body: { email: 'trainee03@example.test', password: PASSWORD, developmentAck: true } });
     const me = await api<{ traineeId: string }>({ method: 'GET', path: '/portal/me' });
     updateState((current) => ({

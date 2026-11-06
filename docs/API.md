@@ -72,9 +72,9 @@ There is no `mode: "development"` and no `provider: "development-adapter"`. A mi
 
 Idle time is 30 minutes for staff. A trainee session stays open for at least 2 idle hours. The session also ends 12 hours after sign-in. Both staff limits can be changed with environment variables. They are not part of the JSON contract.
 
-The user object also includes `emailVerified` (boolean) and `traineeId` (string or null). `role` may be `trainee` or `trainer` as well as `viewer`, `editor`, and `administrator`.
+The session also includes `emailVerified` (boolean) and `traineeId` (string or null). `role` may be `trainee` or `trainer` as well as `viewer`, `editor`, and `administrator`.
 
-A trainee whose email is not confirmed gets `403` and `Confirm your email before you sign in. You can request another link.` A suspended account gets the same `401` as a wrong password. Wrong password and unknown mailbox stay on that `401`.
+A trainee whose registration is still waiting gets `403` and code `TRAINEE_PENDING_APPROVAL`. A rejected registration gets `403` and code `TRAINEE_REGISTRATION_REJECTED`. A deactivated trainee account gets `403` and code `TRAINEE_ACCOUNT_DEACTIVATED`. Those codes are returned only after the password matches. A wrong password, and an unknown mailbox, stay on `401` with `The email or password is not correct.`
 
 ## Trainee signup
 
@@ -83,12 +83,12 @@ A trainee whose email is not confirmed gets `403` and `Confirm your email before
 Success is `202` and this body for every address:
 
 ```json
-{ "accepted": true, "message": "If this email is on the cohort list, we sent a link. If you do not see it, request another from the verification page." }
+{ "accepted": true, "message": "Your registration was received. The account is waiting for an administrator to approve it. You can sign in once it is approved." }
 ```
 
-An email already on `trainees` creates or replaces an unverified trainee login and sends a 24-hour single-use link to `/verify-email`. An email that is not on the roster is stored in `pending_registrations` for an administrator. A verified account receives a different email and is not overwritten. The JSON does not say which happened.
+Every new registration is stored in `pending_registrations` and does not open a login until an administrator approves it. No confirmation email is queued. An email already on the roster is linked to that roster row at approval. Any other email gets a hidden trainee row at approval. A trainee who already has an active account receives a different email and is not overwritten. The JSON does not say which happened. A mail failure does not block the registration.
 
-`POST /public/trainee-signup/verify` with `{ token }` confirms the email and does not start a session. A missing, used, or expired token is `422`. `POST /public/trainee-signup/resend` with `{ email }` returns the same `202` as signup. Signup allows 3 requests an hour per email and 5 per address. Resend allows 3 per email and 10 per address. Over the limit is `429` and `Too many requests. Try again later.`
+`POST /public/trainee-signup/verify` still accepts an old single-use token and does not start a session. A missing, used, or expired token is `422`. `POST /public/trainee-signup/resend` does not send a confirmation email and returns the same `202` as signup. Signup allows 3 requests an hour per email and 5 per address. Resend allows 3 per email and 10 per address. Over the limit is `429` and `Too many requests. Try again later.`
 
 `GET /portal/me` needs `portal.access`. It returns `{ user, traineeId }`. Staff receive `403`.
 
@@ -100,7 +100,7 @@ An email already on `trainees` creates or replaces an unverified trainee login a
 
 There is no age confirmation and no retention period in this version.
 
-Administrators (`users.manage`) list `GET /admin/pending-registrations`, approve or reject a row, list `GET /admin/trainee-accounts`, and disable, enable, or resend. Approve creates a hidden trainee when the email is not already on the roster, links the login, and sends the confirmation email. `delivered` is false when mail was not accepted. The account still exists. Disable deletes that account's sessions.
+Administrators (`users.manage`) list `GET /admin/pending-registrations`, approve or reject a row, list `GET /admin/trainee-accounts`, and disable, enable, or resend a password email for an active account. Approve creates a hidden trainee when the email is not already on the roster, links the login, and sets `email_verified_at` in the same transaction when it is empty. No confirmation email is sent. The trainee can sign in after approval. `delivered` is true when that login is open. Disable deletes that account's sessions. A later sign-in with the right password returns `TRAINEE_ACCOUNT_DEACTIVATED`. A wrong password stays `401`.
 
 ## What the website should change later
 
@@ -360,7 +360,7 @@ The audit row stores the action and the enquiry id. It does not store the mailbo
 
 ## Trainee journey
 
-The journey is computed when it is read. There is no journey table. It joins the timetable (blocks, weeks, and that week’s deliverables), the trainee’s labs, published projects, events attended, achieved skills, and account milestones such as signed up, email confirmed, profile approved, and profile published. A trainee can also add a milestone and mark it private or public. Those rows live in `trainee_milestones`.
+The journey is computed when it is read. There is no journey table. It joins the timetable (blocks, weeks, and that week’s deliverables), the trainee’s labs, published projects, events attended, achieved skills, and account milestones such as signed up, account approved, profile approved, and profile published. A trainee can also add a milestone and mark it private or public. Those rows live in `trainee_milestones`.
 
 `GET /public/trainees/:slug/journey` is public only when the profile is published and consent is on. The same rule as the public profile applies, including a lookup by roster id or slug. The body lists public items only. Draft labs, unapproved skills and events, unpublished projects, and private milestones are left out. The response has no email address and no CV. A missing or private profile is `404` with `That page is not available.`
 

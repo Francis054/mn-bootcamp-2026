@@ -33,6 +33,7 @@ import { TraineeDocuments1794528000000 } from './migrations/1794528000000-Traine
 import { EmployerReach1794614400000 } from './migrations/1794614400000-EmployerReach.js';
 import { TraineeMilestones1794700800000 } from './migrations/1794700800000-TraineeMilestones.js';
 import { EmailOutboxAndRemoval1794787200000 } from './migrations/1794787200000-EmailOutboxAndRemoval.js';
+import { ApproveWaitingTrainees1794873600000 } from './migrations/1794873600000-ApproveWaitingTrainees.js';
 import { EmailOutboxEntity } from '../modules/mail/email-outbox.entity.js';
 import { TraineeMilestoneEntity } from '../modules/journey/trainee-milestone.entity.js';
 import { ContactRequestEntity } from '../modules/reach/contact-request.entity.js';
@@ -145,6 +146,7 @@ export function createDataSource(
       EmployerReach1794614400000,
       TraineeMilestones1794700800000,
       EmailOutboxAndRemoval1794787200000,
+      ApproveWaitingTrainees1794873600000,
     ],
     migrationsTableName: 'schema_migrations',
     ssl: sslConfigForDriver(env.databaseSsl, env.databaseSslCa),
