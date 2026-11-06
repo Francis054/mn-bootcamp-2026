@@ -50,7 +50,7 @@ export function resetVerifyJobsForTests(): void {
 function AuthSplit({ title, children, art }: { title: string; children: ReactNode; art: string }) {
   return (
     <main id="main">
-      <div className="login">
+      <div className="login login--portal">
         <section className="login__form">
           <div className="login__brand">
             <span className="wordmark">
