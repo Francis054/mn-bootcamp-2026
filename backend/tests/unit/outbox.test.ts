@@ -15,7 +15,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 class FlakyMail implements EmailProvider {
-  readonly name = 'resend' as const;
+  readonly name = 'mailersend' as const;
   readonly configured = true;
   readonly sent: OutboundMail[] = [];
   calls = 0;

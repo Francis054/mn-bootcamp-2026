@@ -25,6 +25,8 @@ export function createLogger(env: AppEnv): AppLogger {
         'ADMIN_PASSWORD',
         'ADMIN_BOOTSTRAP_PASSWORD',
         'passwordHash',
+        'mailersendApiToken',
+        'MAILERSEND_API_TOKEN',
       ],
       censor: '[redacted]',
     },

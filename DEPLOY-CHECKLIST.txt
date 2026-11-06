@@ -7,7 +7,7 @@ You already have free accounts signed in with GitHub (Francis054):
   The database password stays in your password manager. It is not in this file.
 - Render, with no services yet. The Render GitHub App is not granted this repo yet.
 - Cloudinary, cloud name i5rrintk.
-- Resend, with no API key and no domain yet.
+- MailerSend is not set up yet. No API token is stored in this file.
 
 The site and the API share ONE public address. Pages live on that address.
 The API lives at /api/v1 on that same address. Cookies will not work if the
@@ -235,18 +235,23 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
      Example: 300000
      That is 5 minutes.
 
-   RESEND_API_KEY
-     What: lets the API send invitation and password-reset mail.
-     Where: you do not have a key yet. In Resend, create an API key and copy it once.
-     Example shape: re_ followed by a long random string. Do not paste a real key here.
-     Leave this blank until step 13. Both Resend variables must be set, or both blank.
-     If they are blank in production, the site still boots and no email is sent.
+   MAILERSEND_API_TOKEN
+     What: lets the API send invitation and password-reset mail through MailerSend.
+     Where: you do not have a token yet. In MailerSend, open Developer tools, then
+     API tokens, and create a token that can send email. Copy it once.
+     Example shape: a long random string. Do not paste a real token here.
+     Leave this blank until step 13. Both mail variables must be set, or both blank.
+     Put this on the API service only, never on the static site.
+     If both are blank in production, the site still boots and no email is sent.
+     If only one is set, the API refuses to start.
 
    EMAIL_FROM
-     What: the From address on those emails. It must be on a domain Resend has verified.
-     Example: Bootcamp <hello@your-domain>
-     Leave this blank until the domain in step 13 shows verified.
-     Do not invent a From address on a domain you have not verified. Resend will reject it.
+     What: the From line on those emails. A mailbox, or a name and a mailbox.
+     Example: Bootcamp <hello@your-trial-domain>
+     For a first test, use the trial domain on the MailerSend Domains page.
+     That address does not have to be a real inbox, and it does not use the
+     onrender.com hostname. For your own domain, wait until MailerSend shows
+     that domain as verified. A from address on an unverified domain is rejected.
 
    ADMIN_EMAIL
      What: read only by the one-time admin:create command, not by the running server.
@@ -410,21 +415,38 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
        CLOUDINARY_API_SECRET. CLOUDINARY_CLOUD_NAME is i5rrintk.
     e. Save and redeploy the API. Do not put these on the static site.
 
-12. You can skip Resend until you have a domain to send from. Until both
-    RESEND_API_KEY and EMAIL_FROM are set, password resets and invitations
-    do not send mail. The API still starts.
+12. You can skip MailerSend until you want mail. Until both
+    MAILERSEND_API_TOKEN and EMAIL_FROM are set, password resets and invitations
+    do not send mail. The API still starts. Do these steps only after the
+    MailerSend change has been reviewed and deployed. This checklist does not
+    deploy it.
 
 13. When you are ready for mail:
-    a. In Resend, add the domain you will send from.
-    b. Resend shows DNS records, including SPF and DKIM. Add those records at
-       the company that hosts that domain's DNS. Wait until Resend shows the
-       domain as verified. Do not copy sample records from this file. Use the
-       ones Resend shows you.
-    c. Create an API key in Resend.
-    d. On the API service, set RESEND_API_KEY to that key.
-    e. Set EMAIL_FROM to an address on the verified domain, for example
-       Bootcamp <hello@your-domain>
-    f. Save and redeploy. Do not commit the key.
+    a. In MailerSend, open Domains and copy the trial (test) domain. You can
+       send a first test from that domain without owning onrender.com and
+       without adding DNS. The from address can be hello@ plus that domain.
+       It does not have to be a real inbox.
+    b. Open Developer tools, then API tokens. Create a token that can send
+       email. Copy it once.
+    c. On the Render API service, not the static site, set
+       MAILERSEND_API_TOKEN to that token.
+    d. Set EMAIL_FROM to a mailbox on the trial domain, or a name and a
+       mailbox, for example Bootcamp <hello@your-trial-domain>
+    e. Save. Render redeploys the API when you save. Do not commit the token.
+    f. If RESEND_API_KEY is still on the API service, delete it. The API does
+       not read it.
+    g. The trial domain is for testing. MailerSend's getting-started guide
+       says it can send up to 100 emails to 2 unique recipients until you are
+       ready for more. Sandbox mode keeps that 2-recipient cap until the
+       account is approved. Approval can lift the recipient cap. It does not
+       remove the domain or plan limits, and it does not turn the trial domain
+       into unrestricted production sending. Cohort mail is delivered only
+       after the account is approved and the current limits allow it.
+       See docs/email.md.
+    h. When you want your own From domain, add it in MailerSend and copy the
+       SPF, two DKIM CNAME records, and return-path CNAME from that domain's
+       page. Do not copy sample records from this file. Wait until MailerSend
+       shows the domain as verified, then change EMAIL_FROM to an address on it.
 
 14. A custom domain is optional. The onrender.com address already works.
     a. On the static site, open Settings, then Custom Domains, and add the name.
@@ -460,10 +482,20 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
        Transformations and bandwidth are counted over a rolling 30 days.
        Sources: https://cloudinary.com/pricing
        and https://cloudinary.com/documentation/billing_and_plans
-    d. Resend free is 100 emails per UTC day and 3,000 per month. Mail you
-       receive counts too. Each recipient on one message counts separately.
-       Sources: https://resend.com/pricing
-       and https://resend.com/docs/knowledge-base/account-quotas-and-limits
+    d. MailerSend's test domain, checked 5 November 2026, is a testing limit
+       and not unrestricted free mail. The getting-started guide says up to
+       100 emails to 2 unique recipients, in Sandbox or on the Professional
+       trial. Sandbox mode is 100 emails a month and 100 API requests a day.
+       Until the account is approved, those emails can go to 2 recipients.
+       After approval, the Sandbox guide says the same 100 monthly emails can
+       go to any recipient. The domain quota remains. The Professional trial
+       on that page is 500 emails a month, which is a different allowance.
+       An approved Free plan is described as 500 a month and 100 a day.
+       Cohort mail waits until the account is approved and the limits allow it.
+       Sources: https://www.mailersend.com/help/getting-started
+       https://www.mailersend.com/help/sandbox-mode-and-the-professional-trial
+       https://developers.mailersend.com/general
+       https://www.mailersend.com/help/plans-features-and-limits
     How long Supabase keeps backups on the free plan was not confirmed.
     Open the project's Backups page before you rely on a restore.
 
@@ -486,7 +518,10 @@ You can use the free name https://YOUR-SITE.onrender.com before you buy a domain
        list if your account has users.manage. The administrator does.
     f. After Cloudinary is set, add one photo at /admin/media. It stays off the
        public gallery until step 18.
-    g. Do not test Resend until step 13 shows the domain as verified.
+    g. Do not send a live MailerSend message from this checklist. Step 13 is
+       configuration for after the reviewed deploy. A trial domain can send
+       only the small test described there, and only after the API is deployed
+       with both mail variables set.
 
 17. If step 16a or 16c fails, do not switch the website to the API hostname.
     The cookies are Lax and host-only, and the code does not set SameSite=None.

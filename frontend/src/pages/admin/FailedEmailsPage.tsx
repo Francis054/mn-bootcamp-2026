@@ -89,7 +89,7 @@ export function FailedEmailsPage() {
       {loading ? <LoadingRows /> : null}
       {!loading && emails.error ? <ErrorState title="Could not load failed emails" text={emails.error.message} /> : null}
       {!loading && !emails.error && emails.data && !emails.data.length ? (
-        <EmptyState icon="mail" title="No failed emails" text="A message appears here when Resend refuses it or the retry window is missed." />
+        <EmptyState icon="mail" title="No failed emails" text="A message appears here when the mail provider refuses it or the retry window is missed." />
       ) : null}
       {!loading && emails.data?.length ? (
         <table className="table table--cards">

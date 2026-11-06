@@ -42,7 +42,7 @@ FRONTEND_URL=http://127.0.0.1:5173
 SESSION_SECRET=local-only-change-this-to-32-characters-min
 ```
 
-Leave Cloudinary and Resend blank. Local development keeps photos and mail in memory.
+Leave Cloudinary and MailerSend blank. Local development keeps photos and mail in memory.
 
 8. Still in `backend/`:
 

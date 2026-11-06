@@ -287,21 +287,76 @@ describe('loadEnv', () => {
     expect(set.videoUploadMaxBytes).toBe(1_048_576);
   });
 
-  it('leaves mail unset until both values are present, and does not repeat a partial value', () => {
+  it('requires MAILERSEND_API_TOKEN with EMAIL_FROM and does not repeat a partial value', () => {
     const blank = loadEnv(
       { DATABASE_URL: 'postgres://127.0.0.1:5432/mn_bootcamp' },
       { loadDotenv: false },
     );
-    expect(blank.resendApiKey).toBeUndefined();
+    expect(blank.mailersendApiToken).toBeUndefined();
     expect(blank.emailFrom).toBeUndefined();
-    expect.assertions(5);
+    expect.assertions(16);
     try {
-      loadEnv(productionSource({ RESEND_API_KEY: 'secret-key-value' }), { loadDotenv: false });
+      loadEnv(productionSource({ MAILERSEND_API_TOKEN: 'secret-key-value' }), {
+        loadDotenv: false,
+      });
     } catch (error) {
       expect(error).toBeInstanceOf(EnvError);
       const message = error instanceof Error ? error.message : '';
-      expect(message).toBe('RESEND_API_KEY and EMAIL_FROM must both be set, or both left blank.');
+      expect(message).toBe(
+        'MAILERSEND_API_TOKEN and EMAIL_FROM must both be set, or both left blank.',
+      );
       expect(message).not.toContain('secret-key-value');
     }
+    try {
+      loadEnv(productionSource({ EMAIL_FROM: 'not-a-mailbox' }), { loadDotenv: false });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+      expect(message).toContain(
+        'EMAIL_FROM must be a mailbox, or a name and a mailbox in angle brackets.',
+      );
+      expect(message).toContain(
+        'MAILERSEND_API_TOKEN and EMAIL_FROM must both be set, or both left blank.',
+      );
+      expect(message).not.toContain('not-a-mailbox');
+    }
+    try {
+      loadEnv(
+        productionSource({
+          MAILERSEND_API_TOKEN: 'secret-key-value',
+          EMAIL_FROM: 'not-a-mailbox',
+        }),
+        { loadDotenv: false },
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+      expect(message).toBe(
+        'EMAIL_FROM must be a mailbox, or a name and a mailbox in angle brackets.',
+      );
+      expect(message).not.toContain('secret-key-value');
+      expect(message).not.toContain('not-a-mailbox');
+    }
+    const ignored = loadEnv(productionSource({ RESEND_API_KEY: 're_old_secret_value' }), {
+      loadDotenv: false,
+    });
+    expect(ignored.mailersendApiToken).toBeUndefined();
+    expect(ignored.emailFrom).toBeUndefined();
+    const ready = loadEnv(
+      productionSource({
+        MAILERSEND_API_TOKEN: 'mls_test_token',
+        EMAIL_FROM: 'Desk <desk@example.test>',
+      }),
+      { loadDotenv: false },
+    );
+    expect(ready.mailersendApiToken).toBe('mls_test_token');
+    expect(ready.emailFrom).toBe('Desk <desk@example.test>');
+    expect(
+      loadEnv(
+        productionSource({
+          MAILERSEND_API_TOKEN: 'mls_test_token',
+          EMAIL_FROM: 'desk@example.test',
+        }),
+        { loadDotenv: false },
+      ).emailFrom,
+    ).toBe('desk@example.test');
   });
 });

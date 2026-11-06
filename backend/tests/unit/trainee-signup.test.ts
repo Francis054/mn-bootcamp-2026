@@ -55,7 +55,7 @@ describe('trainee letters', () => {
 describe('observed mail', () => {
   it('logs a failed send and does not throw or repeat the mailbox', async () => {
     const boom: EmailProvider = {
-      name: 'resend',
+      name: 'mailersend',
       configured: true,
       send(): Promise<MailResult> {
         return Promise.reject(new Error('network down ada@example.test'));
