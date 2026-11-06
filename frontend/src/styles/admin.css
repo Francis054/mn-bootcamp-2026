@@ -138,6 +138,9 @@ body.admin{background:var(--paper);font-size:15px}
 .table th[aria-sort="ascending"]::after{content:"↑";opacity:1}
 .table th[aria-sort="descending"]::after{content:"↓";opacity:1}
 .table td.num{font-family:var(--font-mono);font-size:13px}
+.account-person{min-width:0}
+.account-person b,.account-person small{display:block;max-width:100%;overflow-wrap:anywhere}
+.account-person small{margin-top:2px}
 .table .chk{width:44px}
 .table input[type=checkbox]{width:18px;height:18px;accent-color:var(--forest-600)}
 .table tr.is-selected{background:var(--lime-100)!important}

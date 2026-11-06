@@ -80,14 +80,26 @@ export function TraineeAccountsPage() {
   const [busy, setBusy] = useState('');
   const record = useAsync(`accounts:${nonce}`, () => api<TraineeAccount[]>({ method: 'GET', path: '/admin/trainee-accounts' }));
   usePageMeta('Trainee accounts');
-  const post = async (row: TraineeAccount, action: 'disable' | 'enable' | 'resend-invite', label: string) => {
+  const post = async (row: TraineeAccount, action: 'disable' | 'enable' | 'resend-invite', label = '') => {
     setBusy(`${row.id}:${action}`);
     try {
       const result = await api<{ message?: string; delivered?: boolean }>({
         method: 'POST',
         path: `/admin/trainee-accounts/${row.id}/${action}`,
       });
-      toast(label, result.message ?? label, result.delivered === false ? 'info' : 'success');
+      if (action === 'resend-invite') {
+        if (result.delivered === true) {
+          toast('Email sent', result.message ?? 'The email was sent.', 'success');
+        } else {
+          toast(
+            'Email not sent',
+            result.message ?? 'The email was not sent. Try again once mail is configured.',
+            'error',
+          );
+        }
+      } else {
+        toast(label, result.message ?? label, 'success');
+      }
       setNonce((value) => value + 1);
     } catch (error) {
       toast('Could not update', isApiError(error) ? error.message : 'Request failed.', 'error');
@@ -107,7 +119,10 @@ export function TraineeAccountsPage() {
           <tbody>
             {record.data.map((row) => (
               <tr key={row.id}>
-                <td><b>{row.displayName}</b><small>{row.traineeId ?? 'No roster link'}</small></td>
+                <td className="cell-primary account-person">
+                  <b>{row.displayName}</b>
+                  <small>{row.traineeId ?? 'No roster link'}</small>
+                </td>
                 <td>{row.email}</td>
                 <td>{row.emailVerified ? 'Active' : 'Waiting for approval'}{row.disabled ? ' · Deactivated' : ''}</td>
                 <td>
@@ -117,7 +132,7 @@ export function TraineeAccountsPage() {
                     <button className="btn btn--sm" type="button" disabled={busy.startsWith(row.id)} onClick={() => void post(row, 'disable', 'Account suspended')}>Disable</button>
                   )}
                   {' '}
-                  <button className="btn btn--sm btn--ghost" type="button" disabled={busy.startsWith(row.id)} onClick={() => void post(row, 'resend-invite', 'Email sent')}>Resend invite</button>
+                  <button className="btn btn--sm btn--ghost" type="button" disabled={busy.startsWith(row.id)} onClick={() => void post(row, 'resend-invite')}>Resend invite</button>
                 </td>
               </tr>
             ))}
