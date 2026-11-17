@@ -337,7 +337,8 @@ export type ApiErrorCode =
   | 'pending'
   | 'TRAINEE_PENDING_APPROVAL'
   | 'TRAINEE_REGISTRATION_REJECTED'
-  | 'TRAINEE_ACCOUNT_DEACTIVATED';
+  | 'TRAINEE_ACCOUNT_DEACTIVATED'
+  | 'TRAINEE_SELF_SERVICE_DISABLED';
 
 export class ApiError extends Error {
   readonly code: ApiErrorCode;

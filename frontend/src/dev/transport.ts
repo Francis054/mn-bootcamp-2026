@@ -6,6 +6,7 @@ import { includesQuery, newId, paginate, scheduleFor, slugify } from '@/domain/f
 import { displayPhotoUrl, profilePhotoFileProblem, readFileBytes, sniffedPhotoMime, type ProfilePhotoMime } from '@/domain/photo';
 import { collect, emailAddress, httpUrl, minLength, required } from '@/domain/validate';
 import { currentEnv } from '@/config/runtime';
+import { traineeSelfServiceEnabled } from '@/config/traineeSelfService';
 import type { ApiRequest } from '@/api/liveTransport';
 import { MODULES, mediaSrc } from './fixtures';
 import { SITE_IMAGE_SLOTS, isSiteImageKey, siteImageAltError, siteImageTaglineError, slotDefaults, slotTagline, toPublicSiteImage } from '@/domain/siteImages';
@@ -434,10 +435,16 @@ function login(body: Record<string, unknown>) {
     failures.set(email, row);
     fail('unauthenticated', 'The email or password is not correct.', 401);
   }
+  if (!traineeSelfServiceEnabled() && gate.kind !== 'skip') {
+    fail('TRAINEE_SELF_SERVICE_DISABLED', 'Trainee sign-in is turned off.', 403);
+  }
   if (gate.kind === 'pending') fail('TRAINEE_PENDING_APPROVAL', PENDING_APPROVAL_MESSAGE, 403);
   if (gate.kind === 'rejected') fail('TRAINEE_REGISTRATION_REJECTED', REGISTRATION_REJECTED_MESSAGE, 403);
   if (gate.kind === 'deactivated') fail('TRAINEE_ACCOUNT_DEACTIVATED', ACCOUNT_DEACTIVATED_MESSAGE, 403);
   const user = getState().users.find((item) => item.email === email);
+  if (!traineeSelfServiceEnabled() && user?.role === 'trainee') {
+    fail('TRAINEE_SELF_SERVICE_DISABLED', 'Trainee sign-in is turned off.', 403);
+  }
   if (!user || user.disabled) {
     const row = failures.get(email) ?? { count: 0, lockedUntil: 0 };
     row.count += 1;
@@ -476,7 +483,8 @@ function requestReset(body: Record<string, unknown>) {
   }
   const email = String(body.email ?? '').trim().toLowerCase();
   assertFields(collect({ email: emailAddress(email) }));
-  const user = getState().users.find((item) => item.email === email);
+  const found = getState().users.find((item) => item.email === email);
+  const user = found && (traineeSelfServiceEnabled() || found.role !== 'trainee') ? found : undefined;
   const token = newId('reset');
   if (user) resetTickets.set(token, { userId: user.id, expiresAt: Date.now() + 15 * 60_000 });
   return {
@@ -492,8 +500,10 @@ function completeReset(body: Record<string, unknown>) {
   const next = String(body.password ?? '');
   const confirm = String(body.confirm ?? '');
   const ticket = resetTickets.get(token);
+  const owner = ticket ? getState().users.find((item) => item.id === ticket.userId) : undefined;
+  const traineeClosed = Boolean(owner && owner.role === 'trainee' && !traineeSelfServiceEnabled());
   assertFields(collect({
-    token: ticket && ticket.expiresAt > Date.now() ? null : 'This reset link is missing, used or expired.',
+    token: ticket && ticket.expiresAt > Date.now() && !traineeClosed ? null : 'This reset link is missing, used or expired.',
     password: required(next, 'Choose a new password.') ?? minLength(next, 8, 'Use at least 8 characters.'),
     confirm: next && next === confirm ? null : 'The two passwords do not match.',
   }));

@@ -63,6 +63,11 @@ export interface AppEnv {
   emailFrom?: string;
   /** Closed signup. Only `roster` is implemented. */
   traineeSignupMode: 'roster';
+  /**
+   * Trainee sign-up, sign-in, password reset, and portal sessions.
+   * Off unless `TRAINEE_SELF_SERVICE=on`. Staff sign-in does not use this.
+   */
+  traineeSelfService: boolean;
   /** Print that a development message was accepted. Refused in production. */
   devMailLog: boolean;
 }
@@ -217,6 +222,7 @@ export function loadEnv(
     problems.push('RESEND_API_KEY and EMAIL_FROM must both be set, or both left blank.');
   }
   const traineeSignupMode = readSignupMode(source.TRAINEE_SIGNUP_MODE, problems);
+  const traineeSelfService = readTraineeSelfService(source.TRAINEE_SELF_SERVICE, problems);
   const devMailLog = readBooleanDefault(source.DEV_MAIL_LOG, false, 'DEV_MAIL_LOG', problems);
   if (nodeEnv === 'production' && devMailLog) {
     problems.push('DEV_MAIL_LOG must not be set in production.');
@@ -250,6 +256,7 @@ export function loadEnv(
     cvLinkTtlMs,
     cvRequestLinkTtlMs,
     traineeSignupMode,
+    traineeSelfService,
     devMailLog,
   };
   if (databaseSslCa !== undefined) env.databaseSslCa = databaseSslCa;
@@ -580,6 +587,15 @@ function readSignupMode(raw: string | undefined, problems: string[]): 'roster' {
   if (value === 'roster') return 'roster';
   problems.push('TRAINEE_SIGNUP_MODE must be roster.');
   return 'roster';
+}
+
+/** Only the exact word `on` enables trainee sign-up and sign-in. The value is not repeated. */
+function readTraineeSelfService(raw: string | undefined, problems: string[]): boolean {
+  const value = raw?.trim() ?? '';
+  if (value === '' || value === 'off') return false;
+  if (value === 'on') return true;
+  problems.push('TRAINEE_SELF_SERVICE must be on, off, or blank.');
+  return false;
 }
 
 function readOptional(raw: string | undefined): string | undefined {

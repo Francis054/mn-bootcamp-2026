@@ -30,6 +30,7 @@ import {
   SIGNUP_LIMIT,
   SIGNUP_LOCK_MS,
   signupDecision,
+  TRAINEE_SIGN_UP_OFF,
   VERIFY_OK,
   VERIFY_PROBLEM,
 } from './signup.rules.js';
@@ -91,6 +92,7 @@ export class SignupService {
     private readonly secret: string | undefined,
     private readonly logger: AppLogger,
     private readonly dataSource: DataSource,
+    private readonly traineeSelfService: boolean,
   ) {}
 
   async signup(input: {
@@ -99,6 +101,7 @@ export class SignupService {
     requestId: string;
     now: Date;
   }): Promise<typeof SIGNUP_ACCEPTED> {
+    this.requireSelfService();
     const parsed = parseSignup(input.body);
     if (!parsed.ok) throw new ApiError('validation', CHECK, parsed.problems);
     const ip = clip(input.ip, 64);
@@ -137,6 +140,7 @@ export class SignupService {
   }
 
   async verify(input: { token: string; ip: string; requestId: string; now: Date }): Promise<typeof VERIFY_OK> {
+    this.requireSelfService();
     const found = await this.findLiveVerifyToken(input.token.trim(), input.now);
     if (!found) throw new ApiError('validation', CHECK, { token: VERIFY_PROBLEM });
     const user = await this.users.findById(found.userId);
@@ -158,11 +162,16 @@ export class SignupService {
   }
 
   async resend(input: { body: unknown; ip: string; requestId: string; now: Date }): Promise<typeof SIGNUP_ACCEPTED> {
+    this.requireSelfService();
     const parsed = parseResend(input.body);
     if (!parsed.ok) throw new ApiError('validation', CHECK, parsed.problems);
     const ip = clip(input.ip, 64);
     await this.consume(parsed.email, ip, input.now, 'verify-resend', RESEND_EMAIL_LIMIT, RESEND_IP_LIMIT);
     return { ...SIGNUP_ACCEPTED };
+  }
+
+  private requireSelfService(): void {
+    if (!this.traineeSelfService) throw new ApiError('not_found', TRAINEE_SIGN_UP_OFF);
   }
 
   async portalMe(userId: string): Promise<PortalAccount> {

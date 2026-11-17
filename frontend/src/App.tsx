@@ -1,6 +1,7 @@
 import { lazy, Suspense, type ReactNode } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { RequireAccess } from '@/auth/AuthProvider';
+import { traineeSelfServiceEnabled } from '@/config/traineeSelfService';
 import { BootScreen } from '@/components/BootScreen';
 import { AfterBoot, RouteFallback } from '@/components/Loader';
 import { RobotsMeta, ScrollToTop } from '@/components/ScrollToTop';
@@ -73,6 +74,7 @@ function Waiting({ children }: { children: ReactNode }) {
 }
 
 export function App() {
+  const traineeAuth = traineeSelfServiceEnabled();
   return (
     <>
     <RobotsMeta />
@@ -98,13 +100,13 @@ export function App() {
         <Route path="contact" element={<Waiting><ContactPage /></Waiting>} handle={{ page: 'contact', tone: 'light', title: 'Contact' }} />
         <Route path="*" element={<Waiting><NotFoundPage /></Waiting>} handle={{ page: '', tone: 'light', title: 'Not found' }} />
       </Route>
-      <Route path="/signup" element={<Waiting><SignupPage /></Waiting>} />
-      <Route path="/verify-email" element={<Waiting><VerifyEmailPage /></Waiting>} />
-      <Route path="/login" element={<Waiting><TraineeLoginPage /></Waiting>} />
-      <Route path="/forgot-password" element={<Waiting><TraineeForgotPage /></Waiting>} />
-      <Route path="/portal/reset-password" element={<Waiting><TraineeResetPage /></Waiting>} />
-      <Route path="/portal/journey" element={<RequireAccess permission="portal.access"><Waiting><PortalJourneyPage /></Waiting></RequireAccess>} />
-      <Route path="/portal" element={<RequireAccess permission="portal.access"><Waiting><PortalHomePage /></Waiting></RequireAccess>} />
+      {traineeAuth ? <Route path="/signup" element={<Waiting><SignupPage /></Waiting>} /> : null}
+      {traineeAuth ? <Route path="/verify-email" element={<Waiting><VerifyEmailPage /></Waiting>} /> : null}
+      {traineeAuth ? <Route path="/login" element={<Waiting><TraineeLoginPage /></Waiting>} /> : null}
+      {traineeAuth ? <Route path="/forgot-password" element={<Waiting><TraineeForgotPage /></Waiting>} /> : null}
+      {traineeAuth ? <Route path="/portal/reset-password" element={<Waiting><TraineeResetPage /></Waiting>} /> : null}
+      {traineeAuth ? <Route path="/portal/journey" element={<RequireAccess permission="portal.access"><Waiting><PortalJourneyPage /></Waiting></RequireAccess>} /> : null}
+      {traineeAuth ? <Route path="/portal" element={<RequireAccess permission="portal.access"><Waiting><PortalHomePage /></Waiting></RequireAccess>} /> : null}
       <Route path="/trainer" element={<RequireAccess permission="progress.read"><Waiting><TrainerProgressPage /></Waiting></RequireAccess>} />
       <Route path="/admin/login" element={<Waiting><LoginPage /></Waiting>} />
       <Route path="/admin/forgot-password" element={<Waiting><ForgotPasswordPage /></Waiting>} />

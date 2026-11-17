@@ -8,7 +8,7 @@ export const portalPaths = {
       operationId: 'traineeSignup',
       summary: 'Ask for a trainee account',
       description:
-        'The response is the same whether or not the email is on the cohort list. The registration waits for an administrator. No confirmation email is queued. A filled company field is ignored. The password is stored only as an Argon2id hash. Rate limit: 3 per hour per email and 5 per hour per address.',
+        'The response is the same whether or not the email is on the cohort list. The registration waits for an administrator. No confirmation email is queued. A filled company field is ignored. The password is stored only as an Argon2id hash. Rate limit: 3 per hour per email and 5 per hour per address. While TRAINEE_SELF_SERVICE is not on, this route answers 404 and does not store a registration.',
       requestBody: {
         required: true,
         content: {
@@ -16,6 +16,7 @@ export const portalPaths = {
         },
       },
       responses: {
+        '404': { description: 'Trainee sign-up is turned off.', content: errorRef },
         '202': {
           description: 'Accepted. The body does not say whether the email is on the roster.',
           content: {

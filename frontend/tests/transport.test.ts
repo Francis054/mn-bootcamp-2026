@@ -10,6 +10,26 @@ describe('development authentication adapter', () => {
     setEnvForTests(null);
   });
 
+  it('refuses trainee sign-up while an editor can still sign in', async () => {
+    await expect(api({
+      method: 'POST',
+      path: '/public/trainee-signup',
+      body: {
+        email: 'trainee01@example.test',
+        password: 'Correct-horse-1',
+        confirm: 'Correct-horse-1',
+        displayName: 'Sample Person',
+        acceptTerms: true,
+      },
+    })).rejects.toMatchObject({ code: 'not_found', status: 404, message: 'Trainee sign-up is turned off.' });
+    const editor = await api<{ user: { role: string } }>({
+      method: 'POST',
+      path: '/auth/login',
+      body: { email: 'editor@example.test', password: 'length-ok', developmentAck: true },
+    });
+    expect(editor.user.role).toBe('editor');
+  });
+
   it('signs in a fixture without storing the password', async () => {
     const before = JSON.stringify(getState());
     const result = await api<{ provider: string; user: { role: string } }>({

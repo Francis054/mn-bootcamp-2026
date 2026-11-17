@@ -23,6 +23,7 @@ export class SessionService {
     private readonly secret: string | undefined,
     private readonly idleTtlMs: number,
     private readonly absoluteTtlMs: number,
+    private readonly traineeSelfService: boolean,
   ) {}
 
   async start(user: UserEntity, now: Date): Promise<{ token: string; expiresAt: Date }> {
@@ -48,6 +49,8 @@ export class SessionService {
       await this.sessions.deleteById(id);
       return null;
     }
+    // Leave the row in place so turning the switch back on restores a session that has not expired.
+    if (user.role === 'trainee' && !this.traineeSelfService) return null;
     const idleMs = user.role === 'trainee' ? Math.max(this.idleTtlMs, TRAINEE_IDLE_MS) : this.idleTtlMs;
     const idleDeadline = session.lastSeenAt.getTime() + idleMs;
     if (session.expiresAt.getTime() <= now.getTime() || idleDeadline <= now.getTime()) {

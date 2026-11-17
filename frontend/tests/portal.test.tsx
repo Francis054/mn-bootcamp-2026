@@ -1,8 +1,9 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { api } from '@/api/client';
+import { setTraineeSelfServiceForTests } from '@/config/traineeSelfService';
 import { App } from '@/App';
 import { AuthProvider } from '@/auth/AuthProvider';
 import { ToastProvider } from '@/components/feedback';
@@ -48,7 +49,14 @@ function renderAt(path: string) {
 }
 
 describe('trainee portal screens', () => {
-  it('offers trainee sign-in and sign-up from the trainees menu', async () => {
+  beforeEach(() => {
+    setTraineeSelfServiceForTests(true);
+  });
+  afterEach(() => {
+    setTraineeSelfServiceForTests(null);
+  });
+
+  it('offers trainee sign-in and sign-up from the trainees menu when the switch is on', async () => {
     const user = userEvent.setup();
     renderAt('/');
     expect(await screen.findByRole('heading', { name: /secure the future/i })).toBeInTheDocument();

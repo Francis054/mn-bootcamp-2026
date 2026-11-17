@@ -3,7 +3,8 @@ import type { EventBody, EventKind } from './event-types.js';
 
 /**
  * Labelled sample events. The hackathon stays to be confirmed: no clock time
- * and no venue. The midpoint is a sample milestone and stays scheduled.
+ * and no venue. The midpoint is a sample placeholder. Its date is not confirmed,
+ * so the public site does not publish it when that sample day arrives.
  */
 
 const NOTE = 'Sample event.';
@@ -162,7 +163,7 @@ export function buildSampleEvents(): SampleEvent[] {
       id: 'midpoint',
       title: 'Mid-bootcamp review',
       date: '2026-11-16',
-      dateTbc: false,
+      dateTbc: true,
       whenLabel: 'Mid-November 2026 · sample date',
       place: 'Tantra Hills, Accra',
       kind: 'Milestone',

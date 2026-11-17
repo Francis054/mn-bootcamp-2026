@@ -261,7 +261,7 @@ export function buildEvents(): BootcampEvent[] {
       publicationStatus: 'published', listing: 'public', internalNotes: '',
     },
     {
-      id: 'midpoint', title: 'Mid-bootcamp review', date: '2026-11-16', dateTbc: false,
+      id: 'midpoint', title: 'Mid-bootcamp review', date: '2026-11-16', dateTbc: true,
       whenLabel: 'Mid-November 2026 · sample date', place: 'Tantra Hills, Accra',
       kind: 'Milestone', verified: false, sample: true,
       summary: 'Sample milestone — placeholder for a mid-point review.',

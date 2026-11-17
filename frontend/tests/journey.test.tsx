@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { setTraineeSelfServiceForTests } from '@/config/traineeSelfService';
 import { api } from '@/api/client';
 import { App } from '@/App';
 import { AuthProvider } from '@/auth/AuthProvider';
@@ -13,6 +14,13 @@ import { getState, updateState } from '@/dev/store';
 const PASSWORD = 'Correct-horse-1';
 
 describe('journey privacy', () => {
+  beforeEach(() => {
+    setTraineeSelfServiceForTests(true);
+  });
+  afterEach(() => {
+    setTraineeSelfServiceForTests(null);
+  });
+
   it('drops private milestones, drafts, and email addresses from a public read', () => {
     const body = readJourney({
       displayName: 'Ama Mensah',

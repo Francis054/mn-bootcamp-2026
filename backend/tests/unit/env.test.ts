@@ -41,6 +41,7 @@ describe('loadEnv', () => {
     expect(env.cvRateWindowMs).toBe(900_000);
     expect(env.cvLinkTtlMs).toBe(300_000);
     expect(env.cvRequestLinkTtlMs).toBe(86_400_000);
+    expect(env.traineeSelfService).toBe(false);
     expect(env.supabaseUrl).toBeUndefined();
     expect(env.supabaseServiceRoleKey).toBeUndefined();
     expect(env.sessionSecret).toBeUndefined();
@@ -53,6 +54,17 @@ describe('loadEnv', () => {
     expect(env.trustProxy).toBe(true);
     expect(env.frontendUrl).toBe('https://example.org');
     expect(env.sessionSecret).toBe(SECRET);
+    expect(env.traineeSelfService).toBe(false);
+  });
+
+  it('turns trainee sign-in on only for the exact word on', () => {
+    const on = loadEnv(productionSource({ TRAINEE_SELF_SERVICE: 'on' }), { loadDotenv: false });
+    expect(on.traineeSelfService).toBe(true);
+    const off = loadEnv(productionSource({ TRAINEE_SELF_SERVICE: 'off' }), { loadDotenv: false });
+    expect(off.traineeSelfService).toBe(false);
+    expect(() => loadEnv(productionSource({ TRAINEE_SELF_SERVICE: 'yes' }), { loadDotenv: false })).toThrow(
+      /TRAINEE_SELF_SERVICE must be on, off, or blank/,
+    );
   });
 
   it('uses the origin only, so a path on FRONTEND_URL cannot widen CORS', () => {
