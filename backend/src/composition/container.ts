@@ -186,6 +186,7 @@ export class AppContainer {
       env.sessionSecret,
       env.sessionIdleTtlMs,
       env.sessionAbsoluteTtlMs,
+      env.traineeSelfService,
     );
     const audit = new AuditRepository(dataSource.getRepository(AuditEventEntity));
     const throttles = new LoginThrottleRepository(dataSource);
@@ -219,6 +220,7 @@ export class AppContainer {
       },
       traineeRepository,
       logger,
+      env.traineeSelfService,
     );
     const enquiries = new EnquiryService(
       new EnquiryRepository(dataSource.getRepository(EnquiryEntity)),
@@ -245,6 +247,7 @@ export class AppContainer {
       },
       env.sessionSecret,
       pendingRegistrations,
+      env.traineeSelfService,
     );
     const trackRepository = new TrackRepository(dataSource.getRepository(TrackEntity));
     const moduleRepository = new ModuleRepository(dataSource.getRepository(ModuleEntity));
@@ -354,6 +357,7 @@ export class AppContainer {
       env.sessionSecret,
       logger,
       dataSource,
+      env.traineeSelfService,
     );
     const profiles = new PortalProfileService(
       traineeRepository,

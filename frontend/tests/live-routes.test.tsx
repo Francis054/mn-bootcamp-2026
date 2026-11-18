@@ -32,12 +32,17 @@ const PUBLIC = [
   '/about',
   '/anniversary',
   '/contact',
+  '/this-page-does-not-exist',
+];
+
+const CLOSED_TRAINEE = [
   '/signup',
   '/verify-email',
   '/login',
   '/forgot-password',
   '/portal/reset-password',
-  '/this-page-does-not-exist',
+  '/portal',
+  '/portal/journey',
 ];
 
 const ADMIN = [
@@ -123,6 +128,22 @@ describe('live API routes', () => {
       view.unmount();
     }
     expect(screen.queryByText(/this page hit a problem/i)).not.toBeInTheDocument();
+  });
+
+  it('does not publish trainee sign-in, sign-up, or sign-out pages', async () => {
+    setEnvForTests(LIVE);
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('/auth/session')) return json({ authenticated: false });
+      return json({ error: { code: 'not_found', message: 'Not found.' } }, 404);
+    }));
+    for (const path of CLOSED_TRAINEE) {
+      const view = renderAt(path);
+      expect(await screen.findByRole('heading', { name: /that page is not on this site/i })).toBeInTheDocument();
+      expect(screen.queryByLabelText(/password/i)).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /sign in|sign up|create account|log out|sign out/i })).not.toBeInTheDocument();
+      view.unmount();
+    }
   });
 
   it('renders partial published rows without throwing', async () => {

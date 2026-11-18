@@ -28,6 +28,9 @@ export const REGISTRATION_REJECTED_MESSAGE =
 export const ACCOUNT_DEACTIVATED_MESSAGE =
   'This trainee account is deactivated. An administrator can enable it.';
 
+export const TRAINEE_SIGN_IN_OFF = 'Trainee sign-in is turned off.';
+export const TRAINEE_SIGN_UP_OFF = 'Trainee sign-up is turned off.';
+
 export const APPROVED_READY_MESSAGE = 'The account is ready. The trainee can sign in.';
 
 const HOUR_MS = 60 * 60 * 1000;

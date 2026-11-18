@@ -4,6 +4,7 @@ import {
   ACCOUNT_DEACTIVATED_MESSAGE,
   PENDING_APPROVAL_MESSAGE,
   REGISTRATION_REJECTED_MESSAGE,
+  TRAINEE_SIGN_IN_OFF,
 } from '../trainee-auth/signup.rules.js';
 import type { AppLogger } from '../../shared/logging/logger.js';
 import type { PublicUser } from '../users/public-user.js';
@@ -43,6 +44,7 @@ export class AuthService {
     private readonly limits: { failureLimit: number; ipFailureLimit: number; lockMs: number },
     private readonly sessionSecret: string | undefined,
     private readonly pending: PendingRegistrationRepository,
+    private readonly traineeSelfService: boolean,
   ) {}
 
   async login(attempt: LoginAttempt): Promise<LoginSuccess> {
@@ -81,6 +83,11 @@ export class AuthService {
         throw new ApiError('rate_limited', LOCKED_LOGIN);
       }
       throw new ApiError('unauthenticated', BAD_LOGIN);
+    }
+
+    if (!this.traineeSelfService && ((user && user.role === 'trainee') || (!user && pending))) {
+      await this.recordFailure(user?.id ?? null, ip, attempt.requestId);
+      throw new ApiError('TRAINEE_SELF_SERVICE_DISABLED', TRAINEE_SIGN_IN_OFF);
     }
 
     if (!user && pending) {
