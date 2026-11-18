@@ -38,7 +38,7 @@ function hrefs() {
 }
 
 describe('public navbar', () => {
-  it('keeps trainee sign-in and sign-up inside the trainees menu', async () => {
+  it('keeps the trainees menu to the public directory', async () => {
     const user = userEvent.setup();
     renderAt('/');
     expect(await screen.findByRole('heading', { name: /secure the future/i })).toBeInTheDocument();
@@ -60,15 +60,17 @@ describe('public navbar', () => {
     expect(button).toHaveAttribute('aria-expanded', 'true');
     expect(document.getElementById('trainees-menu')).not.toHaveAttribute('aria-hidden');
     expect(within(primary).getByRole('menuitem', { name: /meet the trainees/i })).toHaveAttribute('href', '/trainees');
-    expect(within(primary).getByRole('menuitem', { name: /sign in/i })).toHaveAttribute('href', '/login');
-    expect(within(primary).getByRole('menuitem', { name: /sign up/i })).toHaveAttribute('href', '/signup');
+    expect(within(primary).queryByRole('menuitem', { name: /sign in/i })).not.toBeInTheDocument();
+    expect(within(primary).queryByRole('menuitem', { name: /sign up/i })).not.toBeInTheDocument();
+    expect(within(primary).queryByRole('menuitem', { name: /sign out/i })).not.toBeInTheDocument();
     expect(within(primary).queryByRole('menuitem', { name: /create account/i })).not.toBeInTheDocument();
 
     const trainees = within(mobile).getByRole('button', { name: 'Trainees' });
     expect(trainees).toHaveAttribute('aria-expanded', 'true');
     expect(within(mobile).getByRole('link', { name: 'Meet the trainees' })).toHaveAttribute('href', '/trainees');
-    expect(within(mobile).getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
-    expect(within(mobile).getByRole('link', { name: 'Sign up' })).toHaveAttribute('href', '/signup');
+    expect(within(mobile).queryByRole('link', { name: 'Sign in' })).not.toBeInTheDocument();
+    expect(within(mobile).queryByRole('link', { name: 'Sign up' })).not.toBeInTheDocument();
+    expect(within(mobile).queryByRole('button', { name: 'Sign out' })).not.toBeInTheDocument();
     expect(within(mobile).queryByRole('link', { name: /create account/i })).not.toBeInTheDocument();
     await user.click(trainees);
     expect(trainees).toHaveAttribute('aria-expanded', 'false');
@@ -99,16 +101,14 @@ describe('public navbar', () => {
       await user.keyboard('{ArrowDown}');
       expect(within(primary).getByRole('menuitem', { name: /meet the trainees/i })).toHaveFocus();
       await user.keyboard('{ArrowDown}');
-      expect(within(primary).getByRole('menuitem', { name: /sign in/i })).toHaveFocus();
+      expect(within(primary).getByRole('menuitem', { name: /meet the trainees/i })).toHaveFocus();
       await user.keyboard('{Escape}');
       expect(button).toHaveFocus();
       expect(button).toHaveAttribute('aria-expanded', 'false');
 
       await user.keyboard('{ArrowDown}');
       expect(button).toHaveAttribute('aria-expanded', 'true');
-      await user.tab();
-      expect(within(primary).getByRole('menuitem', { name: /sign in/i })).toHaveFocus();
-      await user.tab();
+      expect(within(primary).getByRole('menuitem', { name: /meet the trainees/i })).toHaveFocus();
       await user.tab();
       expect(button).toHaveAttribute('aria-expanded', 'false');
 
@@ -125,7 +125,7 @@ describe('public navbar', () => {
     }
   });
 
-  it('shows the portal and sign-out once a trainee is signed in', async () => {
+  it('keeps sign-in, sign-up, the portal, and sign-out out of the menu even when a trainee session exists', async () => {
     const user = userEvent.setup();
     signIn('trainee');
     renderAt('/');
@@ -133,18 +133,16 @@ describe('public navbar', () => {
     const primary = screen.getByRole('navigation', { name: 'Primary' });
     const mobile = screen.getByRole('navigation', { name: 'Mobile' });
     await user.click(within(primary).getByRole('button', { name: 'Trainees' }));
-    expect(within(primary).getByRole('menuitem', { name: /my portal/i })).toHaveAttribute('href', '/portal');
-    expect(within(primary).getByRole('menuitem', { name: /sign out/i })).toBeInTheDocument();
+    expect(within(primary).getByRole('menuitem', { name: /meet the trainees/i })).toHaveAttribute('href', '/trainees');
+    expect(within(primary).queryByRole('menuitem', { name: /my portal/i })).not.toBeInTheDocument();
+    expect(within(primary).queryByRole('menuitem', { name: /sign out/i })).not.toBeInTheDocument();
     expect(within(primary).queryByRole('menuitem', { name: /sign in/i })).not.toBeInTheDocument();
     expect(within(primary).queryByRole('menuitem', { name: /sign up/i })).not.toBeInTheDocument();
-    expect(within(mobile).getByRole('link', { name: 'My portal' })).toHaveAttribute('href', '/portal');
-    expect(within(mobile).getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
+    expect(within(mobile).queryByRole('link', { name: 'My portal' })).not.toBeInTheDocument();
+    expect(within(mobile).queryByRole('button', { name: 'Sign out' })).not.toBeInTheDocument();
     expect(within(mobile).queryByRole('link', { name: 'Sign up' })).not.toBeInTheDocument();
+    expect(hrefs().filter((href) => href === '/login' || href === '/signup' || href === '/portal' || href.startsWith('/portal/'))).toEqual([]);
     expect(hrefs().filter((href) => href === '/admin' || href.startsWith('/admin/'))).toEqual([]);
-
-    await user.click(within(primary).getByRole('menuitem', { name: /sign out/i }));
-    expect(await screen.findByRole('heading', { name: /trainee sign in/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Sign up' })).toHaveAttribute('href', '/signup');
   });
 
   it('does not offer an admin destination when someone else is signed in', async () => {
@@ -154,7 +152,7 @@ describe('public navbar', () => {
     expect(await screen.findByRole('heading', { name: /secure the future/i })).toBeInTheDocument();
     const primary = screen.getByRole('navigation', { name: 'Primary' });
     await user.click(within(primary).getByRole('button', { name: 'Trainees' }));
-    expect(within(primary).getByRole('menuitem', { name: /sign up/i })).toHaveAttribute('href', '/signup');
+    expect(within(primary).queryByRole('menuitem', { name: /sign up/i })).not.toBeInTheDocument();
     expect(within(primary).queryByRole('menuitem', { name: /my portal/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /admin/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /admin/i })).not.toBeInTheDocument();

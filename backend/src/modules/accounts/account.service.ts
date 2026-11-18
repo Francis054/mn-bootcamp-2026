@@ -68,6 +68,7 @@ export class AccountService {
     private readonly limits: LimitSettings,
     private readonly trainees: TraineeRepository,
     private readonly logger: AppLogger,
+    private readonly traineeSelfService: boolean,
   ) {}
 
   async requestReset(input: {
@@ -82,7 +83,8 @@ export class AccountService {
     const ip = clip(input.ip, 64);
     await this.assertResetOpen(email, ip, input.now);
     const user = await this.users.findByEmail(email);
-    if (user) {
+    const canReset = Boolean(user) && (this.traineeSelfService || user?.role !== 'trainee');
+    if (user && canReset) {
       await this.issueToken(
         user.id,
         'reset',
@@ -116,6 +118,7 @@ export class AccountService {
     const user = found ? await this.users.findById(found.userId) : null;
     const problems = newPasswordProblems(input.password, input.confirm, user?.email ?? '');
     if (!found || !user) problems.token = RESET_LINK_PROBLEM;
+    if (user?.role === 'trainee' && !this.traineeSelfService) problems.token = RESET_LINK_PROBLEM;
     if (Object.keys(problems).length > 0) throw new ApiError('validation', CHECK, problems);
     if (!found || !user) throw new ApiError('validation', CHECK, { token: RESET_LINK_PROBLEM });
 

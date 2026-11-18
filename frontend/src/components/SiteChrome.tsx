@@ -5,6 +5,7 @@ import { api } from '@/api/client';
 import { useAuth } from '@/auth/AuthProvider';
 import { APP_NAVIGATED } from '@/components/ScrollToTop';
 import { usesMockApi } from '@/config/runtime';
+import { traineeSelfServiceEnabled } from '@/config/traineeSelfService';
 import { clearSession } from '@/dev/session';
 import { Lockup, Mark } from './Brand';
 import { Icon, type IconName } from './Icon';
@@ -31,6 +32,7 @@ const LINKS_AFTER = [
 
 function traineeEntries(signedIn: boolean): NavEntry[] {
   const directory: NavLinkItem = { id: 'trainees', label: 'Meet the trainees', to: '/trainees', sub: 'The 2026 cohort', icon: 'users' };
+  if (!traineeSelfServiceEnabled()) return [directory];
   if (signedIn) {
     return [
       directory,

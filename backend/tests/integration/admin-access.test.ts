@@ -7,7 +7,7 @@ import { createApp } from '../../src/app.js';
 import type { AppContainer } from '../../src/composition/container.js';
 import { AppContainer as Container } from '../../src/composition/container.js';
 import { testEnv } from '../support/app-env.js';
-import { revertOurMigrations } from '../support/migrations.js';
+import { MIGRATION_NAMES, revertOurMigrations } from '../support/migrations.js';
 import { readError, readRecord } from '../support/read-json.js';
 import { openTestDatabase } from '../support/test-database.js';
 
@@ -219,21 +219,13 @@ describe('admin access by role', () => {
       /audit_events_action_check/,
     );
 
-    await database.undoLastMigration();
-    await database.undoLastMigration();
-    await database.undoLastMigration();
-    await database.undoLastMigration();
-    await database.undoLastMigration();
-    await database.undoLastMigration();
-    await database.undoLastMigration();
-    await database.undoLastMigration();
-    await database.undoLastMigration();
-    await database.undoLastMigration();
+    for (let step = 0; step < MIGRATION_NAMES.length; step += 1) {
+      const latest = await latestMigration(database);
+      if (latest === 'CommunityLogo1794096000000') break;
+      await database.undoLastMigration();
+    }
     try {
-      const names: unknown = await database.query(
-        'SELECT name FROM schema_migrations ORDER BY id DESC LIMIT 1',
-      );
-      expect(JSON.stringify(names)).toContain('CommunityLogo1794096000000');
+      expect(await latestMigration(database)).toBe('CommunityLogo1794096000000');
       await expect(insertAudit(database, 'curriculum.future_kind.created')).rejects.toThrow(
         /audit_events_action_check/,
       );
@@ -243,12 +235,20 @@ describe('admin access by role', () => {
     }
 
     await expect(insertAudit(database, 'curriculum.future_kind.created')).resolves.toBeTruthy();
-    const applied: unknown = await database.query(
-      'SELECT name FROM schema_migrations ORDER BY id DESC LIMIT 1',
-    );
-    expect(JSON.stringify(applied)).toContain('ApproveWaitingTrainees1794873600000');
+    expect(await latestMigration(database)).toBe(MIGRATION_NAMES[MIGRATION_NAMES.length - 1]);
   });
 });
+
+async function latestMigration(database: { query: (sql: string) => Promise<unknown> }): Promise<string> {
+  const names: unknown = await database.query(
+    'SELECT name FROM schema_migrations ORDER BY id DESC LIMIT 1',
+  );
+  if (!Array.isArray(names) || names.length === 0) return '';
+  const row: unknown = names[0];
+  return typeof row === 'object' && row !== null && 'name' in row && typeof row.name === 'string'
+    ? row.name
+    : '';
+}
 
 function emailFor(role: TestRole): string {
   return `${role}.access@example.test`;

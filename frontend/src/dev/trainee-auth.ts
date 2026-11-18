@@ -1,3 +1,4 @@
+import { traineeSelfServiceEnabled } from '@/config/traineeSelfService';
 import { ApiError, type DevUser, type Trainee } from '@/domain/types';
 import { newPassword, collect, emailAddress } from '@/domain/validate';
 import { newId } from '@/domain/format';
@@ -78,6 +79,14 @@ export function readDevMail(): readonly MailRow[] {
 }
 
 export function traineeAuthRoute(method: string, path: string, body: Record<string, unknown>): unknown | undefined {
+  const publicSignup = method === 'POST' && (
+    path === '/public/trainee-signup'
+    || path === '/public/trainee-signup/verify'
+    || path === '/public/trainee-signup/resend'
+  );
+  if (publicSignup && !traineeSelfServiceEnabled()) {
+    throw new ApiError('not_found', 'Trainee sign-up is turned off.', 404);
+  }
   if (method === 'POST' && path === '/public/trainee-signup') return signup(body);
   if (method === 'POST' && path === '/public/trainee-signup/verify') return verify(body);
   if (method === 'POST' && path === '/public/trainee-signup/resend') return resend(body);
