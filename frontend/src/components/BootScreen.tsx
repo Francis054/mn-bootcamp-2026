@@ -103,12 +103,6 @@ export function BootScreen() {
 
   if (!covering) return null;
 
-  const skip = () => {
-    setLeaving(true);
-    setBootPhase('exit');
-    window.setTimeout(() => setBootPhase('done'), plan.reduced ? 0 : 600);
-  };
-
   return (
     <div className={`boot-screen${leaving ? ' is-leaving' : ''}${plan.reduced ? ' is-still' : ''}`} role="dialog" aria-modal="true" aria-labelledby="boot-title">
       <h2 id="boot-title" className="sr-only">Secure environment loading</h2>
@@ -116,7 +110,6 @@ export function BootScreen() {
       {!plan.reduced ? <div className="boot-scan" aria-hidden="true" /> : null}
       <header className="boot-top">
         <p>MN BOOTCAMP // CYBERSECURITY 2026</p>
-        <button type="button" className="boot-skip" onClick={skip}>Skip</button>
       </header>
       <div className="boot-stage">
         <section className={`boot-scene${view.scene === 1 ? ' is-on' : ''}`} aria-hidden="true">
