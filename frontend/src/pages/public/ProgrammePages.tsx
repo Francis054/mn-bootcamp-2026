@@ -42,7 +42,7 @@ export function BootcampPage() {
         <div className="container">
           <div className="sec-head">
             <div className="sec-head__title"><Reveal><span className="eyebrow"><HatMark />Curriculum</span></Reveal><Reveal><h2 id="mod-title" className="h2">What the cohort learns.</h2></Reveal></div>
-            <Reveal className="sec-head__aside"><p className="muted">The six areas below are confirmed by the Foundation. Their order and weekly split are still to be confirmed.</p><span className="verified">Topics verified</span></Reveal>
+            <Reveal className="sec-head__aside"><p className="muted">The six areas below are confirmed by the Foundation. Their order and weekly split are still to be confirmed.</p></Reveal>
           </div>
           <div className="modules">
             {MODULES.map((module, index) => (
@@ -98,7 +98,7 @@ export function BootcampPage() {
               {OVERVIEW_STEPS.map((step) => (
                 <li key={step.title}><h4>{step.title}</h4><p className="muted">{step.text}</p></li>
               ))}
-              <li><h4>Certification exams</h4><p className="muted">Foundation bootcamps include EXIN certification exams. <span className="tbc">Exams for this cohort to be confirmed</span></p></li>
+              <li><h4>Certification exams</h4><p className="muted">Foundation bootcamps include EXIN certification exams.</p></li>
             </ol>
             <Reveal><div className="callout callout--lime" style={{ marginTop: 16 }}><h3>Where it all started</h3><p>The Foundation piloted its first cybersecurity bootcamp in 2020 with 14 trainees. The 2026 cohort builds on that pilot.</p></div></Reveal>
           </div>
@@ -136,7 +136,7 @@ export function JourneyPage() {
   return (
     <PublicGate loading={loading || timetable.loading} error={error ?? timetable.error?.message ?? null}>
     <>
-      <PageIntro title="Journey" crumbs={[{ label: 'Home', to: '/' }, { label: 'Bootcamp' }, { label: 'Journey' }]} eyebrow="Timeline · 5 Oct – 25 Dec 2026" headline={'Twelve weeks,\none milestone\nat a time.'} aside={<><Reveal><p className="lead">The weekly plan is the timetable: three blocks, from 5 October to 25 December 2026.</p></Reveal><Reveal><div className="flex wrap" style={{ marginTop: 16 }}><span className="verified">Dates on the timetable</span><Link className="link" to="/schedule">Daily timetable <Icon name="arrow-right" className="i--sm" /></Link></div></Reveal></>}>
+      <PageIntro title="Journey" crumbs={[{ label: 'Home', to: '/' }, { label: 'Bootcamp' }, { label: 'Journey' }]} eyebrow="Timeline · 5 Oct – 25 Dec 2026" headline={'Twelve weeks,\none milestone\nat a time.'} aside={<><Reveal><p className="lead">The weekly plan is the timetable: three blocks, from 5 October to 25 December 2026.</p></Reveal><Reveal><div className="flex wrap" style={{ marginTop: 16 }}><Link className="link" to="/schedule">Daily timetable <Icon name="arrow-right" className="i--sm" /></Link></div></Reveal></>}>
         <div className="cohort-bar" style={{ marginTop: 56, color: 'var(--ink)' }}><span className="label">5 Oct</span><div className="meter" style={{ ['--p' as string]: weekNumber / 12, background: 'var(--line)' }}><i /></div><span className="label">25 Dec</span><span className="badge badge--lime">Week {weekNumber} · in progress</span></div>
       </PageIntro>
       <section className="section" style={{ paddingTop: 'var(--s-9)' }}>

@@ -59,7 +59,7 @@ describe('site images', () => {
     renderAt('/admin/site-images');
     expect(await screen.findByRole('heading', { name: 'Community logo' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Maxim Nyansa Foundation logo' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Badge tagline')).toHaveValue('STRONGER TOGETHER');
+    expect(screen.getByLabelText('Badge tagline')).toHaveValue('');
     expect(screen.getByRole('heading', { name: 'Homepage hero, main photo' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Sign-in panel photo' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Site images' })).toBeInTheDocument();

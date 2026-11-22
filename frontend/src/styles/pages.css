@@ -78,7 +78,7 @@
 .sec-head__title{grid-column:1 / span 7;min-width:0}
 .sec-head__title h2{margin-top:var(--s-4)}
 .sec-head__aside{grid-column:9 / span 4;display:flex;flex-direction:column;gap:var(--s-4);align-items:flex-start;min-width:0}
-.sec-head__aside .verified,.sec-head__aside .tbc,.sec-head__aside .ph{max-width:100%;white-space:normal}
+.sec-head__aside .tbc,.sec-head__aside .ph{max-width:100%;white-space:normal}
 @media (max-width:900px){.sec-head{display:block}.sec-head__aside{margin-top:var(--s-5)}}
 
 /* ---------- Intro statement ---------- */
@@ -517,11 +517,10 @@ a.tl__card:hover{box-shadow:var(--shadow-2);transform:translateX(4px)}
 .contact-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--s-7);align-items:start}
 @media (max-width:900px){.contact-grid{grid-template-columns:1fr}}
 .contact-side{display:flex;flex-direction:column;gap:12px}
-.contact-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:start;padding:20px}
+.contact-card{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:start;padding:20px}
 .contact-card p{margin:4px 0 0;font-size:15.5px;line-height:1.5}
 .contact-card .link{word-break:break-word}
 .contact-card>.i{width:44px;height:44px;padding:11px;border-radius:12px;background:var(--lime-100);color:var(--forest-600)}
-@media (max-width:480px){.contact-card{grid-template-columns:auto minmax(0,1fr)}.contact-card .verified{grid-column:2;justify-self:start}}
 .contact-social{padding:16px 4px 0}
 .contact-social .socials{margin-top:12px}
 .socials--light a{border-color:var(--line);color:var(--ink-2)}

@@ -1,18 +1,18 @@
 /** Built-in pictures. Keys, labels, and addresses match the API catalogue. */
 
-export const DEFAULT_BADGE_TAGLINE = 'STRONGER TOGETHER';
+export const DEFAULT_BADGE_TAGLINE = '';
 
 export const SITE_IMAGE_SLOTS = [
   {
     key: 'community-logo',
     label: 'Community logo',
-    description: 'The cohort fedora: MAXIM NYANSA on the crown and CYBERSECURITY 2026 on the band. Header, footer, sign-in, admin sidebar, seals, empty states, the favicon, and the loader reveal. An uploaded image replaces it. The tagline sits under the larger seals.',
+    description: 'The cohort fedora: MAXIM NYANSA on the crown and CYBERSECURITY 2026 on the band. Header, footer, sign-in, admin sidebar, seals, empty states, the favicon, and the loader reveal. An uploaded image replaces it.',
     url: '/assets/logo/community-badge.webp',
     alt: 'Cyber Bootcamp community logo',
     width: 840,
     height: 473,
     fit: 'contain',
-    tagline: 'STRONGER TOGETHER',
+    tagline: '',
   },
   {
     key: 'foundation-logo',
@@ -78,7 +78,7 @@ export interface ResolvedSiteImage {
   srcSet?: string;
   fallbackSrcSet?: string;
   tagline: string;
-  /** The community slot is still the bundled fedora, so the page shows that photograph and its tagline. */
+  /** The community slot is still the bundled fedora, so the page shows that photograph. */
   liveBadge: boolean;
 }
 

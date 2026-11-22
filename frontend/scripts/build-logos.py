@@ -508,7 +508,6 @@ def main():
 
 BRAND = ROOT / "scripts" / "brand"
 POPPINS_BLACK = BRAND / "Poppins-Black.ttf"
-BADGE_TAGLINE = "STRONGER TOGETHER"
 
 
 def circular_rgba(im: Image.Image) -> Image.Image:
@@ -528,10 +527,10 @@ def circular_rgba(im: Image.Image) -> Image.Image:
 
 
 def compose_approved_badge(bare: Image.Image, foundation: Image.Image) -> Image.Image:
-    """concept-a plus the cream foundation plate and the STRONGER TOGETHER banner.
+    """concept-a plus the cream foundation plate.
 
     Geometry matches badge-compose-reference.py at 1024px. The live site draws
-    the plate and the banner in HTML so an uploaded foundation logo stays current.
+    the plate in HTML so an uploaded foundation logo stays current.
     This flattened file is the static fallback (favicon crop, social card, no-JS).
     """
     im = bare.convert("RGBA")
@@ -552,26 +551,11 @@ def compose_approved_badge(bare: Image.Image, foundation: Image.Image) -> Image.
     )
     fitted = logo.resize((logo_w, logo_h), Image.Resampling.LANCZOS)
     im.paste(fitted, (cx - logo_w // 2, cy - logo_h // 2), fitted)
-    draw = ImageDraw.Draw(im)
-    draw.rounded_rectangle(
-        [362, 905, 662, 949],
-        radius=22,
-        fill=(10, 31, 22, 255),
-        outline=(136, 204, 0, 255),
-        width=3,
-    )
-    font = ImageFont.truetype(str(POPPINS_BLACK), 17)
-    gap = 2
-    widths = [draw.textlength(char, font=font) + gap for char in BADGE_TAGLINE]
-    x = 512 - sum(widths) / 2
-    for char, width in zip(BADGE_TAGLINE, widths):
-        draw.text((x, 916), char, font=font, fill=(136, 204, 0, 255))
-        x += width
     return im
 
 
 def emblem_crop(im: Image.Image, size: int) -> Image.Image:
-    """Hats and lime ring, without the plate or the banner. Readable at 16–32px."""
+    """Hats and lime ring, without the plate. Readable at 16–32px."""
     side = 640
     left = (1024 - side) // 2
     top = 48

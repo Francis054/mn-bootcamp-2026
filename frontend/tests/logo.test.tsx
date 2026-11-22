@@ -36,11 +36,12 @@ describe('community badge', () => {
     });
   });
 
-  it('names the full mark and keeps the tagline with the original artwork', async () => {
+  it('names the full mark and does not add a tagline under the hat', async () => {
     render(<HatMark label="Cyber Bootcamp" />);
     const badge = screen.getByRole('img', { name: 'Cyber Bootcamp' });
     expect(badge.querySelector('img.community-badge__art')).not.toBeNull();
-    expect(badge).toHaveTextContent('STRONGER TOGETHER');
+    expect(badge.querySelector('.community-badge__tagline')).toBeNull();
+    expect(badge).not.toHaveTextContent(/stronger together/i);
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
