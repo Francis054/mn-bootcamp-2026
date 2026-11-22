@@ -50,7 +50,7 @@ describe('profile photo on the sample pages', () => {
     const site = screen.getAllByRole('link', { name: /view public site/i })[0];
     if (!site) throw new Error('The public site link is missing.');
     await user.click(site);
-    expect(await screen.findByRole('heading', { name: /meet the trainees/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Meet the People Behind the Mission.' })).toBeInTheDocument();
     const homeCard = screen.getByRole('link', { name: /Sample Trainee 01/ });
     expect(within(homeCard).getByRole('img', { name: 'Sample Trainee 01' })).toHaveAttribute(
       'src',

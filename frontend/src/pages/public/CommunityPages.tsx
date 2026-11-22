@@ -328,7 +328,7 @@ export function AboutPage() {
       </section>
       <section className="section section--paper">
         <div className="container">
-          <div className="sec-head"><div className="sec-head__title"><span className="eyebrow">Our values</span><h2 className="h2">Eight values, one way of working.</h2></div><div className="sec-head__aside"><span className="verified">From maximnyansa.com</span></div></div>
+          <div className="sec-head"><div className="sec-head__title"><span className="eyebrow">Our values</span><h2 className="h2">Eight values, one way of working.</h2></div></div>
           <div className="values">{(about.values ?? []).length ? (about.values ?? []).map((value, index) => <div key={value}><span>{String(index + 1).padStart(2, '0')}</span>{value}</div>) : <p className="muted">Values will appear when the about page is published with them.</p>}</div>
         </div>
       </section>
@@ -346,7 +346,7 @@ export function AboutPage() {
       {foundationStats.length ? (
         <section className="section section--dark">
           <div className="container">
-            <div className="sec-head"><div className="sec-head__title"><span className="eyebrow">Foundation-wide figures</span><h2 className="h2">Not bootcamp statistics.</h2></div><div className="sec-head__aside"><span className={about.figuresPermission ? 'verified' : 'tbc'}>{about.figuresPermission ? 'Published counters' : 'Self-reported · permission to display TBC'}</span></div></div>
+            <div className="sec-head"><div className="sec-head__title"><span className="eyebrow">Foundation-wide figures</span><h2 className="h2">Not bootcamp statistics.</h2></div></div>
             <div className="stack">
               <div className="stats">{foundationStats.map((stat) => <div className="stat" key={stat.id}><CountUp value={stat.value} suffix={stat.suffix} /><span>{stat.label}</span></div>)}</div>
               <p className="muted">These counters describe the Foundation’s wider work, not the 2026 cohort. Address: {about.address}. Email: <a href={`mailto:${about.email}`}>{about.email}</a>.</p>
@@ -504,7 +504,7 @@ export function ContactPage() {
 
 function ContactCard({ icon, label, text, href, note }: { icon: IconName; label: string; text: string; href?: string; note?: string }) {
   return (
-    <div className="card contact-card"><span className="contact-card__ic"><Icon name={icon} /></span><div><span className="label">{label}</span><p>{href ? <a className="link" href={href} target={href.startsWith('http') ? '_blank' : undefined} rel="noopener">{text}</a> : text}</p>{note ? <p className="muted">{note}</p> : null}</div><span className="verified">Verified</span></div>
+    <div className="card contact-card"><span className="contact-card__ic"><Icon name={icon} /></span><div><span className="label">{label}</span><p>{href ? <a className="link" href={href} target={href.startsWith('http') ? '_blank' : undefined} rel="noopener">{text}</a> : text}</p>{note ? <p className="muted">{note}</p> : null}</div></div>
   );
 }
 

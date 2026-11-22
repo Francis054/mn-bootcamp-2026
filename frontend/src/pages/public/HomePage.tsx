@@ -158,8 +158,8 @@ export function HomePage() {
       <section className="section" aria-labelledby="tr-title">
         <div className="container">
           <div className="sec-head">
-            <div className="sec-head__title"><Reveal><span className="eyebrow">The cohort</span></Reveal><Reveal><h2 id="tr-title" className="h2">Meet the trainees.</h2></Reveal></div>
-            <Reveal className="sec-head__aside"><p className="muted">Real names and photos will appear only after each trainee gives consent. Until then, every profile is a sample.</p><Link className="link" to="/trainees">Trainee directory <Icon name="arrow-right" className="i--sm" /></Link></Reveal>
+            <div className="sec-head__title"><Reveal><span className="eyebrow">The cohort</span></Reveal><Reveal><h2 id="tr-title" className="h2">Meet the People Behind the Mission.</h2></Reveal></div>
+            <Reveal className="sec-head__aside"><p className="muted">Get to know the trainees, their interests, and their journeys through cybersecurity. Discover the people learning, collaborating, and developing the skills to make the digital world safer.</p><Link className="link" to="/trainees">Explore the Trainee Directory <Icon name="arrow-right" className="i--sm" /></Link></Reveal>
           </div>
           <div className="t-strip">
             {trainees.length ? null : <EmptyState icon="users" title="No public profiles yet" text="Trainee cards appear after consent is recorded and the profile is published." />}
@@ -208,8 +208,8 @@ export function HomePage() {
       <section className="section" aria-labelledby="gal-title">
         <div className="container">
           <div className="sec-head">
-            <div className="sec-head__title"><Reveal><span className="eyebrow">Gallery</span></Reveal><Reveal><h2 id="gal-title" className="h2">Moments from the community.</h2></Reveal></div>
-            <Reveal className="sec-head__aside"><p className="muted">Photos from Foundation community events. Names are withheld until consent is recorded.</p><Link className="link" to="/gallery">Open the gallery <Icon name="arrow-right" className="i--sm" /></Link></Reveal>
+            <div className="sec-head__title"><Reveal><span className="eyebrow">Bootcamp gallery</span></Reveal><Reveal><h2 id="gal-title" className="h2">Learning, Collaboration & Real-World Experiences.</h2></Reveal></div>
+            <Reveal className="sec-head__aside"><p className="muted">A collection of moments from our cybersecurity journey — classroom sessions, hands-on labs, group activities, practical exercises, and experiences beyond the classroom.</p><Link className="link" to="/gallery">Explore the Bootcamp Gallery <Icon name="arrow-right" className="i--sm" /></Link></Reveal>
           </div>
           <div className="gal-teaser">
             {usesMockApi() ? ['hack-group-google-wall', 'anniversary-signature-wall', 'guests-smiling', 'electronics-lab', 'vr-group-lounge'].map((file, index) => (
@@ -233,7 +233,7 @@ export function HomePage() {
             <Reveal><span className="years">2016 — 2026</span></Reveal>
             <SplitHeading id="anni-title" text={'10 Years of Creating\nCareer Perspectives.'} />
             <Reveal><p className="lead">Founded in Ghana in 2016, the Foundation marked its tenth year in October 2026 with a reception alongside the Ghana Netherlands Business & Culture Council and a Grand Durbar that included a cybersecurity panel.</p></Reveal>
-            <Reveal><div className="flex wrap" style={{ marginTop: 32 }}><Link className="btn" to="/anniversary">Explore 10 Years of Impact <span className="arrow"><Icon name="arrow-right" className="i--sm" /></span></Link><span className="verified">Verified facts only</span></div></Reveal>
+            <Reveal><div className="flex wrap" style={{ marginTop: 32 }}><Link className="btn" to="/anniversary">Explore 10 Years of Impact <span className="arrow"><Icon name="arrow-right" className="i--sm" /></span></Link></div></Reveal>
           </div>
         </div>
       </section>
