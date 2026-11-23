@@ -1,9 +1,10 @@
 import { toPublicEvent, toPublicLesson, toPublicProject, toPublicTrainee } from '@/domain/publicView';
-import { ApiError, type ApiErrorCode, type BootcampEvent, type Lesson, type ListQuery, type MediaItem, type Page, type Permission, type Project, type Role, type SearchHit, type Trainee, type WorkPhoto } from '@/domain/types';
+import { ApiError, type AboutPerson, type AboutPersonGroup, type ApiErrorCode, type BootcampEvent, type Lesson, type ListQuery, type MediaItem, type Page, type Permission, type Project, type Role, type SearchHit, type Trainee, type WorkPhoto } from '@/domain/types';
 import { can } from '@/domain/permissions';
 import { isPubliclyListable } from '@/domain/publish';
 import { includesQuery, newId, paginate, scheduleFor, slugify } from '@/domain/format';
 import { displayPhotoUrl, profilePhotoFileProblem, readFileBytes, sniffedPhotoMime, type ProfilePhotoMime } from '@/domain/photo';
+import { aboutPersonFieldErrors, isAboutPersonGroup, normalizePublicAboutPeople } from '@/domain/aboutPeople';
 import { collect, emailAddress, httpUrl, minLength, required } from '@/domain/validate';
 import { currentEnv } from '@/config/runtime';
 import { traineeSelfServiceEnabled } from '@/config/traineeSelfService';
@@ -266,6 +267,7 @@ async function route(method: string, path: string, query: ListQuery & Record<str
   if (method === 'GET' && path.startsWith('/public/events/')) return publicOne(getState().events, path.split('/')[3] ?? '', toPublicEvent);
   if (method === 'GET' && path === '/public/media') return getState().media.filter(isPubliclyListable);
   if (method === 'GET' && path === '/public/work-photos') return publicWorkPhotos(query);
+  if (method === 'GET' && path === '/public/about-people') return publicAboutPeople();
   if (method === 'GET' && path === '/public/site-images') return getState().siteImages.map(toPublicSiteImage);
   if (method === 'GET' && path.startsWith('/public/site-images/')) return publicSiteImage(path.split('/')[3] ?? '');
   if (method === 'POST' && path === '/public/enquiries') return createEnquiry(body);
@@ -326,6 +328,14 @@ async function route(method: string, path: string, query: ListQuery & Record<str
   if (method === 'POST' && /^\/admin\/media\/[^/]+\/withdraw-consent$/.test(path)) return withdrawMedia(id);
   if (method === 'PATCH' && path.startsWith('/admin/media/')) return patchMedia(id, body);
   if (method === 'DELETE' && path.startsWith('/admin/media/')) return remove('media.write', 'media', id);
+
+  if (method === 'GET' && path === '/admin/about-people') return listAboutPeople();
+  if (method === 'POST' && path === '/admin/about-people') return addAboutPerson(body);
+  if (method === 'POST' && path === '/admin/about-people/reorder') return reorderAboutPeople(body);
+  if (method === 'PATCH' && /^\/admin\/about-people\/[^/]+$/.test(path)) return patchAboutPerson(id, body);
+  if (method === 'POST' && /^\/admin\/about-people\/[^/]+\/photo$/.test(path)) return replaceAboutPersonPhoto(id, body);
+  if (method === 'DELETE' && /^\/admin\/about-people\/[^/]+\/photo$/.test(path)) return removeAboutPersonPhoto(id);
+  if (method === 'DELETE' && /^\/admin\/about-people\/[^/]+$/.test(path)) return removeAboutPerson(id);
 
   if (method === 'GET' && path === '/admin/work-photos') return listWorkPhotos(query);
   if (method === 'POST' && path === '/admin/work-photos') return addWorkPhoto(body);
@@ -1054,6 +1064,140 @@ function removeWorkPhoto(id: string) {
   if (!getState().workPhotos.some((photo) => photo.id === id)) fail('not_found', 'Record not found.', 404);
   updateState((s) => ({ ...s, workPhotos: s.workPhotos.filter((photo) => photo.id !== id) }));
   return { deleted: true, id };
+}
+
+function publicAboutPeople() {
+  return normalizePublicAboutPeople(getState().aboutPeople.filter((person) => person.published));
+}
+
+function listAboutPeople() {
+  requireUser('content.read');
+  return [...getState().aboutPeople].sort(byAboutPerson);
+}
+
+function addAboutPerson(body: Record<string, unknown>): AboutPerson {
+  requireUser('content.write');
+  const group = String(body.group ?? '');
+  const name = String(body.name ?? '');
+  const title = body.title === undefined ? '' : String(body.title);
+  const description = body.description === undefined ? '' : String(body.description);
+  assertFields(aboutPersonFieldErrors({ group, name, title, description }));
+  if (!isAboutPersonGroup(group)) fail('validation', 'Check the highlighted fields.', 422, { group: 'Choose Founder, Team, or Partners.' });
+  const item: AboutPerson = {
+    id: newId('person'),
+    group,
+    name: name.trim(),
+    title: title.trim(),
+    description: description.trim(),
+    photoUrl: null,
+    width: 0,
+    height: 0,
+    displayOrder: getState().aboutPeople.filter((person) => person.group === group).length,
+    published: body.published === true,
+    updatedAt: new Date().toISOString(),
+  };
+  updateState((s) => ({ ...s, aboutPeople: [...s.aboutPeople, item] }));
+  return item;
+}
+
+function patchAboutPerson(id: string, body: Record<string, unknown>): AboutPerson {
+  requireUser('content.write');
+  const current = getState().aboutPeople.find((person) => person.id === id);
+  if (!current) fail('not_found', 'That person was not found.', 404);
+  const group = body.group === undefined ? current.group : String(body.group);
+  const name = body.name === undefined ? current.name : String(body.name);
+  const title = body.title === undefined ? current.title : String(body.title);
+  const description = body.description === undefined ? current.description : String(body.description);
+  assertFields(aboutPersonFieldErrors({ group, name, title, description }));
+  if (!isAboutPersonGroup(group)) fail('validation', 'Check the highlighted fields.', 422, { group: 'Choose Founder, Team, or Partners.' });
+  const next: AboutPerson = {
+    ...current,
+    group,
+    name: name.trim(),
+    title: title.trim(),
+    description: description.trim(),
+    published: body.published === undefined ? current.published : body.published === true,
+    updatedAt: new Date().toISOString(),
+  };
+  updateState((s) => ({ ...s, aboutPeople: s.aboutPeople.map((person) => (person.id === id ? next : person)) }));
+  return next;
+}
+
+async function replaceAboutPersonPhoto(id: string, body: Record<string, unknown>): Promise<AboutPerson> {
+  requireUser('content.write');
+  const current = getState().aboutPeople.find((person) => person.id === id);
+  if (!current) fail('not_found', 'That person was not found.', 404);
+  const file = body.file instanceof File ? body.file : undefined;
+  if (!file) fail('validation', 'Check the highlighted fields.', 422, { file: 'Choose an image.' });
+  const fileProblem = profilePhotoFileProblem(file);
+  if (fileProblem) fail('validation', 'Check the highlighted fields.', 422, { file: fileProblem });
+  const bytes = await readFileBytes(file);
+  const mime = sniffedPhotoMime(bytes);
+  if (!mime) fail('validation', 'Check the highlighted fields.', 422, { file: 'Use a JPEG, PNG, or WebP image.' });
+  const size = pngSize(bytes);
+  const next: AboutPerson = {
+    ...current,
+    photoUrl: dataUrl(bytes, mime),
+    width: size.width,
+    height: size.height,
+    updatedAt: new Date().toISOString(),
+  };
+  updateState((s) => ({ ...s, aboutPeople: s.aboutPeople.map((person) => (person.id === id ? next : person)) }));
+  return next;
+}
+
+function removeAboutPersonPhoto(id: string): AboutPerson {
+  requireUser('content.write');
+  const current = getState().aboutPeople.find((person) => person.id === id);
+  if (!current) fail('not_found', 'That person was not found.', 404);
+  const next: AboutPerson = { ...current, photoUrl: null, width: 0, height: 0, updatedAt: new Date().toISOString() };
+  updateState((s) => ({ ...s, aboutPeople: s.aboutPeople.map((person) => (person.id === id ? next : person)) }));
+  return next;
+}
+
+function removeAboutPerson(id: string) {
+  requireUser('content.write');
+  if (!getState().aboutPeople.some((person) => person.id === id)) fail('not_found', 'That person was not found.', 404);
+  updateState((s) => ({ ...s, aboutPeople: s.aboutPeople.filter((person) => person.id !== id) }));
+  return { deleted: true, id };
+}
+
+function reorderAboutPeople(body: Record<string, unknown>) {
+  requireUser('content.write');
+  const group = String(body.group ?? '');
+  const ids = Array.isArray(body.ids) ? body.ids.filter((item): item is string => typeof item === 'string') : [];
+  if (!isAboutPersonGroup(group)) fail('validation', 'Check the highlighted fields.', 422, { group: 'Choose Founder, Team, or Partners.' });
+  const current = getState().aboutPeople.filter((person) => person.group === group);
+  const known = new Set(current.map((person) => person.id));
+  if (ids.length !== current.length || ids.some((item) => !known.has(item)) || new Set(ids).size !== ids.length) {
+    fail('validation', 'Check the highlighted fields.', 422, { ids: 'Include each person in this group once.' });
+  }
+  updateState((s) => ({
+    ...s,
+    aboutPeople: s.aboutPeople.map((person) => {
+      if (person.group !== group) return person;
+      return { ...person, displayOrder: ids.indexOf(person.id) };
+    }),
+  }));
+  return listAboutPeople();
+}
+
+function byAboutPerson(left: AboutPerson, right: AboutPerson): number {
+  const rank: Record<AboutPersonGroup, number> = { founder: 0, team: 1, partner: 2 };
+  const group = rank[left.group] - rank[right.group];
+  if (group !== 0) return group;
+  if (left.displayOrder !== right.displayOrder) return left.displayOrder - right.displayOrder;
+  return left.name.localeCompare(right.name);
+}
+
+function pngSize(bytes: Uint8Array): { width: number; height: number } {
+  if (bytes.length >= 24 && bytes[0] === 0x89 && bytes[1] === 0x50) {
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const width = view.getUint32(16);
+    const height = view.getUint32(20);
+    if (width > 0 && height > 0) return { width, height };
+  }
+  return { width: 1, height: 1 };
 }
 
 function toPublicWorkPhoto(photo: WorkPhoto) {

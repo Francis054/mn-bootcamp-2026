@@ -210,6 +210,34 @@ export interface PublicWorkPhoto {
   caption: string;
 }
 
+export type AboutPersonGroup = 'founder' | 'team' | 'partner';
+
+export interface AboutPerson {
+  id: string;
+  group: AboutPersonGroup;
+  name: string;
+  title: string;
+  description: string;
+  photoUrl: string | null;
+  width: number;
+  height: number;
+  displayOrder: number;
+  published: boolean;
+  updatedAt?: string;
+}
+
+export interface PublicAboutPerson {
+  id: string;
+  group: AboutPersonGroup;
+  name: string;
+  title: string;
+  description: string;
+  photoUrl: string | null;
+  width: number;
+  height: number;
+  displayOrder: number;
+}
+
 export interface Milestone {
   id: string;
   year: string;

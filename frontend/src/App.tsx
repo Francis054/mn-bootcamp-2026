@@ -9,6 +9,7 @@ import { AdminLayout } from '@/layouts/AdminLayout';
 import { PublicLayout } from '@/layouts/PublicLayout';
 
 const AboutEditorPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.AboutEditorPage })));
+const AboutPeoplePage = lazy(() => import('@/pages/admin/AboutPeoplePage').then((m) => ({ default: m.AboutPeoplePage })));
 const AccountPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.AccountPage })));
 const ContentEditorPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.ContentEditorPage })));
 const EnquiriesPage = lazy(() => import('@/pages/admin/SystemPages').then((m) => ({ default: m.EnquiriesPage })));
@@ -135,6 +136,7 @@ export function App() {
         <Route path="content" element={<Waiting><ContentEditorPage /></Waiting>} />
         <Route path="timeline" element={<Waiting><TimelineEditorPage /></Waiting>} />
         <Route path="about" element={<Waiting><AboutEditorPage /></Waiting>} />
+        <Route path="people" element={<Waiting><AboutPeoplePage /></Waiting>} />
         <Route path="account" element={<Waiting><AccountPage /></Waiting>} />
         <Route path="states" element={<Waiting><StatesPage /></Waiting>} />
         <Route path="users" element={<Waiting><RequireAccess permission="users.read"><UsersPage /></RequireAccess></Waiting>} />

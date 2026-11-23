@@ -21,6 +21,7 @@ import { collect, emailAddress, minLength, required } from '@/domain/validate';
 import { usePublicContent } from '@/hooks/useContent';
 import { downloadCalendar, EventRow, moduleOf, PageIntro, PublicGate, SampleMark, TraineeArt } from './helpers';
 import { PublicWorkPhotos } from './WorkPhotos';
+import { OurPeople } from './OurPeople';
 import { TraineeJourney } from './TraineeJourney';
 import { TraineePortfolio } from './TraineePortfolio';
 import { TraineeProgress } from './TraineeProgress';
@@ -320,6 +321,7 @@ export function AboutPage() {
     <>
       <PageIntro title="About" crumbs={[{ label: 'Home', to: '/' }, { label: 'About' }]} eyebrow="About the Foundation" headline={'Maximal wisdom,\nshared widely.'} aside={<><HatMark className="hat-seal hat-seal--block" label="Cyber Bootcamp" /><OfficialLogo width={180} /><p className="lead">Established in Ghana in 2016 to create career perspectives for young Africans through information technology.</p></>} />
       <section className="section" style={{ paddingTop: 0 }}><div className="container"><figure className="detail-media"><SiteImage slot="about-banner" sizes="100vw" /></figure></div></section>
+      <OurPeople />
       <section className="section">
         <div className="container split split--even">
           <div className="split__a"><span className="eyebrow">Mission</span><p className="statement">“{about.mission}”</p></div>

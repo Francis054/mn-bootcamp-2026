@@ -66,6 +66,7 @@ function registeredOperations(): string[] {
     cvRouterStub(),
     reachStub(),
     {} as never,
+    {} as never,
   );
   const operations = [
     ...walk(health, '/api/v1/health'),

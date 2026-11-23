@@ -15,6 +15,7 @@ import { cvPaths, cvSchemas } from './cv-docs.js';
 import { reachPaths, reachSchemas } from './reach-docs.js';
 import { journeyPaths, journeySchemas } from './journey-docs.js';
 import { privacyPaths, privacySchemas } from './privacy-docs.js';
+import { aboutPersonPaths, aboutPersonSchemas } from './about-person-docs.js';
 
 export const openApiSpec = {
   openapi: '3.0.3',
@@ -142,6 +143,7 @@ export const openApiSpec = {
     ...reachPaths,
     ...journeyPaths,
     ...privacyPaths,
+    ...aboutPersonPaths,
   },
   components: {
     schemas: {
@@ -263,6 +265,7 @@ export const openApiSpec = {
       ...reachSchemas,
       ...journeySchemas,
       ...privacySchemas,
+      ...aboutPersonSchemas,
     },
   },
 };

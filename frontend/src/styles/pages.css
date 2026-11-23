@@ -593,3 +593,15 @@ a.tl__card:hover{box-shadow:var(--shadow-2);transform:translateX(4px)}
   .week-sheet__head,.week-sheet__grid{grid-template-columns:1fr}
   .sess{grid-template-columns:1fr;gap:4px}
 }
+
+.people-group + .people-group{margin-top:var(--s-8)}
+.people-group > h3{margin-bottom:var(--s-5)}
+.people-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--grid-gap)}
+.people-grid--founder{grid-template-columns:repeat(auto-fill,minmax(240px,320px))}
+.people-card .tcard__art{aspect-ratio:1}
+.people-card h4{font-size:19px;letter-spacing:-.02em}
+.people-card__title{font-size:14px;color:var(--ink-3);margin-top:4px}
+.people-card__note{margin-top:10px}
+@media (max-width:560px){
+  .people-grid,.people-grid--founder{grid-template-columns:1fr}
+}
