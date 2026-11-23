@@ -78,6 +78,7 @@ export const CURRICULUM_KINDS = [
   'site_image',
   'homepage',
   'about',
+  'about_person',
   'milestone',
   'settings',
 ] as const;

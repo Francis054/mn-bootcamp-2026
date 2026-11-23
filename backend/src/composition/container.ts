@@ -44,6 +44,9 @@ import { SiteImageService } from '../modules/site-images/site-image.service.js';
 import { WorkPhotoEntity } from '../modules/work-photos/work-photo.entity.js';
 import { WorkPhotoRepository } from '../modules/work-photos/work-photo.repository.js';
 import { WorkPhotoService } from '../modules/work-photos/work-photo.service.js';
+import { AboutPersonEntity } from '../modules/about-people/about-person.entity.js';
+import { AboutPersonRepository } from '../modules/about-people/about-person.repository.js';
+import { AboutPersonService } from '../modules/about-people/about-person.service.js';
 import { createMail } from '../modules/mail/create-mail.js';
 import type { EmailProvider } from '../modules/mail/email-provider.js';
 import { ObservedMail } from '../modules/mail/observed-mail.js';
@@ -118,6 +121,7 @@ export class AppContainer {
     media: MediaService,
     workPhotos: WorkPhotoService,
     siteImages: SiteImageService,
+    aboutPeople: AboutPersonService,
     storage: StorageProvider,
     documents: DocumentStorage,
     content: ContentService,
@@ -167,6 +171,7 @@ export class AppContainer {
       cvs,
       reach,
       journey,
+      aboutPeople,
       outbox,
       privacy,
     );
@@ -340,6 +345,12 @@ export class AppContainer {
       storage,
       env.uploadMaxBytes,
     );
+    const aboutPeople = new AboutPersonService(
+      new AboutPersonRepository(dataSource.getRepository(AboutPersonEntity)),
+      audit,
+      storage,
+      env.uploadMaxBytes,
+    );
     const timetableRepository = new TimetableRepository(dataSource);
     const timetable = new TimetableService(timetableRepository, audit, userRepository);
     const signup = new SignupService(
@@ -436,6 +447,7 @@ export class AppContainer {
       mediaService,
       workPhotoService,
       siteImageService,
+      aboutPeople,
       storage,
       documents,
       contentService,

@@ -1,5 +1,6 @@
 import { DataSource } from 'typeorm';
 import type { AppEnv } from '../config/env.js';
+import { AboutPersonEntity } from '../modules/about-people/about-person.entity.js';
 import { AccessTokenEntity } from '../modules/auth/access-token.entity.js';
 import { AuditEventEntity } from '../modules/auth/audit-event.entity.js';
 import { LoginThrottleEntity } from '../modules/auth/login-throttle.entity.js';
@@ -35,6 +36,7 @@ import { TraineeMilestones1794700800000 } from './migrations/1794700800000-Train
 import { EmailOutboxAndRemoval1794787200000 } from './migrations/1794787200000-EmailOutboxAndRemoval.js';
 import { ApproveWaitingTrainees1794873600000 } from './migrations/1794873600000-ApproveWaitingTrainees.js';
 import { HoldSampleMidpoint1794960000000 } from './migrations/1794960000000-HoldSampleMidpoint.js';
+import { AboutPeople1795046400000 } from './migrations/1795046400000-AboutPeople.js';
 import { EmailOutboxEntity } from '../modules/mail/email-outbox.entity.js';
 import { TraineeMilestoneEntity } from '../modules/journey/trainee-milestone.entity.js';
 import { ContactRequestEntity } from '../modules/reach/contact-request.entity.js';
@@ -103,6 +105,7 @@ export function createDataSource(
       MediaEntity,
       WorkPhotoEntity,
       SiteImageEntity,
+      AboutPersonEntity,
       ContentSingletonEntity,
       AccessTokenEntity,
       PendingRegistrationEntity,
@@ -149,6 +152,7 @@ export function createDataSource(
       EmailOutboxAndRemoval1794787200000,
       ApproveWaitingTrainees1794873600000,
       HoldSampleMidpoint1794960000000,
+      AboutPeople1795046400000,
     ],
     migrationsTableName: 'schema_migrations',
     ssl: sslConfigForDriver(env.databaseSsl, env.databaseSslCa),

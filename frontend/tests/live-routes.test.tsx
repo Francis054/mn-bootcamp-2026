@@ -65,6 +65,7 @@ const ADMIN = [
   '/admin/content',
   '/admin/timeline',
   '/admin/about',
+  '/admin/people',
   '/admin/account',
   '/admin/states',
   '/admin/users',

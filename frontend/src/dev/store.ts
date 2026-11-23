@@ -10,6 +10,7 @@ import type {
   MediaItem,
   Milestone,
   WorkPhoto,
+  AboutPerson,
   Project,
   PublicationStatus,
   SiteSettings,
@@ -24,6 +25,7 @@ export interface ContentState {
   events: BootcampEvent[];
   media: MediaItem[];
   workPhotos: WorkPhoto[];
+  aboutPeople: AboutPerson[];
   siteImages: SiteImageAdmin[];
   milestones: Milestone[];
   milestonePublicationStatus: PublicationStatus;
@@ -47,6 +49,7 @@ export function createInitialState(): ContentState {
     events: buildEvents(),
     media: buildMedia(),
     workPhotos: [],
+    aboutPeople: [],
     siteImages: defaultSiteImageRecords(),
     milestones: buildMilestones(),
     milestonePublicationStatus: 'draft',

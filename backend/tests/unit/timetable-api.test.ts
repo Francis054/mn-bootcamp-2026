@@ -128,6 +128,7 @@ function appFor(role: 'editor' | 'viewer' | null) {
       cvRouterStub(),
       reachStub(),
       {} as never,
+      {} as never,
     ),
   );
   app.use(errorHandler(pino({ level: 'silent' }), { nodeEnv: 'test' } as never));
@@ -144,7 +145,9 @@ describe('timetable API', () => {
     expect(Array.isArray(blocks) && readRecord(blocks[0]).name).toBe(
       'Foundations & Secure Systems',
     );
-    const outline = await request(appFor(null)).get('/api/v1/public/timetable?outline=1').expect(200);
+    const outline = await request(appFor(null))
+      .get('/api/v1/public/timetable?outline=1')
+      .expect(200);
     const outlineBlocks = readRecord(outline.body).blocks;
     if (!Array.isArray(outlineBlocks)) throw new Error('Expected outline blocks.');
     const firstBlock = readRecord(outlineBlocks[0]);

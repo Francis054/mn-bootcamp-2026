@@ -16,6 +16,7 @@ import { openTestDatabase } from '../support/test-database.js';
  * new `CREATE TABLE` is not covered.
  */
 const PUBLIC_TABLES = [
+  'about_people',
   'access_tokens',
   'audit_events',
   'class_sessions',

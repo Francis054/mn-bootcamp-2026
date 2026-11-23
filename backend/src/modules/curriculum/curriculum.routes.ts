@@ -1,5 +1,9 @@
 import { Router, type Request } from 'express';
-import { mountAccountAdmin, mountOwnPassword, mountPublicEnquiries } from '../accounts/account.routes.js';
+import {
+  mountAccountAdmin,
+  mountOwnPassword,
+  mountPublicEnquiries,
+} from '../accounts/account.routes.js';
 import type { AccountService } from '../accounts/account.service.js';
 import type { SessionService } from '../auth/session.service.js';
 import type { EnquiryService } from '../enquiries/enquiry.service.js';
@@ -29,6 +33,11 @@ import { mountAdminSiteImages, mountPublicSiteImages } from '../site-images/site
 import type { SiteImageService } from '../site-images/site-image.service.js';
 import { mountAdminWorkPhotos, mountPublicWorkPhotos } from '../work-photos/work-photo.routes.js';
 import type { WorkPhotoService } from '../work-photos/work-photo.service.js';
+import {
+  mountAdminAboutPeople,
+  mountPublicAboutPeople,
+} from '../about-people/about-person.routes.js';
+import type { AboutPersonService } from '../about-people/about-person.service.js';
 import { mountAdminProjects, mountPublicProjects } from '../projects/project.routes.js';
 import type { ProjectService } from '../projects/project.service.js';
 import {
@@ -91,6 +100,7 @@ export function curriculumRouter(
   cvs: CvService,
   reach: ReachService,
   journey: JourneyService,
+  aboutPeople: AboutPersonService,
   outbox?: OutboxMail,
   privacy?: TraineePrivacyService,
 ): Router {
@@ -158,6 +168,7 @@ export function curriculumRouter(
   mountPublicMedia(router, media);
   mountPublicWorkPhotos(router, workPhotos);
   mountPublicSiteImages(router, siteImages);
+  mountPublicAboutPeople(router, aboutPeople);
   mountPublicContent(router, content);
   mountPublicEnquiries(router, enquiries);
   mountPublicTimetable(router, timetable);
@@ -195,6 +206,7 @@ export function curriculumRouter(
   mountAdminMedia(admin, media, maxBytes);
   mountAdminWorkPhotos(admin, workPhotos, maxBytes);
   mountAdminSiteImages(admin, siteImages, maxBytes);
+  mountAdminAboutPeople(admin, aboutPeople, maxBytes);
   mountAdminContent(admin, content);
   mountAccountAdmin(admin, accounts, enquiries);
   mountTraineeAdmin(admin, signup);
