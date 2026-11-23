@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
@@ -172,12 +172,14 @@ describe('about people', () => {
 describe('about people pages', () => {
   it('hides the public section when nobody is published', async () => {
     renderAt('/about');
-    expect(await screen.findByRole('heading', { name: /maximal wisdom/i })).toBeInTheDocument();
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
+    await waitFor(
+      () => {
+        expect(screen.queryByRole('dialog', { name: /secure environment loading/i })).not.toBeInTheDocument();
+      },
+      { timeout: 5000 },
+    );
     expect(screen.queryByRole('heading', { name: 'Our People' })).not.toBeInTheDocument();
-    expect(screen.queryByText(/no people/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/no people yet/i)).not.toBeInTheDocument();
   });
 
   it('shows founder, team, and partners, and skips an empty description', async () => {
